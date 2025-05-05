@@ -1,0 +1,17 @@
+[project]
+name = "vidtanium"
+version = "0.1.0"
+description = "A video player with a built-in downloader and a simple video editor."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "loguru>=0.7.3",
+    "psutil>=7.0.0",
+    "pycryptodome>=3.22.0",
+    "pyside6>=6.9.0",
+    "pyside6-fluent-widgets[full]>=1.7.7",
+    "requests>=2.32.3",
+]
+[[tool.uv.index]]
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+default = true
