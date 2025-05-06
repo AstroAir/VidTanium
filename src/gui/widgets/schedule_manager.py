@@ -1,23 +1,26 @@
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
-    QHeaderView, QAbstractItemView, QPushButton, QMenu, QAction,
-    QMessageBox, QLabel
+    QHeaderView, QAbstractItemView, QMessageBox, QLabel
 )
 from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtGui import QColor, QBrush, QIcon, QCursor
 from datetime import datetime
 import logging
 
+from qfluentwidgets import (
+    PushButton, TableWidget, InfoBar, InfoBarPosition,
+    FluentIcon, MessageBox, Action, RoundMenu
+)
 from src.core.scheduler import TaskType
 
 logger = logging.getLogger(__name__)
 
 
 class ScheduleManager(QWidget):
-    """计划任务管理器界面"""
+    """Schedule Task Manager Interface"""
 
-    # 信号定义
-    task_action_requested = Signal(str, str)  # 任务ID, 操作
+    # Signal definitions
+    task_action_requested = Signal(str, str)  # task_id, action
 
     def __init__(self, scheduler, parent=None):
         super().__init__(parent)
@@ -28,32 +31,35 @@ class ScheduleManager(QWidget):
         self._populate_tasks()
 
     def _create_ui(self):
-        """创建界面"""
+        """Create UI elements"""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(10)
 
-        # 工具栏
+        # Toolbar
         toolbar_layout = QHBoxLayout()
         toolbar_layout.setContentsMargins(0, 0, 0, 8)
 
-        self.new_task_button = QPushButton("新建计划")
+        self.new_task_button = PushButton("New Schedule")
+        self.new_task_button.setIcon(FluentIcon.ADD)
         self.new_task_button.clicked.connect(self._on_new_task)
         toolbar_layout.addWidget(self.new_task_button)
 
-        self.refresh_button = QPushButton("刷新")
+        self.refresh_button = PushButton("Refresh")
+        self.refresh_button.setIcon(FluentIcon.SYNC)
         self.refresh_button.clicked.connect(self._populate_tasks)
         toolbar_layout.addWidget(self.refresh_button)
 
-        # 添加空白
+        # Add stretch space
         toolbar_layout.addStretch()
 
         layout.addLayout(toolbar_layout)
 
-        # 任务表格
-        self.task_table = QTableWidget()
+        # Task table
+        self.task_table = TableWidget()
         self.task_table.setColumnCount(6)
         self.task_table.setHorizontalHeaderLabels(
-            ["名称", "类型", "状态", "下次运行", "上次运行", "操作"]
+            ["Name", "Type", "Status", "Next Run", "Last Run", "Actions"]
         )
         self.task_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.task_table.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -61,7 +67,7 @@ class ScheduleManager(QWidget):
         self.task_table.customContextMenuRequested.connect(
             self._show_context_menu)
 
-        # 设置表格列宽
+        # Set table column widths
         header = self.task_table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.Stretch)
         header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
@@ -72,84 +78,88 @@ class ScheduleManager(QWidget):
 
         layout.addWidget(self.task_table)
 
-        # 提示标签
-        self.hint_label = QLabel("提示: 右键点击任务可查看更多操作")
+        # Hint label
+        self.hint_label = QLabel(
+            "Tip: Right-click on a task to see more options")
         layout.addWidget(self.hint_label)
 
     def _populate_tasks(self):
-        """填充任务列表"""
+        """Populate task list"""
         self.task_table.setRowCount(0)
 
         tasks = self.scheduler.get_all_tasks()
         self.task_table.setRowCount(len(tasks))
 
         for i, task in enumerate(tasks):
-            # 名称
+            # Name
             name_item = QTableWidgetItem(task.name)
             name_item.setData(Qt.UserRole, task.task_id)
             self.task_table.setItem(i, 0, name_item)
 
-            # 类型
+            # Type
             type_text = self._get_task_type_text(task.task_type)
             type_item = QTableWidgetItem(type_text)
             self.task_table.setItem(i, 1, type_item)
 
-            # 状态
-            status_text = "启用" if task.enabled else "禁用"
+            # Status
+            status_text = "Enabled" if task.enabled else "Disabled"
             status_item = QTableWidgetItem(status_text)
             status_color = QColor(
                 0, 128, 0) if task.enabled else QColor(128, 128, 128)
             status_item.setForeground(QBrush(status_color))
             self.task_table.setItem(i, 2, status_item)
 
-            # 下次运行
+            # Next run
             next_run_text = self._format_datetime(
                 task.next_run) if task.next_run else "--"
             next_run_item = QTableWidgetItem(next_run_text)
             self.task_table.setItem(i, 3, next_run_item)
 
-            # 上次运行
+            # Last run
             last_run_text = self._format_datetime(
                 task.last_run) if task.last_run else "--"
             last_run_item = QTableWidgetItem(last_run_text)
             self.task_table.setItem(i, 4, last_run_item)
 
-            # 操作按钮
+            # Action buttons
             self._create_action_buttons(i, task)
 
     def _create_action_buttons(self, row, task):
-        """创建操作按钮"""
-        # 创建按钮容器
+        """Create action buttons"""
+        # Create button container
         buttons_widget = QWidget()
         buttons_layout = QHBoxLayout(buttons_widget)
         buttons_layout.setContentsMargins(0, 0, 0, 0)
         buttons_layout.setSpacing(4)
 
-        # 根据任务状态创建不同的按钮
+        # Create different buttons based on task status
         if task.enabled:
-            # 禁用按钮
-            disable_button = QPushButton("禁用")
+            # Disable button
+            disable_button = PushButton("Disable")
+            disable_button.setIcon(FluentIcon.PAUSE)
             disable_button.clicked.connect(
                 lambda: self.task_action_requested.emit(task.task_id, "disable"))
             buttons_layout.addWidget(disable_button)
         else:
-            # 启用按钮
-            enable_button = QPushButton("启用")
+            # Enable button
+            enable_button = PushButton("Enable")
+            enable_button.setIcon(FluentIcon.PLAY)
             enable_button.clicked.connect(
                 lambda: self.task_action_requested.emit(task.task_id, "enable"))
             buttons_layout.addWidget(enable_button)
 
-        # 删除按钮
-        delete_button = QPushButton("删除")
+        # Delete button
+        delete_button = PushButton("Delete")
+        delete_button.setIcon(FluentIcon.DELETE)
         delete_button.clicked.connect(
             lambda: self.task_action_requested.emit(task.task_id, "remove"))
         buttons_layout.addWidget(delete_button)
 
-        # 设置按钮到表格
+        # Set buttons to table
         self.task_table.setCellWidget(row, 5, buttons_widget)
 
     def _show_context_menu(self, position):
-        """显示上下文菜单"""
+        """Show context menu"""
         index = self.task_table.indexAt(position)
         if not index.isValid():
             return
@@ -164,66 +174,81 @@ class ScheduleManager(QWidget):
         if not task:
             return
 
-        # 创建上下文菜单
-        menu = QMenu(self)
+        # Create context menu
+        menu = RoundMenu(self)
 
-        # 根据任务状态添加不同的操作
+        # Add different actions based on task status
         if task.enabled:
-            disable_action = QAction("禁用", self)
+            disable_action = Action(FluentIcon.PAUSE, "Disable")
             disable_action.triggered.connect(
                 lambda: self.task_action_requested.emit(task_id, "disable"))
             menu.addAction(disable_action)
         else:
-            enable_action = QAction("启用", self)
+            enable_action = Action(FluentIcon.PLAY, "Enable")
             enable_action.triggered.connect(
                 lambda: self.task_action_requested.emit(task_id, "enable"))
             menu.addAction(enable_action)
 
-        # 立即执行
-        run_now_action = QAction("立即执行", self)
+        # Run now
+        run_now_action = Action(FluentIcon.PLAY_SOLID, "Run Now")
         run_now_action.triggered.connect(
             lambda: self.task_action_requested.emit(task_id, "run_now"))
         menu.addAction(run_now_action)
 
         menu.addSeparator()
 
-        # 删除操作
-        remove_action = QAction("删除", self)
+        # Delete action
+        remove_action = Action(FluentIcon.DELETE, "Delete")
         remove_action.triggered.connect(
             lambda: self.task_action_requested.emit(task_id, "remove"))
         menu.addAction(remove_action)
 
-        # 显示菜单
+        # Show menu
         menu.exec(QCursor.pos())
 
     def _on_new_task(self):
-        """新建任务按钮点击"""
-        # 发射信号，由父窗口处理
+        """New task button clicked"""
+        # Emit signal to be handled by parent window
         self.task_action_requested.emit("", "new")
 
     def _get_task_type_text(self, task_type):
-        """获取任务类型文本"""
+        """Get task type text"""
         type_texts = {
-            TaskType.ONE_TIME: "一次性",
-            TaskType.DAILY: "每天",
-            TaskType.WEEKLY: "每周",
-            TaskType.INTERVAL: "间隔"
+            TaskType.ONE_TIME: "One Time",
+            TaskType.DAILY: "Daily",
+            TaskType.WEEKLY: "Weekly",
+            TaskType.INTERVAL: "Interval"
         }
         return type_texts.get(task_type, str(task_type))
 
     def _format_datetime(self, dt):
-        """格式化日期时间"""
+        """Format datetime"""
         if not dt:
             return "--"
 
         now = datetime.now()
 
         if dt.date() == now.date():
-            # 今天
-            return f"今天 {dt.strftime('%H:%M:%S')}"
-        elif dt.date() == (now + datetime.timedelta(days=1)).date():
-            # 明天
-            return f"明天 {dt.strftime('%H:%M:%S')}"
+            # Today
+            return f"Today {dt.strftime('%H:%M:%S')}"
+        elif dt.date() == (now.date() + datetime.timedelta(days=1)).date():
+            # Tomorrow
+            return f"Tomorrow {dt.strftime('%H:%M:%S')}"
         else:
-            # 其他日期
+            # Other dates
             return dt.strftime("%Y-%m-%d %H:%M:%S")
+
+    def show_message(self, title, content, type_="success"):
+        """Show a message notification"""
+        if type_ == "success":
+            InfoBar.success(title, content, parent=self,
+                            position=InfoBarPosition.TOP)
+        elif type_ == "warning":
+            InfoBar.warning(title, content, parent=self,
+                            position=InfoBarPosition.TOP)
+        elif type_ == "error":
+            InfoBar.error(title, content, parent=self,
+                          position=InfoBarPosition.TOP)
+        else:
+            InfoBar.info(title, content, parent=self,
+                         position=InfoBarPosition.TOP)

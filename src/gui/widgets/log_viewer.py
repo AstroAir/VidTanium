@@ -1,7 +1,12 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QHBoxLayout, QPushButton
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel
 from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtGui import QTextCursor, QColor, QTextCharFormat
 
+from qfluentwidgets import (
+    TextEdit, PushButton, ComboBox, CheckBox, 
+    FluentIcon, CardWidget, StrongBodyLabel, BodyLabel,
+    TransparentDropDownToolButton, FluentStyleSheet
+)
 
 class LogViewer(QWidget):
     """日志查看器组件"""
@@ -37,26 +42,25 @@ class LogViewer(QWidget):
         """
         
         # 日志操作按钮
-        self.clear_button = QPushButton("清空日志")
+        self.clear_button = PushButton("清空日志")
         self.clear_button.setStyleSheet(btn_style)
         self.clear_button.setToolTip("清空当前所有日志")
         self.clear_button.clicked.connect(self._clear_logs)
         controls_layout.addWidget(self.clear_button)
 
-        self.save_button = QPushButton("保存日志")
+        self.save_button = PushButton("保存日志")
         self.save_button.setStyleSheet(btn_style)
         self.save_button.setToolTip("将日志保存到文件")
         self.save_button.clicked.connect(self._save_logs)
         controls_layout.addWidget(self.save_button)
         
         # 增加过滤功能
-        from PySide6.QtWidgets import QCheckBox, QComboBox, QLabel
 
         controls_layout.addSpacing(20)
         
         # 日志级别过滤
         controls_layout.addWidget(QLabel("显示级别:"))
-        self.level_combo = QComboBox()
+        self.level_combo = ComboBox()
         self.level_combo.addItems(["全部", "仅错误", "无错误"])
         self.level_combo.setToolTip("选择要显示的日志级别")
         self.level_combo.currentIndexChanged.connect(self._filter_logs)
@@ -65,7 +69,7 @@ class LogViewer(QWidget):
         controls_layout.addSpacing(20)
         
         # 自动滚动复选框
-        self.auto_scroll = QCheckBox("自动滚动")
+        self.auto_scroll = CheckBox("自动滚动")
         self.auto_scroll.setChecked(True)
         self.auto_scroll.setToolTip("新日志出现时自动滚动到底部")
         controls_layout.addWidget(self.auto_scroll)
@@ -76,7 +80,7 @@ class LogViewer(QWidget):
         layout.addLayout(controls_layout)
 
         # 日志文本框 - 使用更易读的配色和字体
-        self.log_text = QTextEdit()
+        self.log_text = TextEdit()
         self.log_text.setReadOnly(True)
         self.log_text.document().setMaximumBlockCount(1000)  # 限制最大行数
         

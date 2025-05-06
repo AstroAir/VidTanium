@@ -1,11 +1,17 @@
 import os
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem,
-    QHeaderView, QAbstractItemView, QProgressBar,
-    QToolButton, QHBoxLayout, QMenu, QPushButton, QFrame, QLabel
+    QHeaderView, QAbstractItemView, QMenu, QFrame, QLabel,
+    QHBoxLayout
 )
 from PySide6.QtCore import Qt, Signal, Slot, QSize
 from PySide6.QtGui import QIcon, QAction, QColor, QBrush, QFont
+
+from qfluentwidgets import (
+    PushButton, ToolButton, ProgressBar, InfoBar, InfoBarPosition,
+    FluentIcon, StrongBodyLabel, BodyLabel, TransparentToolButton,
+    FluentStyleSheet
+)
 
 from src.core.downloader import TaskStatus
 
@@ -26,64 +32,38 @@ class TaskManager(QWidget):
         """创建界面"""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(4)  # 减小间距
+        layout.setSpacing(8)
 
         # 工具栏
         toolbar_layout = QHBoxLayout()
-        toolbar_layout.setContentsMargins(0, 0, 0, 6)
-        toolbar_layout.setSpacing(6)  # 增加按钮间距
-
-        # 创建流式布局的按钮组
-        button_frame = QFrame()
-        button_frame.setStyleSheet("QFrame { background-color: transparent; }")
-        button_layout = QHBoxLayout(button_frame)
-        button_layout.setContentsMargins(0, 0, 0, 0)
-        button_layout.setSpacing(4)
-
-        # 使用更现代的图标按钮
-        btn_style = """
-            QPushButton {
-                padding: 6px 12px;
-                border-radius: 4px;
-                border: 1px solid #d0d0d0;
-                background-color: #f5f5f5;
-            }
-            QPushButton:hover {
-                background-color: #e8e8e8;
-            }
-            QPushButton:pressed {
-                background-color: #d0d0d0;
-            }
-        """
+        toolbar_layout.setContentsMargins(0, 0, 0, 8)
+        toolbar_layout.setSpacing(8)
 
         # 新建任务按钮
-        self.new_task_button = QPushButton("新建任务")
-        self.new_task_button.setStyleSheet(btn_style)
+        self.new_task_button = PushButton("新建任务")
+        self.new_task_button.setIcon(FluentIcon.ADD)
         self.new_task_button.clicked.connect(self._on_new_task)
-        button_layout.addWidget(self.new_task_button)
+        toolbar_layout.addWidget(self.new_task_button)
 
         # 控制按钮
-        self.start_all_button = QPushButton("全部开始")
-        self.start_all_button.setStyleSheet(btn_style)
+        self.start_all_button = PushButton("全部开始")
+        self.start_all_button.setIcon(FluentIcon.PLAY)
         self.start_all_button.clicked.connect(self._on_start_all)
-        button_layout.addWidget(self.start_all_button)
+        toolbar_layout.addWidget(self.start_all_button)
 
-        self.pause_all_button = QPushButton("全部暂停")
-        self.pause_all_button.setStyleSheet(btn_style)
+        self.pause_all_button = PushButton("全部暂停")
+        self.pause_all_button.setIcon(FluentIcon.PAUSE)
         self.pause_all_button.clicked.connect(self._on_pause_all)
-        button_layout.addWidget(self.pause_all_button)
+        toolbar_layout.addWidget(self.pause_all_button)
 
         # 清理按钮
-        self.clean_button = QPushButton("清理已完成")
-        self.clean_button.setStyleSheet(btn_style)
+        self.clean_button = PushButton("清理已完成")
+        self.clean_button.setIcon(FluentIcon.BROOM)
         self.clean_button.clicked.connect(self._on_clean)
-        button_layout.addWidget(self.clean_button)
+        toolbar_layout.addWidget(self.clean_button)
 
         # 弹簧
-        button_layout.addStretch()
-
-        # 添加按钮组到工具栏布局
-        toolbar_layout.addWidget(button_frame, 1)
+        toolbar_layout.addStretch()
         layout.addLayout(toolbar_layout)
 
         # 任务表格
@@ -101,36 +81,63 @@ class TaskManager(QWidget):
         # 设置交替行颜色以提高可读性
         self.task_table.setAlternatingRowColors(True)
 
-        # 设置表格样式
+        # 设置表格样式 - 使用更现代的风格
         self.task_table.setStyleSheet("""
             QTableWidget {
-                border: 1px solid #d0d0d0;
-                border-radius: 4px;
+                border: 1px solid #e0e0e0;
+                border-radius: 6px;
                 background-color: white;
-                gridline-color: #f0f0f0;
+                gridline-color: #f5f5f5;
             }
             QTableWidget::item {
-                padding: 4px;
+                padding: 6px;
+                border-bottom: 1px solid #f5f5f5;
             }
             QTableWidget::item:selected {
-                background-color: #e8f0fe;
+                background-color: #ecf6ff;
                 color: black;
             }
             QHeaderView::section {
-                background-color: #f5f5f5;
-                padding: 4px;
-                border: 1px solid #d0d0d0;
-                border-left: none;
-                border-top: none;
+                background-color: #f8f8f8;
+                padding: 6px;
+                border: none;
+                border-bottom: 1px solid #e0e0e0;
+                font-weight: bold;
+                color: #505050;
             }
-            QHeaderView::section:first {
-                border-left: 1px solid #d0d0d0;
+            QScrollBar:vertical {
+                border: none;
+                background: #f0f0f0;
+                width: 10px;
+                border-radius: 5px;
+            }
+            QScrollBar::handle:vertical {
+                background: #c0c0c0;
+                min-height: 20px;
+                border-radius: 5px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background: #a0a0a0;
+            }
+            QScrollBar:horizontal {
+                border: none;
+                background: #f0f0f0;
+                height: 10px;
+                border-radius: 5px;
+            }
+            QScrollBar::handle:horizontal {
+                background: #c0c0c0;
+                min-width: 20px;
+                border-radius: 5px;
+            }
+            QScrollBar::handle:horizontal:hover {
+                background: #a0a0a0;
             }
         """)
 
         # 设置表格字体
         font = QFont()
-        font.setPointSize(9)  # 设置适合的字体大小
+        font.setPointSize(9)
         self.task_table.setFont(font)
 
         # 设置表格列宽
@@ -143,8 +150,9 @@ class TaskManager(QWidget):
         header.setSectionResizeMode(5, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(6, QHeaderView.Fixed)  # 固定操作列宽度
 
-        # 预设一个合适的操作列宽度
-        self.task_table.setColumnWidth(6, 160)
+        # 预设一个合适的操作列宽度和进度条列宽度
+        self.task_table.setColumnWidth(6, 180)
+        self.task_table.setColumnWidth(2, 150)
 
         # 设置垂直标题不可见
         self.task_table.verticalHeader().setVisible(False)
@@ -152,9 +160,10 @@ class TaskManager(QWidget):
         layout.addWidget(self.task_table)
 
         # 在没有任务时显示的提示信息
-        self.empty_hint = QLabel("暂无下载任务，点击‘新建任务’按钮开始下载")
+        self.empty_hint = BodyLabel("暂无下载任务，点击'新建任务'按钮开始下载")
         self.empty_hint.setAlignment(Qt.AlignCenter)
-        self.empty_hint.setStyleSheet("color: gray; padding: 20px;")
+        self.empty_hint.setStyleSheet(
+            "color: #808080; padding: 30px; font-size: 14px;")
         layout.addWidget(self.empty_hint)
         self.empty_hint.setVisible(False)  # 默认隐藏
 
@@ -186,7 +195,7 @@ class TaskManager(QWidget):
             self.task_table.setItem(i, 1, status_item)
 
             # 进度
-            progress_widget = QProgressBar()
+            progress_widget = ProgressBar()
             progress_widget.setMinimum(0)
             progress_widget.setMaximum(100)
             progress_widget.setValue(int(task.get_progress_percentage()))
@@ -357,7 +366,7 @@ class TaskManager(QWidget):
         # 根据状态创建不同的按钮
         if status == TaskStatus.PENDING or status == TaskStatus.PAUSED:
             # 开始按钮
-            start_button = QToolButton()
+            start_button = ToolButton()
             start_button.setText("开始")
             start_button.setStyleSheet(start_btn_style)
             start_button.setToolTip("开始任务")
@@ -367,7 +376,7 @@ class TaskManager(QWidget):
 
         if status == TaskStatus.RUNNING:
             # 暂停按钮
-            pause_button = QToolButton()
+            pause_button = ToolButton()
             pause_button.setText("暂停")
             pause_button.setStyleSheet(pause_btn_style)
             pause_button.setToolTip("暂停任务")
@@ -377,7 +386,7 @@ class TaskManager(QWidget):
 
         if status != TaskStatus.COMPLETED:
             # 取消按钮
-            cancel_button = QToolButton()
+            cancel_button = ToolButton()
             cancel_button.setText("取消")
             cancel_button.setStyleSheet(cancel_btn_style)
             cancel_button.setToolTip("取消任务")
@@ -386,7 +395,7 @@ class TaskManager(QWidget):
             buttons_layout.addWidget(cancel_button)
 
         # 删除按钮
-        delete_button = QToolButton()
+        delete_button = ToolButton()
         delete_button.setText("删除")
         delete_button.setStyleSheet(btn_style)
         delete_button.setToolTip("删除任务")

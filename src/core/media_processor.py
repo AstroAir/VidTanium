@@ -386,3 +386,138 @@ class MediaProcessor:
         except Exception as e:
             logger.error(f"Error executing command: {e}", exc_info=True)
             return {"success": False, "error": str(e)}
+
+    def batch_convert_file(self, input_file: str, options: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Convert media file with batch processing options
+
+        Args:
+            input_file: Path to input file
+            options: Dictionary with conversion options including:
+                - format: Output format (mp4, mkv, etc)
+                - output_dir: Output directory (optional)
+                - video_codec: Video codec to use
+                - audio_codec: Audio codec to use
+                - bitrate: Video bitrate in kbps
+                - resolution: Output resolution
+                - keep_original: Whether to keep original file
+
+        Returns:
+            dict: Result with success flag and message
+        """
+        try:
+            import os
+            from loguru import logger
+
+            logger.info(f"批量转换文件: {input_file}")
+
+            if not os.path.exists(input_file):
+                error_message = f"输入文件不存在: {input_file}"
+                logger.error(error_message)
+                return {"success": False, "message": error_message}
+
+            # 生成输出文件名
+            filename = os.path.basename(input_file)
+            basename, _ = os.path.splitext(filename)
+
+            output_dir = options.get("output_dir", "")
+            if not output_dir:
+                output_dir = os.path.dirname(input_file)
+
+            # 如果输出目录不存在，则创建
+            os.makedirs(output_dir, exist_ok=True)
+
+            output_format = options.get("format", "mp4")
+            output_file = os.path.join(
+                output_dir, f"{basename}.{output_format}")
+
+            # 检查输出文件是否存在
+            if os.path.exists(output_file):
+                output_file = os.path.join(
+                    output_dir, f"{basename}_converted.{output_format}")
+
+            logger.info(f"输出文件: {output_file}")
+
+            # 构建 FFmpeg 命令
+            command = [self.ffmpeg_path or "ffmpeg", "-i", input_file]
+
+            # 添加视频编码选项
+            video_codec = options.get("video_codec", "copy")
+            if video_codec != "copy":
+                command.extend(["-c:v", video_codec])
+                logger.debug(f"使用视频编码: {video_codec}")
+
+                # 设置码率
+                bitrate = options.get("bitrate", 2000)
+                command.extend(["-b:v", f"{bitrate}k"])
+                logger.debug(f"设置视频码率: {bitrate}k")
+
+                # 处理分辨率
+                resolution = options.get("resolution", "原始")
+                if resolution != "原始":
+                    # 将常用分辨率名称映射到实际尺寸
+                    resolution_map = {
+                        "1080p": "1920:1080",
+                        "720p": "1280:720",
+                        "480p": "854:480",
+                        "360p": "640:360"
+                    }
+                    if resolution in resolution_map:
+                        command.extend(
+                            ["-vf", f"scale={resolution_map[resolution]}"])
+                        logger.debug(f"设置分辨率: {resolution_map[resolution]}")
+            else:
+                # 直接复制视频流
+                command.extend(["-c:v", "copy"])
+                logger.debug("使用复制模式处理视频流（不重新编码）")
+
+            # 添加音频编码选项
+            audio_codec = options.get("audio_codec", "copy")
+            command.extend(["-c:a", audio_codec])
+            logger.debug(f"使用音频编码: {audio_codec}")
+
+            # 添加输出格式
+            command.extend(["-f", output_format])
+            logger.debug(f"设置输出格式: {output_format}")
+
+            # 添加输出文件
+            command.extend(["-y", output_file])
+
+            logger.debug(f"执行命令: {' '.join(command)}")
+
+            # 执行 FFmpeg 命令
+            import subprocess
+            result = subprocess.run(
+                command,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+
+            # 如果不保留原始文件且转换成功，则删除原始文件
+            if not options.get("keep_original", True) and os.path.exists(output_file):
+                os.remove(input_file)
+                logger.info(f"已删除原始文件: {input_file}")
+
+            logger.success(f"文件转换成功: {input_file} -> {output_file}")
+            return {
+                "success": True,
+                "message": "文件转换成功",
+                "output_file": output_file
+            }
+
+        except subprocess.CalledProcessError as e:
+            error_message = f"FFmpeg 执行错误: {e.stderr}"
+            logger.error(error_message)
+            return {
+                "success": False,
+                "message": error_message
+            }
+        except Exception as e:
+            error_message = f"转换过程中出错: {str(e)}"
+            logger.error(error_message, exc_info=True)
+            return {
+                "success": False,
+                "message": error_message
+            }

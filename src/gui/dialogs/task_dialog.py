@@ -1,78 +1,112 @@
 from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
-    QFormLayout, QSpinBox, QPushButton, QFileDialog,
-    QComboBox, QCheckBox, QGroupBox
+    QDialog, QVBoxLayout, QHBoxLayout, QFileDialog, QFormLayout,
 )
 from PySide6.QtCore import Qt, Signal, Slot
+from PySide6.QtGui import QIcon
 import os
 
+from qfluentwidgets import (
+    Dialog, PushButton, LineEdit, CheckBox, SpinBox, ComboBox,
+    CardWidget, StrongBodyLabel, InfoBar, InfoBarPosition,
+    SimpleCardWidget, SubtitleLabel, FluentIcon, FluentStyleSheet
+)
 
-class TaskDialog(QDialog):
+
+class TaskDialog(Dialog):
     """新建任务对话框"""
 
     def __init__(self, settings, parent=None):
-        super().__init__(parent)
+        super().__init__("新建下载任务", "", parent)
 
         self.settings = settings
-
-        self.setWindowTitle("新建下载任务")
-        self.setMinimumWidth(500)
+        self.setMinimumSize(550, 480)
 
         self._create_ui()
+        self.setStyleSheet(FluentStyleSheet.LIGHT)
 
     def _create_ui(self):
         """创建界面"""
-        layout = QVBoxLayout(self)
+        # 创建卡片容器
+        self.card = SimpleCardWidget(self)
+        self.vBoxLayout.addWidget(self.card)
 
-        # 基本信息
-        basic_group = QGroupBox("基本信息")
+        layout = QVBoxLayout(self.card)
+        layout.setContentsMargins(20, 15, 20, 15)
+        layout.setSpacing(15)
+
+        # 标题
+        self.title_label = SubtitleLabel("新建下载任务")
+        layout.addWidget(self.title_label)
+
+        # 基本信息卡片
+        basic_card = CardWidget()
         basic_layout = QFormLayout()
+        basic_layout.setContentsMargins(15, 15, 15, 15)
+        basic_layout.setSpacing(12)
+        basic_layout.setLabelAlignment(Qt.AlignRight)
+
+        # 添加卡片标题
+        basic_title = StrongBodyLabel("基本信息")
+        basic_layout.addRow(basic_title)
 
         # 任务名称
-        self.name_input = QLineEdit()
+        self.name_input = LineEdit()
+        self.name_input.setPlaceholderText("输入任务名称")
         basic_layout.addRow("任务名称:", self.name_input)
 
         # 视频基础URL
         url_layout = QHBoxLayout()
-        self.base_url_input = QLineEdit()
+        self.base_url_input = LineEdit()
+        self.base_url_input.setPlaceholderText("输入视频M3U8地址")
         url_layout.addWidget(self.base_url_input)
 
-        self.extract_button = QPushButton("自动提取")
+        self.extract_button = PushButton("提取")
+        self.extract_button.setIcon(FluentIcon.DOWNLOAD)
         self.extract_button.clicked.connect(self._extract_m3u8_info)
         url_layout.addWidget(self.extract_button)
 
-        basic_layout.addRow("视频基础URL:", url_layout)
+        basic_layout.addRow("视频URL:", url_layout)
 
         # 密钥URL
-        self.key_url_input = QLineEdit()
+        self.key_url_input = LineEdit()
+        self.key_url_input.setPlaceholderText("输入视频密钥URL")
         basic_layout.addRow("密钥URL:", self.key_url_input)
 
         # 视频片段数量
-        self.segments_input = QSpinBox()
+        self.segments_input = SpinBox()
         self.segments_input.setRange(1, 10000)
         self.segments_input.setValue(200)
         basic_layout.addRow("视频片段数量:", self.segments_input)
 
         # 输出文件
         output_layout = QHBoxLayout()
-        self.output_input = QLineEdit()
+        self.output_input = LineEdit()
+        self.output_input.setPlaceholderText("选择保存位置...")
         output_layout.addWidget(self.output_input)
 
-        self.browse_button = QPushButton("浏览...")
+        self.browse_button = PushButton("浏览...")
+        self.browse_button.setIcon(FluentIcon.SAVE)
         self.browse_button.clicked.connect(self._browse_output)
         output_layout.addWidget(self.browse_button)
 
         basic_layout.addRow("输出文件:", output_layout)
 
-        basic_group.setLayout(basic_layout)
-        layout.addWidget(basic_group)
+        basic_card.setLayout(basic_layout)
+        layout.addWidget(basic_card)
 
-        # 高级选项
-        advanced_group = QGroupBox("高级选项")
+        # 高级选项卡片
+        advanced_card = CardWidget()
         advanced_layout = QFormLayout()
+        advanced_layout.setContentsMargins(15, 15, 15, 15)
+        advanced_layout.setSpacing(12)
+        advanced_layout.setLabelAlignment(Qt.AlignRight)
+
+        # 添加卡片标题
+        advanced_title = StrongBodyLabel("高级选项")
+        advanced_layout.addRow(advanced_title)
 
         # 优先级
-        self.priority_combo = QComboBox()
+        self.priority_combo = ComboBox()
         self.priority_combo.addItem("高", "high")
         self.priority_combo.addItem("中", "normal")
         self.priority_combo.addItem("低", "low")
@@ -80,23 +114,26 @@ class TaskDialog(QDialog):
         advanced_layout.addRow("任务优先级:", self.priority_combo)
 
         # 自动开始
-        self.auto_start_check = QCheckBox("添加后自动开始下载")
+        self.auto_start_check = CheckBox("添加后自动开始下载")
         self.auto_start_check.setChecked(True)
         advanced_layout.addRow("", self.auto_start_check)
 
-        advanced_group.setLayout(advanced_layout)
-        layout.addWidget(advanced_group)
+        advanced_card.setLayout(advanced_layout)
+        layout.addWidget(advanced_card)
 
         # 按钮
         buttons_layout = QHBoxLayout()
+        buttons_layout.setContentsMargins(0, 10, 0, 0)
 
-        self.cancel_button = QPushButton("取消")
+        self.cancel_button = PushButton("取消")
+        self.cancel_button.setIcon(FluentIcon.CANCEL)
         self.cancel_button.clicked.connect(self.reject)
         buttons_layout.addWidget(self.cancel_button)
 
         buttons_layout.addStretch()
 
-        self.ok_button = QPushButton("确定")
+        self.ok_button = PushButton("确定")
+        self.ok_button.setIcon(FluentIcon.ACCEPT)
         self.ok_button.clicked.connect(self._on_ok)
         self.ok_button.setDefault(True)
         buttons_layout.addWidget(self.ok_button)
