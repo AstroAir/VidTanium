@@ -5,6 +5,10 @@ from enum import Enum
 from typing import List, Dict, Optional, Tuple, Any
 from loguru import logger
 
+# ========================================================================
+# Enums - 枚举类型定义
+# ========================================================================
+
 
 class StreamType(Enum):
     """Stream type enumeration"""
@@ -21,6 +25,24 @@ class EncryptionMethod(Enum):
     AES_128 = "AES-128"
     SAMPLE_AES = "SAMPLE-AES"
     UNKNOWN = "UNKNOWN"
+
+
+# ========================================================================
+# Models - 数据模型定义
+# ========================================================================
+
+
+class M3U8Segment:
+    """M3U8 video segment"""
+
+    def __init__(self):
+        self.url = ""
+        self.duration = 0
+        self.index = 0
+        self.encryption = EncryptionMethod.NONE
+        self.key_url = ""
+        self.key_iv = ""
+        self.discontinuity = False
 
 
 class M3U8Stream:
@@ -42,17 +64,9 @@ class M3U8Stream:
         self.base_url = ""
 
 
-class M3U8Segment:
-    """M3U8 video segment"""
-
-    def __init__(self):
-        self.url = ""
-        self.duration = 0
-        self.index = 0
-        self.encryption = EncryptionMethod.NONE
-        self.key_url = ""
-        self.key_iv = ""
-        self.discontinuity = False
+# ========================================================================
+# Parser - M3U8 解析器
+# ========================================================================
 
 
 class M3U8Parser:
@@ -344,6 +358,87 @@ class M3U8Parser:
         return lowest_stream
 
 
+# ========================================================================
+# URL Pattern Utils - URL模式工具
+# ========================================================================
+
+
+def extract_url_pattern(url: str) -> Dict[str, str]:
+    """
+    Extract pattern from URL for batch download
+    Example: https://example.com/video/segment1.ts 
+    Returns: {"base_url": "https://example.com/video/segment", "pattern": "{}.ts"}
+    """
+    try:
+        logger.debug(f"Extracting URL pattern from: {url}")
+        # Find numeric part
+        match = re.search(r'(\d+)(\.[^.]+)?$', url)
+        if match:
+            # Extract number and extension
+            number_part = match.group(1)
+            extension = match.group(2) or ""
+
+            # Replace number part with format placeholder
+            base_url = url[:match.start(1)]
+
+            pattern_info = {
+                "base_url": base_url,
+                "pattern": "{}{}".format("", extension)
+            }
+
+            logger.debug(
+                f"Pattern extracted: {pattern_info['base_url']} + index + {pattern_info['pattern']}")
+            return pattern_info
+
+        logger.warning(f"No numeric pattern found in URL: {url}")
+        return None
+
+    except Exception as e:
+        logger.error(f"Error extracting URL pattern: {e}", exc_info=True)
+        return None
+
+
+# ========================================================================
+# Extractors - 提取器函数
+# ========================================================================
+
+
+def extract_m3u8_url_from_page(url: str, headers: Dict[str, str] = None) -> str:
+    """Extract M3U8 link from webpage"""
+    try:
+        logger.debug(f"Attempting to extract M3U8 URL from page: {url}")
+        headers = headers or {}
+        response = requests.get(url, headers=headers, timeout=30)
+        content = response.text
+        logger.debug(f"Retrieved page content ({len(content)} bytes)")
+
+        # Search for M3U8 links
+        patterns = [
+            r'https?://[^"\']+\.m3u8',  # Basic HTTP/HTTPS links
+            r'"([^"]+\.m3u8[^"]*)"',    # Links in double quotes
+            r'\'([^\']+\.m3u8[^\']*)\''  # Links in single quotes
+        ]
+
+        for pattern in patterns:
+            matches = re.findall(pattern, content)
+            if matches:
+                # Return first matching link
+                match = matches[0]
+                # If tuple (regex capture group), return first element
+                if isinstance(match, tuple):
+                    match = match[0]
+                logger.success(f"Found M3U8 URL in page: {match}")
+                return match
+
+        logger.warning("No M3U8 URL found in page content")
+        return ""
+
+    except Exception as e:
+        logger.error(
+            f"Error extracting M3U8 URL from page: {e}", exc_info=True)
+        return ""
+
+
 def extract_m3u8_info(url: str, headers: Dict[str, str] = None) -> Dict[str, Any]:
     """
     Extract M3U8 information from URL
@@ -451,74 +546,3 @@ def extract_m3u8_info(url: str, headers: Dict[str, str] = None) -> Dict[str, Any
         logger.error(f"Error extracting M3U8 information: {e}", exc_info=True)
         result["message"] = f"Error extracting M3U8 information: {str(e)}"
         return result
-
-
-def extract_m3u8_url_from_page(url: str, headers: Dict[str, str] = None) -> str:
-    """Extract M3U8 link from webpage"""
-    try:
-        logger.debug(f"Attempting to extract M3U8 URL from page: {url}")
-        headers = headers or {}
-        response = requests.get(url, headers=headers, timeout=30)
-        content = response.text
-        logger.debug(f"Retrieved page content ({len(content)} bytes)")
-
-        # Search for M3U8 links
-        patterns = [
-            r'https?://[^"\']+\.m3u8',  # Basic HTTP/HTTPS links
-            r'"([^"]+\.m3u8[^"]*)"',    # Links in double quotes
-            r'\'([^\']+\.m3u8[^\']*)\''  # Links in single quotes
-        ]
-
-        for pattern in patterns:
-            matches = re.findall(pattern, content)
-            if matches:
-                # Return first matching link
-                match = matches[0]
-                # If tuple (regex capture group), return first element
-                if isinstance(match, tuple):
-                    match = match[0]
-                logger.success(f"Found M3U8 URL in page: {match}")
-                return match
-
-        logger.warning("No M3U8 URL found in page content")
-        return ""
-
-    except Exception as e:
-        logger.error(
-            f"Error extracting M3U8 URL from page: {e}", exc_info=True)
-        return ""
-
-
-def extract_url_pattern(url: str) -> Dict[str, str]:
-    """
-    Extract pattern from URL for batch download
-    Example: https://example.com/video/segment1.ts 
-    Returns: {"base_url": "https://example.com/video/segment", "pattern": "{}.ts"}
-    """
-    try:
-        logger.debug(f"Extracting URL pattern from: {url}")
-        # Find numeric part
-        match = re.search(r'(\d+)(\.[^.]+)?$', url)
-        if match:
-            # Extract number and extension
-            number_part = match.group(1)
-            extension = match.group(2) or ""
-
-            # Replace number part with format placeholder
-            base_url = url[:match.start(1)]
-
-            pattern_info = {
-                "base_url": base_url,
-                "pattern": "{}{}".format("", extension)
-            }
-
-            logger.debug(
-                f"Pattern extracted: {pattern_info['base_url']} + index + {pattern_info['pattern']}")
-            return pattern_info
-
-        logger.warning(f"No numeric pattern found in URL: {url}")
-        return None
-
-    except Exception as e:
-        logger.error(f"Error extracting URL pattern: {e}", exc_info=True)
-        return None

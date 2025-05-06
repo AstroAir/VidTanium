@@ -4,7 +4,7 @@ import threading
 import os
 import json
 import uuid
-from queue import PriorityQueue, Queue
+from queue import PriorityQueue, Queue, Empty
 from enum import Enum
 from datetime import datetime
 from loguru import logger
@@ -471,9 +471,11 @@ class DownloadManager:
                 self.event_queue.task_done()
 
             except Exception as e:
-                if isinstance(e, TimeoutError):
+                if isinstance(e, (Empty, TimeoutError)):
                     continue
-                logger.error(f"Error processing event: {e}", exc_info=True)
+                import traceback
+                error_details = traceback.format_exc()
+                logger.error(f"Error processing event: {e}\n{error_details}")
 
     def _scheduler_loop(self):
         """Scheduler main loop"""
