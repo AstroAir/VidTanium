@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import (
-    QVBoxLayout, QHBoxLayout, QWidget, QFormLayout,
-    QButtonGroup, QFileDialog, QTimeEdit, QStackedWidget
+    QVBoxLayout, QHBoxLayout, QWidget, QFormLayout, QDialog,
+    QButtonGroup, QFileDialog, QTimeEdit, QStackedWidget, QDialogButtonBox
 )
 from PySide6.QtCore import Qt, QTime, QTimer, Signal, Slot
 from PySide6.QtGui import QIntValidator, QIcon
@@ -8,27 +8,26 @@ import os
 import logging
 
 from qfluentwidgets import (
-    Dialog, PushButton, LineEdit, CheckBox,
+    PushButton, LineEdit, CheckBox,
     TextEdit, SpinBox, ComboBox, BodyLabel, StrongBodyLabel,
     ProgressBar, FluentIcon, CardWidget, Slider,
     RadioButton, SubtitleLabel, SimpleCardWidget, InfoBar,
     InfoBarPosition, TabBar
 )
-from qfluentwidgets import FluentStyleSheet
 
 from src.core.media_processor import MediaProcessor
 
 logger = logging.getLogger(__name__)
 
 
-class MediaProcessingDialog(Dialog):
+class MediaProcessingDialog(QDialog):
     """媒体处理对话框"""
 
     # 处理完成信号
     processing_completed = Signal(bool, str)  # 成功/失败, 消息
 
     def __init__(self, settings, input_file=None, parent=None):
-        super().__init__("媒体处理", "", parent)  # Pass empty string for content
+        super().__init__(parent)
 
         self.settings = settings
         self.input_file = input_file
@@ -53,16 +52,14 @@ class MediaProcessingDialog(Dialog):
 
     def _create_ui(self):
         """创建界面"""
-        self.card = SimpleCardWidget(self)
-        self.vBoxLayout.addWidget(self.card)
-
-        layout = QVBoxLayout(self.card)
-        layout.setContentsMargins(20, 15, 20, 15)
-        layout.setSpacing(15)
+        # 创建主布局
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 15, 20, 15)
+        main_layout.setSpacing(15)
 
         # 标题
         self.title_label = SubtitleLabel("媒体处理")
-        layout.addWidget(self.title_label)
+        main_layout.addWidget(self.title_label)
 
         # 文件选择卡片
         file_card = CardWidget()
@@ -104,7 +101,7 @@ class MediaProcessingDialog(Dialog):
         file_layout.addRow("文件信息:", self.file_info_label)
 
         file_card.setLayout(file_layout)
-        layout.addWidget(file_card)
+        main_layout.addWidget(file_card)
 
         # 处理选项选项卡
         self.tab_bar = TabBar()
@@ -138,33 +135,31 @@ class MediaProcessingDialog(Dialog):
         self._create_compress_tab()
         self.stacked_widget.addWidget(self.compress_tab)
 
-        layout.addWidget(self.tab_bar)
-        layout.addWidget(self.stacked_widget)
+        main_layout.addWidget(self.tab_bar)
+        main_layout.addWidget(self.stacked_widget)
 
         # 进度区域
         self.progress_bar = ProgressBar()
         self.progress_bar.setVisible(False)
         self.progress_bar.setTextVisible(True)
         self.progress_bar.setFixedHeight(10)
-        layout.addWidget(self.progress_bar)
+        main_layout.addWidget(self.progress_bar)
 
         # 按钮
-        buttons_layout = QHBoxLayout()
-        buttons_layout.setContentsMargins(0, 10, 0, 0)
+        self.button_box = QDialogButtonBox(
+            QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        self.button_box.button(QDialogButtonBox.Ok).setText("开始处理")
+        self.button_box.button(QDialogButtonBox.Ok).setIcon(FluentIcon.PLAY)
+        self.button_box.button(QDialogButtonBox.Ok).setEnabled(False)
+        self.button_box.button(QDialogButtonBox.Cancel).setText("取消")
 
-        self.cancel_button = PushButton("取消")
-        self.cancel_button.clicked.connect(self.reject)
-        buttons_layout.addWidget(self.cancel_button)
+        self.button_box.accepted.connect(self._start_processing)
+        self.button_box.rejected.connect(self.reject)
 
-        buttons_layout.addStretch()
+        main_layout.addWidget(self.button_box)
 
-        self.process_button = PushButton("开始处理")
-        self.process_button.setIcon(FluentIcon.PLAY)
-        self.process_button.setEnabled(False)
-        self.process_button.clicked.connect(self._start_processing)
-        buttons_layout.addWidget(self.process_button)
-
-        layout.addLayout(buttons_layout)
+        self.process_button = self.button_box.button(QDialogButtonBox.Ok)
+        self.cancel_button = self.button_box.button(QDialogButtonBox.Cancel)
 
     def _create_convert_tab(self):
         """创建格式转换选项卡"""
@@ -384,7 +379,7 @@ class MediaProcessingDialog(Dialog):
     def _browse_output(self):
         """浏览输出文件"""
         # 根据选项卡确定文件类型
-        current_tab = self.tabs.currentIndex()
+        current_tab = self.tab_bar.currentIndex()
         file_filter = ""
 
         if current_tab == 0:  # 格式转换
@@ -507,7 +502,7 @@ class MediaProcessingDialog(Dialog):
         input_name = os.path.splitext(os.path.basename(input_file))[0]
 
         # 根据当前选项卡确定输出文件格式
-        current_tab = self.tabs.currentIndex()
+        current_tab = self.tab_bar.currentIndex()
         output_ext = ""
 
         if current_tab == 0:  # 格式转换
@@ -634,7 +629,7 @@ class MediaProcessingDialog(Dialog):
         self.progress_bar.setFormat("处理中...")
 
         # 获取当前选项卡
-        current_tab = self.tabs.currentIndex()
+        current_tab = self.tab_bar.currentIndex()
 
         # 根据选项卡执行相应操作
         if current_tab == 0:  # 格式转换
@@ -867,7 +862,7 @@ class MediaProcessingDialog(Dialog):
         self.output_file_input.setEnabled(False)
         self.browse_input_button.setEnabled(False)
         self.browse_output_button.setEnabled(False)
-        self.tabs.setEnabled(False)
+        self.tab_bar.setEnabled(False)
         self.process_button.setEnabled(False)
         self.cancel_button.setText("取消处理")
 
@@ -877,7 +872,7 @@ class MediaProcessingDialog(Dialog):
         self.output_file_input.setEnabled(True)
         self.browse_input_button.setEnabled(True)
         self.browse_output_button.setEnabled(True)
-        self.tabs.setEnabled(True)
+        self.tab_bar.setEnabled(True)
         self.process_button.setEnabled(True)
         self.cancel_button.setText("取消")
         self.progress_bar.setVisible(False)

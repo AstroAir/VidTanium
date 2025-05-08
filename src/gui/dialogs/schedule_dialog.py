@@ -1,25 +1,24 @@
 from PySide6.QtWidgets import (
     QVBoxLayout, QHBoxLayout, QWidget, QButtonGroup,
-    QFormLayout, QAbstractItemView
+    QFormLayout, QAbstractItemView, QDialog, QDialogButtonBox
 )
 from PySide6.QtCore import Qt, QDateTime, Signal, Slot
 from datetime import datetime, timedelta
 import logging
 
 from qfluentwidgets import (
-    Dialog, LineEdit, PushButton, RadioButton, CheckBox,
+    LineEdit, PushButton, RadioButton, CheckBox,
     SpinBox, ComboBox, CardWidget, StrongBodyLabel, BodyLabel,
     DateTimeEdit, SubtitleLabel, FluentIcon, InfoBar,
     InfoBarPosition, TransparentGroupBox, SimpleCardWidget
 )
-from qfluentwidgets import FluentStyleSheet
 
 from src.core.scheduler import SchedulerTask, TaskType
 
 logger = logging.getLogger(__name__)
 
 
-class ScheduleDialog(Dialog):
+class ScheduleDialog(QDialog):
     """计划任务设置对话框"""
 
     # 信号定义
@@ -33,22 +32,21 @@ class ScheduleDialog(Dialog):
 
         self.setWindowTitle("计划下载任务")
         self.setMinimumSize(550, 480)
+        self.resize(550, 480)
+        self.setWindowIcon(FluentIcon.CALENDAR.icon())
 
         self._create_ui()
-        self.setStyleSheet(FluentStyleSheet.LIGHT)
 
     def _create_ui(self):
         """创建界面"""
-        self.card = SimpleCardWidget(self)
-        self.vBoxLayout.addWidget(self.card)
-
-        layout = QVBoxLayout(self.card)
-        layout.setContentsMargins(20, 15, 20, 15)
-        layout.setSpacing(15)
+        # 主布局
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 15, 20, 15)
+        main_layout.setSpacing(15)
 
         # 标题
         self.title_label = SubtitleLabel("计划下载任务")
-        layout.addWidget(self.title_label)
+        main_layout.addWidget(self.title_label)
 
         # 任务信息
         info_card = CardWidget()
@@ -67,7 +65,7 @@ class ScheduleDialog(Dialog):
         info_layout.addRow("任务名称:", self.name_input)
 
         info_card.setLayout(info_layout)
-        layout.addWidget(info_card)
+        main_layout.addWidget(info_card)
 
         # 计划选项
         schedule_card = CardWidget()
@@ -181,26 +179,22 @@ class ScheduleDialog(Dialog):
         schedule_layout.addLayout(task_options_layout)
 
         schedule_card.setLayout(schedule_layout)
-        layout.addWidget(schedule_card)
+        main_layout.addWidget(schedule_card)
 
-        # 按钮
-        buttons_layout = QHBoxLayout()
-        buttons_layout.setContentsMargins(0, 10, 0, 0)
+        # 使用标准按钮盒
+        self.button_box = QDialogButtonBox(
+            QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.button_box.button(QDialogButtonBox.Ok).setText("确定")
+        self.button_box.button(QDialogButtonBox.Ok).setIcon(FluentIcon.ACCEPT)
+        self.button_box.button(QDialogButtonBox.Cancel).setText("取消")
+        self.button_box.button(
+            QDialogButtonBox.Cancel).setIcon(FluentIcon.CANCEL)
 
-        self.cancel_button = PushButton("取消")
-        self.cancel_button.setIcon(FluentIcon.CANCEL)
-        self.cancel_button.clicked.connect(self.reject)
-        buttons_layout.addWidget(self.cancel_button)
+        # 连接按钮信号
+        self.button_box.accepted.connect(self._on_ok)
+        self.button_box.rejected.connect(self.reject)
 
-        buttons_layout.addStretch()
-
-        self.ok_button = PushButton("确定")
-        self.ok_button.setIcon(FluentIcon.ACCEPT)
-        self.ok_button.clicked.connect(self._on_ok)
-        self.ok_button.setDefault(True)
-        buttons_layout.addWidget(self.ok_button)
-
-        layout.addLayout(buttons_layout)
+        main_layout.addWidget(self.button_box)
 
         # 初始化UI状态
         self.one_time_radio.setChecked(True)

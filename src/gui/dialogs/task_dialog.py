@@ -1,42 +1,43 @@
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFileDialog, QFormLayout,
+    QDialogButtonBox, QMessageBox, QProgressDialog, QWidget
 )
 from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtGui import QIcon
 import os
 
 from qfluentwidgets import (
-    Dialog, PushButton, LineEdit, CheckBox, SpinBox, ComboBox,
+    PushButton, LineEdit, CheckBox, SpinBox, ComboBox,
     CardWidget, StrongBodyLabel, InfoBar, InfoBarPosition,
-    SimpleCardWidget, SubtitleLabel, FluentIcon, FluentStyleSheet
+    SimpleCardWidget, SubtitleLabel, FluentIcon
 )
 
 
-class TaskDialog(Dialog):
+class TaskDialog(QDialog):
     """新建任务对话框"""
 
     def __init__(self, settings, parent=None):
-        super().__init__("新建下载任务", "", parent)
+        super().__init__(parent)
 
         self.settings = settings
+
+        self.setWindowTitle("新建下载任务")
         self.setMinimumSize(550, 480)
+        self.resize(550, 480)
+        self.setWindowIcon(FluentIcon.DOWNLOAD.icon())
 
         self._create_ui()
-        self.setStyleSheet(FluentStyleSheet.LIGHT)
 
     def _create_ui(self):
         """创建界面"""
-        # 创建卡片容器
-        self.card = SimpleCardWidget(self)
-        self.vBoxLayout.addWidget(self.card)
-
-        layout = QVBoxLayout(self.card)
-        layout.setContentsMargins(20, 15, 20, 15)
-        layout.setSpacing(15)
+        # 主布局
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 15, 20, 15)
+        main_layout.setSpacing(15)
 
         # 标题
         self.title_label = SubtitleLabel("新建下载任务")
-        layout.addWidget(self.title_label)
+        main_layout.addWidget(self.title_label)
 
         # 基本信息卡片
         basic_card = CardWidget()
@@ -44,6 +45,7 @@ class TaskDialog(Dialog):
         basic_layout.setContentsMargins(15, 15, 15, 15)
         basic_layout.setSpacing(12)
         basic_layout.setLabelAlignment(Qt.AlignRight)
+        basic_layout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
 
         # 添加卡片标题
         basic_title = StrongBodyLabel("基本信息")
@@ -92,7 +94,7 @@ class TaskDialog(Dialog):
         basic_layout.addRow("输出文件:", output_layout)
 
         basic_card.setLayout(basic_layout)
-        layout.addWidget(basic_card)
+        main_layout.addWidget(basic_card)
 
         # 高级选项卡片
         advanced_card = CardWidget()
@@ -100,6 +102,7 @@ class TaskDialog(Dialog):
         advanced_layout.setContentsMargins(15, 15, 15, 15)
         advanced_layout.setSpacing(12)
         advanced_layout.setLabelAlignment(Qt.AlignRight)
+        advanced_layout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
 
         # 添加卡片标题
         advanced_title = StrongBodyLabel("高级选项")
@@ -119,26 +122,22 @@ class TaskDialog(Dialog):
         advanced_layout.addRow("", self.auto_start_check)
 
         advanced_card.setLayout(advanced_layout)
-        layout.addWidget(advanced_card)
+        main_layout.addWidget(advanced_card)
 
-        # 按钮
-        buttons_layout = QHBoxLayout()
-        buttons_layout.setContentsMargins(0, 10, 0, 0)
+        # 使用标准按钮盒
+        self.button_box = QDialogButtonBox(
+            QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.button_box.button(QDialogButtonBox.Ok).setText("确定")
+        self.button_box.button(QDialogButtonBox.Ok).setIcon(FluentIcon.ACCEPT)
+        self.button_box.button(QDialogButtonBox.Cancel).setText("取消")
+        self.button_box.button(
+            QDialogButtonBox.Cancel).setIcon(FluentIcon.CANCEL)
 
-        self.cancel_button = PushButton("取消")
-        self.cancel_button.setIcon(FluentIcon.CANCEL)
-        self.cancel_button.clicked.connect(self.reject)
-        buttons_layout.addWidget(self.cancel_button)
+        # 连接信号
+        self.button_box.accepted.connect(self._on_ok)
+        self.button_box.rejected.connect(self.reject)
 
-        buttons_layout.addStretch()
-
-        self.ok_button = PushButton("确定")
-        self.ok_button.setIcon(FluentIcon.ACCEPT)
-        self.ok_button.clicked.connect(self._on_ok)
-        self.ok_button.setDefault(True)
-        buttons_layout.addWidget(self.ok_button)
-
-        layout.addLayout(buttons_layout)
+        main_layout.addWidget(self.button_box)
 
         # 填充默认值
         self._fill_defaults()
@@ -190,7 +189,6 @@ class TaskDialog(Dialog):
 
     def _show_error(self, message):
         """显示错误消息"""
-        from PySide6.QtWidgets import QMessageBox
         QMessageBox.warning(self, "输入错误", message)
 
     def _extract_m3u8_info(self):
@@ -201,9 +199,6 @@ class TaskDialog(Dialog):
             return
 
         # 显示加载对话框
-        from PySide6.QtWidgets import QProgressDialog
-        from PySide6.QtCore import Qt
-
         progress = QProgressDialog("正在分析M3U8...", "取消", 0, 0, self)
         progress.setWindowModality(Qt.WindowModal)
         progress.setWindowTitle("提取中")
@@ -252,7 +247,6 @@ class TaskDialog(Dialog):
                     self.name_input.setText(name)
 
             # 显示提取结果
-            from PySide6.QtWidgets import QMessageBox
             QMessageBox.information(
                 self,
                 "提取成功",

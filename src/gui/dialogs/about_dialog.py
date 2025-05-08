@@ -1,27 +1,36 @@
-from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QStackedWidget
+from PySide6.QtWidgets import (QVBoxLayout, QHBoxLayout, QWidget, QStackedWidget, 
+                              QDialog, QDialogButtonBox)
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont, QIcon
 
 from qfluentwidgets import (
-    FluentIcon, Dialog, PushButton,
-    SimpleCardWidget, TextEdit, IconWidget, ImageLabel,
-    BodyLabel, TitleLabel, CaptionLabel, TabBar
+    FluentIcon, PushButton, SimpleCardWidget, TextEdit, 
+    IconWidget, ImageLabel, BodyLabel, TitleLabel, 
+    CaptionLabel, TabBar
 )
 from qfluentwidgets import FluentStyleSheet
 
 
-class AboutDialog(Dialog):
+class AboutDialog(QDialog):
     """关于对话框"""
 
     def __init__(self, parent=None):
-        super().__init__("关于 VidTanium", "", parent)
+        super().__init__(parent)
 
         self.setWindowTitle("关于")
         self.setMinimumSize(600, 450)
         self.setWindowIcon(QIcon(":/images/logo.png"))
-
+        
+        # 创建主布局
+        self.main_layout = QVBoxLayout(self)
+        self.content_layout = QVBoxLayout()
+        self.button_layout = QHBoxLayout()
+        
+        # 设置布局
+        self.main_layout.addLayout(self.content_layout)
+        self.main_layout.addLayout(self.button_layout)
+        
         self._create_ui()
-        # self.setStyleSheet(FluentStyleSheet.LIGHT)
 
     def _create_ui(self):
         """创建界面"""
@@ -47,13 +56,13 @@ class AboutDialog(Dialog):
         title_layout.addLayout(info_layout)
         title_layout.addStretch()
 
-        self.viewLayout.addLayout(title_layout)
+        self.content_layout.addLayout(title_layout)
 
         # 分隔线
         self.separator = QWidget()
         self.separator.setFixedHeight(1)
         self.separator.setStyleSheet("background-color: #e0e0e0;")
-        self.viewLayout.addWidget(self.separator)
+        self.content_layout.addWidget(self.separator)
 
         # 创建TabBar和QStackedWidget组合
         tab_layout = QVBoxLayout()
@@ -92,14 +101,15 @@ class AboutDialog(Dialog):
         self.tab_bar.currentChanged.connect(
             self.stacked_widget.setCurrentIndex)
 
-        self.viewLayout.addLayout(tab_layout)
+        self.content_layout.addLayout(tab_layout)
 
-        # 按钮
-        self.buttonLayout.addStretch()
-
-        self.close_button = PushButton('关闭')
-        self.close_button.clicked.connect(self.accept)
-        self.buttonLayout.addWidget(self.close_button)
+        # 使用标准对话框按钮
+        self.button_box = QDialogButtonBox(QDialogButtonBox.Close)
+        self.button_box.rejected.connect(self.reject)
+        
+        # 添加到按钮布局
+        self.button_layout.addStretch()
+        self.button_layout.addWidget(self.button_box)
 
     def _create_about_tab(self):
         """创建关于选项卡"""

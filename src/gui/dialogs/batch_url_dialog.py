@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import (
-    QVBoxLayout, QHBoxLayout, QLabel, QWidget, QFileDialog,
+    QVBoxLayout, QHBoxLayout, QLabel, QWidget, QFileDialog, QDialog, QDialogButtonBox,
     QApplication, QFormLayout, QButtonGroup, QMessageBox
 )
 from PySide6.QtCore import Qt, Signal, Slot
@@ -8,19 +8,18 @@ import os
 import logging
 
 from qfluentwidgets import (
-    Dialog, TabWidget, PushButton, LineEdit, CheckBox,
+    TabWidget, PushButton, LineEdit, CheckBox,
     TextEdit, SpinBox, ComboBox, CardWidget, BodyLabel,
     SubtitleLabel, StrongBodyLabel, ProgressBar, FluentIcon,
     InfoBarPosition, SimpleCardWidget, InfoBar
 )
-from qfluentwidgets import FluentStyleSheet
 
 from src.core.url_extractor import URLExtractor
 
 logger = logging.getLogger(__name__)
 
 
-class BatchURLDialog(Dialog):
+class BatchURLDialog(QDialog):
     """批量URL导入对话框"""
 
     # 导入URL信号
@@ -35,27 +34,24 @@ class BatchURLDialog(Dialog):
         self.setWindowTitle("批量导入URL")
         self.setMinimumSize(750, 550)
         self.resize(750, 550)
+        self.setWindowIcon(QIcon(":/images/link.png"))  # 假设有这个图标资源
 
         self._create_ui()
-        self.setStyleSheet(FluentStyleSheet.LIGHT)
 
     def _create_ui(self):
         """创建界面"""
-        self.card = SimpleCardWidget(self)
-        self.vBoxLayout.addWidget(self.card)
-
-        layout = QVBoxLayout(self.card)
-        layout.setContentsMargins(20, 15, 20, 15)
-        layout.setSpacing(15)
+        # 主布局
+        main_layout = QVBoxLayout(self)
+        main_layout.setSpacing(12)
+        main_layout.setContentsMargins(15, 15, 15, 15)
 
         # 标题
         self.title_label = SubtitleLabel("批量导入URL")
-        layout.addWidget(self.title_label)
+        main_layout.addWidget(self.title_label)
 
         # 创建选项卡
         self.tabs = TabWidget()
-        self.tabs.setFixedHeight(280)
-
+        
         # 文本输入选项卡
         self.text_tab = QWidget()
         self._create_text_tab()
@@ -71,7 +67,7 @@ class BatchURLDialog(Dialog):
         self._create_web_tab()
         self.tabs.addTab(self.web_tab, "从网页抓取")
 
-        layout.addWidget(self.tabs)
+        main_layout.addWidget(self.tabs)
 
         # URL列表预览
         preview_card = CardWidget(self)
@@ -92,25 +88,20 @@ class BatchURLDialog(Dialog):
         self.url_count_label = BodyLabel("已检测到 0 个URL")
         preview_layout.addWidget(self.url_count_label)
 
-        layout.addWidget(preview_card)
+        main_layout.addWidget(preview_card)
 
-        # 按钮
-        buttons_layout = QHBoxLayout()
-        buttons_layout.setContentsMargins(0, 10, 0, 0)
-
-        self.cancel_button = PushButton("取消")
-        self.cancel_button.clicked.connect(self.reject)
-        buttons_layout.addWidget(self.cancel_button)
-
-        buttons_layout.addStretch()
-
-        self.import_button = PushButton("导入")
-        self.import_button.setIcon(FluentIcon.DOWNLOAD)
-        self.import_button.setEnabled(False)
-        self.import_button.clicked.connect(self._import_urls)
-        buttons_layout.addWidget(self.import_button)
-
-        layout.addLayout(buttons_layout)
+        # 添加标准按钮
+        self.button_box = QDialogButtonBox(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        self.button_box.button(QDialogButtonBox.Ok).setText("导入")
+        self.button_box.button(QDialogButtonBox.Ok).setIcon(FluentIcon.DOWNLOAD)
+        self.button_box.button(QDialogButtonBox.Ok).setEnabled(False)
+        self.button_box.button(QDialogButtonBox.Cancel).setText("取消")
+        
+        # 连接按钮信号
+        self.button_box.accepted.connect(self._import_urls)
+        self.button_box.rejected.connect(self.reject)
+        
+        main_layout.addWidget(self.button_box)
 
     def _create_text_tab(self):
         """创建文本输入选项卡"""
@@ -496,7 +487,7 @@ class BatchURLDialog(Dialog):
         self.url_count_label.setText(f"已检测到 {len(urls)} 个URL")
 
         # 启用/禁用导入按钮
-        self.import_button.setEnabled(len(urls) > 0)
+        self.button_box.button(QDialogButtonBox.Ok).setEnabled(len(urls) > 0)
 
     def _import_urls(self):
         """导入URL"""

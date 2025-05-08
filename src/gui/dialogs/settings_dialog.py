@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QTabWidget,
     QWidget, QFormLayout, QLabel, QLineEdit,
-    QGroupBox, QFileDialog
+    QGroupBox, QFileDialog, QDialogButtonBox
 )
 from PySide6.QtCore import Qt, Signal, Slot
 import os
@@ -21,6 +21,8 @@ class SettingsDialog(QDialog):
         self.settings = settings
         self.setWindowTitle("Settings")
         self.setMinimumSize(600, 400)
+        self.resize(650, 500)  # 设置合适的默认大小
+        self.setWindowIcon(FluentIcon.SETTING.icon())  # 添加设置图标
 
         self._create_ui()
         self._load_settings()
@@ -28,9 +30,12 @@ class SettingsDialog(QDialog):
     def _create_ui(self):
         """Create user interface"""
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(20, 15, 20, 15)
+        layout.setSpacing(15)
 
         # Tabs
         self.tab_widget = QTabWidget()
+        self.tab_widget.setDocumentMode(True)  # 使标签看起来更现代
 
         # General tab
         self.general_tab = QWidget()
@@ -54,34 +59,39 @@ class SettingsDialog(QDialog):
 
         layout.addWidget(self.tab_widget)
 
-        # Buttons
-        buttons_layout = QHBoxLayout()
+        # 使用标准按钮盒
+        self.button_box = QDialogButtonBox(
+            QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
 
+        # 创建重置按钮并添加到按钮盒
         self.reset_button = PushButton("Reset to Default")
         self.reset_button.setIcon(FluentIcon.SYNC)
         self.reset_button.clicked.connect(self._reset_settings)
-        buttons_layout.addWidget(self.reset_button)
+        self.button_box.addButton(
+            self.reset_button, QDialogButtonBox.ResetRole)
 
-        buttons_layout.addStretch()
+        # 设置按钮文本和图标
+        self.button_box.button(QDialogButtonBox.Ok).setText("OK")
+        self.button_box.button(QDialogButtonBox.Ok).setIcon(FluentIcon.ACCEPT)
+        self.button_box.button(QDialogButtonBox.Cancel).setText("Cancel")
 
-        self.cancel_button = PushButton("Cancel")
-        self.cancel_button.clicked.connect(self.reject)
-        buttons_layout.addWidget(self.cancel_button)
+        # 连接信号
+        self.button_box.accepted.connect(self._save_settings)
+        self.button_box.rejected.connect(self.reject)
 
-        self.ok_button = PushButton("OK")
-        self.ok_button.setIcon(FluentIcon.ACCEPT)
-        self.ok_button.clicked.connect(self._save_settings)
-        self.ok_button.setDefault(True)
-        buttons_layout.addWidget(self.ok_button)
-
-        layout.addLayout(buttons_layout)
+        layout.addWidget(self.button_box)
 
     def _create_general_tab(self):
         """Create general tab"""
-        layout = ExpandLayout(self.general_tab)
+        layout = QVBoxLayout(self.general_tab)
+        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setSpacing(15)
 
         # Basic settings
         form_layout = QFormLayout()
+        form_layout.setLabelAlignment(Qt.AlignRight)
+        form_layout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        form_layout.setSpacing(12)
 
         # Output directory
         output_layout = QHBoxLayout()
@@ -128,10 +138,15 @@ class SettingsDialog(QDialog):
 
     def _create_download_tab(self):
         """Create download tab"""
-        layout = ExpandLayout(self.download_tab)
+        layout = QVBoxLayout(self.download_tab)
+        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setSpacing(15)
 
         # Download settings
         form_layout = QFormLayout()
+        form_layout.setLabelAlignment(Qt.AlignRight)
+        form_layout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        form_layout.setSpacing(12)
 
         # Max concurrent tasks
         self.max_tasks_spin = SpinBox()
@@ -188,11 +203,16 @@ class SettingsDialog(QDialog):
 
     def _create_advanced_tab(self):
         """Create advanced tab"""
-        layout = ExpandLayout(self.advanced_tab)
+        layout = QVBoxLayout(self.advanced_tab)
+        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setSpacing(15)
 
         # Network settings
         network_group = QGroupBox("Network Settings")
         network_layout = QFormLayout()
+        network_layout.setLabelAlignment(Qt.AlignRight)
+        network_layout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        network_layout.setSpacing(12)
 
         # Proxy
         self.proxy_input = QLineEdit()
@@ -214,6 +234,9 @@ class SettingsDialog(QDialog):
         # External tools settings
         tools_group = QGroupBox("External Tools")
         tools_layout = QFormLayout()
+        tools_layout.setLabelAlignment(Qt.AlignRight)
+        tools_layout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        tools_layout.setSpacing(12)
 
         # FFmpeg path
         ffmpeg_layout = QHBoxLayout()
@@ -233,6 +256,9 @@ class SettingsDialog(QDialog):
         # Debug options
         debug_group = QGroupBox("Debug Options")
         debug_layout = QFormLayout()
+        debug_layout.setLabelAlignment(Qt.AlignRight)
+        debug_layout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        debug_layout.setSpacing(12)
 
         # Keep temp files
         self.keep_temp_files_check = CheckBox("Keep temporary files")
@@ -249,10 +275,15 @@ class SettingsDialog(QDialog):
 
     def _create_ui_tab(self):
         """Create UI tab"""
-        layout = ExpandLayout(self.ui_tab)
+        layout = QVBoxLayout(self.ui_tab)
+        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setSpacing(15)
 
         # UI settings
         form_layout = QFormLayout()
+        form_layout.setLabelAlignment(Qt.AlignRight)
+        form_layout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        form_layout.setSpacing(12)
 
         # Show detailed progress
         self.show_detailed_progress_check = CheckBox(
