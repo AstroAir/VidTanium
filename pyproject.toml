@@ -5,11 +5,16 @@ description = "A video player with a built-in downloader and a simple video edit
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "aiofiles>=24.1.0",
+    "aiosqlite>=0.21.0",
+    "bs4>=0.0.2",
     "loguru>=0.7.3",
+    "playwright>=1.52.0",
     "psutil>=7.0.0",
     "pycryptodome>=3.22.0",
     "pyside6>=6.9.0",
     "pyside6-fluent-widgets[full]>=1.7.7",
+    "pytest>=8.3.5",
     "requests>=2.32.3",
 ]
 [[tool.uv.index]]

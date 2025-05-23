@@ -1,5 +1,4 @@
 import re
-import os
 import requests
 from typing import List, Dict, Optional, Set
 from urllib.parse import urlparse, urljoin
@@ -10,7 +9,7 @@ class URLExtractor:
     """URL extractor for extracting URLs from various sources"""
 
     @staticmethod
-    def extract_urls_from_text(text: str, pattern: str = None) -> List[str]:
+    def extract_urls_from_text(text: str, pattern: Optional[str] = None) -> List[str]:
         """
         Extract URLs from text
 
@@ -47,7 +46,7 @@ class URLExtractor:
             urls = re.findall(url_pattern, text)
 
             # Process URLs starting with www, add http://
-            processed_urls = []
+            processed_urls: List[str] = []
             for url in urls:
                 if url.startswith("www."):
                     url = "http://" + url
@@ -57,7 +56,7 @@ class URLExtractor:
             return processed_urls
 
     @staticmethod
-    def extract_urls_from_file(file_path: str, pattern: str = None) -> List[str]:
+    def extract_urls_from_file(file_path: str, pattern: Optional[str] = None) -> List[str]:
         """
         Extract URLs from a file
 
@@ -82,8 +81,8 @@ class URLExtractor:
             return []
 
     @staticmethod
-    def extract_media_urls_from_webpage(url: str, headers: Dict[str, str] = None,
-                                        media_extensions: List[str] = None) -> List[str]:
+    def extract_media_urls_from_webpage(url: str, headers: Optional[Dict[str, str]] = None,
+                                        media_extensions: Optional[List[str]] = None) -> List[str]:
         """
         Extract media URLs from a webpage
 
@@ -115,7 +114,7 @@ class URLExtractor:
             logger.debug(f"Received {len(content)} characters from webpage")
 
             # Extract all URLs
-            all_urls = set()
+            all_urls: Set[str] = set()
 
             # Extract media file links
             for ext in media_extensions:
@@ -145,7 +144,7 @@ class URLExtractor:
             logger.debug(f"Found {len(matches)} m3u8 URLs in JavaScript code")
 
             # Return sorted URL list
-            result = sorted(list(all_urls))
+            result: List[str] = sorted(list(all_urls))
             logger.success(
                 f"Successfully extracted {len(result)} media URLs from webpage")
             return result
@@ -156,8 +155,8 @@ class URLExtractor:
             return []
 
     @staticmethod
-    def filter_urls(urls: List[str], include_pattern: str = None,
-                    exclude_pattern: str = None) -> List[str]:
+    def filter_urls(urls: List[str], include_pattern: Optional[str] = None,
+                    exclude_pattern: Optional[str] = None) -> List[str]:
         """
         Filter URLs based on patterns
 
@@ -175,7 +174,7 @@ class URLExtractor:
         if exclude_pattern:
             logger.debug(f"Using exclude pattern: {exclude_pattern}")
 
-        result = []
+        result: List[str] = []
 
         for url in urls:
             # Check exclude pattern

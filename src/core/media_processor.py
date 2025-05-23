@@ -1,29 +1,28 @@
 import os
 import subprocess
-import shutil
-import tempfile
-from typing import Dict, List, Tuple, Any, Optional
+import json
+from typing import Dict, List, Any, Optional
 from loguru import logger
 
 
 class MediaProcessor:
     """Media processor for video transcoding, editing and other operations"""
 
-    def __init__(self, ffmpeg_path=None):
+    def __init__(self, ffmpeg_path: Optional[str] = None):
         """
         Initialize media processor
 
         Args:
             ffmpeg_path: Path to FFmpeg executable
         """
-        self.ffmpeg_path = ffmpeg_path
-        self.last_command = ""
-        self.last_output = ""
+        self.ffmpeg_path: Optional[str] = ffmpeg_path
+        self.last_command: str = ""
+        self.last_output: str = ""
         logger.debug(
             f"MediaProcessor initialized with FFmpeg path: {ffmpeg_path or 'system default'}")
 
     def convert_format(self, input_file: str, output_file: str,
-                       format_options: Dict[str, Any] = None) -> Dict[str, Any]:
+                       format_options: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Convert video format
 
@@ -48,7 +47,7 @@ class MediaProcessor:
             return {"success": False, "error": f"Input file does not exist: {input_file}"}
 
         # Default options
-        options = {
+        options: Dict[str, Any] = {
             "codec": "copy",
             "audio_codec": "copy",
             "bitrate": None,
@@ -63,7 +62,7 @@ class MediaProcessor:
             logger.debug(f"Format options applied: {format_options}")
 
         # Build command
-        cmd = [self.ffmpeg_path or "ffmpeg", "-i", input_file]
+        cmd: List[str] = [self.ffmpeg_path or "ffmpeg", "-i", input_file]
 
         # Add video encoding options
         if options["codec"] != "copy":
@@ -108,7 +107,7 @@ class MediaProcessor:
         return self._run_command(cmd)
 
     def clip_video(self, input_file: str, output_file: str,
-                   start_time: str = None, duration: str = None) -> Dict[str, Any]:
+                   start_time: Optional[str] = None, duration: Optional[str] = None) -> Dict[str, Any]:
         """
         Clip video
 
@@ -130,7 +129,7 @@ class MediaProcessor:
             return {"success": False, "error": f"Input file does not exist: {input_file}"}
 
         # Build command
-        cmd = [self.ffmpeg_path or "ffmpeg", "-i", input_file]
+        cmd: List[str] = [self.ffmpeg_path or "ffmpeg", "-i", input_file]
 
         # Add start time
         if start_time:
@@ -150,7 +149,7 @@ class MediaProcessor:
         return self._run_command(cmd)
 
     def extract_audio(self, input_file: str, output_file: str,
-                      audio_format: str = "mp3", audio_bitrate: str = None) -> Dict[str, Any]:
+                      audio_format: str = "mp3", audio_bitrate: Optional[str] = None) -> Dict[str, Any]:
         """
         Extract audio track from video
 
@@ -172,7 +171,8 @@ class MediaProcessor:
             return {"success": False, "error": f"Input file does not exist: {input_file}"}
 
         # Build command
-        cmd = [self.ffmpeg_path or "ffmpeg", "-i", input_file, "-vn"]
+        cmd: List[str] = [self.ffmpeg_path or "ffmpeg",
+                          "-i", input_file, "-vn"]
 
         # Add audio format
         if audio_format:
@@ -212,7 +212,7 @@ class MediaProcessor:
             return {"success": False, "error": "No metadata provided"}
 
         # Build command
-        cmd = [self.ffmpeg_path or "ffmpeg", "-i", input_file]
+        cmd: List[str] = [self.ffmpeg_path or "ffmpeg", "-i", input_file]
 
         # Add metadata
         for key, value in metadata.items():
@@ -228,7 +228,7 @@ class MediaProcessor:
         return self._run_command(cmd)
 
     def compress_video(self, input_file: str, output_file: str,
-                       target_size_mb: int = None, quality: int = None) -> Dict[str, Any]:
+                       target_size_mb: Optional[int] = None, quality: Optional[int] = None) -> Dict[str, Any]:
         """
         Compress video
 
@@ -250,7 +250,7 @@ class MediaProcessor:
             return {"success": False, "error": f"Input file does not exist: {input_file}"}
 
         # Build command
-        cmd = [self.ffmpeg_path or "ffmpeg", "-i", input_file]
+        cmd: List[str] = [self.ffmpeg_path or "ffmpeg", "-i", input_file]
 
         if target_size_mb:
             # Get video duration
@@ -298,8 +298,14 @@ class MediaProcessor:
             return {"success": False, "error": f"File does not exist: {video_file}"}
 
         # Use ffprobe to get video information
-        cmd = [
-            self.ffmpeg_path[:-5] + "probe" if self.ffmpeg_path else "ffprobe",
+        probe_path: str = ""
+        if self.ffmpeg_path:
+            probe_path = self.ffmpeg_path[:-5] + "probe"
+        else:
+            probe_path = "ffprobe"
+
+        cmd: List[str] = [
+            probe_path,
             "-v", "quiet",
             "-print_format", "json",
             "-show_format",
@@ -313,7 +319,6 @@ class MediaProcessor:
             return result
 
         # Parse output
-        import json
         try:
             info = json.loads(result["output"])
             logger.debug(
@@ -359,7 +364,7 @@ class MediaProcessor:
         logger.info(f"Executing command: {self.last_command}")
 
         try:
-            result = subprocess.run(
+            process_result = subprocess.run(
                 command,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -367,21 +372,21 @@ class MediaProcessor:
                 check=False
             )
 
-            self.last_output = result.stderr
+            self.last_output = process_result.stderr
 
-            if result.returncode != 0:
+            if process_result.returncode != 0:
                 logger.error(
-                    f"Command execution failed with return code {result.returncode}")
-                logger.error(f"Error output: {result.stderr}")
-                return {"success": False, "error": result.stderr}
+                    f"Command execution failed with return code {process_result.returncode}")
+                logger.error(f"Error output: {process_result.stderr}")
+                return {"success": False, "error": process_result.stderr}
 
             logger.success(
-                f"Command executed successfully (return code: {result.returncode})")
-            if len(result.stderr) > 0:
+                f"Command executed successfully (return code: {process_result.returncode})")
+            if len(process_result.stderr) > 0:
                 logger.debug(
-                    f"Command output: {result.stderr[:500]}{'...' if len(result.stderr) > 500 else ''}")
+                    f"Command output: {process_result.stderr[:500]}{'...' if len(process_result.stderr) > 500 else ''}")
 
-            return {"success": True, "output": result.stderr}
+            return {"success": True, "output": process_result.stderr}
 
         except Exception as e:
             logger.error(f"Error executing command: {e}", exc_info=True)
@@ -406,9 +411,6 @@ class MediaProcessor:
             dict: Result with success flag and message
         """
         try:
-            import os
-            from loguru import logger
-
             logger.info(f"批量转换文件: {input_file}")
 
             if not os.path.exists(input_file):
@@ -439,7 +441,8 @@ class MediaProcessor:
             logger.info(f"输出文件: {output_file}")
 
             # 构建 FFmpeg 命令
-            command = [self.ffmpeg_path or "ffmpeg", "-i", input_file]
+            command: List[str] = [
+                self.ffmpeg_path or "ffmpeg", "-i", input_file]
 
             # 添加视频编码选项
             video_codec = options.get("video_codec", "copy")
@@ -486,8 +489,7 @@ class MediaProcessor:
             logger.debug(f"执行命令: {' '.join(command)}")
 
             # 执行 FFmpeg 命令
-            import subprocess
-            result = subprocess.run(
+            subprocess.run(
                 command,
                 check=True,
                 stdout=subprocess.PIPE,

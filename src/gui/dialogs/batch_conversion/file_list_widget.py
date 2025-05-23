@@ -3,10 +3,11 @@ from PySide6.QtWidgets import (
     QFileDialog, QGroupBox
 )
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QIcon
+# from PySide6.QtGui import QIcon # Unused import
 import os
+from typing import List, Optional
 
-from qfluentwidgets import (
+from qfluentwidgets import (  # type: ignore
     PushButton, FluentIcon, InfoBar, InfoBarPosition
 )
 
@@ -17,10 +18,10 @@ class FileListWidget(QWidget):
     # 文件列表变化信号
     file_list_changed = Signal(int)  # 参数: 文件数量
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
 
-        self.input_files = []
+        self.input_files: List[str] = []
         self._create_ui()
 
     def _create_ui(self):
@@ -35,7 +36,8 @@ class FileListWidget(QWidget):
 
         # 文件列表
         self.files_list = QListWidget()
-        self.files_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.files_list.setSelectionMode(
+            QAbstractItemView.SelectionMode.ExtendedSelection)
         self.files_list.setAlternatingRowColors(True)
         files_layout.addWidget(self.files_list, 1)
 
@@ -59,7 +61,8 @@ class FileListWidget(QWidget):
         file_buttons_layout.addWidget(self.remove_files_button)
 
         self.clear_files_button = PushButton("清空全部")
-        self.clear_files_button.setIcon(FluentIcon.CLEAR)
+        # Assuming FluentIcon.CLEAR is valid
+        self.clear_files_button.setIcon(FluentIcon.BRUSH)
         self.clear_files_button.clicked.connect(self.clear_files)
         file_buttons_layout.addWidget(self.clear_files_button)
 
@@ -69,7 +72,7 @@ class FileListWidget(QWidget):
     def _add_files(self):
         """添加文件到列表"""
         file_dialog = QFileDialog(self)
-        file_dialog.setFileMode(QFileDialog.ExistingFiles)
+        file_dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
         file_dialog.setNameFilter(
             "媒体文件 (*.mp4 *.mkv *.avi *.mov *.flv *.webm *.ts *.m4v *.3gp *.wmv)")
 
@@ -116,10 +119,10 @@ class FileListWidget(QWidget):
 
             self._notify_file_list_changed()
 
-            InfoBar.success(
+            InfoBar.success(  # type: ignore
                 title="文件已添加",
                 content=f"从文件夹中添加了 {added_files} 个媒体文件",
-                orient=Qt.Horizontal,
+                orient=Qt.Orientation.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
                 duration=3000,
@@ -131,7 +134,7 @@ class FileListWidget(QWidget):
         selected_items = self.files_list.selectedItems()
 
         for item in selected_items:
-            file_path = item.toolTip()
+            file_path = item.toolTip()  # Assuming toolTip stores the full path
             if file_path in self.input_files:
                 self.input_files.remove(file_path)
             self.files_list.takeItem(self.files_list.row(item))
@@ -148,6 +151,6 @@ class FileListWidget(QWidget):
         """发出文件列表变化信号"""
         self.file_list_changed.emit(len(self.input_files))
 
-    def get_input_files(self):
+    def get_input_files(self) -> List[str]:
         """获取输入文件列表"""
         return self.input_files

@@ -2,10 +2,10 @@ from PySide6.QtWidgets import (
     QWidget, QHBoxLayout, QFormLayout, QFileDialog
 )
 from PySide6.QtCore import Signal
-from qfluentwidgets import (
+from typing import Optional
+from qfluentwidgets import (  # type: ignore
     PushButton, ComboBox, LineEdit, CheckBox, FluentIcon
 )
-import os
 
 
 class OutputSettingsWidget(QWidget):
@@ -14,7 +14,7 @@ class OutputSettingsWidget(QWidget):
     # 设置变更信号
     settings_changed = Signal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
         self._create_ui()
 
@@ -22,7 +22,8 @@ class OutputSettingsWidget(QWidget):
         """创建输出设置界面"""
         # 输出设置布局
         layout = QFormLayout(self)
-        layout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        layout.setFieldGrowthPolicy(
+            QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         layout.setSpacing(12)
         layout.setContentsMargins(0, 0, 0, 0)
 
@@ -71,22 +72,22 @@ class OutputSettingsWidget(QWidget):
             self.output_dir_input.setText(output_dir)
             self.settings_changed.emit()
 
-    def set_output_directory(self, directory):
+    def set_output_directory(self, directory: str):
         """设置输出目录"""
         self.output_dir_input.setText(directory)
 
-    def get_output_format(self):
+    def get_output_format(self) -> str:
         """获取输出格式"""
         return self.format_combo.currentText().lower()
 
-    def get_output_directory(self):
+    def get_output_directory(self) -> str:
         """获取输出目录"""
         return self.output_dir_input.text()
 
-    def get_resolution(self):
+    def get_resolution(self) -> str:
         """获取分辨率设置"""
         return self.resolution_combo.currentText()
 
-    def get_keep_original(self):
+    def get_keep_original(self) -> bool:
         """获取是否保留原始文件设置"""
         return self.keep_original_check.isChecked()

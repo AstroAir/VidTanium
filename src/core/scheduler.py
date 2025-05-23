@@ -5,7 +5,7 @@ import json
 import os
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict, List, Optional, Callable, Any
+from typing import Dict, List, Optional, Callable, Any, TypeVar
 from loguru import logger
 
 
@@ -17,17 +17,20 @@ class TaskType(Enum):
     INTERVAL = "interval"  # Interval-based recurring task
 
 
+T = TypeVar('T', bound='SchedulerTask')
+
+
 class SchedulerTask:
     """Scheduler task class"""
 
     def __init__(self,
-                 task_id: str = None,
-                 name: str = None,
+                 task_id: Optional[str] = None,
+                 name: Optional[str] = None,
                  task_type: TaskType = TaskType.ONE_TIME,
-                 data: Dict[str, Any] = None,
-                 first_run: datetime = None,
+                 data: Optional[Dict[str, Any]] = None,
+                 first_run: Optional[datetime] = None,
                  interval: int = 0,
-                 days: List[int] = None,
+                 days: Optional[List[int]] = None,
                  enabled: bool = True):
         """
         Initialize scheduler task
@@ -42,16 +45,16 @@ class SchedulerTask:
             days: Weekly schedule (0-6, where 0 is Monday)
             enabled: Whether task is enabled
         """
-        self.task_id = task_id or str(uuid.uuid4())
-        self.name = name or f"Task-{self.task_id[:8]}"
-        self.task_type = task_type
-        self.data = data or {}
-        self.first_run = first_run or datetime.now()
-        self.interval = interval
-        self.days = days or []
-        self.enabled = enabled
-        self.last_run = None
-        self.next_run = self._calculate_next_run()
+        self.task_id: str = task_id or str(uuid.uuid4())
+        self.name: str = name or f"Task-{self.task_id[:8]}"
+        self.task_type: TaskType = task_type
+        self.data: Dict[str, Any] = data or {}
+        self.first_run: datetime = first_run or datetime.now()
+        self.interval: int = interval
+        self.days: List[int] = days or []
+        self.enabled: bool = enabled
+        self.last_run: Optional[datetime] = None
+        self.next_run: Optional[datetime] = self._calculate_next_run()
 
     def _calculate_next_run(self) -> Optional[datetime]:
         """Calculate the next run time"""
@@ -158,17 +161,17 @@ class SchedulerTask:
 
             return None
 
-    def mark_executed(self):
+    def mark_executed(self) -> None:
         """Mark task as executed"""
         self.last_run = datetime.now()
         self.next_run = self._calculate_next_run()
 
-    def enable(self):
+    def enable(self) -> None:
         """Enable task"""
         self.enabled = True
         self.next_run = self._calculate_next_run()
 
-    def disable(self):
+    def disable(self) -> None:
         """Disable task"""
         self.enabled = False
         self.next_run = None
@@ -196,15 +199,24 @@ class SchedulerTask:
         last_run = datetime.fromisoformat(
             data["last_run"]) if data.get("last_run") else None
 
+        task_id: Optional[str] = data.get("task_id")
+        name: Optional[str] = data.get("name")
+        task_type_val: str = data.get("task_type", "one_time")
+        task_type: TaskType = TaskType(task_type_val)
+        task_data: Dict[str, Any] = data.get("data", {})
+        interval: int = data.get("interval", 0)
+        days: List[int] = data.get("days", [])
+        enabled: bool = data.get("enabled", True)
+
         task = cls(
-            task_id=data.get("task_id"),
-            name=data.get("name"),
-            task_type=TaskType(data.get("task_type", "one_time")),
-            data=data.get("data", {}),
+            task_id=task_id,
+            name=name,
+            task_type=task_type,
+            data=task_data,
             first_run=first_run,
-            interval=data.get("interval", 0),
-            days=data.get("days", []),
-            enabled=data.get("enabled", True)
+            interval=interval,
+            days=days,
+            enabled=enabled
         )
 
         task.last_run = last_run
@@ -216,7 +228,7 @@ class SchedulerTask:
 class TaskScheduler:
     """Task scheduler"""
 
-    def __init__(self, config_dir: str = None):
+    def __init__(self, config_dir: Optional[str] = None):
         """
         Initialize the task scheduler
 
@@ -238,20 +250,20 @@ class TaskScheduler:
         self.tasks_file = self.config_dir / "scheduled_tasks.json"
 
         # Task dictionary
-        self.tasks = {}
+        self.tasks: Dict[str, SchedulerTask] = {}
 
         # Task handlers
-        self.task_handlers = {}
+        self.task_handlers: Dict[str, Callable[[Dict[str, Any]], None]] = {}
 
         # Control and threads
         self.running = False
-        self.scheduler_thread = None
+        self.scheduler_thread: Optional[threading.Thread] = None
         self.lock = threading.RLock()
 
         # Load tasks
         self._load_tasks()
 
-    def start(self):
+    def start(self) -> None:
         """Start the scheduler"""
         if self.running:
             return
@@ -263,7 +275,7 @@ class TaskScheduler:
 
         logger.info("Task scheduler started")
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop the scheduler"""
         if not self.running:
             return
@@ -279,7 +291,7 @@ class TaskScheduler:
 
         logger.info("Task scheduler stopped")
 
-    def register_handler(self, task_type: str, handler: Callable[[Dict[str, Any]], None]):
+    def register_handler(self, task_type: str, handler: Callable[[Dict[str, Any]], None]) -> None:
         """
         Register task handler
 
@@ -402,7 +414,7 @@ class TaskScheduler:
         """
         return list(self.tasks.values())
 
-    def _scheduler_loop(self):
+    def _scheduler_loop(self) -> None:
         """Scheduler main loop"""
         logger.debug("Scheduler loop started")
 
@@ -429,11 +441,11 @@ class TaskScheduler:
                 logger.error(f"Scheduler error: {e}", exc_info=True)
                 time.sleep(5)  # Increase delay on error
 
-    def _execute_task(self, task: SchedulerTask):
+    def _execute_task(self, task: SchedulerTask) -> None:
         """Execute task"""
         try:
             # Get task type
-            task_type = task.data.get("handler_type")
+            task_type: str = task.data.get("handler_type", "")
             logger.debug(
                 f"Executing task: {task.name} (ID: {task.task_id}), handler type: {task_type}")
 
@@ -468,7 +480,7 @@ class TaskScheduler:
             logger.error(
                 f"Error executing task: {task.name} (ID: {task.task_id}), error: {e}", exc_info=True)
 
-    def _load_tasks(self):
+    def _load_tasks(self) -> None:
         """Load tasks from file"""
         if not os.path.exists(self.tasks_file):
             logger.debug(f"Tasks file not found at: {self.tasks_file}")
@@ -476,7 +488,7 @@ class TaskScheduler:
 
         try:
             with open(self.tasks_file, 'r', encoding='utf-8') as f:
-                tasks_data = json.load(f)
+                tasks_data: List[Dict[str, Any]] = json.load(f)
 
             # Parse tasks
             for task_data in tasks_data:
@@ -496,10 +508,11 @@ class TaskScheduler:
         except Exception as e:
             logger.error(f"Error loading tasks: {e}", exc_info=True)
 
-    def _save_tasks(self):
+    def _save_tasks(self) -> None:
         """Save tasks to file"""
         try:
-            tasks_data = [task.to_dict() for task in self.tasks.values()]
+            tasks_data: List[Dict[str, Any]] = [task.to_dict()
+                                                for task in self.tasks.values()]
 
             with open(self.tasks_file, 'w', encoding='utf-8') as f:
                 json.dump(tasks_data, f, ensure_ascii=False, indent=2)

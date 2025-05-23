@@ -5,7 +5,7 @@ from urllib.parse import urljoin
 from loguru import logger
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 
 
 class EncryptionType(Enum):
@@ -32,23 +32,23 @@ class M3U8Info:
     encryption: EncryptionType
     key_url: Optional[str] = None
     iv: Optional[str] = None
-    encryption_details: Optional[Dict] = None
+    encryption_details: Optional[Dict[str, Any]] = None
 
 
 class MediaAnalyzer:
     """Media Analyzer for intelligent media processing"""
 
-    def __init__(self, settings=None):
-        self.settings = settings or {}
-        self.user_agent = self.settings.get("user_agent",
-                                            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-        self.timeout = self.settings.get("timeout", 30)
-        self.verify_ssl = self.settings.get("verify_ssl", True)
-        self.proxy = self.settings.get("proxy", None)
+    def __init__(self, settings: Optional[Dict[str, Any]] = None):
+        self.settings: Dict[str, Any] = settings or {}
+        self.user_agent: str = self.settings.get("user_agent",
+                                                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+        self.timeout: int = self.settings.get("timeout", 30)
+        self.verify_ssl: bool = self.settings.get("verify_ssl", True)
+        self.proxy: Optional[str] = self.settings.get("proxy", None)
         logger.debug(
             f"MediaAnalyzer initialized with timeout={self.timeout}, verify_ssl={self.verify_ssl}")
 
-    def analyze_url(self, url: str) -> Dict:
+    def analyze_url(self, url: str) -> Dict[str, Any]:
         """
         Analyze URL and return media information
 
@@ -56,7 +56,7 @@ class MediaAnalyzer:
             url (str): URL to analyze
 
         Returns:
-            Dict: Media information or error details
+            Dict[str, Any]: Media information or error details
         """
         try:
             logger.info(f"Analyzing URL: {url}")
@@ -87,7 +87,7 @@ class MediaAnalyzer:
             logger.error(f"Error analyzing URL: {e}", exc_info=True)
             return {"success": False, "error": str(e)}
 
-    def analyze_m3u8(self, url: str) -> Dict:
+    def analyze_m3u8(self, url: str) -> Dict[str, Any]:
         """
         Analyze M3U8 file content
 
@@ -95,7 +95,7 @@ class MediaAnalyzer:
             url (str): M3U8 URL to analyze
 
         Returns:
-            Dict: Analysis results or error details
+            Dict[str, Any]: Analysis results or error details
         """
         try:
             logger.info(f"Analyzing M3U8 file: {url}")
@@ -143,7 +143,7 @@ class MediaAnalyzer:
         logger.debug(f"Found {len(m3u8_urls)} direct M3U8 links")
 
         # 2. Look for JSON data that might contain media information
-        json_urls = []
+        json_urls: List[str] = []
         logger.debug("Searching for M3U8 links in JSON data")
         json_data_matches = re.findall(r'({[^}]+\.m3u8[^}]+})', content)
         for json_str in json_data_matches:
@@ -214,9 +214,9 @@ class MediaAnalyzer:
             str: Content as string or empty string on failure
         """
         logger.debug(f"Fetching content from: {url}")
-        headers = {"User-Agent": self.user_agent}
-        proxies = {"http": self.proxy,
-                   "https": self.proxy} if self.proxy else None
+        headers: Dict[str, str] = {"User-Agent": self.user_agent}
+        proxies: Optional[Dict[str, str]] = {"http": self.proxy,
+                                             "https": self.proxy} if self.proxy else None
 
         try:
             response = requests.get(
@@ -240,7 +240,7 @@ class MediaAnalyzer:
             logger.error(f"Error fetching content: {e}", exc_info=True)
             return ""
 
-    def _parse_master_playlist(self, content: str, base_url: str) -> Dict:
+    def _parse_master_playlist(self, content: str, base_url: str) -> Dict[str, Any]:
         """
         Parse master playlist (contains multiple stream variants)
 
@@ -249,10 +249,10 @@ class MediaAnalyzer:
             base_url (str): Base URL for resolving relative paths
 
         Returns:
-            Dict: Parsed master playlist information
+            Dict[str, Any]: Parsed master playlist information
         """
         logger.info("Parsing master playlist")
-        variants = []
+        variants: List[StreamInfo] = []
         lines = content.splitlines()
 
         for i, line in enumerate(lines):
@@ -294,7 +294,7 @@ class MediaAnalyzer:
             logger.error("No stream variants found in master playlist")
             return {"success": False, "error": "No stream variants found"}
 
-    def _parse_media_playlist(self, content: str, base_url: str) -> Dict:
+    def _parse_media_playlist(self, content: str, base_url: str) -> Dict[str, Any]:
         """
         Parse media playlist (contains segments)
 
@@ -303,32 +303,33 @@ class MediaAnalyzer:
             base_url (str): Base URL for resolving relative paths
 
         Returns:
-            Dict: Parsed media playlist information
+            Dict[str, Any]: Parsed media playlist information
         """
         logger.info("Parsing media playlist")
-        segments = []
+        segments: List[str] = []
         duration = 0.0
         encryption = EncryptionType.NONE
         key_url = None
         iv = None
-        encryption_details = {}
+        encryption_details: Dict[str, Any] = {}
 
         lines = content.splitlines()
 
         for i, line in enumerate(lines):
             if line.startswith('#EXTINF:'):
                 # Parse segment duration
-                segment_duration = float(
-                    re.search(r'#EXTINF:([0-9.]+)', line).group(1))
-                duration += segment_duration
+                match = re.search(r'#EXTINF:([0-9.]+)', line)
+                if match:
+                    segment_duration = float(match.group(1))
+                    duration += segment_duration
 
-                if i+1 < len(lines) and not lines[i+1].startswith('#'):
-                    # Next line should contain the segment URL
-                    segment_url = lines[i+1]
-                    # Resolve relative URL
-                    if not segment_url.startswith('http'):
-                        segment_url = urljoin(base_url, segment_url)
-                    segments.append(segment_url)
+                    if i+1 < len(lines) and not lines[i+1].startswith('#'):
+                        # Next line should contain the segment URL
+                        segment_url = lines[i+1]
+                        # Resolve relative URL
+                        if not segment_url.startswith('http'):
+                            segment_url = urljoin(base_url, segment_url)
+                        segments.append(segment_url)
 
             elif line.startswith('#EXT-X-KEY:'):
                 # Parse encryption information
@@ -361,7 +362,7 @@ class MediaAnalyzer:
         if segments:
             logger.success(
                 f"Successfully parsed media playlist with {len(segments)} segments")
-            result = {
+            result: Dict[str, Any] = {
                 "success": True,
                 "type": "media",
                 "segments": segments,

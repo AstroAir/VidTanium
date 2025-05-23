@@ -1,0 +1,124 @@
+
+"""文本输入选项卡"""
+from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QIcon
+
+from qfluentwidgets import (
+    PushButton, LineEdit, CardWidget, BodyLabel,
+    TextEdit, FluentIcon, InfoBarPosition, InfoBar,
+    StrongBodyLabel, QFormLayout
+)
+
+from src.core.url_extractor import URLExtractor
+
+
+class TextInputTab(QWidget):
+    """文本输入选项卡"""
+
+    # 提取URL信号
+    urls_extracted = Signal(list)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._create_ui()
+
+    def _create_ui(self):
+        """创建界面"""
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(10)
+
+        # 说明文本
+        hint_label = BodyLabel("请输入要导入的URL，每行一个:")
+        layout.addWidget(hint_label)
+
+        # 文本输入区域
+        self.text_input = TextEdit()
+        self.text_input.setPlaceholderText("在此粘贴URL...")
+        self.text_input.textChanged.connect(self._process_text_input)
+        layout.addWidget(self.text_input)
+
+        # 操作按钮
+        buttons_layout = QHBoxLayout()
+        buttons_layout.setContentsMargins(0, 5, 0, 5)
+
+        self.paste_button = PushButton("从剪贴板粘贴")
+        self.paste_button.setIcon(FluentIcon.COPY)
+        self.paste_button.clicked.connect(self._paste_from_clipboard)
+        buttons_layout.addWidget(self.paste_button)
+
+        self.clear_button = PushButton("清空")
+        self.clear_button.setIcon(FluentIcon.DELETE)
+        self.clear_button.clicked.connect(self._clear_text)
+        buttons_layout.addWidget(self.clear_button)
+
+        layout.addLayout(buttons_layout)
+
+        # 选项
+        options_card = CardWidget(self)
+        options_layout = QFormLayout(options_card)
+        options_layout.setContentsMargins(15, 10, 15, 10)
+        options_layout.setSpacing(10)
+
+        # 正则表达式过滤
+        options_title = StrongBodyLabel("过滤选项")
+        options_layout.addRow(options_title)
+
+        self.regex_input = LineEdit()
+        self.regex_input.setPlaceholderText("例如: .*\\.mp4|.*\\.m3u8")
+        self.regex_input.textChanged.connect(self._process_text_input)
+        options_layout.addRow("正则表达式过滤:", self.regex_input)
+
+        layout.addWidget(options_card)
+
+    def _paste_from_clipboard(self):
+        """从剪贴板粘贴"""
+        from PySide6.QtWidgets import QApplication
+
+        clipboard = QApplication.clipboard()
+        text = clipboard.text()
+        if text:
+            self.text_input.setText(text)
+            InfoBar.success(
+                title="粘贴成功",
+                content="已从剪贴板粘贴文本",
+                orient=Qt.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP,
+                duration=2000,
+                parent=self
+            )
+        else:
+            InfoBar.warning(
+                title="粘贴失败",
+                content="剪贴板中没有文本内容",
+                orient=Qt.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP,
+                duration=2000,
+                parent=self
+            )
+
+    def _clear_text(self):
+        """清空文本框"""
+        self.text_input.clear()
+        self._process_text_input()
+
+        InfoBar.success(
+            title="已清空",
+            content="文本框内容已清空",
+            orient=Qt.Horizontal,
+            isClosable=True,
+            position=InfoBarPosition.TOP,
+            duration=2000,
+            parent=self
+        )
+
+    def _process_text_input(self):
+        """处理文本输入"""
+        text = self.text_input.toPlainText()
+        pattern = self.regex_input.text() if self.regex_input.text() else None
+
+        urls = URLExtractor.extract_urls_from_text(text, pattern)
+        self.urls_extracted.emit(urls)

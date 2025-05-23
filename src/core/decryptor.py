@@ -2,7 +2,7 @@ from loguru import logger
 from Crypto.Cipher import AES
 
 
-def decrypt_data(data, key, iv, last_block=False):
+def decrypt_data(data: bytes, key: bytes, iv: bytes, last_block: bool = False) -> bytes:
     """
     Decrypt AES-encrypted data block
 
@@ -17,16 +17,17 @@ def decrypt_data(data, key, iv, last_block=False):
     """
     try:
         # Create decryptor
-        cipher = AES.new(key, AES.MODE_CBC, iv)
+        cipher = AES.new(key, AES.MODE_CBC, iv)  # type: ignore
 
         # Ensure data length is a multiple of 16 bytes
         pad_len = len(data) % 16
+        padded_data = data
         if pad_len != 0:
             # Add PKCS#7 padding
-            data += b'\x00' * (16 - pad_len)
+            padded_data = data + b'\x00' * (16 - pad_len)
 
         # Decrypt data
-        decrypted_data = cipher.decrypt(data)
+        decrypted_data = cipher.decrypt(padded_data)
 
         # If this is the last block and there's padding, remove it
         if last_block and pad_len != 0:

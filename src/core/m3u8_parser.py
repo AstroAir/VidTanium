@@ -2,7 +2,7 @@ import re
 import requests
 import urllib.parse
 from enum import Enum
-from typing import List, Dict, Optional, Tuple, Any
+from typing import List, Dict, Optional, Any, Tuple, Union
 from loguru import logger
 
 # ========================================================================
@@ -36,32 +36,32 @@ class M3U8Segment:
     """M3U8 video segment"""
 
     def __init__(self):
-        self.url = ""
-        self.duration = 0
-        self.index = 0
-        self.encryption = EncryptionMethod.NONE
-        self.key_url = ""
-        self.key_iv = ""
-        self.discontinuity = False
+        self.url: str = ""
+        self.duration: float = 0.0
+        self.index: int = 0
+        self.encryption: EncryptionMethod = EncryptionMethod.NONE
+        self.key_url: Optional[str] = None
+        self.key_iv: Optional[str] = None
+        self.discontinuity: bool = False
 
 
 class M3U8Stream:
     """M3U8 video stream"""
 
     def __init__(self):
-        self.url = ""
-        self.type = StreamType.UNKNOWN
-        self.bandwidth = 0
-        self.resolution = ""
-        self.codecs = ""
-        self.name = ""
-        self.segments = []
-        self.encryption = EncryptionMethod.NONE
-        self.key_url = ""
-        self.key_iv = ""
-        self.duration = 0
-        self.segment_count = 0
-        self.base_url = ""
+        self.url: str = ""
+        self.type: StreamType = StreamType.UNKNOWN
+        self.bandwidth: int = 0
+        self.resolution: str = ""
+        self.codecs: str = ""
+        self.name: str = ""
+        self.segments: List[M3U8Segment] = []
+        self.encryption: EncryptionMethod = EncryptionMethod.NONE
+        self.key_url: Optional[str] = None
+        self.key_iv: Optional[str] = None
+        self.duration: float = 0.0
+        self.segment_count: int = 0
+        self.base_url: str = ""
 
 
 # ========================================================================
@@ -73,14 +73,14 @@ class M3U8Parser:
     """M3U8 parser"""
 
     def __init__(self):
-        self.streams = []
-        self.master_url = ""
-        self.base_url = ""
-        self.master_playlist = ""
-        self.headers = {}
-        self.timeout = 30
+        self.streams: List[M3U8Stream] = []
+        self.master_url: str = ""
+        self.base_url: str = ""
+        self.master_playlist: str = ""
+        self.headers: Dict[str, str] = {}
+        self.timeout: int = 30
 
-    def parse_url(self, url: str, headers: Dict[str, str] = None, timeout: int = 30) -> List[M3U8Stream]:
+    def parse_url(self, url: str, headers: Optional[Dict[str, str]] = None, timeout: int = 30) -> List[M3U8Stream]:
         """
         Parse M3U8 URL
 
@@ -180,7 +180,7 @@ class M3U8Parser:
         """Parse master playlist"""
         logger.info("Parsing master playlist")
         lines = content.splitlines()
-        stream_info = None
+        stream_info: Optional[Dict[str, str]] = None
 
         for i, line in enumerate(lines):
             line = line.strip()
@@ -204,13 +204,13 @@ class M3U8Parser:
                     stream.type = StreamType.VIDEO
 
                     # Set stream attributes
-                    if 'BANDWIDTH' in stream_info:
+                    if stream_info and 'BANDWIDTH' in stream_info:
                         stream.bandwidth = int(stream_info['BANDWIDTH'])
-                    if 'RESOLUTION' in stream_info:
+                    if stream_info and 'RESOLUTION' in stream_info:
                         stream.resolution = stream_info['RESOLUTION']
-                    if 'CODECS' in stream_info:
+                    if stream_info and 'CODECS' in stream_info:
                         stream.codecs = stream_info['CODECS']
-                    if 'NAME' in stream_info:
+                    if stream_info and 'NAME' in stream_info:
                         stream.name = stream_info['NAME']
 
                     logger.debug(
@@ -234,11 +234,11 @@ class M3U8Parser:
         logger.info(
             f"Parsing media playlist for stream: {stream.name or stream.url}")
         lines = content.splitlines()
-        current_key_url = None
-        current_key_iv = None
+        current_key_url: Optional[str] = None
+        current_key_iv: Optional[str] = None
         current_encryption = EncryptionMethod.NONE
         segment_index = 0
-        total_duration = 0
+        total_duration: float = 0.0
 
         for i, line in enumerate(lines):
             line = line.strip()
@@ -319,7 +319,7 @@ class M3U8Parser:
 
     def _parse_attributes(self, attribute_string: str) -> Dict[str, str]:
         """Parse attribute string"""
-        attributes = {}
+        attributes: Dict[str, str] = {}
         pattern = r'([A-Z0-9-]+)=(?:"([^"]*)"|([^",]*))(?:,|$)'
         matches = re.findall(pattern, attribute_string)
 
@@ -363,7 +363,7 @@ class M3U8Parser:
 # ========================================================================
 
 
-def extract_url_pattern(url: str) -> Dict[str, str]:
+def extract_url_pattern(url: str) -> Optional[Dict[str, str]]:
     """
     Extract pattern from URL for batch download
     Example: https://example.com/video/segment1.ts 
@@ -375,13 +375,12 @@ def extract_url_pattern(url: str) -> Dict[str, str]:
         match = re.search(r'(\d+)(\.[^.]+)?$', url)
         if match:
             # Extract number and extension
-            number_part = match.group(1)
             extension = match.group(2) or ""
 
             # Replace number part with format placeholder
             base_url = url[:match.start(1)]
 
-            pattern_info = {
+            pattern_info: Dict[str, str] = {
                 "base_url": base_url,
                 "pattern": "{}{}".format("", extension)
             }
@@ -403,7 +402,7 @@ def extract_url_pattern(url: str) -> Dict[str, str]:
 # ========================================================================
 
 
-def extract_m3u8_url_from_page(url: str, headers: Dict[str, str] = None) -> str:
+def extract_m3u8_url_from_page(url: str, headers: Optional[Dict[str, str]] = None) -> str:
     """Extract M3U8 link from webpage"""
     try:
         logger.debug(f"Attempting to extract M3U8 URL from page: {url}")
@@ -423,12 +422,17 @@ def extract_m3u8_url_from_page(url: str, headers: Dict[str, str] = None) -> str:
             matches = re.findall(pattern, content)
             if matches:
                 # Return first matching link
-                match = matches[0]
-                # If tuple (regex capture group), return first element
-                if isinstance(match, tuple):
-                    match = match[0]
-                logger.success(f"Found M3U8 URL in page: {match}")
-                return match
+                first_match: Union[str, Tuple[str, ...]] = matches[0]
+                extracted_url: str = ""
+
+                # If tuple (regex capture group), get first element
+                if isinstance(first_match, tuple):
+                    extracted_url = first_match[0]
+                else:
+                    extracted_url = first_match
+
+                logger.success(f"Found M3U8 URL in page: {extracted_url}")
+                return extracted_url
 
         logger.warning("No M3U8 URL found in page content")
         return ""
@@ -439,7 +443,7 @@ def extract_m3u8_url_from_page(url: str, headers: Dict[str, str] = None) -> str:
         return ""
 
 
-def extract_m3u8_info(url: str, headers: Dict[str, str] = None) -> Dict[str, Any]:
+def extract_m3u8_info(url: str, headers: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
     """
     Extract M3U8 information from URL
 
@@ -450,7 +454,7 @@ def extract_m3u8_info(url: str, headers: Dict[str, str] = None) -> Dict[str, Any
     Returns:
         Dictionary containing parsed information
     """
-    result = {
+    result: Dict[str, Any] = {
         "success": False,
         "message": "",
         "streams": [],
@@ -513,7 +517,7 @@ def extract_m3u8_info(url: str, headers: Dict[str, str] = None) -> Dict[str, Any
                 "duration": selected_stream.duration
             }
 
-            result["key_url"] = selected_stream.key_url
+            result["key_url"] = selected_stream.key_url or ""
             result["segments"] = selected_stream.segment_count
             result["duration"] = selected_stream.duration
             result["encryption"] = selected_stream.encryption.value

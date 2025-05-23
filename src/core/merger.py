@@ -2,28 +2,62 @@ import os
 import subprocess
 import shutil
 import tempfile
+from typing import List, Dict, Any, Optional
 from loguru import logger
+from src.core.utils.version_checker import VersionChecker  # Added import
 
 
-def is_ffmpeg_available(ffmpeg_path=None):
-    """Check if FFmpeg is installed and available in the system"""
-    cmd = [ffmpeg_path or "ffmpeg", "-version"]
-    try:
-        result = subprocess.run(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        return result.returncode == 0
-    except (subprocess.SubprocessError, FileNotFoundError):
-        return False
+def is_ffmpeg_available(ffmpeg_path: Optional[str] = None) -> bool:
+    """Check if FFmpeg is installed and available in the system.
+    Uses VersionChecker if no specific path is provided or if the path is empty.
+    """
+    if ffmpeg_path and ffmpeg_path.strip():  # If a specific, non-empty path is provided
+        # Test this specific ffmpeg path
+        cmd: List[str] = [ffmpeg_path, "-version"]
+        try:
+            result = subprocess.run(
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False
+            )
+            if result.returncode == 0:
+                logger.debug(
+                    f"FFmpeg confirmed at specified path: {ffmpeg_path}")
+                return True
+            else:
+                logger.debug(
+                    f"Specified ffmpeg path {ffmpeg_path} did not respond to -version correctly. stderr: {result.stderr}")
+                return False
+        except (subprocess.SubprocessError, FileNotFoundError):
+            logger.debug(
+                f"Failed to run ffmpeg -version with specified path: {ffmpeg_path}")
+            return False
+    else:  # If no specific path or path is empty/whitespace, use VersionChecker
+        logger.debug(
+            "No specific ffmpeg path provided or path is empty; using VersionChecker.")
+        checker = VersionChecker()
+        try:
+            ffmpeg_info = checker.check_software("ffmpeg")
+            if ffmpeg_info.installed:
+                logger.debug(
+                    f"VersionChecker found ffmpeg: Path='{ffmpeg_info.path}', Version='{ffmpeg_info.version}', Installed={ffmpeg_info.installed}")
+                return True
+            else:
+                logger.debug("VersionChecker did not find ffmpeg.")
+                return False
+        except Exception as e:
+            # Log the exception from VersionChecker if it fails unexpectedly
+            logger.warning(
+                f"VersionChecker encountered an error while checking for ffmpeg: {e}", exc_info=True)
+            return False
 
 
-def merge_files_ffmpeg(files, output_file, ffmpeg_path=None):
+def merge_files_ffmpeg(files: List[str], output_file: str, ffmpeg_path: Optional[str] = None) -> Dict[str, Any]:
     """
     Merge video files using FFmpeg
 
     Args:
-        files (list): List of files to merge
-        output_file (str): Output file path
-        ffmpeg_path (str, optional): Path to FFmpeg executable
+        files: List of files to merge
+        output_file: Output file path
+        ffmpeg_path: Path to FFmpeg executable
 
     Returns:
         dict: Result of the merge operation
@@ -36,7 +70,7 @@ def merge_files_ffmpeg(files, output_file, ffmpeg_path=None):
                 f.write(f"file '{os.path.abspath(file)}'\n")
 
         # Build FFmpeg command
-        cmd = [
+        cmd: List[str] = [
             ffmpeg_path or "ffmpeg",
             "-f", "concat",
             "-safe", "0",
@@ -68,13 +102,13 @@ def merge_files_ffmpeg(files, output_file, ffmpeg_path=None):
         return {"success": False, "error": str(e)}
 
 
-def merge_files_binary(files, output_file):
+def merge_files_binary(files: List[str], output_file: str) -> Dict[str, Any]:
     """
     Merge files using binary concatenation
 
     Args:
-        files (list): List of files to merge
-        output_file (str): Output file path
+        files: List of files to merge
+        output_file: Output file path
 
     Returns:
         dict: Result of the merge operation
@@ -99,20 +133,20 @@ def merge_files_binary(files, output_file):
         return {"success": False, "error": str(e)}
 
 
-def convert_ts_to_mp4(ts_file, output_file, ffmpeg_path=None):
+def convert_ts_to_mp4(ts_file: str, output_file: str, ffmpeg_path: Optional[str] = None) -> Dict[str, Any]:
     """
     Convert TS file to MP4 format
 
     Args:
-        ts_file (str): Input TS file path
-        output_file (str): Output MP4 file path
-        ffmpeg_path (str, optional): Path to FFmpeg executable
+        ts_file: Input TS file path
+        output_file: Output MP4 file path
+        ffmpeg_path: Path to FFmpeg executable
 
     Returns:
         dict: Result of the conversion operation
     """
     try:
-        cmd = [
+        cmd: List[str] = [
             ffmpeg_path or "ffmpeg",
             "-i", ts_file,
             "-c", "copy",
@@ -136,13 +170,13 @@ def convert_ts_to_mp4(ts_file, output_file, ffmpeg_path=None):
         return {"success": False, "error": str(e)}
 
 
-def merge_files(files, output_file, settings=None):
+def merge_files(files: List[str], output_file: str, settings: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """
     Choose appropriate method to merge video files based on available tools
 
     Args:
-        files (list): List of files to merge
-        output_file (str): Output file path
+        files: List of files to merge
+        output_file: Output file path
         settings: Settings object containing configuration
 
     Returns:
@@ -153,15 +187,22 @@ def merge_files(files, output_file, settings=None):
         return {"success": False, "error": "No files to merge"}
 
     # Sort files by name
-    sorted_files = sorted(files, key=lambda x: int(
-        os.path.basename(x).split('_')[1].split('.')[0]))
+    try:
+        sorted_files: List[str] = sorted(files, key=lambda x: int(
+            os.path.basename(x).split('_')[1].split('.')[0]))
+    except (IndexError, ValueError):
+        # Fallback to direct sorting if custom sort fails
+        logger.warning(
+            "Failed to sort files by segment number, using filename sort instead")
+        sorted_files = sorted(files)
 
     logger.info(
         f"Preparing to merge {len(sorted_files)} files into {output_file}")
 
     # Get FFmpeg path from settings
-    ffmpeg_path = settings.get(
-        "advanced", "ffmpeg_path", "") if settings else ""
+    ffmpeg_path: Optional[str] = None
+    if settings:
+        ffmpeg_path = settings.get("advanced", {}).get("ffmpeg_path", "")
 
     # Check if FFmpeg is available
     if is_ffmpeg_available(ffmpeg_path):

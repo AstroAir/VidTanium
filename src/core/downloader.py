@@ -8,6 +8,9 @@ from queue import PriorityQueue, Queue, Empty
 from enum import Enum
 from datetime import datetime
 from loguru import logger
+from typing import (
+    Optional, List, Dict, Tuple, Set, Callable, Any, Union, Literal, Protocol, TypedDict
+)
 
 
 class TaskStatus(Enum):
@@ -27,18 +30,62 @@ class TaskPriority(Enum):
     HIGH = 2
 
 
+class ProgressDict(TypedDict):
+    total: int
+    completed: int
+    failed: int
+    current_file: Optional[str]
+    current_file_progress: float
+    start_time: Optional[float]
+    end_time: Optional[float]
+    speed: float
+    estimated_time: Optional[float]
+    downloaded_bytes: int
+
+
+class SegmentDetail(TypedDict):
+    status: str
+    size: int
+    timestamp: float
+
+
+class SettingsProvider(Protocol):
+    def get(self, section: str, key: str, default: Any = None) -> Any: ...
+
+
 class DownloadTask:
     """Download task class"""
 
+    task_id: str
+    name: str
+    base_url: Optional[str]
+    key_url: Optional[str]
+    segments: Optional[int]
+    output_file: Optional[str]
+    # Assuming settings or {} results in a valid SettingsProvider
+    settings: SettingsProvider
+    priority: TaskPriority
+    status: TaskStatus
+    progress: ProgressDict
+    segments_info: Dict[str, SegmentDetail]
+    downloaded_size: int
+    key_data: Optional[bytes]
+    worker_thread: Optional[threading.Thread]
+    paused_event: threading.Event
+    canceled_event: threading.Event
+    progress_file: Optional[str]
+    recent_speeds: List[float]
+
     def __init__(self,
-                 task_id=None,
-                 name=None,
-                 base_url=None,
-                 key_url=None,
-                 segments=None,
-                 output_file=None,
-                 settings=None,
-                 priority=TaskPriority.NORMAL):
+                 task_id: Optional[str] = None,
+                 name: Optional[str] = None,
+                 base_url: Optional[str] = None,
+                 key_url: Optional[str] = None,
+                 segments: Optional[int] = None,
+                 output_file: Optional[str] = None,
+                 # Actual settings object or dict-like
+                 settings: Optional[SettingsProvider] = None,
+                 priority: TaskPriority = TaskPriority.NORMAL):
         """Initialize download task"""
         self.task_id = task_id or str(uuid.uuid4())
         self.name = name or f"Task-{self.task_id[:8]}"
@@ -46,7 +93,13 @@ class DownloadTask:
         self.key_url = key_url
         self.segments = segments
         self.output_file = output_file
-        self.settings = settings or {}
+        # If settings is None, self.settings becomes an empty dict, which might not satisfy SettingsProvider.
+        # This assumes that an empty dict can be cast or used as a SettingsProvider,
+        # or that the actual default is a conforming object.
+        # For simplicity, we'll assume `settings or {}` is handled appropriately by the caller
+        # or that SettingsProvider can accommodate an empty dict-like structure for its `get`.
+        # A more robust approach might involve a default SettingsProvider object.
+        self.settings = settings or {}  # type: ignore
         self.priority = priority
 
         # Status information
@@ -56,10 +109,10 @@ class DownloadTask:
             "completed": 0,
             "failed": 0,
             "current_file": None,
-            "current_file_progress": 0,
+            "current_file_progress": 0.0,
             "start_time": None,
             "end_time": None,
-            "speed": 0,
+            "speed": 0.0,
             "estimated_time": None,
             "downloaded_bytes": 0
         }
@@ -77,15 +130,15 @@ class DownloadTask:
 
         # Progress tracking
         self.progress_file = f"{output_file}.progress" if output_file else None
-        self.recent_speeds = []  # Stores recent download speeds for average calculation
+        self.recent_speeds = []
 
-    def get_progress_percentage(self):
+    def get_progress_percentage(self) -> float:
         """Get progress percentage"""
         if self.progress["total"] == 0:
-            return 0
+            return 0.0
         return round((self.progress["completed"] / self.progress["total"]) * 100, 2)
 
-    def start(self, worker_func):
+    def start(self, worker_func: Callable[[str], None]) -> None:
         """Start task"""
         if self.status == TaskStatus.RUNNING:
             return
@@ -104,7 +157,7 @@ class DownloadTask:
         self.worker_thread.daemon = True
         self.worker_thread.start()
 
-    def pause(self):
+    def pause(self) -> None:
         """Pause task"""
         if self.status != TaskStatus.RUNNING:
             return
@@ -112,7 +165,7 @@ class DownloadTask:
         self.status = TaskStatus.PAUSED
         self.paused_event.clear()  # Set pause event
 
-    def resume(self):
+    def resume(self) -> None:
         """Resume task"""
         if self.status != TaskStatus.PAUSED:
             return
@@ -120,7 +173,7 @@ class DownloadTask:
         self.status = TaskStatus.RUNNING
         self.paused_event.set()  # Clear pause event
 
-    def cancel(self):
+    def cancel(self) -> None:
         """Cancel task"""
         if self.status in [TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELED]:
             return
@@ -129,13 +182,13 @@ class DownloadTask:
         self.canceled_event.set()  # Set cancel event
         self.paused_event.set()  # Release pause to allow task to detect cancellation
 
-    def save_progress(self):
+    def save_progress(self) -> None:
         """Save progress to file"""
         if not self.progress_file:
             return
 
         try:
-            progress_data = {
+            progress_data: Dict[str, Any] = {
                 "task_id": self.task_id,
                 "name": self.name,
                 "status": self.status.value,
@@ -150,21 +203,22 @@ class DownloadTask:
         except Exception as e:
             logger.error(f"Failed to save task progress: {e}", exc_info=True)
 
-    def load_progress(self):
+    def load_progress(self) -> bool:
         """Load progress from file"""
         if not self.progress_file or not os.path.exists(self.progress_file):
             return False
 
         try:
             with open(self.progress_file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
+                data: Dict[str, Any] = json.load(f)
 
             # Restore progress information
-            if data["task_id"] == self.task_id:
-                self.name = data["name"]
-                self.status = TaskStatus(data["status"])
-                self.progress = data["progress"]
-                self.segments_info = data["segments_info"]
+            if data.get("task_id") == self.task_id:
+                self.name = data.get("name", self.name)
+                self.status = TaskStatus(data.get("status", self.status.value))
+                self.progress = data.get("progress", self.progress)
+                self.segments_info = data.get(
+                    "segments_info", self.segments_info)
                 logger.info(
                     f"Progress loaded for task {self.name}: {self.progress['completed']}/{self.progress['total']} segments completed")
                 return True
@@ -173,10 +227,10 @@ class DownloadTask:
 
         return False
 
-    def update_speed(self, bytes_downloaded, elapsed_time):
+    def update_speed(self, bytes_downloaded: int, elapsed_time: float) -> None:
         """Update download speed statistics"""
         if elapsed_time > 0:
-            current_speed = bytes_downloaded / elapsed_time
+            current_speed: float = bytes_downloaded / elapsed_time
             self.recent_speeds.append(current_speed)
 
             # Keep only the 10 most recent speed samples
@@ -189,24 +243,59 @@ class DownloadTask:
                     self.recent_speeds) / len(self.recent_speeds)
 
             # Estimate remaining time
-            if self.progress["speed"] > 0 and self.progress["total"] > 0:
-                remaining = self.progress["total"] - self.progress["completed"]
-                # Assuming average segment size
-                self.progress["estimated_time"] = remaining / \
-                    (self.progress["speed"] / 8192)
+            if self.progress["speed"] > 0 and self.progress["total"] > 0 and self.progress["completed"] < self.progress["total"]:
+                remaining_segments: int = self.progress["total"] - \
+                    self.progress["completed"]
+                # Assuming average segment size is related to chunk_size for estimation
+                # This estimation logic might need refinement based on actual segment sizes
+                # Time to process one "chunk_size" worth of data
+                avg_segment_processing_time_estimate = 8192 / \
+                    self.progress["speed"]
+                if avg_segment_processing_time_estimate > 0:
+                    self.progress["estimated_time"] = remaining_segments * \
+                        avg_segment_processing_time_estimate
+                else:
+                    self.progress["estimated_time"] = None
             else:
                 self.progress["estimated_time"] = None
+
+
+# Define EventTuple for DownloadManager.event_queue
+EventTuple = Union[
+    Tuple[Literal["status_changed"], str, Optional[TaskStatus], TaskStatus],
+    Tuple[Literal["progress"], str, ProgressDict],
+    Tuple[Literal["completed"], str, str],
+    Tuple[Literal["failed"], str, str]
+]
 
 
 class DownloadManager:
     """Download manager"""
 
-    def __init__(self, settings=None):
+    settings: Optional[SettingsProvider]
+    tasks: Dict[str, DownloadTask]
+    # Task priority queue (neg_priority, time, task_id)
+    tasks_queue: "PriorityQueue[Tuple[int, float, str]]"
+    active_tasks: Set[str]
+    running: bool
+    scheduler_thread: Optional[threading.Thread]
+    lock: threading.RLock
+    bandwidth_limiter: Any  # Placeholder for actual type
+    bandwidth_limit: int
+    on_task_progress: Optional[Callable[[str, ProgressDict], None]]
+    on_task_status_changed: Optional[Callable[[
+        str, Optional[TaskStatus], TaskStatus], None]]
+    on_task_completed: Optional[Callable[[str, str], None]]
+    on_task_failed: Optional[Callable[[str, str], None]]
+    event_queue: "Queue[EventTuple]"
+    event_thread: Optional[threading.Thread]
+
+    def __init__(self, settings: Optional[SettingsProvider] = None):
         """Initialize download manager"""
         self.settings = settings
-        self.tasks = {}  # Task dictionary, key is task ID
-        self.tasks_queue = PriorityQueue()  # Task priority queue
-        self.active_tasks = set()  # Set of active task IDs
+        self.tasks = {}
+        self.tasks_queue = PriorityQueue()
+        self.active_tasks = set()
 
         # Controls and events
         self.running = False
@@ -215,7 +304,7 @@ class DownloadManager:
 
         # Bandwidth control
         self.bandwidth_limiter = None
-        self.bandwidth_limit = 0  # 0 means unlimited
+        self.bandwidth_limit = 0
 
         # Signal handling and callbacks
         self.on_task_progress = None
@@ -227,7 +316,7 @@ class DownloadManager:
         self.event_queue = Queue()
         self.event_thread = None
 
-    def start(self):
+    def start(self) -> None:
         """Start download manager"""
         if self.running:
             return
@@ -246,7 +335,7 @@ class DownloadManager:
 
         logger.info("Download manager started")
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop download manager"""
         if not self.running:
             return
@@ -255,17 +344,18 @@ class DownloadManager:
 
         # Pause all tasks
         with self.lock:
-            for task_id in self.active_tasks:
+            active_task_ids = list(self.active_tasks)  # Iterate over a copy
+            for task_id in active_task_ids:
                 task = self.tasks.get(task_id)
                 if task:
                     task.pause()
 
         # Wait for scheduler thread to end
-        if self.scheduler_thread:
+        if self.scheduler_thread and self.scheduler_thread.is_alive():
             self.scheduler_thread.join(timeout=2)
 
         # Wait for event handling thread to end
-        if self.event_thread:
+        if self.event_thread and self.event_thread.is_alive():
             self.event_thread.join(timeout=2)
 
         # Save progress for all tasks
@@ -274,7 +364,7 @@ class DownloadManager:
 
         logger.info("Download manager stopped")
 
-    def add_task(self, task):
+    def add_task(self, task: DownloadTask) -> str:
         """Add download task"""
         with self.lock:
             self.tasks[task.task_id] = task
@@ -288,11 +378,11 @@ class DownloadManager:
 
         return task.task_id
 
-    def get_task(self, task_id):
+    def get_task(self, task_id: str) -> Optional[DownloadTask]:
         """Get specified task"""
         return self.tasks.get(task_id)
 
-    def start_task(self, task_id):
+    def start_task(self, task_id: str) -> bool:
         """Start specified task"""
         with self.lock:
             task = self.tasks.get(task_id)
@@ -313,7 +403,7 @@ class DownloadManager:
             task.load_progress()
 
             # Start task
-            old_status = task.status
+            old_status: Optional[TaskStatus] = task.status
             task.start(self._task_worker)
 
             # Add to active tasks
@@ -324,7 +414,7 @@ class DownloadManager:
 
             return True
 
-    def pause_task(self, task_id):
+    def pause_task(self, task_id: str) -> bool:
         """Pause specified task"""
         with self.lock:
             task = self.tasks.get(task_id)
@@ -335,15 +425,12 @@ class DownloadManager:
             if task.status != TaskStatus.RUNNING:
                 return False
 
-            old_status = task.status
+            old_status: TaskStatus = task.status
             task.pause()
-
-            # Notify status change
             self._emit_status_changed(task_id, old_status, task.status)
-
             return True
 
-    def resume_task(self, task_id):
+    def resume_task(self, task_id: str) -> bool:
         """Resume specified task"""
         with self.lock:
             task = self.tasks.get(task_id)
@@ -354,15 +441,12 @@ class DownloadManager:
             if task.status != TaskStatus.PAUSED:
                 return False
 
-            old_status = task.status
+            old_status: TaskStatus = task.status
             task.resume()
-
-            # Notify status change
             self._emit_status_changed(task_id, old_status, task.status)
-
             return True
 
-    def cancel_task(self, task_id):
+    def cancel_task(self, task_id: str) -> bool:
         """Cancel specified task"""
         with self.lock:
             task = self.tasks.get(task_id)
@@ -370,19 +454,17 @@ class DownloadManager:
                 logger.warning(f"Task not found: {task_id}")
                 return False
 
-            old_status = task.status
+            old_status: TaskStatus = task.status
             task.cancel()
 
             # Remove from active tasks if present
             if task_id in self.active_tasks:
                 self.active_tasks.remove(task_id)
 
-            # Notify status change
             self._emit_status_changed(task_id, old_status, task.status)
-
             return True
 
-    def remove_task(self, task_id, delete_files=False):
+    def remove_task(self, task_id: str, delete_files: bool = False) -> bool:
         """Remove specified task"""
         with self.lock:
             task = self.tasks.get(task_id)
@@ -392,7 +474,7 @@ class DownloadManager:
 
             # Cancel if task is running or paused
             if task.status in [TaskStatus.RUNNING, TaskStatus.PAUSED]:
-                task.cancel()
+                task.cancel()  # This will also set its status to CANCELED
 
             # Remove from active tasks if present
             if task_id in self.active_tasks:
@@ -404,7 +486,7 @@ class DownloadManager:
                     os.remove(task.progress_file)
                 except Exception as e:
                     logger.error(
-                        f"Failed to delete progress file: {e}", exc_info=True)
+                        f"Failed to delete progress file: {task.progress_file}, {e}", exc_info=True)
 
             # Delete output file
             if delete_files and task.output_file and os.path.exists(task.output_file):
@@ -413,167 +495,175 @@ class DownloadManager:
                     logger.info(f"Deleted output file: {task.output_file}")
                 except Exception as e:
                     logger.error(
-                        f"Failed to delete output file: {e}", exc_info=True)
+                        f"Failed to delete output file: {task.output_file}, {e}", exc_info=True)
 
             # Remove from task dictionary
-            del self.tasks[task_id]
+            if task_id in self.tasks:
+                del self.tasks[task_id]
             logger.info(f"Task removed: {task.name} (ID: {task_id})")
-
+            # Optionally emit a final status change or a specific "removed" event
+            # self._emit_status_changed(task_id, task.status, TaskStatus.CANCELED) # Or a new "REMOVED" status
             return True
+        return False
 
-    def _emit_status_changed(self, task_id, old_status, new_status):
+    def _emit_status_changed(self, task_id: str, old_status: Optional[TaskStatus], new_status: TaskStatus) -> None:
         """Emit task status change event"""
         if self.on_task_status_changed:
-            self.event_queue.put(
-                ("status_changed", task_id, old_status, new_status))
+            event: EventTuple = ("status_changed", task_id,
+                                 old_status, new_status)
+            self.event_queue.put(event)
 
-    def _emit_progress(self, task_id, progress):
+    def _emit_progress(self, task_id: str, progress: ProgressDict) -> None:
         """Emit task progress event"""
         if self.on_task_progress:
-            self.event_queue.put(("progress", task_id, progress))
+            event: EventTuple = ("progress", task_id, progress)
+            self.event_queue.put(event)
 
-    def _emit_completed(self, task_id, success, message):
+    def _emit_completed(self, task_id: str, success: bool, message: str) -> None:
         """Emit task completion event"""
         if success and self.on_task_completed:
-            self.event_queue.put(("completed", task_id, message))
+            event: EventTuple = ("completed", task_id, message)
+            self.event_queue.put(event)
         elif not success and self.on_task_failed:
-            self.event_queue.put(("failed", task_id, message))
+            event: EventTuple = ("failed", task_id, message)
+            self.event_queue.put(event)
 
-    def _event_loop(self):
+    def _event_loop(self) -> None:
         """Event handling loop"""
         while self.running:
             try:
                 # Get event from queue
-                event = self.event_queue.get(timeout=0.5)
-                if not event:
+                event: EventTuple = self.event_queue.get(timeout=0.5)
+                if not event:  # Should not happen with Queue.get unless None is put
                     continue
 
                 event_type = event[0]
 
                 if event_type == "status_changed" and self.on_task_status_changed:
-                    _, task_id, old_status, new_status = event
+                    _, task_id_ev, old_status_ev, new_status_ev = event  # type: ignore
                     self.on_task_status_changed(
-                        task_id, old_status, new_status)
+                        task_id_ev, old_status_ev, new_status_ev)
 
                 elif event_type == "progress" and self.on_task_progress:
-                    _, task_id, progress = event
-                    self.on_task_progress(task_id, progress)
+                    _, task_id_ev, progress_ev = event  # type: ignore
+                    self.on_task_progress(task_id_ev, progress_ev)
 
                 elif event_type == "completed" and self.on_task_completed:
-                    _, task_id, message = event
-                    self.on_task_completed(task_id, message)
+                    _, task_id_ev, message_ev = event  # type: ignore
+                    self.on_task_completed(task_id_ev, message_ev)
 
                 elif event_type == "failed" and self.on_task_failed:
-                    _, task_id, message = event
-                    self.on_task_failed(task_id, message)
+                    _, task_id_ev, message_ev = event  # type: ignore
+                    self.on_task_failed(task_id_ev, message_ev)
 
                 # Mark event as processed
                 self.event_queue.task_done()
 
+            except Empty:  # Changed from generic Exception for Empty
+                continue
             except Exception as e:
-                if isinstance(e, (Empty, TimeoutError)):
-                    continue
+                # if isinstance(e, (Empty, TimeoutError)): # TimeoutError not applicable for Queue.get
+                #     continue
                 import traceback
                 error_details = traceback.format_exc()
                 logger.error(f"Error processing event: {e}\n{error_details}")
 
-    def _scheduler_loop(self):
+    def _scheduler_loop(self) -> None:
         """Scheduler main loop"""
         while self.running:
             try:
-                # Check if there are available task slots
-                max_concurrent = int(self.settings.get(
-                    "download", "max_concurrent_tasks", 3)) if self.settings else 3
+                max_concurrent: int = 3
+                if self.settings:
+                    max_concurrent = int(self.settings.get(
+                        "download", "max_concurrent_tasks", 3))
 
                 with self.lock:
-                    # Current number of active tasks
-                    active_count = len(self.active_tasks)
-
-                    # Start new tasks if slots available and queue not empty
+                    active_count: int = len(self.active_tasks)
                     if active_count < max_concurrent and not self.tasks_queue.empty():
                         try:
-                            _, _, task_id = self.tasks_queue.get_nowait()
+                            # Type assertion for item from PriorityQueue
+                            # type: Tuple[int, float, str]
+                            _prio, _time, task_id_sched = self.tasks_queue.get_nowait()
 
-                            # Check if task still exists
-                            if task_id not in self.tasks:
+                            if task_id_sched not in self.tasks:
                                 continue
 
-                            task = self.tasks[task_id]
+                            task_to_start = self.tasks[task_id_sched]
 
-                            if task.status in [TaskStatus.PENDING, TaskStatus.PAUSED]:
-                                # Start task
-                                old_status = task.status
-                                task.start(self._task_worker)
-                                self.active_tasks.add(task_id)
-
-                                # Notify status change
+                            if task_to_start.status in [TaskStatus.PENDING, TaskStatus.PAUSED]:
+                                old_status_sched: Optional[TaskStatus] = task_to_start.status
+                                task_to_start.start(self._task_worker)
+                                self.active_tasks.add(task_id_sched)
                                 self._emit_status_changed(
-                                    task_id, old_status, task.status)
+                                    task_id_sched, old_status_sched, task_to_start.status)
+                        except Empty:  # If queue becomes empty between check and get
+                            pass
                         except Exception as e:
                             logger.error(
-                                f"Error starting task: {e}", exc_info=True)
-
-                # Avoid excessive CPU usage
+                                f"Error starting task from scheduler: {e}", exc_info=True)
                 time.sleep(0.5)
-
             except Exception as e:
                 logger.error(f"Scheduler error: {e}", exc_info=True)
-                time.sleep(1)  # Increase delay on error
+                time.sleep(1)
 
-    def _task_worker(self, task_id):
+    def _task_worker(self, task_id: str) -> None:
         """Task worker thread function"""
-        from .decryptor import decrypt_data
+        from .decryptor import decrypt_data  # Assuming decrypt_data(bytes, bytes, bytes, bool) -> bytes
+        # Assuming merge_files(List[str], str, Optional[SettingsProvider]) -> Dict[str, Any]
         from .merger import merge_files
 
         task = self.tasks.get(task_id)
         if not task:
-            logger.error(f"Task not found: {task_id}")
+            logger.error(f"Task not found in worker: {task_id}")
             return
 
         try:
             logger.info(
                 f"Starting task execution: {task.name} (ID: {task_id})")
-
-            # Initialize HTTP session
             session = requests.Session()
 
-            # Set request headers
-            user_agent = self.settings.get(
-                "advanced", "user_agent", "Mozilla/5.0") if self.settings else "Mozilla/5.0"
+            user_agent: str = "Mozilla/5.0"
+            if self.settings:
+                user_agent = str(self.settings.get(
+                    "advanced", "user_agent", "Mozilla/5.0"))
             session.headers.update({"User-Agent": user_agent})
 
-            # Set proxy
-            proxy = self.settings.get(
-                "advanced", "proxy", "") if self.settings else ""
-            if proxy:
-                session.proxies = {
-                    "http": proxy,
-                    "https": proxy
-                }
+            proxy_str: str = ""
+            if self.settings:
+                proxy_str = str(self.settings.get("advanced", "proxy", ""))
+            if proxy_str:
+                session.proxies = {"http": proxy_str, "https": proxy_str}
 
-            # Set SSL verification
-            verify_ssl = self.settings.get(
-                "advanced", "verify_ssl", True) if self.settings else True
-            session.verify = verify_ssl
+            verify_ssl_val: bool = True
+            if self.settings:
+                verify_ssl_val = bool(self.settings.get(
+                    "advanced", "verify_ssl", True))
+            session.verify = verify_ssl_val
 
-            # Get download parameters
-            max_retries = int(self.settings.get(
-                "download", "max_retries", 5)) if self.settings else 5
-            retry_delay = float(self.settings.get(
-                "download", "retry_delay", 2)) if self.settings else 2
-            timeout = int(self.settings.get(
-                "download", "request_timeout", 60)) if self.settings else 60
-            chunk_size = int(self.settings.get(
-                "download", "chunk_size", 8192)) if self.settings else 8192
+            max_retries_val: int = 5
+            retry_delay_val: float = 2.0
+            timeout_val: int = 60
+            chunk_size_val: int = 8192
 
-            # Download encryption key
-            if not task.key_data:
+            if self.settings:
+                max_retries_val = int(self.settings.get(
+                    "download", "max_retries", 5))
+                retry_delay_val = float(self.settings.get(
+                    "download", "retry_delay", 2.0))
+                timeout_val = int(self.settings.get(
+                    "download", "request_timeout", 60))
+                chunk_size_val = int(self.settings.get(
+                    "download", "chunk_size", 8192))
+
+            if not task.key_data and task.key_url:
                 logger.info(f"Downloading encryption key: {task.key_url}")
                 task.progress["current_file"] = "Encryption Key"
-
-                for attempt in range(max_retries):
+                for attempt in range(max_retries_val):
+                    if task.canceled_event.is_set():
+                        break
                     try:
-                        response = session.get(task.key_url, timeout=timeout)
+                        response = session.get(
+                            task.key_url, timeout=timeout_val)
                         if response.status_code == 200:
                             task.key_data = response.content
                             logger.debug(
@@ -581,271 +671,230 @@ class DownloadManager:
                             break
                         else:
                             logger.warning(
-                                f"Key download failed, HTTP status: {response.status_code}, retry ({attempt+1}/{max_retries})")
+                                f"Key download failed, HTTP status: {response.status_code}, retry ({attempt+1}/{max_retries_val})")
                     except Exception as e:
                         logger.warning(
-                            f"Key download error: {e}, retry ({attempt+1}/{max_retries})")
-
-                    # Check if task was canceled
-                    if task.canceled_event.is_set():
-                        logger.info(f"Task canceled: {task.name}")
-                        return
-
-                    # Wait before retry
-                    time.sleep(retry_delay * (attempt + 1))
-
+                            f"Key download error: {e}, retry ({attempt+1}/{max_retries_val})")
+                    time.sleep(retry_delay_val * (attempt + 1))
                 if not task.key_data:
-                    error_msg = "Failed to download encryption key"
-                    logger.error(error_msg)
-                    raise Exception(error_msg)
+                    raise Exception("Failed to download encryption key")
 
-            # Create output directory
-            output_dir = os.path.dirname(task.output_file)
+            if not task.output_file:
+                raise Exception("Output file not specified for task.")
+
+            output_dir: str = os.path.dirname(task.output_file)
             if output_dir and not os.path.exists(output_dir):
                 os.makedirs(output_dir, exist_ok=True)
-                logger.debug(f"Created output directory: {output_dir}")
 
-            # Create temporary directory
-            temp_dir = f"{task.output_file}_temp"
+            temp_dir: str = f"{task.output_file}_temp"
             os.makedirs(temp_dir, exist_ok=True)
-            logger.debug(f"Created temporary directory: {temp_dir}")
 
-            # Initialize IV (Initialization Vector)
             iv = bytes.fromhex('00000000000000000000000000000000')
+            successful_files: List[str] = []
 
-            # Download and decrypt all segments
-            successful_files = []
-            start_time = time.time()
+            if task.segments is None:  # Should not happen if initialized correctly
+                task.segments = 0
+                task.progress["total"] = 0
 
             logger.info(
                 f"Downloading {task.segments} segments for task: {task.name}")
 
             for i in range(task.segments):
-                # Check if task was canceled
                 if task.canceled_event.is_set():
-                    logger.info(f"Task canceled: {task.name}")
                     break
-
-                # Check if task is paused
                 while task.status == TaskStatus.PAUSED:
+                    if task.canceled_event.is_set():
+                        break
                     time.sleep(0.5)
-                    if task.canceled_event.is_set():
-                        break
+                if task.canceled_event.is_set():
+                    break  # Check again after pause
 
-                # Skip if segment already downloaded
                 segment_key = str(i)
-                if segment_key in task.segments_info and task.segments_info[segment_key].get("status") == "completed":
-                    ts_filename = os.path.join(temp_dir, f"segment_{i}.ts")
-                    if os.path.exists(ts_filename):
-                        logger.debug(
-                            f"Skipping already downloaded segment {i}")
-                        successful_files.append(ts_filename)
-                        continue
-
-                # Generate segment URL
-                segment_url = f"{task.base_url}/index{i}.ts"
                 ts_filename = os.path.join(temp_dir, f"segment_{i}.ts")
+                if segment_key in task.segments_info and task.segments_info[segment_key].get("status") == "completed" and os.path.exists(ts_filename):
+                    logger.debug(f"Skipping already downloaded segment {i}")
+                    successful_files.append(ts_filename)
+                    continue
+
+                if not task.base_url:
+                    raise Exception(
+                        "Base URL not specified for task segments.")
+                segment_url = f"{task.base_url}/index{i}.ts"
                 temp_filename = f"{ts_filename}.temp"
-
-                # Update progress info
                 task.progress["current_file"] = f"Segment {i+1}/{task.segments}"
+                segment_success = False
+                segment_start_time = time.time()
 
-                # Download and decrypt segment
-                success = False
-
-                for attempt in range(max_retries):
+                for attempt in range(max_retries_val):
                     if task.canceled_event.is_set():
                         break
-
                     try:
-                        # Stream download
                         logger.debug(
-                            f"Downloading segment {i+1}/{task.segments}")
+                            f"Downloading segment {i+1}/{task.segments} from {segment_url}")
                         response = session.get(
-                            segment_url, stream=True, timeout=timeout)
-
+                            segment_url, stream=True, timeout=timeout_val)
                         if response.status_code != 200:
                             logger.warning(
-                                f"Segment download failed, HTTP status: {response.status_code}, retry ({attempt+1}/{max_retries})")
-                            time.sleep(retry_delay * (attempt + 1))
+                                f"Segment download failed (HTTP {response.status_code}), retry ({attempt+1}/{max_retries_val})")
+                            time.sleep(retry_delay_val * (attempt + 1))
                             continue
 
-                        # Get file size
                         total_size = int(
                             response.headers.get('content-length', 0))
-
-                        # Decrypt and save segment
+                        downloaded_this_segment = 0
                         with open(temp_filename, 'wb') as f:
-                            downloaded = 0
-
-                            for chunk in response.iter_content(chunk_size=chunk_size):
-                                # Check task status
+                            for chunk in response.iter_content(chunk_size=chunk_size_val):
                                 if task.canceled_event.is_set():
                                     break
-
-                                # Wait if task is paused
-                                while not task.paused_event.is_set():
-                                    time.sleep(0.5)
+                                while not task.paused_event.is_set():  # Corrected: check if PAUSED
                                     if task.canceled_event.is_set():
                                         break
-
+                                    time.sleep(0.1)
+                                if task.canceled_event.is_set():
+                                    break  # Check again
                                 if not chunk:
                                     continue
 
-                                # Decrypt data block
-                                decrypted_chunk = decrypt_data(
-                                    chunk,
-                                    task.key_data,
-                                    iv,
-                                    last_block=(
-                                        downloaded + len(chunk) >= total_size)
-                                )
-                                f.write(decrypted_chunk)
+                                if task.key_data:  # Ensure key_data is present
+                                    decrypted_chunk = decrypt_data(chunk, task.key_data, iv, last_block=(
+                                        downloaded_this_segment + len(chunk) >= total_size and total_size > 0))
+                                    f.write(decrypted_chunk)
+                                else:  # Should not happen if key download is successful
+                                    # Write raw if no key (fallback, might be wrong for encrypted content)
+                                    f.write(chunk)
 
-                                # Update download progress
-                                downloaded += len(chunk)
-                                task.progress["current_file_progress"] = downloaded / \
+                                downloaded_this_segment += len(chunk)
+                                task.progress["current_file_progress"] = downloaded_this_segment / \
                                     total_size if total_size > 0 else 0
                                 task.progress["downloaded_bytes"] += len(chunk)
-
-                                # Update download speed
-                                elapsed = time.time() - start_time
-                                task.update_speed(len(chunk), elapsed)
-
-                                # Send progress notification
+                                # Use segment_start_time for per-segment speed context
+                                task.update_speed(
+                                    len(chunk), time.time() - segment_start_time)
+                                segment_start_time = time.time()  # Reset for next chunk's elapsed time
                                 self._emit_progress(task_id, task.progress)
 
-                        # Rename temporary file
-                        if os.path.exists(temp_filename):
-                            os.rename(temp_filename, ts_filename)
-                            successful_files.append(ts_filename)
+                        if task.canceled_event.is_set():
+                            break  # Check after writing loop
 
-                            # Update segment info
-                            task.segments_info[segment_key] = {
-                                "status": "completed",
-                                "size": os.path.getsize(ts_filename),
-                                "timestamp": time.time()
-                            }
-
-                            success = True
-                            logger.debug(
-                                f"Successfully downloaded segment {i+1}/{task.segments}")
-                            break
-
+                        os.rename(temp_filename, ts_filename)
+                        successful_files.append(ts_filename)
+                        task.segments_info[segment_key] = {"status": "completed", "size": os.path.getsize(
+                            ts_filename), "timestamp": time.time()}
+                        segment_success = True
+                        logger.debug(
+                            f"Successfully downloaded segment {i+1}/{task.segments}")
+                        break
                     except Exception as e:
                         logger.error(
                             f"Failed to download segment {i}: {e}", exc_info=True)
-
-                        # Clean up failed temporary file
                         if os.path.exists(temp_filename):
                             try:
                                 os.remove(temp_filename)
-                            except:
+                            except OSError:
                                 pass
+                        time.sleep(retry_delay_val * (attempt + 1))
 
-                    # Wait before retry
-                    time.sleep(retry_delay * (attempt + 1))
-
-                # Update task progress
-                if success:
+                if task.canceled_event.is_set():
+                    break
+                if segment_success:
                     task.progress["completed"] += 1
                 else:
                     task.progress["failed"] += 1
-
-                # Save progress periodically
-                if i % 10 == 0:
+                if i % 10 == 0 or not segment_success:
                     task.save_progress()
-
-                # Send progress notification
                 self._emit_progress(task_id, task.progress)
 
-            # Handle download results
             if task.canceled_event.is_set():
-                logger.info(f"Task canceled: {task.name}")
-                task.status = TaskStatus.CANCELED
-                self._emit_status_changed(
-                    task_id, TaskStatus.RUNNING, task.status)
-                task.save_progress()
-                return
-
-            # Merge video files
-            if successful_files:
                 logger.info(
-                    f"Starting to merge {len(successful_files)} video segments")
+                    f"Task canceled during segments download: {task.name}")
+                task.status = TaskStatus.CANCELED
+            elif task.progress["failed"] > 0 and task.progress["completed"] == 0:
+                logger.error(
+                    f"All segments failed to download for task: {task.name}")
+                task.status = TaskStatus.FAILED
+            elif successful_files:
+                logger.info(
+                    f"Starting to merge {len(successful_files)} video segments for {task.name}")
                 task.progress["current_file"] = "Merging video"
+                # Update UI before merge
+                self._emit_progress(task_id, task.progress)
 
-                # Merge files
-                merge_result = merge_files(
+                merge_result: Dict[str, Any] = merge_files(
                     successful_files, task.output_file, self.settings)
-
-                if merge_result["success"]:
+                if merge_result.get("success"):
                     logger.success(
                         f"Video merge successful: {task.output_file}")
                     task.status = TaskStatus.COMPLETED
-                    task.progress["end_time"] = time.time()
-                    self._emit_status_changed(
-                        task_id, TaskStatus.RUNNING, task.status)
-                    self._emit_completed(
-                        task_id, True, f"Video download and merge successful: {task.output_file}")
                 else:
                     logger.error(
-                        f"Video merge failed: {merge_result['error']}")
+                        f"Video merge failed: {merge_result.get('error', 'Unknown error')}")
                     task.status = TaskStatus.FAILED
-                    self._emit_status_changed(
-                        task_id, TaskStatus.RUNNING, task.status)
-                    self._emit_completed(
-                        task_id, False, f"Video merge failed: {merge_result['error']}")
+            # No successful files and not canceled (e.g. all segments failed)
             else:
                 logger.error(
-                    "No successfully downloaded video segments to merge")
+                    f"No successfully downloaded video segments to merge for task: {task.name}")
                 task.status = TaskStatus.FAILED
-                self._emit_status_changed(
-                    task_id, TaskStatus.RUNNING, task.status)
+
+            task.progress["end_time"] = time.time()
+            # Assuming it was RUNNING
+            self._emit_status_changed(task_id, TaskStatus.RUNNING, task.status)
+            if task.status == TaskStatus.COMPLETED:
                 self._emit_completed(
-                    task_id, False, "No successfully downloaded video segments to merge")
+                    task_id, True, f"Video download and merge successful: {task.output_file}")
+            elif task.status != TaskStatus.CANCELED:  # FAILED or other non-canceled states
+                error_message = "Task failed."
+                if task.progress["failed"] > 0 and task.progress["completed"] == 0:
+                    error_message = "All segments failed to download."
+                elif not successful_files and task.segments > 0:  # task.segments should be > 0
+                    error_message = "No segments were successfully downloaded to merge."
+                elif 'error' in locals().get('merge_result', {}):  # Check if merge_result exists and has error
+                    error_message = f"Video merge failed: {locals()['merge_result']['error']}"
 
-            # Auto cleanup temporary files
-            auto_cleanup = self.settings.get(
-                "general", "auto_cleanup", True) if self.settings else True
-            keep_temp = self.settings.get(
-                "advanced", "keep_temp_files", False) if self.settings else False
+                self._emit_completed(task_id, False, error_message)
 
-            if auto_cleanup and not keep_temp:
-                logger.info(f"Cleaning up temporary files: {temp_dir}")
-                for file in successful_files:
+            auto_cleanup_val: bool = True
+            keep_temp_val: bool = False
+            if self.settings:
+                auto_cleanup_val = bool(self.settings.get(
+                    "general", "auto_cleanup", True))
+                keep_temp_val = bool(self.settings.get(
+                    "advanced", "keep_temp_files", False))
+
+            if auto_cleanup_val and not keep_temp_val and os.path.exists(temp_dir):
+                logger.info(f"Cleaning up temporary files in: {temp_dir}")
+                # successful_files list contains paths within temp_dir
+                for file_path in successful_files:  # These should have been merged
+                    if os.path.exists(file_path):
+                        try:
+                            os.remove(file_path)
+                        except OSError as e:
+                            logger.warning(
+                                f"Failed to clean up file: {file_path}, error: {e}")
+                # Attempt to remove other temp files if any (e.g. .temp parts)
+                for item in os.listdir(temp_dir):
+                    item_path = os.path.join(temp_dir, item)
                     try:
-                        if os.path.exists(file):
-                            os.remove(file)
-                    except Exception as e:
+                        if os.path.isfile(item_path):
+                            os.remove(item_path)
+                    except OSError as e:
                         logger.warning(
-                            f"Failed to clean up file: {file}, error: {e}")
-
+                            f"Failed to clean up temp item: {item_path}, error: {e}")
                 try:
-                    if os.path.exists(temp_dir):
-                        os.rmdir(temp_dir)
-                except Exception as e:
+                    os.rmdir(temp_dir)
+                except OSError as e:
                     logger.warning(
-                        f"Failed to delete temporary directory: {temp_dir}, error: {e}")
-
-            # Save final progress
+                        f"Failed to delete temporary directory: {temp_dir}, error: {e} (may not be empty)")
             task.save_progress()
 
-            # Remove from active tasks
-            with self.lock:
-                if task_id in self.active_tasks:
-                    self.active_tasks.remove(task_id)
-
         except Exception as e:
-            logger.error(f"Task execution error: {e}", exc_info=True)
-            import traceback
-            logger.error(traceback.format_exc())
-
+            logger.error(
+                f"Task execution error for {task.name} (ID: {task_id}): {e}", exc_info=True)
             task.status = TaskStatus.FAILED
+            # Assuming it was RUNNING
             self._emit_status_changed(task_id, TaskStatus.RUNNING, task.status)
             self._emit_completed(
                 task_id, False, f"Task execution error: {str(e)}")
-
-            # Remove from active tasks
+        finally:
             with self.lock:
                 if task_id in self.active_tasks:
                     self.active_tasks.remove(task_id)
