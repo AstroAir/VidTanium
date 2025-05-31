@@ -8,7 +8,8 @@ import os
 import logging
 
 from qfluentwidgets import (
-    TabWidget, PushButton, LineEdit, CheckBox,
+    TabWidget as QTabWidgetFluent,  # type: ignore
+    PushButton, LineEdit, CheckBox,
     TextEdit, SpinBox, ComboBox, CardWidget, BodyLabel,
     SubtitleLabel, StrongBodyLabel, ProgressBar, FluentIcon,
     InfoBarPosition, SimpleCardWidget, InfoBar
@@ -50,8 +51,8 @@ class BatchURLDialog(QDialog):
         main_layout.addWidget(self.title_label)
 
         # 创建选项卡
-        self.tabs = TabWidget()
-        
+        self.tabs = QTabWidgetFluent()
+
         # 文本输入选项卡
         self.text_tab = QWidget()
         self._create_text_tab()
@@ -91,16 +92,18 @@ class BatchURLDialog(QDialog):
         main_layout.addWidget(preview_card)
 
         # 添加标准按钮
-        self.button_box = QDialogButtonBox(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
-        self.button_box.button(QDialogButtonBox.Ok).setText("导入")
-        self.button_box.button(QDialogButtonBox.Ok).setIcon(FluentIcon.DOWNLOAD)
-        self.button_box.button(QDialogButtonBox.Ok).setEnabled(False)
-        self.button_box.button(QDialogButtonBox.Cancel).setText("取消")
-        
+        self.button_box = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Cancel | QDialogButtonBox.StandardButton.Ok)
+        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setText("导入")
+        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setIcon(
+            FluentIcon.DOWNLOAD)  # type: ignore
+        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
+        self.button_box.button(QDialogButtonBox.StandardButton.Cancel).setText("取消")
+
         # 连接按钮信号
         self.button_box.accepted.connect(self._import_urls)
         self.button_box.rejected.connect(self.reject)
-        
+
         main_layout.addWidget(self.button_box)
 
     def _create_text_tab(self):
@@ -288,7 +291,7 @@ class BatchURLDialog(QDialog):
             InfoBar.success(
                 title="粘贴成功",
                 content="已从剪贴板粘贴文本",
-                orient=Qt.Horizontal,
+                orient=Qt.Orientation.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
                 duration=2000,
@@ -298,7 +301,7 @@ class BatchURLDialog(QDialog):
             InfoBar.warning(
                 title="粘贴失败",
                 content="剪贴板中没有文本内容",
-                orient=Qt.Horizontal,
+                orient=Qt.Orientation.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
                 duration=2000,
@@ -312,7 +315,7 @@ class BatchURLDialog(QDialog):
         InfoBar.success(
             title="已清空",
             content="文本框内容已清空",
-            orient=Qt.Horizontal,
+            orient=Qt.Orientation.Horizontal,
             isClosable=True,
             position=InfoBarPosition.TOP,
             duration=2000,
@@ -344,7 +347,7 @@ class BatchURLDialog(QDialog):
             InfoBar.success(
                 title="加载成功",
                 content=f"从文件中提取了 {len(urls)} 个URL",
-                orient=Qt.Horizontal,
+                orient=Qt.Orientation.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
                 duration=2000,
@@ -354,7 +357,7 @@ class BatchURLDialog(QDialog):
             InfoBar.error(
                 title="加载失败",
                 content=f"加载文件出错: {str(e)}",
-                orient=Qt.Horizontal,
+                orient=Qt.Orientation.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
                 duration=3000,
@@ -376,7 +379,7 @@ class BatchURLDialog(QDialog):
             InfoBar.warning(
                 title="输入错误",
                 content="请输入网页URL",
-                orient=Qt.Horizontal,
+                orient=Qt.Orientation.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
                 duration=2000,
@@ -389,7 +392,7 @@ class BatchURLDialog(QDialog):
             InfoBar.error(
                 title="输入错误",
                 content="请输入有效的URL",
-                orient=Qt.Horizontal,
+                orient=Qt.Orientation.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
                 duration=2000,
@@ -410,7 +413,7 @@ class BatchURLDialog(QDialog):
             InfoBar.warning(
                 title="选择错误",
                 content="请至少选择一种媒体类型",
-                orient=Qt.Horizontal,
+                orient=Qt.Orientation.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
                 duration=2000,
@@ -426,8 +429,11 @@ class BatchURLDialog(QDialog):
         progress.setFormat("正在抓取URL...")
 
         # 添加到URL卡片的底部
-        url_card_layout = self.web_tab.findChild(CardWidget).layout()
-        url_card_layout.addWidget(progress)
+        url_card = self.web_tab.findChild(CardWidget)
+        if url_card:
+            url_card_layout = url_card.layout()
+            if url_card_layout:
+                url_card_layout.addWidget(progress)
 
         # 禁用抓取按钮
         self.fetch_button.setEnabled(False)
@@ -442,7 +448,11 @@ class BatchURLDialog(QDialog):
                 url, headers, extensions)
 
             # 移除进度条并恢复按钮
-            url_card_layout.removeWidget(progress)
+            url_card = self.web_tab.findChild(CardWidget)
+            if url_card:
+                layout = url_card.layout()
+                if layout:
+                    layout.removeWidget(progress)
             progress.deleteLater()
             self.fetch_button.setEnabled(True)
 
@@ -452,7 +462,7 @@ class BatchURLDialog(QDialog):
             InfoBar.success(
                 title="抓取成功",
                 content=f"从网页中提取了 {len(urls)} 个URL",
-                orient=Qt.Horizontal,
+                orient=Qt.Orientation.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
                 duration=2000,
@@ -461,14 +471,18 @@ class BatchURLDialog(QDialog):
 
         except Exception as e:
             # 移除进度条并恢复按钮
-            url_card_layout.removeWidget(progress)
+            url_card = self.web_tab.findChild(CardWidget)
+            if url_card:
+                layout = url_card.layout()
+                if layout:
+                    layout.removeWidget(progress)
             progress.deleteLater()
             self.fetch_button.setEnabled(True)
 
             InfoBar.error(
                 title="抓取失败",
                 content=f"从网页抓取URL出错: {str(e)}",
-                orient=Qt.Horizontal,
+                orient=Qt.Orientation.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
                 duration=3000,
@@ -487,7 +501,7 @@ class BatchURLDialog(QDialog):
         self.url_count_label.setText(f"已检测到 {len(urls)} 个URL")
 
         # 启用/禁用导入按钮
-        self.button_box.button(QDialogButtonBox.Ok).setEnabled(len(urls) > 0)
+        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(len(urls) > 0)
 
     def _import_urls(self):
         """导入URL"""

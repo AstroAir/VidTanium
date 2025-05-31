@@ -22,6 +22,7 @@ from .schedule_toolbar import ScheduleToolbar
 
 logger = logging.getLogger(__name__)
 
+
 class ScheduleManager(QWidget):
     """计划任务管理器界面"""
 
@@ -39,7 +40,7 @@ class ScheduleManager(QWidget):
         self._connect_signals()
         self._populate_tasks()
         self._setup_auto_refresh()
-        
+
     def _create_ui(self):
         """创建界面"""
         layout = QVBoxLayout(self)
@@ -67,7 +68,7 @@ class ScheduleManager(QWidget):
         layout.addWidget(self.toolbar)
 
         # 主分割器: 表格 + 详情面板
-        self.splitter = QSplitter(Qt.Horizontal)
+        self.splitter = QSplitter(Qt.Orientation.Horizontal)
         self.splitter.setChildrenCollapsible(False)
 
         # 左侧表格
@@ -119,15 +120,16 @@ class ScheduleManager(QWidget):
         """连接信号与槽"""
         # 自动刷新开关
         self.auto_refresh.toggled.connect(self._toggle_auto_refresh)
-        
+
         # 表格过滤信号
         self.search_input.textChanged.connect(self._filter_tasks)
         self.filter_combo.currentIndexChanged.connect(self._on_filter_changed)
-        
+
         # 表格上下文菜单
-        self.task_table.customContextMenuRequested.connect(self._show_context_menu)
+        self.task_table.customContextMenuRequested.connect(
+            self._show_context_menu)
         self.task_table.task_clicked.connect(self._show_task_details)
-        
+
         # 设置操作处理函数
         self.task_table.set_action_handlers({
             'enable': lambda task_id: self.task_action_requested.emit(task_id, "enable"),
@@ -136,19 +138,20 @@ class ScheduleManager(QWidget):
             'show_details': self._show_task_details,
             'remove': lambda task_id: self.task_action_requested.emit(task_id, "remove")
         })
-        
+
         # 详情面板按钮
         self.task_details.enable_button.clicked.connect(self._on_toggle_task)
         self.task_details.run_now_button.clicked.connect(self._on_run_now)
         self.task_details.delete_button.clicked.connect(self._on_delete_task)
-        
+
         # 工具栏按钮
-        self.toolbar.new_task_clicked.connect(lambda: self.task_action_requested.emit("", "new"))
+        self.toolbar.new_task_clicked.connect(
+            lambda: self.task_action_requested.emit("", "new"))
         self.toolbar.refresh_clicked.connect(self._populate_tasks)
         self.toolbar.enable_all_clicked.connect(self._on_enable_all)
         self.toolbar.disable_all_clicked.connect(self._on_disable_all)
         self.toolbar.view_details_toggled.connect(self.task_details.setVisible)
-        
+
         # 初始隐藏详情面板
         self.task_details.setVisible(False)
 
@@ -194,7 +197,7 @@ class ScheduleManager(QWidget):
         """过滤任务"""
         search_text = self.search_input.text()
         self.task_table.filter_tasks(search_text, self.current_filter)
-        
+
         # 更新状态栏信息
         visible_rows = self.task_table.get_visible_rows_count()
         total_rows = self.task_table.get_total_rows_count()
@@ -204,7 +207,7 @@ class ScheduleManager(QWidget):
         """填充任务列表"""
         tasks = self.scheduler.get_all_tasks()
         self.task_table.populate_tasks(tasks)
-        
+
         # 应用当前过滤器
         self._filter_tasks()
 
@@ -251,13 +254,13 @@ class ScheduleManager(QWidget):
         if not name_item:
             return
 
-        task_id = name_item.data(Qt.UserRole)
+        task_id = name_item.data(Qt.ItemDataRole.UserRole)
         task = self.scheduler.get_task(task_id)
         if not task:
             return
 
         # 创建上下文菜单
-        menu = RoundMenu(self)
+        menu = RoundMenu("Task Actions", self)
 
         # 添加不同操作基于任务状态
         if task.enabled:
@@ -353,9 +356,9 @@ class ScheduleManager(QWidget):
         if task:
             # 更新表格中的任务行
             self.task_table.update_task_row(task_id, task)
-                
+
             # 如果是当前显示的任务，更新详情面板
-            if (self.task_details.isVisible() and 
+            if (self.task_details.isVisible() and
                     self.task_details.current_task and
                     self.task_details.current_task.task_id == task_id):
                 self.task_details.update_task(task)

@@ -2,9 +2,10 @@ from PySide6.QtWidgets import (
     QWidget, QFormLayout
 )
 from PySide6.QtCore import Signal, Slot
-from qfluentwidgets import (
+from qfluentwidgets import (  # type: ignore
     ComboBox, SpinBox
 )
+from typing import Optional, Dict, Union
 
 
 class EncodingSettingsWidget(QWidget):
@@ -13,7 +14,7 @@ class EncodingSettingsWidget(QWidget):
     # 设置变更信号
     settings_changed = Signal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
         self._create_ui()
 
@@ -21,7 +22,8 @@ class EncodingSettingsWidget(QWidget):
         """创建编码设置界面"""
         # 编码设置布局
         layout = QFormLayout(self)
-        layout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        layout.setFieldGrowthPolicy(
+            QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         layout.setSpacing(12)
         layout.setContentsMargins(0, 0, 0, 0)
 
@@ -58,28 +60,29 @@ class EncodingSettingsWidget(QWidget):
         layout.addRow("音频编码:", self.audio_codec_combo)
 
     @Slot(int)
-    def _on_quality_changed(self, index):
+    def _on_quality_changed(self, index: int):
         """处理质量选择变化"""
         # 仅对自定义质量启用码率设置
         self.bitrate_spin.setEnabled(index == 3)  # 自定义选项
         self.settings_changed.emit()
 
-    def get_video_codec(self):
+    def get_video_codec(self) -> str:
         """获取视频编码设置"""
         return self.video_codec_combo.currentText()
 
-    def get_audio_codec(self):
+    def get_audio_codec(self) -> str:
         """获取音频编码设置"""
         return self.audio_codec_combo.currentText()
 
-    def get_quality_settings(self):
+    def get_quality_settings(self) -> Dict[str, Union[str, int]]:
         """获取质量设置"""
-        quality = self.video_quality_combo.currentText()
+        quality: str = self.video_quality_combo.currentText()
+        bitrate: int
         if quality == "自定义":
             bitrate = self.bitrate_spin.value()
         else:
             # 将质量选择映射到码率
-            quality_map = {
+            quality_map: Dict[str, int] = {
                 "高": 5000,
                 "中": 2500,
                 "低": 1000

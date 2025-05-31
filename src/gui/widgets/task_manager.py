@@ -72,9 +72,9 @@ class TaskManager(QWidget):
         self.task_table.setHorizontalHeaderLabels(
             ["名称", "状态", "进度", "速度", "已完成/总计", "剩余时间", "操作"]
         )
-        self.task_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.task_table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.task_table.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.task_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.task_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.task_table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.task_table.customContextMenuRequested.connect(
             self._show_context_menu)
 
@@ -142,13 +142,13 @@ class TaskManager(QWidget):
 
         # 设置表格列宽
         header = self.task_table.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.Stretch)  # 名称列可伸缩
-        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(2, QHeaderView.Interactive)  # 进度条可手动调整
-        header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(4, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(5, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(6, QHeaderView.Fixed)  # 固定操作列宽度
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)  # 名称列可伸缩
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Interactive)  # 进度条可手动调整
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(6, QHeaderView.ResizeMode.Fixed)  # 固定操作列宽度
 
         # 预设一个合适的操作列宽度和进度条列宽度
         self.task_table.setColumnWidth(6, 180)
@@ -161,7 +161,7 @@ class TaskManager(QWidget):
 
         # 在没有任务时显示的提示信息
         self.empty_hint = BodyLabel("暂无下载任务，点击'新建任务'按钮开始下载")
-        self.empty_hint.setAlignment(Qt.AlignCenter)
+        self.empty_hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.empty_hint.setStyleSheet(
             "color: #808080; padding: 30px; font-size: 14px;")
         layout.addWidget(self.empty_hint)
@@ -186,7 +186,7 @@ class TaskManager(QWidget):
 
             # 名称
             name_item = QTableWidgetItem(task.name)
-            name_item.setData(Qt.UserRole, task_id)
+            name_item.setData(Qt.ItemDataRole.UserRole, task_id)
             self.task_table.setItem(i, 0, name_item)
 
             # 状态
@@ -263,15 +263,18 @@ class TaskManager(QWidget):
         """更新任务进度"""
         for row in range(self.task_table.rowCount()):
             name_item = self.task_table.item(row, 0)
-            if name_item and name_item.data(Qt.UserRole) == task_id:
+            if name_item and name_item.data(Qt.ItemDataRole.UserRole) == task_id:
                 # 更新进度条
                 progress_bar = self.task_table.cellWidget(row, 2)
                 if progress_bar:
-                    completed = progress.get("completed", 0)
-                    total = progress.get("total", 0)
-                    percentage = int((completed / total) *
-                                     100) if total > 0 else 0
-                    progress_bar.setValue(percentage)
+                    # Explicitly check if it's a ProgressBar instance
+                    from qfluentwidgets import ProgressBar
+                    if isinstance(progress_bar, ProgressBar):
+                        completed = progress.get("completed", 0)
+                        total = progress.get("total", 0)
+                        percentage = int((completed / total) *
+                                         100) if total > 0 else 0
+                        progress_bar.setValue(percentage)
 
                 # 更新速度
                 speed_text = self._format_speed(progress.get("speed", 0))
@@ -282,7 +285,12 @@ class TaskManager(QWidget):
                 # 更新已完成/总计
                 completed_total_item = self.task_table.item(row, 4)
                 if completed_total_item:
-                    completed_total_item.setText(f"{completed}/{total}")
+                    completed_val = progress.get("completed")
+                    total_val = progress.get("total")
+                    if completed_val is not None and total_val is not None:
+                        completed_total_item.setText(f"{completed_val}/{total_val}")
+                    else:
+                        completed_total_item.setText("N/A")
 
                 # 更新剩余时间
                 estimated_time = progress.get("estimated_time")
@@ -298,7 +306,7 @@ class TaskManager(QWidget):
         """更新任务状态"""
         for row in range(self.task_table.rowCount()):
             name_item = self.task_table.item(row, 0)
-            if name_item and name_item.data(Qt.UserRole) == task_id:
+            if name_item and name_item.data(Qt.ItemDataRole.UserRole) == task_id:
                 # 更新状态文本和颜色
                 status_item = self.task_table.item(row, 1)
                 if status_item:
@@ -417,7 +425,7 @@ class TaskManager(QWidget):
         if not name_item:
             return
 
-        task_id = name_item.data(Qt.UserRole)
+        task_id = name_item.data(Qt.ItemDataRole.UserRole)
         task = self.tasks.get(task_id)
         if not task:
             return
@@ -475,8 +483,9 @@ class TaskManager(QWidget):
         # 在父窗口中处理
         parent = self.parent()
         while parent:
-            if hasattr(parent, "show_new_task_dialog"):
-                parent.show_new_task_dialog()
+            method = getattr(parent, "show_new_task_dialog", None)
+            if callable(method):
+                method()
                 break
             parent = parent.parent()
 
@@ -485,8 +494,9 @@ class TaskManager(QWidget):
         # 在父窗口中处理
         parent = self.parent()
         while parent:
-            if hasattr(parent, "start_all_tasks"):
-                parent.start_all_tasks()
+            method = getattr(parent, "start_all_tasks", None)
+            if callable(method):
+                method()
                 break
             parent = parent.parent()
 
@@ -495,8 +505,9 @@ class TaskManager(QWidget):
         # 在父窗口中处理
         parent = self.parent()
         while parent:
-            if hasattr(parent, "pause_all_tasks"):
-                parent.pause_all_tasks()
+            method = getattr(parent, "pause_all_tasks", None)
+            if callable(method):
+                method()
                 break
             parent = parent.parent()
 
@@ -505,8 +516,9 @@ class TaskManager(QWidget):
         # 在父窗口中处理
         parent = self.parent()
         while parent:
-            if hasattr(parent, "clear_completed_tasks"):
-                parent.clear_completed_tasks()
+            method = getattr(parent, "clear_completed_tasks", None)
+            if callable(method):
+                method()
                 break
             parent = parent.parent()
 
@@ -560,8 +572,9 @@ class TaskManager(QWidget):
         # 在父窗口中处理
         parent = self.parent()
         while parent:
-            if hasattr(parent, "show_media_processing"):
-                parent.show_media_processing()
+            method = getattr(parent, "show_media_processing", None)
+            if callable(method):
+                method()
                 break
             parent = parent.parent()
 
@@ -573,7 +586,7 @@ class TaskManager(QWidget):
 
         for item in selected_rows:
             if item.column() == 0:  # 只处理第一列的项
-                task_id = item.data(Qt.UserRole)
+                task_id = item.data(Qt.ItemDataRole.UserRole)
                 if task_id:
                     task_ids.append(task_id)
 

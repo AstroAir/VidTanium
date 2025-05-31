@@ -1,28 +1,30 @@
 """计划任务工具栏组件"""
 
-from PySide6.QtWidgets import QToolBar, QAction
+from PySide6.QtWidgets import QToolBar
+from PySide6.QtGui import QAction
 from PySide6.QtCore import Qt, Signal, QSize
 
 from qfluentwidgets import FluentIcon
 
+
 class ScheduleToolbar(QToolBar):
     """计划任务工具栏"""
-    
+
     # 信号定义
     new_task_clicked = Signal()
     refresh_clicked = Signal()
     enable_all_clicked = Signal()
     disable_all_clicked = Signal()
     view_details_toggled = Signal(bool)  # 是否查看详情
-    
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._create_ui()
-        
+
     def _create_ui(self):
         """创建用户界面"""
         self.setIconSize(QSize(16, 16))
-        self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
         # 新建任务
         self.new_task_action = QAction(FluentIcon.ADD.icon(), "新建计划", self)
@@ -56,7 +58,7 @@ class ScheduleToolbar(QToolBar):
         self.view_details_action.setCheckable(True)
         self.view_details_action.triggered.connect(self.view_details_toggled)
         self.addAction(self.view_details_action)
-        
+
     def set_details_checked(self, checked):
         """设置详情按钮的选中状态"""
         self.view_details_action.setChecked(checked)

@@ -10,21 +10,20 @@ from src.gui.main_window import MainWindow
 from src.core.scheduler import TaskScheduler
 
 
-class Application(QObject):
+class Application(QApplication):
     """Application class"""
 
     def __init__(self, config_dir=None):
-        super().__init__()
+        super().__init__(sys.argv)
 
         # Initialize settings
         self.settings = Settings(config_dir)
 
-        # Create Qt application
-        self.app = QApplication(sys.argv)
-        self.app.setApplicationName("Video Downloader")
-        self.app.setApplicationVersion("1.0.0")
-        self.app.setOrganizationName("Development Team")
-        self.app.setOrganizationDomain("example.com")
+        # Set application properties
+        self.setApplicationName("Video Downloader")
+        self.setApplicationVersion("1.0.0")
+        self.setOrganizationName("Development Team")
+        self.setOrganizationDomain("example.com")
 
         # Apply theme
         self._apply_theme()
@@ -46,7 +45,7 @@ class Application(QObject):
 
         # Create main window
         self.main_window = MainWindow(
-            self, self.download_manager, self.settings)
+            self, self.download_manager, self.settings)  # type: ignore
 
         # Check initial settings
         self._check_initial_settings()
@@ -70,14 +69,16 @@ class Application(QObject):
 
         # Run application
         logger.info("Application started, entering main event loop")
-        return self.app.exec()
+        return self.exec()
 
-    def send_notification(self, title, message):
+    def send_notification(self, title: str, message: str, icon=None, duration=5000):
         """Send system notification
 
         Args:
             title (str): Notification title
             message (str): Notification message
+            icon: Notification icon (optional)
+            duration: Notification duration in ms (default: 5000)
         """
         if not self.settings.get("ui", "show_notifications", True):
             logger.debug("Notifications are disabled, skipping")
@@ -86,11 +87,9 @@ class Application(QObject):
         # Check if system tray is available
         if hasattr(self, "tray_icon") and self.tray_icon:
             logger.debug(f"Sending notification: {title} - {message}")
-            self.tray_icon.showMessage(title, message)
+            self.tray_icon.show_notification(title, message, icon, duration)
         else:
             logger.debug("System tray not available, notification not shown")
-
-        # Third-party libraries like plyer can also be used for cross-platform notifications
 
     def add_task_from_url(self, url):
         """Automatically create task from URL
@@ -193,9 +192,6 @@ class Application(QObject):
 
         Args:
             task_data (dict): Task configuration data
-
-        Returns:
-            bool: True if task was created successfully, False otherwise
         """
         try:
             # Create download task
@@ -237,10 +233,14 @@ class Application(QObject):
 
             logger.success(
                 f"Successfully created and started scheduled task: {task.name}")
-            return True
         except Exception as e:
             logger.error(f"Error processing download task: {e}", exc_info=True)
-            return False
+            # Send notification on error if enabled
+            if task_data.get("notify", True):
+                self.send_notification(
+                    "Scheduled Task Failed",
+                    f"Failed to start scheduled task: {task_data.get('name', 'Unknown')}"
+                )
 
     def _init_system_tray(self):
         """Initialize system tray"""
@@ -252,7 +252,7 @@ class Application(QObject):
 
         if enable_tray:
             self.tray_icon = SystemTrayIcon(
-                self.app, self.settings, self.main_window)
+                self, self.settings, self.main_window)
 
             # Connect signals
             self.tray_icon.action_triggered.connect(self._handle_tray_action)

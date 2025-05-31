@@ -1,10 +1,10 @@
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
     QHeaderView, QAbstractItemView, QMessageBox, QLabel, QSplitter,
-    QComboBox, QGroupBox, QFormLayout, QFrame, QToolBar, QAction
+    QComboBox, QGroupBox, QFormLayout, QFrame, QToolBar
 )
 from PySide6.QtCore import Qt, Signal, Slot, QSize, QTimer
-from PySide6.QtGui import QColor, QBrush, QIcon, QCursor
+from PySide6.QtGui import QColor, QBrush, QIcon, QCursor, QAction
 from datetime import datetime, timedelta
 import logging
 
@@ -19,7 +19,6 @@ from qfluentwidgets import (
 from src.core.scheduler import TaskType
 
 logger = logging.getLogger(__name__)
-
 
 
 class TaskDetailsWidget(CardWidget):
@@ -53,13 +52,13 @@ class TaskDetailsWidget(CardWidget):
 
         # 添加分隔线
         separator = QFrame()
-        separator.setFrameShape(QFrame.HLine)
-        separator.setFrameShadow(QFrame.Sunken)
+        separator.setFrameShape(QFrame.Shape.HLine)
+        separator.setFrameShadow(QFrame.Shadow.Sunken)
         layout.addWidget(separator)
 
         # 详情表单
         details_form = QFormLayout()
-        details_form.setLabelAlignment(Qt.AlignRight)
+        details_form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
         details_form.setSpacing(10)
 
         # 任务名称
@@ -93,7 +92,7 @@ class TaskDetailsWidget(CardWidget):
         # 任务配置
         self.config_group = QGroupBox("任务配置")
         config_layout = QFormLayout(self.config_group)
-        config_layout.setLabelAlignment(Qt.AlignRight)
+        config_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
 
         # 根据任务类型不同，配置项会变化
         # 周期
@@ -289,7 +288,7 @@ class ScheduleManager(QWidget):
         layout.addWidget(self.toolbar)
 
         # 主分割器: 表格 + 详情面板
-        self.splitter = QSplitter(Qt.Horizontal)
+        self.splitter = QSplitter(Qt.Orientation.Horizontal)
         self.splitter.setChildrenCollapsible(False)
 
         # 左侧表格
@@ -319,9 +318,9 @@ class ScheduleManager(QWidget):
         self.task_table.setHorizontalHeaderLabels(
             ["名称", "类型", "状态", "下次执行", "上次执行", "操作"]
         )
-        self.task_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.task_table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.task_table.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.task_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.task_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.task_table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.task_table.customContextMenuRequested.connect(
             self._show_context_menu)
         self.task_table.itemClicked.connect(self._on_task_clicked)
@@ -329,12 +328,12 @@ class ScheduleManager(QWidget):
 
         # 设置表格列宽
         header = self.task_table.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.Stretch)
-        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(4, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(5, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)
 
         table_layout.addWidget(self.task_table)
 
@@ -369,7 +368,7 @@ class ScheduleManager(QWidget):
         """创建工具栏"""
         self.toolbar = QToolBar()
         self.toolbar.setIconSize(QSize(16, 16))
-        self.toolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
         # 新建任务
         self.new_task_action = QAction(FluentIcon.ADD.icon(), "新建计划", self)
@@ -449,7 +448,11 @@ class ScheduleManager(QWidget):
 
         for row in range(self.task_table.rowCount()):
             show_row = True
-            task_id = self.task_table.item(row, 0).data(Qt.UserRole)
+            item = self.task_table.item(row, 0)
+            if item:
+                task_id = item.data(Qt.ItemDataRole.UserRole)
+            else:
+                continue
             task = self.scheduler.get_task(task_id)
 
             if not task:
@@ -487,7 +490,7 @@ class ScheduleManager(QWidget):
         for i, task in enumerate(tasks):
             # 任务名称
             name_item = QTableWidgetItem(task.name)
-            name_item.setData(Qt.UserRole, task.task_id)
+            name_item.setData(Qt.ItemDataRole.UserRole, task.task_id)
             self.task_table.setItem(i, 0, name_item)
 
             # 任务类型
@@ -579,7 +582,11 @@ class ScheduleManager(QWidget):
     def _on_task_clicked(self, item):
         """处理任务点击"""
         row = item.row()
-        task_id = self.task_table.item(row, 0).data(Qt.UserRole)
+        item = self.task_table.item(row, 0)
+        if item:
+            task_id = item.data(Qt.ItemDataRole.UserRole)
+        else:
+            return
         if task_id:
             self._show_task_details(task_id)
 
@@ -619,13 +626,13 @@ class ScheduleManager(QWidget):
         if not name_item:
             return
 
-        task_id = name_item.data(Qt.UserRole)
+        task_id = name_item.data(Qt.ItemDataRole.UserRole)
         task = self.scheduler.get_task(task_id)
         if not task:
             return
 
         # 创建上下文菜单
-        menu = RoundMenu(self)
+        menu = RoundMenu("Task Menu", self)
 
         # 添加不同操作基于任务状态
         if task.enabled:
@@ -752,26 +759,31 @@ class ScheduleManager(QWidget):
         # 更新表格中的任务
         for row in range(self.task_table.rowCount()):
             item = self.task_table.item(row, 0)
-            if item and item.data(Qt.UserRole) == task_id:
+            if item and item.data(Qt.ItemDataRole.UserRole) == task_id:
                 task = self.scheduler.get_task(task_id)
                 if task:
                     # 更新状态
                     status_text = "已启用" if task.enabled else "已禁用"
                     status_color = QColor(
                         0, 128, 0) if task.enabled else QColor(128, 128, 128)
-                    self.task_table.item(row, 2).setText(status_text)
-                    self.task_table.item(row, 2).setForeground(
-                        QBrush(status_color))
+                    item_status = self.task_table.item(row, 2)
+                    if item_status:
+                        item_status.setText(status_text)
+                        item_status.setForeground(QBrush(status_color))
 
                     # 更新下次执行时间
                     next_run_text = self._format_datetime(
                         task.next_run) if task.next_run else "--"
-                    self.task_table.item(row, 3).setText(next_run_text)
+                    item = self.task_table.item(row, 3)
+                    if item:
+                        item.setText(next_run_text)
 
                     # 更新上次执行时间
                     last_run_text = self._format_datetime(
                         task.last_run) if task.last_run else "--"
-                    self.task_table.item(row, 4).setText(last_run_text)
+                    item = self.task_table.item(row, 4)
+                    if item:
+                        item.setText(last_run_text)
 
                     # 更新操作按钮
                     self._create_action_buttons(row, task)

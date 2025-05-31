@@ -1,6 +1,6 @@
 import logging
 # import os # Unused
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, Callable  # Added Callable
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QStatusBar,
@@ -13,72 +13,88 @@ from PySide6.QtGui import (
 )
 from urllib.parse import urlparse, ParseResult
 from os.path import basename, join
+from enum import Enum
+from ..core.downloader import DownloadManager
 
 
 # Assuming qfluentwidgets components are individually typed,
 # but if the package itself lacks stubs, a '# type: ignore' might be needed on this line
 # depending on your type checker's behavior regarding the "找不到 Stub 文件" error.
-from qfluentwidgets import (
+from qfluentwidgets import (  # type: ignore
     MessageBox, Action, RoundMenu,
     FluentIcon, InfoBar, InfoBarPosition
 )
 
 from .widgets.task_manager import TaskManager
 from .widgets.log_viewer import LogViewer
-from .dialogs.settings_dialog import SettingsDialog
+from .dialogs.settings_dialog import SettingsDialog  # type: ignore
 from .dialogs.task_dialog import TaskDialog
 from .dialogs.about_dialog import AboutDialog
 from .dialogs.batch_url_dialog import BatchURLDialog
-from .dialogs.media_processing_dialog import MediaProcessingDialog
-from .dialogs.batch_conversion_dialog import BatchConversionDialog
-from src.core.downloader import DownloadTask, TaskPriority # Assuming DownloadTask and TaskPriority are well-typed
-from src.core.m3u8_parser import extract_m3u8_info # Assuming this function is well-typed
+# from .dialogs.media_processing_dialog import MediaProcessingDialog # Unused import, can be removed if not needed
+# from .dialogs.batch_conversion_dialog import BatchConversionDialog # Unused import, can be removed if not needed
+# Assuming DownloadTask and TaskPriority are well-typed
+from src.core.downloader import DownloadTask, TaskPriority
+# Assuming this function is well-typed
+from src.core.m3u8_parser import extract_m3u8_info
 
 
 logger = logging.getLogger(__name__)
 
 # --- Placeholder/Helper Types (Replace with actual imports or more detailed Protocols if available) ---
-# It's assumed that DownloadTask has a 'status' attribute which is an enum.
-# For example:
-# class TaskStatus(Enum):
-#     PENDING = "PENDING"
-#     RUNNING = "RUNNING"
-#     PAUSED = "PAUSED"
-#     COMPLETED = "COMPLETED"
-#     FAILED = "FAILED"
-#     CANCELED = "CANCELED"
-# And DownloadTask.status would be of type TaskStatus.
-# Since this enum is not provided, 'Any' will be used for status comparisons,
-# or direct string comparisons if the original code implied that.
-# Users should replace these with their actual TaskStatus enum.
 
-class AppType(QApplication): # Assuming app is a QApplication or subclass
-    tray_icon: Any # Should be QSystemTrayIcon or a custom typed class
+
+class TaskStatus(Enum):  # Added placeholder TaskStatus
+    PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    PAUSED = "PAUSED"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    CANCELED = "CANCELED"
+
+
+class AppType(QApplication):  # Assuming app is a QApplication or subclass
+    tray_icon: Any  # Should be QSystemTrayIcon or a custom typed class
+
     def send_notification(self, title: str, message: str, icon: Optional[FluentIcon] = None, duration: int = 5000) -> None:
         # This is a placeholder signature
+        _ = title, message, icon, duration  # Mark as used
         ...
 
-class SettingsType: # Placeholder for your settings class
-    def get(self, section: str, key: str, default: Any = None) -> Any: ...
-    def set(self, section: str, key: str, value: Any) -> None: ...
+
+class SettingsType:  # Placeholder for your settings class
+    def get(self, section: str, key: str, default: Any = None) -> Any:
+        _ = section, key, default  # Mark as used
+        ...
+
+    def set(self, section: str, key: str, value: Any) -> None:
+        _ = section, key, value  # Mark as used
+        ...
+
     def save_settings(self) -> None: ...
 
-class DownloadManagerType: # Placeholder for your download manager
-    tasks: Dict[str, DownloadTask]
-    active_tasks: List[DownloadTask] # Or Dict[str, DownloadTask]
-    on_task_progress: Optional[callable[[str, Dict[str, Any]], None]]
-    on_task_status_changed: Optional[callable[[str, Any, Any], None]] # Status types are Any
-    on_task_completed: Optional[callable[[str, str], None]]
-    on_task_failed: Optional[callable[[str, str], None]]
+# Removed DownloadManagerType placeholder
+    active_tasks: List[DownloadTask]  # Or Dict[str, DownloadTask]
+    on_task_progress: Optional[Callable[[str, Dict[str, Any]], None]]
+    # Status types are TaskStatus
+    on_task_status_changed: Optional[Callable[[
+        str, TaskStatus, TaskStatus], None]]
+    on_task_completed: Optional[Callable[[str, str], None]]
+    on_task_failed: Optional[Callable[[str, str], None]]
 
     def stop(self) -> None: ...
-    def add_task(self, task: DownloadTask) -> None: ...
-    def start_task(self, task_id: str) -> None: ...
-    def pause_task(self, task_id: str) -> None: ...
-    def resume_task(self, task_id: str) -> None: ...
-    def cancel_task(self, task_id: str) -> None: ...
-    def remove_task(self, task_id: str, delete_files: bool = False) -> None: ...
-    def get_task(self, task_id: str) -> Optional[DownloadTask]: ...
+    def add_task(self, task: DownloadTask) -> None: _ = task; ...
+    def start_task(self, task_id: str) -> None: _ = task_id; ...
+    def pause_task(self, task_id: str) -> None: _ = task_id; ...
+    def resume_task(self, task_id: str) -> None: _ = task_id; ...
+    def cancel_task(self, task_id: str) -> None: _ = task_id; ...
+
+    def remove_task(self, task_id: str, delete_files: bool = False) -> None:
+        _ = task_id, delete_files
+        ...
+    def get_task(
+        self, task_id: str) -> Optional[DownloadTask]: _ = task_id
+    ...
 # --- End Placeholder Types ---
 
 
@@ -118,9 +134,11 @@ class StatusInfoWidget(QWidget):
         if isinstance(self.icon, FluentIcon):
             pixmap = self._create_colored_pixmap(self.icon, self.icon_color)
             self.icon_label.setPixmap(pixmap)
-        elif isinstance(self.icon, QPixmap): # If icon can be a QPixmap
-             # Scale pixmap if necessary, original code used fixed size
-            self.icon_label.setPixmap(self.icon.scaled(16, 16, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+        # type: ignore[redundant-expr] # Keep for clarity or future Union extension
+        elif isinstance(self.icon, QPixmap):
+            # Scale pixmap if necessary, original code used fixed size
+            self.icon_label.setPixmap(self.icon.scaled(
+                16, 16, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
         # If self.icon could be QIcon (FluentIcon.icon() returns QIcon):
         # elif isinstance(self.icon, QIcon):
         #     pixmap = self.icon.pixmap(16,16)
@@ -128,7 +146,6 @@ class StatusInfoWidget(QWidget):
         #        # Manual coloring for QIcon's pixmap would be similar to _create_colored_pixmap
         #        pass # Placeholder for QIcon coloring
         #     self.icon_label.setPixmap(pixmap)
-
 
     def _create_colored_pixmap(self, fluent_icon: FluentIcon, color: Optional[QColor] = None) -> QPixmap:
         # FluentIcon might handle coloring directly: fluent_icon.icon(color_if_any).pixmap(16,16)
@@ -144,19 +161,21 @@ class StatusInfoWidget(QWidget):
         painter = QPainter(colored_pixmap)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
-        painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
+        painter.setCompositionMode(
+            QPainter.CompositionMode.CompositionMode_SourceOver)
         painter.drawPixmap(0, 0, original_pixmap)
-        painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceIn)
+        painter.setCompositionMode(
+            QPainter.CompositionMode.CompositionMode_SourceIn)
         painter.fillRect(colored_pixmap.rect(), color)
         painter.end()
         return colored_pixmap
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, app: AppType, download_manager: DownloadManagerType, settings: SettingsType):
+    def __init__(self, app: AppType, download_manager: "DownloadManager", settings: SettingsType):
         super().__init__()
         self.app: AppType = app
-        self.download_manager: DownloadManagerType = download_manager
+        self.download_manager: "DownloadManager" = download_manager
         self.settings: SettingsType = settings
         self._force_close: bool = False
 
@@ -173,11 +192,13 @@ class MainWindow(QMainWindow):
         self.system_info_timer: QTimer
         self.auto_save_timer: QTimer
 
-        if self.download_manager: # Ensure download_manager is not None
+        if self.download_manager:  # Ensure download_manager is not None
             self.download_manager.on_task_progress = self.on_task_progress
             self.download_manager.on_task_status_changed = self.on_task_status_changed
             self.download_manager.on_task_completed = self.on_task_completed
             self.download_manager.on_task_failed = self.on_task_failed
+        # else: # Potentially handle the case where download_manager might be None if that's valid
+            # pass
 
         self.setWindowTitle("Encrypted Video Downloader")
         self.setMinimumSize(1000, 700)
@@ -200,22 +221,28 @@ class MainWindow(QMainWindow):
         self.main_splitter.setHandleWidth(8)
         self.main_splitter.setChildrenCollapsible(False)
 
-        self.task_manager = TaskManager(self.settings) # type: ignore[arg-type] # If SettingsType is not what TaskManager expects
+        # type: ignore[arg-type] # If SettingsType is not what TaskManager expects
+        self.task_manager = TaskManager(self.settings)
         self.main_splitter.addWidget(self.task_manager)
         self.log_viewer = LogViewer()
         self.main_splitter.addWidget(self.log_viewer)
-        self.main_splitter.setSizes([int(self.height() * 0.7), int(self.height() * 0.3)])
+        self.main_splitter.setSizes(
+            [int(self.height() * 0.7), int(self.height() * 0.3)])  # type: ignore
         main_layout.addWidget(self.main_splitter)
 
         if hasattr(self.task_manager, 'task_action_requested'):
-            self.task_manager.task_action_requested.connect(self.handle_task_action)
+            self.task_manager.task_action_requested.connect(
+                self.handle_task_action)
 
-        geometry_data: Optional[Any] = self.settings.get("ui", "window_geometry", None)
-        state_data: Optional[Any] = self.settings.get("ui", "window_state", None)
+        geometry_data: Optional[Any] = self.settings.get(
+            "ui", "window_geometry", None)
+        state_data: Optional[Any] = self.settings.get(
+            "ui", "window_state", None)
 
         if isinstance(geometry_data, (str, bytes)):
             try:
-                encoded_geom = geometry_data.encode() if isinstance(geometry_data, str) else geometry_data
+                encoded_geom = geometry_data.encode() if isinstance(
+                    geometry_data, str) else geometry_data
                 self.restoreGeometry(QByteArray.fromBase64(encoded_geom))
             except Exception as e:
                 logger.warning(f"Failed to restore geometry: {e}")
@@ -226,7 +253,6 @@ class MainWindow(QMainWindow):
             except Exception as e:
                 logger.warning(f"Failed to restore state: {e}")
 
-
     def _create_menu(self) -> None:
         file_menu = self.menuBar().addMenu("File(&F)")
         new_task_action = Action(FluentIcon.ADD, "New Task(&N)", self)
@@ -234,7 +260,8 @@ class MainWindow(QMainWindow):
         new_task_action.triggered.connect(self.show_new_task_dialog)
         file_menu.addAction(new_task_action)
 
-        import_url_action = Action(FluentIcon.LINK, "Import from URL(&I)", self)
+        import_url_action = Action(
+            FluentIcon.LINK, "Import from URL(&I)", self)
         import_url_action.setShortcut("Ctrl+I")
         import_url_action.triggered.connect(self.import_from_url)
         file_menu.addAction(import_url_action)
@@ -247,11 +274,13 @@ class MainWindow(QMainWindow):
         file_menu.addSeparator()
 
         import_menu = RoundMenu("Import", self)
-        import_url_submenu_action = Action(FluentIcon.LINK, "Import from URL", self)
+        import_url_submenu_action = Action(
+            FluentIcon.LINK, "Import from URL", self)
         import_url_submenu_action.setShortcut("Ctrl+I")
         import_url_submenu_action.triggered.connect(self.import_from_url)
         import_menu.addAction(import_url_submenu_action)
-        import_batch_action = Action(FluentIcon.FOLDER_ADD, "Batch Import URLs", self)
+        import_batch_action = Action(
+            FluentIcon.FOLDER_ADD, "Batch Import URLs", self)
         import_batch_action.setShortcut("Ctrl+B")
         import_batch_action.triggered.connect(self.import_batch_urls)
         import_menu.addAction(import_batch_action)
@@ -260,17 +289,22 @@ class MainWindow(QMainWindow):
 
         exit_action = Action(FluentIcon.CLOSE, "Exit(&Q)", self)
         exit_action.setShortcut(QKeySequence(QKeySequence.StandardKey.Quit))
-        exit_action.triggered.connect(self.close) # QMainWindow.close, not self.app.quit
+        # QMainWindow.close, not self.app.quit
+        exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
 
         media_menu = self.menuBar().addMenu("Media(&M)")
-        process_media_action = Action(FluentIcon.EDIT, "Process Media Files(&P)", self)
+        process_media_action = Action(
+            FluentIcon.EDIT, "Process Media Files(&P)", self)
         process_media_action.setShortcut("Ctrl+P")
-        process_media_action.triggered.connect(self.show_media_processing)
+        process_media_action.triggered.connect(
+            self.show_media_processing)  # type: ignore[attr-defined]
         media_menu.addAction(process_media_action)
         media_menu.addSeparator()
-        batch_convert_action = Action(FluentIcon.TILES, "Batch Convert(&B)", self)
-        batch_convert_action.triggered.connect(self.show_batch_conversion)
+        batch_convert_action = Action(
+            FluentIcon.TILES, "Batch Convert(&B)", self)
+        batch_convert_action.triggered.connect(
+            self.show_batch_conversion)  # type: ignore[attr-defined]
         media_menu.addAction(batch_convert_action)
 
         task_menu = self.menuBar().addMenu("Tasks(&T)")
@@ -281,7 +315,8 @@ class MainWindow(QMainWindow):
         pause_all_action.triggered.connect(self.pause_all_tasks)
         task_menu.addAction(pause_all_action)
         task_menu.addSeparator()
-        clear_completed_action = Action(FluentIcon.DELETE, "Clear Completed Tasks(&C)", self)
+        clear_completed_action = Action(
+            FluentIcon.DELETE, "Clear Completed Tasks(&C)", self)
         clear_completed_action.triggered.connect(self.clear_completed_tasks)
         task_menu.addAction(clear_completed_action)
 
@@ -297,14 +332,16 @@ class MainWindow(QMainWindow):
         task_layout = QHBoxLayout(task_frame)
         task_layout.setContentsMargins(2, 0, 2, 0)
         task_layout.setSpacing(10)
-        self.status_info_widget = StatusInfoWidget(FluentIcon.DATE_TIME, "Ready", self)
+        self.status_info_widget = StatusInfoWidget(
+            FluentIcon.DATE_TIME, "Ready", self)
         task_layout.addWidget(self.status_info_widget)
         self.status_bar.addWidget(task_frame)
 
         separator1 = QFrame()
         separator1.setFrameShape(QFrame.Shape.VLine)
         separator1.setFrameShadow(QFrame.Shadow.Sunken)
-        separator1.setFixedWidth(1); separator1.setFixedHeight(16)
+        separator1.setFixedWidth(1)
+        separator1.setFixedHeight(16)
         self.status_bar.addWidget(separator1)
         self.active_tasks_label = QLabel("Active Tasks: 0/0")
         self.status_bar.addWidget(self.active_tasks_label)
@@ -312,7 +349,8 @@ class MainWindow(QMainWindow):
         separator2 = QFrame()
         separator2.setFrameShape(QFrame.Shape.VLine)
         separator2.setFrameShadow(QFrame.Shadow.Sunken)
-        separator2.setFixedWidth(1); separator2.setFixedHeight(16)
+        separator2.setFixedWidth(1)
+        separator2.setFixedHeight(16)
         self.status_bar.addWidget(separator2)
 
         self.cpu_usage_label = QLabel("CPU: 0%")
@@ -323,7 +361,8 @@ class MainWindow(QMainWindow):
 
         speed_frame = QFrame()
         speed_layout = QHBoxLayout(speed_frame)
-        speed_layout.setContentsMargins(6, 0, 6, 0); speed_layout.setSpacing(6)
+        speed_layout.setContentsMargins(6, 0, 6, 0)
+        speed_layout.setSpacing(6)
         speed_icon_label = QLabel()
         speed_icon_label.setPixmap(FluentIcon.DOWNLOAD.icon().pixmap(16, 16))
         speed_layout.addWidget(speed_icon_label)
@@ -346,9 +385,11 @@ class MainWindow(QMainWindow):
             memory_mb = memory_info.rss / (1024 * 1024)
             self.memory_usage_label.setText(f"Memory: {memory_mb:.1f}MB")
         except ImportError:
-            self.cpu_usage_label.hide(); self.memory_usage_label.hide()
-        except Exception:
-            self.cpu_usage_label.hide(); self.memory_usage_label.hide()
+            self.cpu_usage_label.hide()
+            self.memory_usage_label.hide()
+        except Exception:  # pragma: no cover
+            self.cpu_usage_label.hide()
+            self.memory_usage_label.hide()
 
     def _connect_signals(self) -> None:
         pass
@@ -360,22 +401,26 @@ class MainWindow(QMainWindow):
 
     def _update_ui(self) -> None:
         if hasattr(self, 'task_manager') and self.download_manager:
-            self.task_manager.update_tasks(self.download_manager.tasks)
+            self.task_manager.update_tasks(
+                self.download_manager.tasks)  # type: ignore
             active_count = len(self.download_manager.active_tasks)
             total_count = len(self.download_manager.tasks)
-            self.active_tasks_label.setText(f"Active Tasks: {active_count}/{total_count}")
+            self.active_tasks_label.setText(
+                f"Active Tasks: {active_count}/{total_count}")
             if active_count > 0:
-                self.status_info_widget.setContent(FluentIcon.DOWNLOAD, "Downloading")
+                self.status_info_widget.setContent(
+                    FluentIcon.DOWNLOAD, "Downloading")
             elif total_count > 0:
                 self.status_info_widget.setContent(FluentIcon.PAUSE, "Paused")
             else:
-                self.status_info_widget.setContent(FluentIcon.DATE_TIME, "Ready")
+                self.status_info_widget.setContent(
+                    FluentIcon.DATE_TIME, "Ready")
 
     def auto_save(self) -> None:
         if self.download_manager:
             for task in self.download_manager.tasks.values():
                 if hasattr(task, 'save_progress'):
-                    task.save_progress()
+                    task.save_progress()  # type: ignore[attr-defined]
 
     def closeEvent(self, event: QCloseEvent) -> None:
         if self.app.tray_icon and self.settings.get("ui", "minimize_to_tray", False) and not self._force_close:
@@ -388,8 +433,8 @@ class MainWindow(QMainWindow):
                         "Encrypted Video Downloader",
                         "Application minimized to system tray. Click icon to restore."
                     )
-                elif hasattr(self.app.tray_icon, "show_notification"): # Custom method
-                     self.app.tray_icon.show_notification( # type: ignore
+                elif hasattr(self.app.tray_icon, "show_notification"):  # Custom method
+                    self.app.tray_icon.show_notification(  # type: ignore
                         "Encrypted Video Downloader",
                         "Application minimized to system tray. Click icon to restore."
                     )
@@ -398,8 +443,7 @@ class MainWindow(QMainWindow):
         active_tasks_list: List[DownloadTask] = []
         if self.download_manager:
             for task in self.download_manager.tasks.values():
-                # Replace with actual TaskStatus enum checks, e.g., task.status == TaskStatus.RUNNING
-                if hasattr(task, 'status') and task.status in ["RUNNING", "PAUSED"]: # Placeholder string comparison
+                if hasattr(task, 'status') and task.status in [TaskStatus.RUNNING.value, TaskStatus.PAUSED.value]:
                     active_tasks_list.append(task)
 
         if active_tasks_list and self.settings.get("ui", "confirm_on_exit", True):
@@ -408,37 +452,45 @@ class MainWindow(QMainWindow):
                 f"There are still {len(active_tasks_list)} tasks in progress. Are you sure you want to exit?\n(Tasks will be paused and progress saved)",
                 self
             )
-            if not msg_box.exec(): # exec() returns bool for MessageBox in some contexts or int for QDialog
+            # type: ignore[truthy-bool] # Assuming exec returns int, 0 for No
+            if not msg_box.exec():
                 event.ignore()
                 return
 
         if self.download_manager:
             self.download_manager.stop()
 
-        # QByteArray.data() returns memoryview, so .tobytes().decode()
-        geom_bytes = self.saveGeometry().toBase64().data().tobytes()
-        self.settings.set("ui", "window_geometry", geom_bytes.decode('utf-8'))
-        state_bytes = self.saveState().toBase64().data().tobytes()
-        self.settings.set("ui", "window_state", state_bytes.decode('utf-8'))
+        geom_data = self.saveGeometry().toBase64()
+        geom_bytes = geom_data.data().tobytes()  # type: ignore[attr-defined]
+        self.settings.set("ui", "window_geometry", geom_bytes.decode(
+            'utf-8'))  # type: ignore[attr-defined]
+        state_data = self.saveState().toBase64()
+        state_bytes = state_data.data().tobytes()  # type: ignore[attr-defined]
+        self.settings.set("ui", "window_state", state_bytes.decode(
+            'utf-8'))  # type: ignore[attr-defined]
         self.settings.save_settings()
         event.accept()
 
     @Slot()
     def show_new_task_dialog(self) -> None:
-        dialog = TaskDialog(self.settings, parent=self) # type: ignore[arg-type]
-        if dialog.exec():
-            task_data: Dict[str, Any] = dialog.get_task_data()
+        # type: ignore[arg-type]
+        dialog = TaskDialog(self.settings, parent=self)
+        if dialog.exec():  # type: ignore[attr-defined]
+            task_data: Dict[str, Any] = dialog.get_task_data()  # type: ignore
             priority_map: Dict[str, TaskPriority] = {
                 "high": TaskPriority.HIGH, "normal": TaskPriority.NORMAL, "low": TaskPriority.LOW
             }
             task = DownloadTask(
                 name=str(task_data.get("name", "Untitled Task")),
-                base_url=str(task_data.get("base_url","")),
-                key_url=str(task_data.get("key_url")) if task_data.get("key_url") else None,
+                base_url=str(task_data.get("base_url", "")),
+                key_url=str(task_data.get("key_url")) if task_data.get(
+                    "key_url") else None,
+                # type: ignore[arg-type]
                 segments=list(task_data.get("segments", [])),
                 output_file=str(task_data.get("output_file", "")),
-                settings=self.settings, # type: ignore[arg-type]
-                priority=priority_map.get(str(task_data.get("priority", "normal")), TaskPriority.NORMAL)
+                settings=self.settings,  # type: ignore[arg-type]
+                priority=priority_map.get(
+                    str(task_data.get("priority", "normal")), TaskPriority.NORMAL)
             )
             if self.download_manager:
                 self.download_manager.add_task(task)
@@ -448,7 +500,7 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def import_from_url(self) -> None:
-        InfoBar.info( # type: ignore[attr-defined] # If InfoBarPosition is not found
+        InfoBar.info(  # type: ignore
             title="Information", content="This feature is not yet implemented",
             orient=Qt.Orientation.Horizontal, isClosable=True,
             position=InfoBarPosition.TOP, duration=2000, parent=self
@@ -456,52 +508,58 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def show_settings(self) -> None:
-        dialog = SettingsDialog(self.settings, parent=self) # type: ignore[arg-type]
-        if dialog.exec(): self._update_ui()
+        # type: ignore[arg-type]
+        dialog = SettingsDialog(self.settings, parent=self)
+        if dialog.exec():
+            self._update_ui()  # type: ignore[attr-defined]
 
     @Slot()
     def show_about(self) -> None:
         dialog = AboutDialog(parent=self)
-        dialog.exec()
+        dialog.exec()  # type: ignore[attr-defined]
 
     @Slot(str, str)
     def handle_task_action(self, task_id: str, action: str) -> None:
-        if not self.download_manager: return
-        actions = {
+        if not self.download_manager:
+            return
+
+        actions: Dict[str, Callable[[str], bool]] = {
             "start": self.download_manager.start_task,
             "pause": self.download_manager.pause_task,
             "resume": self.download_manager.resume_task,
             "cancel": self.download_manager.cancel_task,
-            "remove": lambda tid: self.download_manager.remove_task(tid),
-            "remove_with_file": lambda tid: self.download_manager.remove_task(tid, delete_files=True)
+            "remove": lambda tid: self.download_manager.remove_task(task_id=tid),
+            "remove_with_file": lambda tid: self.download_manager.remove_task(task_id=tid, delete_files=True)
         }
-        if action_func := actions.get(action):
-            action_func(task_id)
+        if action_func := actions.get(action):  # type: ignore[assignment]
+            action_func(task_id)  # type: ignore[operator]
         self._update_ui()
 
     @Slot()
     def start_all_tasks(self) -> None:
-        if not self.download_manager: return
+        if not self.download_manager:
+            return
         for task_id, task_item in self.download_manager.tasks.items():
-            # Replace with actual TaskStatus enum
-            if hasattr(task_item, 'status') and task_item.status in ["PENDING", "PAUSED"]: # Placeholder
+            if hasattr(task_item, 'status') and task_item.status in [TaskStatus.PENDING.value, TaskStatus.PAUSED.value]:
                 self.download_manager.start_task(task_id)
         self._update_ui()
 
     @Slot()
     def pause_all_tasks(self) -> None:
-        if not self.download_manager: return
+        if not self.download_manager:
+            return
         for task_id, task_item in self.download_manager.tasks.items():
-            if hasattr(task_item, 'status') and task_item.status == "RUNNING": # Placeholder
+            if hasattr(task_item, 'status') and task_item.status == TaskStatus.RUNNING.value:
                 self.download_manager.pause_task(task_id)
         self._update_ui()
 
     @Slot()
     def clear_completed_tasks(self) -> None:
-        if not self.download_manager: return
+        if not self.download_manager:
+            return
         task_ids_to_remove = [
             tid for tid, t in self.download_manager.tasks.items()
-            if hasattr(t, 'status') and t.status in ["COMPLETED", "FAILED", "CANCELED"] # Placeholder
+            if hasattr(t, 'status') and t.status in [TaskStatus.COMPLETED.value, TaskStatus.FAILED.value, TaskStatus.CANCELED.value]
         ]
         for task_id in task_ids_to_remove:
             self.download_manager.remove_task(task_id)
@@ -510,148 +568,201 @@ class MainWindow(QMainWindow):
     @Slot(str, dict)
     def on_task_progress(self, task_id: str, progress_data: Dict[str, Any]) -> None:
         if hasattr(self, 'task_manager'):
-            self.task_manager.update_task_progress(task_id, progress_data)
+            self.task_manager.update_task_progress(
+                task_id, progress_data)  # type: ignore
         if self.download_manager:
             total_speed: float = sum(
+                # type: ignore[attr-defined]
                 task.progress.get("speed", 0.0) for task in self.download_manager.tasks.values()
-                if hasattr(task, 'status') and task.status == "RUNNING" # Placeholder
+                if hasattr(task, 'status') and task.status == TaskStatus.RUNNING.value
             )
             self.speed_label.setText(self._format_speed(total_speed))
 
+    # Keep object if TaskStatus enum is not strictly enforced by manager
     @Slot(str, object, object)
-    def on_task_status_changed(self, task_id: str, old_status: Any, new_status: Any) -> None:
+    def on_task_status_changed(self, task_id: str, old_status_obj: Any, new_status_obj: Any) -> None:
+        # Assuming old_status_obj and new_status_obj are TaskStatus enum members or their .value strings
+        old_status_val = old_status_obj.value if isinstance(
+            old_status_obj, Enum) else old_status_obj
+        new_status_val = new_status_obj.value if isinstance(
+            new_status_obj, Enum) else new_status_obj
+
         if hasattr(self, 'task_manager'):
-            self.task_manager.update_task_status(task_id, new_status)
+            self.task_manager.update_task_status(
+                task_id, new_status_obj)  # type: ignore
         if self.download_manager:
             active_count = len(self.download_manager.active_tasks)
             total_count = len(self.download_manager.tasks)
-            self.active_tasks_label.setText(f"Active Tasks: {active_count}/{total_count}")
+            self.active_tasks_label.setText(
+                f"Active Tasks: {active_count}/{total_count}")
 
             if self.settings.get("ui", "show_notifications", True):
                 task = self.download_manager.get_task(task_id)
                 if task and hasattr(task, 'name') and hasattr(task, 'status'):
-                    # Replace string status with actual TaskStatus enum
                     status_map = {
-                        "RUNNING": (f"Task \"{task.name}\" has started downloading", "Task Started"),
-                        "PAUSED": (f"Task \"{task.name}\" has been paused", "Task Paused"),
-                        "COMPLETED": (f"Task \"{task.name}\" has completed successfully", "Task Completed"),
-                        "FAILED": (f"Task \"{task.name}\" has failed", "Task Failed"),
-                        "CANCELED": (f"Task \"{task.name}\" has been canceled", "Task Canceled"),
+                        TaskStatus.RUNNING.value: (f"Task \"{task.name}\" has started downloading", "Task Started"),
+                        TaskStatus.PAUSED.value: (f"Task \"{task.name}\" has been paused", "Task Paused"),
+                        TaskStatus.COMPLETED.value: (f"Task \"{task.name}\" has completed successfully", "Task Completed"),
+                        TaskStatus.FAILED.value: (f"Task \"{task.name}\" has failed", "Task Failed"),
+                        TaskStatus.CANCELED.value: (f"Task \"{task.name}\" has been canceled", "Task Canceled"),
                     }
-                    # Special condition for RUNNING notification (only if not resuming from PAUSED)
-                    if new_status == "RUNNING" and old_status != "PAUSED":
-                        msg, title = status_map["RUNNING"]
+                    if new_status_val == TaskStatus.RUNNING.value and old_status_val != TaskStatus.PAUSED.value:
+                        msg, title = status_map[TaskStatus.RUNNING.value]
                         self.app.send_notification(title, msg)
-                    elif new_status != "RUNNING" and new_status in status_map:
-                        msg, title = status_map[new_status]
+                    elif new_status_val != TaskStatus.RUNNING.value and new_status_val in status_map:
+                        msg, title = status_map[new_status_val]  # type: ignore
                         self.app.send_notification(title, msg)
         self._update_ui()
 
-
     @Slot(str, str)
-    def on_task_completed(self, task_id: str, message: str) -> None: # task_id is unused by this impl
+    def on_task_completed(self, task_id: str, message: str) -> None:
+        _ = task_id  # Mark as used
         logger.info(f"Task completed: {message}")
-        if hasattr(self, 'log_viewer'): self.log_viewer.add_log_entry(f"Task completed: {message}", level="info")
+        if hasattr(self, 'log_viewer'):
+            self.log_viewer.add_log_entry(
+                f"Task completed: {message}", level="info")  # type: ignore
         self._update_ui()
 
     @Slot(str, str)
-    def on_task_failed(self, task_id: str, message: str) -> None: # task_id is unused by this impl
+    def on_task_failed(self, task_id: str, message: str) -> None:
+        _ = task_id  # Mark as used
         logger.error(f"Task failed: {message}")
-        if hasattr(self, 'log_viewer'): self.log_viewer.add_log_entry(f"Task failed: {message}", level="error")
+        if hasattr(self, 'log_viewer'):
+            self.log_viewer.add_log_entry(
+                f"Task failed: {message}", level="error")  # type: ignore
         self._update_ui()
 
     def _format_speed(self, bytes_per_second: float) -> str:
-        if bytes_per_second < 1024: return f"{bytes_per_second:.1f} B/s"
-        if bytes_per_second < 1024 * 1024: return f"{bytes_per_second / 1024:.1f} KB/s"
+        if bytes_per_second < 1024:
+            return f"{bytes_per_second:.1f} B/s"
+        if bytes_per_second < 1024 * 1024:
+            return f"{bytes_per_second / 1024:.1f} KB/s"
         return f"{bytes_per_second / (1024 * 1024):.2f} MB/s"
 
     @Slot()
     def import_batch_urls(self) -> None:
-        dialog = BatchURLDialog(self.settings, parent=self) # type: ignore[arg-type]
+        # type: ignore[arg-type]
+        dialog = BatchURLDialog(self.settings, parent=self)
         if hasattr(dialog, 'urls_imported'):
             dialog.urls_imported.connect(self._handle_batch_urls)
-        dialog.exec()
+        dialog.exec()  # type: ignore[attr-defined]
 
     @Slot(list)
     def _handle_batch_urls(self, urls: List[str]) -> None:
-        if not urls: return
+        if not urls:
+            return
         msg_box = MessageBox(
             "URL Processing",
             f"Imported {len(urls)} URLs. Would you like to try auto-parsing them into download tasks?", self
         )
-        if msg_box.exec():
-            progress = QProgressDialog("Parsing URLs...", "Cancel", 0, len(urls), self)
-            progress.setWindowTitle("Parsing"); progress.setMinimumDuration(0); progress.setModal(True); progress.show()
+        if msg_box.exec():  # type: ignore[truthy-bool]
+            progress = QProgressDialog(
+                "Parsing URLs...", "Cancel", 0, len(urls), self)
+            progress.setWindowTitle("Parsing")
+            progress.setMinimumDuration(0)
+            progress.setModal(True)
+            progress.show()
             successful_imports = 0
             for i, url_str in enumerate(urls):
-                progress.setValue(i); progress.setLabelText(f"Parsing URL {i+1}/{len(urls)}")
-                if progress.wasCanceled(): break
+                progress.setValue(i)
+                progress.setLabelText(f"Parsing URL {i+1}/{len(urls)}")
+                if progress.wasCanceled():
+                    break
                 try:
-                    ua_setting: str = self.settings.get("advanced", "user_agent", "")
-                    req_headers: Optional[Dict[str, str]] = {"User-Agent": ua_setting} if ua_setting else None
-                    m3u8_data: Dict[str, Any] = extract_m3u8_info(url_str, req_headers) # type: ignore[arg-type]
+                    ua_setting: str = self.settings.get(
+                        "advanced", "user_agent", "")
+                    req_headers: Optional[Dict[str, str]] = {
+                        "User-Agent": ua_setting} if ua_setting else None
+                    m3u8_data: Dict[str, Any] = extract_m3u8_info(
+                        url_str, req_headers)  # type: ignore[arg-type]
                     if m3u8_data.get("success"):
                         parsed_url_obj: ParseResult = urlparse(url_str)
                         url_path: str = parsed_url_obj.path
-                        file_name_base: str = basename(url_path).split(".")[0] if basename(url_path) else f"Task-{i+1}"
-                        output_dir_path: str = self.settings.get("general", "output_directory", ".")
-                        final_output_file: str = join(output_dir_path, f"{file_name_base}.mp4")
+                        file_name_base: str = basename(url_path).split(
+                            ".")[0] if basename(url_path) else f"Task-{i+1}"
+                        output_dir_path: str = self.settings.get(
+                            "general", "output_directory", ".")
+                        final_output_file: str = join(
+                            output_dir_path, f"{file_name_base}.mp4")
+
                         new_task = DownloadTask(
-                            name=file_name_base, base_url=str(m3u8_data["base_url"]),
-                            key_url=str(m3u8_data.get("key_url")) if m3u8_data.get("key_url") else None,
-                            segments(list(m3u8_data.get("segments",[])), output_file=final_output_file,
-                            settings=self.settings, priority=TaskPriority.NORMAL # type: ignore[arg-type]
+                            name=file_name_base,
+                            base_url=str(m3u8_data["base_url"]),
+                            key_url=str(m3u8_data.get("key_url")) if m3u8_data.get(
+                                "key_url") else None,
+                            # Pass the count of segments, not the list
+                            segments=len(m3u8_data.get("segments", [])),
+                            output_file=final_output_file,
+                            # type: ignore[arg-type]
+                            settings=self.settings, priority=TaskPriority.NORMAL
                         )
                         if self.download_manager:
                             self.download_manager.add_task(new_task)
                             self.download_manager.start_task(new_task.task_id)
                         successful_imports += 1
-                except Exception as e: logger.error(f"Error parsing URL {url_str}: {e}")
+                except Exception as e:
+                    logger.error(f"Error parsing URL {url_str}: {e}")
             progress.setValue(len(urls))
             self._update_ui()
-            InfoBar.success( # type: ignore[attr-defined]
+            InfoBar.success(  # type: ignore
                 title="Import Results", content=f"Successfully imported {successful_imports} tasks, failed {len(urls) - successful_imports}.",
                 orient=Qt.Orientation.Horizontal, isClosable=True, position=InfoBarPosition.TOP, duration=3000, parent=self
             )
         else:
             q_clipboard = QApplication.clipboard()
-            if q_clipboard: q_clipboard.setText("\n".join(urls))
-            InfoBar.info( # type: ignore[attr-defined]
+            if q_clipboard:
+                q_clipboard.setText("\n".join(urls))
+            InfoBar.info(  # type: ignore
                 title="URLs Copied", content=f"{len(urls)} URLs copied to clipboard.",
                 orient=Qt.Orientation.Horizontal, isClosable=True, position=InfoBarPosition.TOP, duration=3000, parent=self
             )
 
     @Slot()
     def show_media_processing(self) -> None:
+        from .dialogs.media_processing_dialog import MediaProcessingDialog  # Moved import here
         output_file_path: Optional[str] = None
         if hasattr(self, 'task_manager') and self.download_manager:
+            # type: ignore[attr-defined]
             selected_ids: List[str] = self.task_manager.get_selected_rows()
             if selected_ids:
                 task_obj = self.download_manager.get_task(selected_ids[0])
-                if task_obj and hasattr(task_obj, 'status') and task_obj.status == "COMPLETED" and task_obj.output_file: # Placeholder
+                # type: ignore[attr-defined]
+                if task_obj and hasattr(task_obj, 'status') and task_obj.status == TaskStatus.COMPLETED.value and task_obj.output_file:
+                    # type: ignore[attr-defined]
                     output_file_path = task_obj.output_file
-        dialog = MediaProcessingDialog(self.settings, output_file_path, parent=self) # type: ignore[arg-type]
+        dialog = MediaProcessingDialog(
+            self.settings, output_file_path, parent=self)  # type: ignore[arg-type]
         if hasattr(dialog, 'processing_completed'):
-            dialog.processing_completed.connect(self._on_media_processing_completed)
-        dialog.exec()
+            dialog.processing_completed.connect(
+                self._on_media_processing_completed)
+        dialog.exec()  # type: ignore[attr-defined]
 
     @Slot()
     def show_batch_conversion(self) -> None:
-        dialog = BatchConversionDialog(self.settings, parent=self) # type: ignore[arg-type]
+        from .dialogs.batch_conversion_dialog import BatchConversionDialog  # Moved import here
+        dialog = BatchConversionDialog(
+            self.settings, parent=self)  # type: ignore[arg-type]
         if hasattr(dialog, 'processing_completed'):
-            dialog.processing_completed.connect(self._on_batch_conversion_completed)
-        dialog.exec()
+            dialog.processing_completed.connect(
+                self._on_batch_conversion_completed)
+        dialog.exec()  # type: ignore[attr-defined]
 
     @Slot(bool, str)
     def _on_batch_conversion_completed(self, op_success: bool, result_message: str) -> None:
         log_level = "info" if op_success else "error"
-        if hasattr(self, 'log_viewer'): self.log_viewer.add_log_entry(result_message, level=log_level)
+        if hasattr(self, 'log_viewer'):
+            self.log_viewer.add_log_entry(
+                result_message, level=log_level)  # type: ignore
         if op_success and self.settings.get("ui", "show_notifications", True):
-            self.app.send_notification("Batch Conversion", "Media batch conversion completed")
+            self.app.send_notification(
+                "Batch Conversion", "Media batch conversion completed")
 
     @Slot(bool, str)
     def _on_media_processing_completed(self, op_success: bool, result_message: str) -> None:
         log_level = "info" if op_success else "error"
-        if hasattr(self, 'log_viewer'): self.log_viewer.add_log_entry(result_message, level=log_level)
+        if hasattr(self, 'log_viewer'):
+            self.log_viewer.add_log_entry(
+                result_message, level=log_level)  # type: ignore
         if op_success and self.settings.get("ui", "show_notifications", True):
-            self.app.send_notification("Media Processing", "Media processing completed")
+            self.app.send_notification(
+                "Media Processing", "Media processing completed")

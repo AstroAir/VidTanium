@@ -44,8 +44,8 @@ class TaskDialog(QDialog):
         basic_layout = QFormLayout()
         basic_layout.setContentsMargins(15, 15, 15, 15)
         basic_layout.setSpacing(12)
-        basic_layout.setLabelAlignment(Qt.AlignRight)
-        basic_layout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        basic_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+        basic_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
 
         # 添加卡片标题
         basic_title = StrongBodyLabel("基本信息")
@@ -101,8 +101,8 @@ class TaskDialog(QDialog):
         advanced_layout = QFormLayout()
         advanced_layout.setContentsMargins(15, 15, 15, 15)
         advanced_layout.setSpacing(12)
-        advanced_layout.setLabelAlignment(Qt.AlignRight)
-        advanced_layout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        advanced_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+        advanced_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
 
         # 添加卡片标题
         advanced_title = StrongBodyLabel("高级选项")
@@ -126,12 +126,12 @@ class TaskDialog(QDialog):
 
         # 使用标准按钮盒
         self.button_box = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        self.button_box.button(QDialogButtonBox.Ok).setText("确定")
-        self.button_box.button(QDialogButtonBox.Ok).setIcon(FluentIcon.ACCEPT)
-        self.button_box.button(QDialogButtonBox.Cancel).setText("取消")
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setText("确定")
+        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setIcon(FluentIcon.ACCEPT.icon())
+        self.button_box.button(QDialogButtonBox.StandardButton.Cancel).setText("取消")
         self.button_box.button(
-            QDialogButtonBox.Cancel).setIcon(FluentIcon.CANCEL)
+            QDialogButtonBox.StandardButton.Cancel).setIcon(FluentIcon.CANCEL.icon())
 
         # 连接信号
         self.button_box.accepted.connect(self._on_ok)
@@ -200,7 +200,7 @@ class TaskDialog(QDialog):
 
         # 显示加载对话框
         progress = QProgressDialog("正在分析M3U8...", "取消", 0, 0, self)
-        progress.setWindowModality(Qt.WindowModal)
+        progress.setWindowModality(Qt.WindowModality.WindowModal)
         progress.setWindowTitle("提取中")
         progress.setMinimumDuration(0)
         progress.setValue(0)

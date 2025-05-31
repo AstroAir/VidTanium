@@ -29,8 +29,8 @@ class BatchConversionDialog(QDialog):
         """执行对话框"""
         self._dialog.show()
         return super().exec()
-        
-    def close(self):
+
+    def close(self) -> bool:
         """关闭对话框"""
         self._dialog.close()
-        super().close()
+        return super().close()

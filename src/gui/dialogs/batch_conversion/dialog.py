@@ -5,14 +5,16 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtGui import QIcon
 import os
+from typing import Any, List, Dict, Optional, Union
 
-from qfluentwidgets import (
-    FluentIcon, InfoBar, InfoBarPosition, MessageBox
+from qfluentwidgets import (  # type: ignore
+    FluentIcon, InfoBar, InfoBarPosition, MessageBox, PushButton
 )
 
 from .file_list_widget import FileListWidget
 from .output_settings_widget import OutputSettingsWidget
 from .encoding_settings_widget import EncodingSettingsWidget
+from src.core.media_processor import MediaProcessor
 
 
 class BatchConversionDialog(QDialog):
@@ -21,7 +23,7 @@ class BatchConversionDialog(QDialog):
     # 处理完成时发出信号
     processing_completed = Signal(bool, str)
 
-    def __init__(self, settings, parent=None):
+    def __init__(self, settings: Any, parent: Optional[QWidget] = None):
         super().__init__(parent)
 
         self.settings = settings
@@ -41,7 +43,7 @@ class BatchConversionDialog(QDialog):
         main_layout.setContentsMargins(15, 15, 15, 15)
 
         # 创建分割器，使用户可以调整文件列表和设置区域的大小
-        self.splitter = QSplitter(Qt.Vertical)
+        self.splitter = QSplitter(Qt.Orientation.Vertical)
         main_layout.addWidget(self.splitter, 1)
 
         # ===== 文件选择部分 =====
@@ -73,7 +75,7 @@ class BatchConversionDialog(QDialog):
         self.splitter.addWidget(settings_container)
 
         # 设置分割器的初始大小比例
-        self.splitter.setSizes([300, 250])
+        self.splitter.setSizes([300, 250])  # type: ignore
 
         # 状态标签 - 在底部显示当前状态
         self.status_layout = QHBoxLayout()
@@ -86,10 +88,13 @@ class BatchConversionDialog(QDialog):
         # 添加标准按钮
         self.button_box = QDialogButtonBox()
         self.close_button = self.button_box.addButton(
-            "关闭", QDialogButtonBox.RejectRole)
-        self.convert_button = self.button_box.addButton(
-            "开始转换", QDialogButtonBox.AcceptRole)
-        self.convert_button.setIcon(FluentIcon.PLAY)
+            "关闭", QDialogButtonBox.ButtonRole.RejectRole)
+
+        # 使用 PushButton 替代 QPushButton
+        self.convert_button = PushButton("开始转换")
+        self.convert_button.setIcon(FluentIcon.PLAY)  # type: ignore
+        self.button_box.addButton(
+            self.convert_button, QDialogButtonBox.ButtonRole.AcceptRole)
         self.convert_button.setEnabled(False)  # 初始时禁用，直到有文件
 
         # 连接按钮信号
@@ -103,7 +108,7 @@ class BatchConversionDialog(QDialog):
     def _load_settings(self):
         """加载设置"""
         # 设置默认输出目录
-        default_output_dir = self.settings.get(
+        default_output_dir: str = self.settings.get(
             "general", "output_directory", "")
         self.output_settings.set_output_directory(default_output_dir)
 
@@ -111,11 +116,11 @@ class BatchConversionDialog(QDialog):
         self._update_file_count(0)
 
     @Slot(int)
-    def _on_file_list_changed(self, file_count):
+    def _on_file_list_changed(self, file_count: int):
         """处理文件列表变化"""
         self._update_file_count(file_count)
 
-    def _update_file_count(self, count):
+    def _update_file_count(self, count: int):
         """更新文件计数显示"""
         if count == 0:
             self.file_count_label.setText("未选择文件")
@@ -127,13 +132,13 @@ class BatchConversionDialog(QDialog):
 
     def _start_conversion(self):
         """开始批量转换过程"""
-        input_files = self.file_list_widget.get_input_files()
+        input_files: List[str] = self.file_list_widget.get_input_files()
 
         if not input_files:
-            InfoBar.warning(
+            InfoBar.warning(  # type: ignore
                 title="无文件",
                 content="请添加要转换的文件",
-                orient=Qt.Horizontal,
+                orient=Qt.Orientation.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
                 duration=3000,
@@ -142,25 +147,29 @@ class BatchConversionDialog(QDialog):
             return
 
         # 获取转换设置
-        output_format = self.output_settings.get_output_format()
-        output_dir = self.output_settings.get_output_directory()
-        video_codec = self.encoding_settings.get_video_codec()
-        audio_codec = self.encoding_settings.get_audio_codec()
-        resolution = self.output_settings.get_resolution()
-        keep_original = self.output_settings.get_keep_original()
+        output_format: str = self.output_settings.get_output_format()
+        output_dir: str = self.output_settings.get_output_directory()
+        video_codec: str = self.encoding_settings.get_video_codec()
+        audio_codec: str = self.encoding_settings.get_audio_codec()
+        resolution: str = self.output_settings.get_resolution()
+        keep_original: bool = self.output_settings.get_keep_original()
 
-        quality_settings = self.encoding_settings.get_quality_settings()
-        bitrate = quality_settings["bitrate"]
+        quality_settings: Dict[str, Union[str, int]
+                               ] = self.encoding_settings.get_quality_settings()
+        bitrate: int = quality_settings["bitrate"] if isinstance(
+            quality_settings["bitrate"], int) else 0
 
         # 获取 FFmpeg 路径
-        ffmpeg_path = self.settings.get("advanced", "ffmpeg_path", "ffmpeg")
+        ffmpeg_path: str = self.settings.get(
+            "advanced", "ffmpeg_path", "ffmpeg")
 
         # 转换前确认
-        result = MessageBox(
+        msg_box = MessageBox(
             "确认转换",
             f"准备将 {len(input_files)} 个文件转换为 {output_format.upper()} 格式。\n此操作可能需要较长时间。\n\n确定要继续吗？",
             self
-        ).exec()
+        )
+        result = msg_box.exec()
 
         if not result:
             return
@@ -174,12 +183,10 @@ class BatchConversionDialog(QDialog):
         progress.setModal(True)
         progress.show()
 
-        # 导入媒体处理器
-        from src.core.media_processor import MediaProcessor
         processor = MediaProcessor(ffmpeg_path)
 
         # 定义输出选项
-        options = {
+        options: Dict[str, Union[str, int, bool]] = {
             "format": output_format,
             "output_dir": output_dir,
             "video_codec": video_codec,
@@ -190,9 +197,9 @@ class BatchConversionDialog(QDialog):
         }
 
         # 处理每个文件
-        successful = 0
-        failed = 0
-        error_messages = []
+        successful: int = 0
+        failed: int = 0
+        error_messages: List[str] = []
 
         for i, file_path in enumerate(input_files):
             progress.setValue(i)
@@ -203,13 +210,14 @@ class BatchConversionDialog(QDialog):
                 break
 
             try:
-                result = processor.batch_convert_file(file_path, options)
-                if result["success"]:
+                convert_result: Dict[str, Union[bool, str]] = processor.batch_convert_file(
+                    file_path, options)
+                if convert_result.get("success"):
                     successful += 1
                 else:
                     failed += 1
                     error_messages.append(
-                        f"转换 {os.path.basename(file_path)} 出错: {result['message']}")
+                        f"转换 {os.path.basename(file_path)} 出错: {convert_result.get('message', '未知错误')}")
             except Exception as e:
                 failed += 1
                 error_messages.append(
@@ -219,10 +227,10 @@ class BatchConversionDialog(QDialog):
 
         # 显示结果
         if successful > 0:
-            InfoBar.success(
+            InfoBar.success(  # type: ignore
                 title="转换完成",
                 content=f"成功转换 {successful} 个文件，失败: {failed}",
-                orient=Qt.Horizontal,
+                orient=Qt.Orientation.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
                 duration=5000,
@@ -234,10 +242,14 @@ class BatchConversionDialog(QDialog):
                 True, f"批量转换完成: {successful} 成功, {failed} 失败"
             )
         else:
-            InfoBar.error(
+            error_summary = f"未能成功转换任何文件。失败 {failed} 个。"
+            if error_messages:
+                error_summary += f"部分错误: {', '.join(error_messages[:3])}"
+
+            InfoBar.error(  # type: ignore
                 title="转换失败",
-                content="未能成功转换任何文件。请查看日志了解详情。",
-                orient=Qt.Horizontal,
+                content=error_summary,
+                orient=Qt.Orientation.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
                 duration=5000,
@@ -246,7 +258,7 @@ class BatchConversionDialog(QDialog):
 
             # 向主窗口发送信号
             self.processing_completed.emit(
-                False, f"批量转换失败: {', '.join(error_messages[:3])}"
+                False, f"批量转换失败: {', '.join(error_messages[:3]) if error_messages else '未知错误'}"
             )
 
         # 更新状态

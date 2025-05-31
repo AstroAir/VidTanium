@@ -23,8 +23,8 @@ class DownloadTab(QWidget):
 
         # Download settings
         form_layout = QFormLayout()
-        form_layout.setLabelAlignment(Qt.AlignRight)
-        form_layout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        form_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+        form_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         form_layout.setSpacing(12)
 
         # Max concurrent tasks
@@ -63,9 +63,9 @@ class DownloadTab(QWidget):
 
         # Bandwidth limit
         bandwidth_layout = QHBoxLayout()
-        self.bandwidth_slider = Slider(Qt.Horizontal)
+        self.bandwidth_slider = Slider(Qt.Orientation.Horizontal)
         self.bandwidth_slider.setRange(0, 10)
-        self.bandwidth_slider.setTickPosition(Slider.TicksBelow)
+        self.bandwidth_slider.setTickPosition(Slider.TickPosition.TicksBelow)
         self.bandwidth_slider.setTickInterval(1)
         bandwidth_layout.addWidget(self.bandwidth_slider)
 
@@ -86,7 +86,7 @@ class DownloadTab(QWidget):
             self.bandwidth_label.setText("No limit")
         else:
             speeds = ["512KB/s", "1MB/s", "2MB/s", "5MB/s", "10MB/s",
-                     "20MB/s", "50MB/s", "100MB/s", "200MB/s", "Unlimited"]
+                      "20MB/s", "50MB/s", "100MB/s", "200MB/s", "Unlimited"]
             self.bandwidth_label.setText(speeds[value - 1])
 
     def load_settings(self, settings):

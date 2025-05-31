@@ -147,19 +147,19 @@ class MediaProcessingDialog(QDialog):
 
         # 按钮
         self.button_box = QDialogButtonBox(
-            QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
-        self.button_box.button(QDialogButtonBox.Ok).setText("开始处理")
-        self.button_box.button(QDialogButtonBox.Ok).setIcon(FluentIcon.PLAY)
-        self.button_box.button(QDialogButtonBox.Ok).setEnabled(False)
-        self.button_box.button(QDialogButtonBox.Cancel).setText("取消")
+            QDialogButtonBox.StandardButton.Cancel | QDialogButtonBox.StandardButton.Ok)
+        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setText("开始处理")
+        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setIcon(FluentIcon.PLAY.icon())
+        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
+        self.button_box.button(QDialogButtonBox.StandardButton.Cancel).setText("取消")
 
         self.button_box.accepted.connect(self._start_processing)
         self.button_box.rejected.connect(self.reject)
 
         main_layout.addWidget(self.button_box)
 
-        self.process_button = self.button_box.button(QDialogButtonBox.Ok)
-        self.cancel_button = self.button_box.button(QDialogButtonBox.Cancel)
+        self.process_button = self.button_box.button(QDialogButtonBox.StandardButton.Ok)
+        self.cancel_button = self.button_box.button(QDialogButtonBox.StandardButton.Cancel)
 
     def _create_convert_tab(self):
         """创建格式转换选项卡"""
@@ -282,7 +282,7 @@ class MediaProcessingDialog(QDialog):
 
         # 音频质量
         # quality_hints = ["非常低", "低", "中等", "高", "非常高"]
-        self.audio_quality_slider = Slider(Qt.Horizontal)
+        self.audio_quality_slider = Slider(Qt.Orientation.Horizontal)
         self.audio_quality_slider.setRange(0, 4)
         self.audio_quality_slider.setValue(2)
         # self.audio_quality_slider.setHints(quality_hints)
@@ -328,7 +328,7 @@ class MediaProcessingDialog(QDialog):
         # 质量设置
         quality_hints = {0: "无损", 18: "高质量",
                          23: "标准", 28: "中等", 35: "低质量", 51: "最低"}
-        self.quality_slider = Slider(Qt.Horizontal)
+        self.quality_slider = Slider(Qt.Orientation.Horizontal)
         self.quality_slider.setRange(0, 51)
         self.quality_slider.setValue(23)  # 默认23
         # self.quality_slider.setHints(quality_hints)
@@ -369,7 +369,7 @@ class MediaProcessingDialog(QDialog):
             InfoBar.success(
                 title="文件已选择",
                 content=f"已选择输入文件: {os.path.basename(file_path)}",
-                orient=Qt.Horizontal,
+                orient=Qt.Orientation.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
                 duration=2000,
@@ -582,7 +582,7 @@ class MediaProcessingDialog(QDialog):
             InfoBar.error(
                 title="输入错误",
                 content="请选择有效的输入文件",
-                orient=Qt.Horizontal,
+                orient=Qt.Orientation.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
                 duration=3000,
@@ -594,7 +594,7 @@ class MediaProcessingDialog(QDialog):
             InfoBar.error(
                 title="输入错误",
                 content="请指定输出文件",
-                orient=Qt.Horizontal,
+                orient=Qt.Orientation.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
                 duration=3000,
@@ -611,7 +611,7 @@ class MediaProcessingDialog(QDialog):
                 InfoBar.error(
                     title="错误",
                     content=f"无法创建输出目录: {str(e)}",
-                    orient=Qt.Horizontal,
+                    orient=Qt.Orientation.Horizontal,
                     isClosable=True,
                     position=InfoBarPosition.TOP,
                     duration=3000,
@@ -803,7 +803,7 @@ class MediaProcessingDialog(QDialog):
                 InfoBar.success(
                     title="处理成功",
                     content=f"文件已保存至: {os.path.basename(output_file)}",
-                    orient=Qt.Horizontal,
+                    orient=Qt.Orientation.Horizontal,
                     isClosable=True,
                     position=InfoBarPosition.TOP,
                     duration=3000,
@@ -821,7 +821,7 @@ class MediaProcessingDialog(QDialog):
                 InfoBar.error(
                     title="处理失败",
                     content=f"错误: {result['error']}",
-                    orient=Qt.Horizontal,
+                    orient=Qt.Orientation.Horizontal,
                     isClosable=True,
                     position=InfoBarPosition.TOP,
                     duration=5000,
@@ -843,7 +843,7 @@ class MediaProcessingDialog(QDialog):
             InfoBar.error(
                 title="处理出错",
                 content=f"发生异常: {str(e)}",
-                orient=Qt.Horizontal,
+                orient=Qt.Orientation.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
                 duration=5000,

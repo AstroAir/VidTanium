@@ -59,19 +59,19 @@ class SettingsDialog(QDialog):
 
         # 使用标准按钮盒
         self.button_box = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
 
         # 创建重置按钮并添加到按钮盒
         self.reset_button = PushButton("Reset to Default")
         self.reset_button.setIcon(FluentIcon.SYNC)
         self.reset_button.clicked.connect(self._reset_settings)
         self.button_box.addButton(
-            self.reset_button, QDialogButtonBox.ResetRole)
+            self.reset_button, QDialogButtonBox.ButtonRole.ResetRole)
 
         # 设置按钮文本和图标
-        self.button_box.button(QDialogButtonBox.Ok).setText("OK")
-        self.button_box.button(QDialogButtonBox.Ok).setIcon(FluentIcon.ACCEPT)
-        self.button_box.button(QDialogButtonBox.Cancel).setText("Cancel")
+        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setText("OK")
+        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setIcon(FluentIcon.ACCEPT.icon())
+        self.button_box.button(QDialogButtonBox.StandardButton.Cancel).setText("Cancel")
 
         # 连接信号
         self.button_box.accepted.connect(self._save_settings)

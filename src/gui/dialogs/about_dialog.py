@@ -1,11 +1,11 @@
-from PySide6.QtWidgets import (QVBoxLayout, QHBoxLayout, QWidget, QStackedWidget, 
-                              QDialog, QDialogButtonBox)
+from PySide6.QtWidgets import (QVBoxLayout, QHBoxLayout, QWidget, QStackedWidget,
+                               QDialog, QDialogButtonBox)
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont, QIcon
 
 from qfluentwidgets import (
-    FluentIcon, PushButton, SimpleCardWidget, TextEdit, 
-    IconWidget, ImageLabel, BodyLabel, TitleLabel, 
+    FluentIcon, PushButton, SimpleCardWidget, TextEdit,
+    IconWidget, ImageLabel, BodyLabel, TitleLabel,
     CaptionLabel, TabBar
 )
 from qfluentwidgets import FluentStyleSheet
@@ -20,16 +20,16 @@ class AboutDialog(QDialog):
         self.setWindowTitle("关于")
         self.setMinimumSize(600, 450)
         self.setWindowIcon(QIcon(":/images/logo.png"))
-        
+
         # 创建主布局
         self.main_layout = QVBoxLayout(self)
         self.content_layout = QVBoxLayout()
         self.button_layout = QHBoxLayout()
-        
+
         # 设置布局
         self.main_layout.addLayout(self.content_layout)
         self.main_layout.addLayout(self.button_layout)
-        
+
         self._create_ui()
 
     def _create_ui(self):
@@ -83,19 +83,19 @@ class AboutDialog(QDialog):
         self.about_tab = QWidget()
         self._create_about_tab()
         self.stacked_widget.addWidget(self.about_tab)
-        self.tab_bar.addTab(FluentIcon.INFO, '关于')
+        self.tab_bar.addTab(FluentIcon.INFO.value, '关于')
 
         # 许可证选项卡
         self.license_tab = QWidget()
         self._create_license_tab()
         self.stacked_widget.addWidget(self.license_tab)
-        self.tab_bar.addTab(FluentIcon.DOCUMENT, '许可证')
+        self.tab_bar.addTab(FluentIcon.DOCUMENT.value, '许可证')
 
         # 第三方库选项卡
         self.third_party_tab = QWidget()
         self._create_third_party_tab()
         self.stacked_widget.addWidget(self.third_party_tab)
-        self.tab_bar.addTab(FluentIcon.APPLICATION, '第三方库')
+        self.tab_bar.addTab(FluentIcon.APPLICATION.value, '第三方库')
 
         # 连接TabBar和StackedWidget
         self.tab_bar.currentChanged.connect(
@@ -104,9 +104,9 @@ class AboutDialog(QDialog):
         self.content_layout.addLayout(tab_layout)
 
         # 使用标准对话框按钮
-        self.button_box = QDialogButtonBox(QDialogButtonBox.Close)
+        self.button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
         self.button_box.rejected.connect(self.reject)
-        
+
         # 添加到按钮布局
         self.button_layout.addStretch()
         self.button_layout.addWidget(self.button_box)

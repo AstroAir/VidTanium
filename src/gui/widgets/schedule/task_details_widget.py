@@ -12,6 +12,7 @@ from qfluentwidgets import (
 )
 from src.core.scheduler import TaskType
 
+
 class TaskDetailsWidget(CardWidget):
     """任务详情组件"""
 
@@ -43,13 +44,13 @@ class TaskDetailsWidget(CardWidget):
 
         # 添加分隔线
         separator = QFrame()
-        separator.setFrameShape(QFrame.HLine)
-        separator.setFrameShadow(QFrame.Sunken)
+        separator.setFrameShape(QFrame.Shape.HLine)
+        separator.setFrameShadow(QFrame.Shadow.Sunken)
         layout.addWidget(separator)
 
         # 详情表单
         details_form = QFormLayout()
-        details_form.setLabelAlignment(Qt.AlignRight)
+        details_form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
         details_form.setSpacing(10)
 
         # 任务名称
@@ -83,7 +84,7 @@ class TaskDetailsWidget(CardWidget):
         # 任务配置
         self.config_group = QGroupBox("任务配置")
         config_layout = QFormLayout(self.config_group)
-        config_layout.setLabelAlignment(Qt.AlignRight)
+        config_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
 
         # 根据任务类型不同，配置项会变化
         # 周期

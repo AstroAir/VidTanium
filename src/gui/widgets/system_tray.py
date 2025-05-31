@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QSystemTrayIcon, QMenu
-from PySide6.QtGui import QIcon, QAction    
+from PySide6.QtGui import QIcon, QAction
 from PySide6.QtCore import Signal, Slot, QObject
 import logging
 
@@ -78,17 +78,34 @@ class SystemTrayIcon(QObject):
         """托盘图标被激活"""
         if reason == QSystemTrayIcon.ActivationReason.Trigger:
             # 单击托盘图标
-            if self.parent_widget.isVisible():
-                self.action_triggered.emit("hide")
+            if self.parent_widget is not None:
+                if self.parent_widget.isVisible():
+                    self.action_triggered.emit("hide")
+                else:
+                    self.action_triggered.emit("show")
             else:
+                # Handle case when parent widget doesn't exist
+                # Could log a warning or show a notification
                 self.action_triggered.emit("show")
 
-    def show_notification(self, title, message):
-        """显示托盘通知"""
+    def show_notification(self, title, message, icon=None, duration=5000):
+        """显示托盘通知
+
+        Args:
+            title (str): 通知标题
+            message (str): 通知内容
+            icon: 通知图标 (可选)
+            duration: 通知显示时长(毫秒，默认5000)
+        """
         if not self.settings.get("ui", "show_notifications", True):
             return
 
-        self.tray_icon.showMessage(title, message)
+        # Use default icon if none provided
+        tray_icon = QSystemTrayIcon.MessageIcon.Information
+        if icon:
+            tray_icon = icon
+
+        self.tray_icon.showMessage(title, message, tray_icon, duration)
 
     def show(self):
         """显示托盘图标"""
