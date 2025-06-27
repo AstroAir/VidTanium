@@ -1,7 +1,7 @@
 """
-日志过滤栏组件
+Log Filter Bar Component
 
-提供日志搜索和过滤功能
+Provides log search and filtering functionality.
 """
 
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel
@@ -11,9 +11,9 @@ from qfluentwidgets import ComboBox, SearchLineEdit
 
 
 class LogFilterBar(QWidget):
-    """日志过滤栏组件"""
+    """Log filter bar component."""
 
-    # 信号定义
+    # Signal definition
     filterChanged = Signal()
 
     def __init__(self, parent=None):
@@ -21,45 +21,47 @@ class LogFilterBar(QWidget):
         self._create_ui()
 
     def _create_ui(self):
-        """创建界面"""
+        """Create the UI."""
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 4)
 
-        # 搜索框
+        # Search box
         self.search_input = SearchLineEdit(self)
-        self.search_input.setPlaceholderText("搜索日志...")
+        self.search_input.setPlaceholderText("Search logs...")
         self.search_input.textChanged.connect(self.filterChanged.emit)
         layout.addWidget(self.search_input, 3)
 
-        # 日志级别过滤
-        layout.addWidget(QLabel("显示级别:"), 0)
+        # Log level filter
+        layout.addWidget(QLabel("Show Level:"), 0)
         self.level_combo = ComboBox(self)
-        self.level_combo.addItems(["全部", "仅错误", "仅警告", "仅信息", "无错误"])
-        self.level_combo.setToolTip("选择要显示的日志级别")
+        self.level_combo.addItems(
+            ["All", "Error Only", "Warning Only", "Info Only", "No Error"])
+        self.level_combo.setToolTip("Select the log level to display")
         self.level_combo.currentIndexChanged.connect(self.filterChanged.emit)
         layout.addWidget(self.level_combo, 1)
 
-        # 日期过滤
-        layout.addWidget(QLabel("时间段:"), 0)
+        # Date filter
+        layout.addWidget(QLabel("Time Range:"), 0)
         self.date_combo = ComboBox(self)
-        self.date_combo.addItems(["全部", "今天", "一小时内", "十分钟内"])
+        self.date_combo.addItems(
+            ["All", "Today", "Within 1 Hour", "Within 10 Minutes"])
         self.date_combo.currentIndexChanged.connect(self.filterChanged.emit)
         layout.addWidget(self.date_combo, 1)
 
     def get_search_text(self):
-        """获取搜索文本"""
+        """Get the search text."""
         return self.search_input.text()
 
     def get_level_filter(self):
-        """获取级别过滤器索引"""
+        """Get the level filter index."""
         return self.level_combo.currentIndex()
 
     def get_date_filter(self):
-        """获取日期过滤器索引"""
+        """Get the date filter index."""
         return self.date_combo.currentIndex()
 
     def reset_filters(self):
-        """重置所有过滤器"""
+        """Reset all filters."""
         self.search_input.clear()
         self.level_combo.setCurrentIndex(0)
         self.date_combo.setCurrentIndex(0)

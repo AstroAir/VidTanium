@@ -19,6 +19,7 @@ from src.core.scheduler import TaskType
 from .task_details_widget import TaskDetailsWidget
 from .task_table import TaskTable
 from .schedule_toolbar import ScheduleToolbar
+from ...utils.i18n import tr
 
 logger = logging.getLogger(__name__)
 
@@ -51,13 +52,13 @@ class ScheduleManager(QWidget):
         title_layout = QHBoxLayout()
         title_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.title_label = SubtitleLabel("计划任务管理")
+        self.title_label = SubtitleLabel(tr("schedule_manager.title"))
         title_layout.addWidget(self.title_label)
 
         title_layout.addStretch()
 
         # 自动刷新开关
-        self.auto_refresh = ToggleButton("自动刷新")
+        self.auto_refresh = ToggleButton(tr("schedule_manager.auto_refresh"))
         self.auto_refresh.setChecked(True)
         title_layout.addWidget(self.auto_refresh)
 
@@ -81,7 +82,7 @@ class ScheduleManager(QWidget):
         filter_layout = QHBoxLayout()
 
         self.search_input = SearchLineEdit()
-        self.search_input.setPlaceholderText("搜索任务...")
+        self.search_input.setPlaceholderText(tr("schedule_manager.search_placeholder"))
         filter_layout.addWidget(self.search_input, 2)
 
         self.filter_combo = ComboBox()

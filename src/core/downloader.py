@@ -228,32 +228,55 @@ class DownloadTask:
         return False
 
     def update_speed(self, bytes_downloaded: int, elapsed_time: float) -> None:
-        """Update download speed statistics"""
+        """Update download speed statistics with accurate calculation"""
         if elapsed_time > 0:
             current_speed: float = bytes_downloaded / elapsed_time
-            self.recent_speeds.append(current_speed)
+            current_time = time.time()
+            
+            # Track speed samples with timestamps for better accuracy
+            if not hasattr(self, 'speed_samples'):
+                self.speed_samples = []
+            
+            self.speed_samples.append((current_time, current_speed))
+            
+            # Keep only speed samples from the last 30 seconds for better accuracy
+            cutoff_time = current_time - 30.0
+            self.speed_samples = [(t, s) for t, s in self.speed_samples if t >= cutoff_time]
+            
+            # Calculate weighted average speed (more recent samples have higher weight)
+            if self.speed_samples:
+                total_weight = 0
+                weighted_speed = 0
+                for sample_time, speed in self.speed_samples:
+                    # Weight decreases exponentially with age
+                    age = current_time - sample_time
+                    weight = max(0.1, 1.0 - (age / 30.0))  # Minimum weight of 0.1
+                    weighted_speed += speed * weight
+                    total_weight += weight
+                
+                if total_weight > 0:
+                    self.progress["speed"] = weighted_speed / total_weight
+                else:
+                    self.progress["speed"] = current_speed
+            else:
+                self.progress["speed"] = current_speed
 
-            # Keep only the 10 most recent speed samples
-            if len(self.recent_speeds) > 10:
+            # Also keep the simple recent speeds for backup calculation
+            self.recent_speeds.append(current_speed)
+            if len(self.recent_speeds) > 20:
                 self.recent_speeds.pop(0)
 
-            # Calculate average speed
-            if self.recent_speeds:
-                self.progress["speed"] = sum(
-                    self.recent_speeds) / len(self.recent_speeds)
-
-            # Estimate remaining time
-            if self.progress["speed"] > 0 and self.progress["total"] > 0 and self.progress["completed"] < self.progress["total"]:
-                remaining_segments: int = self.progress["total"] - \
-                    self.progress["completed"]
-                # Assuming average segment size is related to chunk_size for estimation
-                # This estimation logic might need refinement based on actual segment sizes
-                # Time to process one "chunk_size" worth of data
-                avg_segment_processing_time_estimate = 8192 / \
-                    self.progress["speed"]
-                if avg_segment_processing_time_estimate > 0:
-                    self.progress["estimated_time"] = remaining_segments * \
-                        avg_segment_processing_time_estimate
+            # Estimate remaining time based on actual progress and current speed
+            if self.progress["speed"] > 0 and self.progress["total"] > 0:
+                completed_ratio = self.progress["completed"] / self.progress["total"]
+                if completed_ratio > 0 and self.progress["downloaded_bytes"] > 0:
+                    # Estimate total download size based on current progress
+                    estimated_total_bytes = self.progress["downloaded_bytes"] / completed_ratio
+                    remaining_bytes = estimated_total_bytes - self.progress["downloaded_bytes"]
+                    if remaining_bytes > 0:
+                        self.progress["estimated_time"] = remaining_bytes / self.progress["speed"]
+                    else:
+                        self.progress["estimated_time"] = 0
                 else:
                     self.progress["estimated_time"] = None
             else:
@@ -530,31 +553,46 @@ class DownloadManager:
 
     def _event_loop(self) -> None:
         """Event handling loop"""
+        
         while self.running:
             try:
                 # Get event from queue
                 event: EventTuple = self.event_queue.get(timeout=0.5)
+                
                 if not event:  # Should not happen with Queue.get unless None is put
                     continue
 
                 event_type = event[0]
 
                 if event_type == "status_changed" and self.on_task_status_changed:
-                    _, task_id_ev, old_status_ev, new_status_ev = event  # type: ignore
-                    self.on_task_status_changed(
-                        task_id_ev, old_status_ev, new_status_ev)
+                    if len(event) >= 4:
+                        _, task_id_ev, old_status_ev, new_status_ev = event
+                        if isinstance(task_id_ev, str):
+                            self.on_task_status_changed(task_id_ev, old_status_ev, new_status_ev)
 
                 elif event_type == "progress" and self.on_task_progress:
-                    _, task_id_ev, progress_ev = event  # type: ignore
-                    self.on_task_progress(task_id_ev, progress_ev)
+                    if len(event) >= 3 and event[0] == "progress":
+                        progress_event = event  # Type should be Tuple[Literal["progress"], str, ProgressDict]
+                        task_id_ev = progress_event[1]
+                        progress_ev = progress_event[2]
+                        if isinstance(task_id_ev, str) and isinstance(progress_ev, dict):
+                            self.on_task_progress(task_id_ev, progress_ev)
 
                 elif event_type == "completed" and self.on_task_completed:
-                    _, task_id_ev, message_ev = event  # type: ignore
-                    self.on_task_completed(task_id_ev, message_ev)
+                    if len(event) >= 3 and event[0] == "completed":
+                        completed_event = event  # Type should be Tuple[Literal["completed"], str, str]
+                        task_id_ev = completed_event[1]
+                        message_ev = completed_event[2]
+                        if isinstance(task_id_ev, str) and isinstance(message_ev, str):
+                            self.on_task_completed(task_id_ev, message_ev)
 
                 elif event_type == "failed" and self.on_task_failed:
-                    _, task_id_ev, message_ev = event  # type: ignore
-                    self.on_task_failed(task_id_ev, message_ev)
+                    if len(event) >= 3 and event[0] == "failed":
+                        failed_event = event  # Type should be Tuple[Literal["failed"], str, str]
+                        task_id_ev = failed_event[1]
+                        message_ev = failed_event[2]
+                        if isinstance(task_id_ev, str) and isinstance(message_ev, str):
+                            self.on_task_failed(task_id_ev, message_ev)
 
                 # Mark event as processed
                 self.event_queue.task_done()
@@ -666,8 +704,9 @@ class DownloadManager:
                             task.key_url, timeout=timeout_val)
                         if response.status_code == 200:
                             task.key_data = response.content
+                            key_size = len(task.key_data) if task.key_data else 0
                             logger.debug(
-                                f"Successfully downloaded encryption key ({len(task.key_data)} bytes)")
+                                f"Successfully downloaded encryption key ({key_size} bytes)")
                             break
                         else:
                             logger.warning(
@@ -742,6 +781,9 @@ class DownloadManager:
                         total_size = int(
                             response.headers.get('content-length', 0))
                         downloaded_this_segment = 0
+                        chunk_start_time = time.time()
+                        last_speed_update = chunk_start_time
+                        
                         with open(temp_filename, 'wb') as f:
                             for chunk in response.iter_content(chunk_size=chunk_size_val):
                                 if task.canceled_event.is_set():
@@ -755,6 +797,7 @@ class DownloadManager:
                                 if not chunk:
                                     continue
 
+                                chunk_process_start = time.time()
                                 if task.key_data:  # Ensure key_data is present
                                     decrypted_chunk = decrypt_data(chunk, task.key_data, iv, last_block=(
                                         downloaded_this_segment + len(chunk) >= total_size and total_size > 0))
@@ -767,11 +810,14 @@ class DownloadManager:
                                 task.progress["current_file_progress"] = downloaded_this_segment / \
                                     total_size if total_size > 0 else 0
                                 task.progress["downloaded_bytes"] += len(chunk)
-                                # Use segment_start_time for per-segment speed context
-                                task.update_speed(
-                                    len(chunk), time.time() - segment_start_time)
-                                segment_start_time = time.time()  # Reset for next chunk's elapsed time
-                                self._emit_progress(task_id, task.progress)
+                                
+                                # Update speed calculation more accurately
+                                current_time = time.time()
+                                chunk_elapsed = current_time - chunk_process_start
+                                if current_time - last_speed_update >= 0.5:  # Update speed every 0.5 seconds
+                                    task.update_speed(len(chunk), chunk_elapsed)
+                                    last_speed_update = current_time
+                                    self._emit_progress(task_id, task.progress)
 
                         if task.canceled_event.is_set():
                             break  # Check after writing loop
@@ -820,7 +866,7 @@ class DownloadManager:
                 self._emit_progress(task_id, task.progress)
 
                 merge_result: Dict[str, Any] = merge_files(
-                    successful_files, task.output_file, self.settings)
+                    successful_files, task.output_file, None)
                 if merge_result.get("success"):
                     logger.success(
                         f"Video merge successful: {task.output_file}")

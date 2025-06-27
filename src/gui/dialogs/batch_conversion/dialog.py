@@ -15,6 +15,7 @@ from .file_list_widget import FileListWidget
 from .output_settings_widget import OutputSettingsWidget
 from .encoding_settings_widget import EncodingSettingsWidget
 from src.core.media_processor import MediaProcessor
+from ...utils.i18n import tr
 
 
 class BatchConversionDialog(QDialog):
@@ -28,7 +29,7 @@ class BatchConversionDialog(QDialog):
 
         self.settings = settings
 
-        self.setWindowTitle("批量媒体转换")
+        self.setWindowTitle(tr("batch_conversion_dialog.title"))
         self.setMinimumSize(750, 550)
         self.setWindowIcon(QIcon(":/images/convert.png"))
 
@@ -58,7 +59,7 @@ class BatchConversionDialog(QDialog):
         settings_container_layout.setContentsMargins(0, 0, 0, 0)
 
         # 转换设置组
-        settings_group = QGroupBox("转换设置")
+        settings_group = QGroupBox(tr("batch_conversion_dialog.sections.conversion_settings"))
         settings_layout = QHBoxLayout(settings_group)
         settings_layout.setContentsMargins(15, 20, 15, 15)
         settings_layout.setSpacing(20)
@@ -81,14 +82,14 @@ class BatchConversionDialog(QDialog):
         self.status_layout = QHBoxLayout()
         self.status_layout.setContentsMargins(5, 5, 5, 5)
 
-        self.file_count_label = QLabel("就绪")
+        self.file_count_label = QLabel(tr("batch_conversion_dialog.status.ready"))
         self.status_layout.addWidget(self.file_count_label)
         self.status_layout.addStretch()
 
         # 添加标准按钮
         self.button_box = QDialogButtonBox()
-        self.close_button = self.button_box.addButton(
-            "关闭", QDialogButtonBox.ButtonRole.RejectRole)
+        self.close_button =        self.button_box.addButton(
+            tr("batch_conversion_dialog.buttons.close"), QDialogButtonBox.ButtonRole.RejectRole)
 
         # 使用 PushButton 替代 QPushButton
         self.convert_button = PushButton("开始转换")

@@ -2,6 +2,7 @@ from PySide6.QtWidgets import QSystemTrayIcon, QMenu
 from PySide6.QtGui import QIcon, QAction
 from PySide6.QtCore import Signal, Slot, QObject
 import logging
+from ..utils.i18n import tr
 
 logger = logging.getLogger(__name__)
 
@@ -25,10 +26,8 @@ class SystemTrayIcon(QObject):
         # 设置图标（实际应用中应加载实际图标）
         # self.tray_icon.setIcon(QIcon(":/images/icon.png"))
         self.tray_icon.setIcon(self.app.style().standardIcon(
-            self.app.style().SP_MediaPlay))
-
-        # 设置提示文本
-        self.tray_icon.setToolTip("加密视频下载器")
+            self.app.style().SP_MediaPlay))        # 设置提示文本
+        self.tray_icon.setToolTip(tr("system_tray.tooltip"))
 
         # 创建托盘菜单
         self.tray_menu = QMenu(parent)
@@ -43,12 +42,12 @@ class SystemTrayIcon(QObject):
     def _create_tray_menu(self):
         """创建托盘菜单"""
         # 显示/隐藏主窗口
-        self.show_action = QAction("显示", self.parent_widget)
+        self.show_action = QAction(tr("system_tray.menu.show"), self.parent_widget)
         self.show_action.triggered.connect(
             lambda: self.action_triggered.emit("show"))
         self.tray_menu.addAction(self.show_action)
 
-        self.hide_action = QAction("隐藏", self.parent_widget)
+        self.hide_action = QAction(tr("system_tray.menu.hide"), self.parent_widget)
         self.hide_action.triggered.connect(
             lambda: self.action_triggered.emit("hide"))
         self.tray_menu.addAction(self.hide_action)
@@ -56,12 +55,12 @@ class SystemTrayIcon(QObject):
         self.tray_menu.addSeparator()
 
         # 任务控制
-        self.start_all_action = QAction("开始所有任务", self.parent_widget)
+        self.start_all_action = QAction(tr("system_tray.menu.start_all"), self.parent_widget)
         self.start_all_action.triggered.connect(
             lambda: self.action_triggered.emit("start_all"))
         self.tray_menu.addAction(self.start_all_action)
 
-        self.pause_all_action = QAction("暂停所有任务", self.parent_widget)
+        self.pause_all_action = QAction(tr("system_tray.menu.pause_all"), self.parent_widget)
         self.pause_all_action.triggered.connect(
             lambda: self.action_triggered.emit("pause_all"))
         self.tray_menu.addAction(self.pause_all_action)
@@ -69,7 +68,7 @@ class SystemTrayIcon(QObject):
         self.tray_menu.addSeparator()
 
         # 退出
-        self.exit_action = QAction("退出", self.parent_widget)
+        self.exit_action = QAction(tr("system_tray.menu.exit"), self.parent_widget)
         self.exit_action.triggered.connect(
             lambda: self.action_triggered.emit("exit"))
         self.tray_menu.addAction(self.exit_action)
@@ -125,10 +124,8 @@ class SystemTrayIcon(QObject):
 
         # 更新动作状态
         self.start_all_action.setEnabled(True)
-        self.pause_all_action.setEnabled(has_running)
-
-        # 更新图标提示
+        self.pause_all_action.setEnabled(has_running)        # 更新图标提示
         if has_running:
-            self.tray_icon.setToolTip(f"加密视频下载器 - {running_tasks} 个任务运行中")
+            self.tray_icon.setToolTip(tr("system_tray.tooltip_running", count=running_tasks))
         else:
-            self.tray_icon.setToolTip("加密视频下载器")
+            self.tray_icon.setToolTip(tr("system_tray.tooltip"))

@@ -8,6 +8,7 @@ from .settings import Settings
 from src.core.downloader import DownloadManager
 from src.gui.main_window import MainWindow
 from src.core.scheduler import TaskScheduler
+from src.gui.utils.i18n import init_i18n, set_locale
 
 
 class Application(QApplication):
@@ -23,13 +24,18 @@ class Application(QApplication):
         self.setApplicationName("Video Downloader")
         self.setApplicationVersion("1.0.0")
         self.setOrganizationName("Development Team")
-        self.setOrganizationDomain("example.com")
+        self.setOrganizationDomain("example.com")        # Apply language
+        self._apply_language()        # Initialize i18n system
+        init_i18n()
+        self._i18n_initialized = True
+        
+        # Apply pending locale if any
+        if hasattr(self, '_pending_locale'):
+            set_locale(self._pending_locale)
 
-        # Apply theme
-        self._apply_theme()
-
-        # Apply language
-        self._apply_language()
+        # Initialize theme manager
+        from src.gui.theme_manager import ThemeManager
+        self.theme_manager = ThemeManager(self.settings, self)
 
         # Initialize download manager
         self.download_manager = DownloadManager(self.settings)
@@ -41,11 +47,9 @@ class Application(QApplication):
 
         # Register task handler
         self.task_scheduler.register_handler(
-            "download", self._handle_download_task)
-
-        # Create main window
+            "download", self._handle_download_task)        # Create main window
         self.main_window = MainWindow(
-            self, self.download_manager, self.settings)  # type: ignore
+            self, self.download_manager, self.settings, self.theme_manager)  # type: ignore
 
         # Check initial settings
         self._check_initial_settings()
@@ -96,54 +100,68 @@ class Application(QApplication):
 
         Args:
             url (str): URL to process
-        """
-        # Simplified handling, actual implementation should parse URL to extract M3U8 and key information
+        """        # Simplified handling, actual implementation should parse URL to extract M3U8 and key information
         # TODO: Implement URL parsing
         logger.info(f"Attempting to create task from URL: {url}")
         self.main_window.import_from_url()
 
     def _apply_theme(self):
-        """Apply theme settings"""
+        """Apply theme settings using QFluentWidgets"""
+        from qfluentwidgets import setTheme, Theme, qconfig
+        
         theme = self.settings.get("general", "theme", "system")
         logger.debug(f"Applying theme: {theme}")
 
-        # In a real application, you could use Qt stylesheets or third-party libraries like qdarkstyle
-        # Simplified handling here
-        if theme == "light":
-            # Set light theme
-            logger.debug("Setting light theme")
-            pass
-        elif theme == "dark":
-            # Set dark theme
-            logger.debug("Setting dark theme")
-            pass
-        else:
-            # Follow system
-            logger.debug("Using system theme")
-            pass
+        try:
+            if theme == "light":
+                # Set light theme
+                setTheme(Theme.LIGHT)
+                logger.debug("Applied light theme")
+            elif theme == "dark":
+                # Set dark theme
+                setTheme(Theme.DARK)
+                logger.debug("Applied dark theme")
+            else:
+                # Follow system theme
+                setTheme(Theme.AUTO)
+                logger.debug("Applied system theme")
+                
+            # Save theme configuration
+            qconfig.save()
+            
+        except Exception as e:
+            logger.error(f"Error applying theme: {e}", exc_info=True)
 
     def _apply_language(self):
         """Apply language settings"""
         language = self.settings.get("general", "language", "auto")
-        logger.debug(f"Setting application language: {language}")
-
-        # Create translator
-        translator = QTranslator()
-
+        logger.debug(f"Setting application language: {language}")        # Determine locale
         if language == "auto":
             # Use system language
-            locale = QLocale.system().name()
-            logger.debug(f"Using system locale: {locale}")
+            system_locale = QLocale.system().name()
+            logger.debug(f"Using system locale: {system_locale}")
+            # Map system locale to our supported locales
+            if system_locale.startswith("zh"):
+                locale = "zh_CN"
+            else:
+                locale = "en"
         else:
-            # Use specified language
-            locale = language
+            locale = language if language else "zh_CN"
             logger.debug(f"Using specified locale: {locale}")
 
+        # Set i18n locale
+        if hasattr(self, '_i18n_initialized'):
+            set_locale(locale)
+        else:
+            # Store for later initialization
+            self._pending_locale = locale
+
+        # Create Qt translator (for Qt built-in strings)
+        translator = QTranslator()
         # Load translation file (requires .qm files in actual application)
         # translator.load(f":/translations/{locale}.qm")
-
         # Install translator
-        # self.app.installTranslator(translator)
+        # self.installTranslator(translator)
 
     def _check_initial_settings(self):
         """Check initial settings"""

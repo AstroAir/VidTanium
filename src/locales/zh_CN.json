@@ -1,0 +1,669 @@
+{
+  "app": {
+    "title": "VidTanium - 视频下载工具",
+    "name": "VidTanium"
+  },
+  "navigation": {
+    "dashboard": "仪表板",
+    "download": "下载管理",
+    "logs": "活动日志",
+    "settings": "设置"
+  },
+  "dashboard": {
+    "title": "VidTanium 仪表板",
+    "subtitle": "管理您的视频下载任务",
+    "stats": {
+      "total_tasks": "总任务数",
+      "running": "运行中",
+      "completed": "已完成",
+      "avg_speed": "平均速度"
+    },
+    "quick_actions": {
+      "title": "快速操作",
+      "url_placeholder": "输入视频URL或M3U8地址...",
+      "add_task": "添加任务",
+      "paste_url": "粘贴URL"
+    },
+    "batch_operations": {
+      "title": "批量操作",
+      "import_urls": "导入URL文件",
+      "start_all": "开始全部",
+      "pause_all": "暂停全部"
+    },
+    "media_processing": {
+      "title": "媒体处理",
+      "process_files": "处理媒体文件",
+      "batch_convert": "批量转换"
+    },
+    "recent_tasks": {
+      "title": "最近任务",
+      "view_all": "查看全部任务"
+    },
+    "system_status": {
+      "title": "系统状态",
+      "cpu_usage": "CPU 使用率",
+      "memory_usage": "内存使用",
+      "network_status": "网络状态",
+      "normal": "正常"
+    },
+    "recent_logs": {
+      "title": "最近日志",
+      "view_all": "查看全部日志",
+      "default_text": "系统启动...\n等待任务添加..."
+    },
+    "settings_section": {
+      "title": "设置",
+      "app_settings": "应用设置",
+      "about_app": "关于应用"
+    },
+    "task_status": {
+      "waiting": "等待中"
+    }
+  },
+  "download": {
+    "title": "下载管理",
+    "search_placeholder": "搜索任务...",
+    "filter": {
+      "all": "全部任务",
+      "running": "运行中",
+      "paused": "已暂停",
+      "completed": "已完成",
+      "failed": "失败"
+    },
+    "buttons": {
+      "refresh": "刷新",
+      "new_task": "新建任务",
+      "batch_import": "批量导入",
+      "start_all": "开始全部",
+      "pause_all": "暂停全部",
+      "clear_completed": "清理已完成"
+    },
+    "task_details": {
+      "title": "任务详情",
+      "select_task": "选择一个任务查看详细信息"
+    },
+    "real_time_logs": {
+      "title": "实时日志",
+      "waiting": "等待任务日志..."
+    }
+  },
+  "logs": {
+    "title": "活动日志",
+    "levels": {
+      "all": "全部",
+      "debug": "调试",
+      "info": "信息",
+      "warning": "警告",
+      "error": "错误"
+    },
+    "buttons": {
+      "clear": "清除日志",
+      "export": "导出日志"
+    },
+    "init_failed": "日志查看器初始化失败"
+  },
+  "settings": {
+    "title": "应用设置",
+    "subtitle": "配置应用程序的外观和行为",
+    "nav_title": "设置分类",
+    "categories": {
+      "general": "常规设置",
+      "download": "下载设置",
+      "appearance": "外观设置",
+      "network": "网络设置",
+      "advanced": "高级设置"
+    },
+    "general": {
+      "download_dir": {
+        "title": "下载目录",
+        "label": "默认下载目录:",
+        "browse": "浏览"
+      },
+      "behavior": {
+        "title": "行为设置",
+        "auto_cleanup": "自动清理临时文件",
+        "auto_start": "自动开始下载",
+        "notifications": "启用通知"
+      },
+      "updates": {
+        "title": "更新设置",
+        "check_updates": "启动时检查更新",
+        "max_recent_files": "最大最近文件数:"
+      }
+    },
+    "download": {
+      "title": "下载设置",
+      "max_concurrent": "最大并发下载数:",
+      "retry_attempts": "下载重试次数:",
+      "timeout": "连接超时:",
+      "timeout_suffix": " 秒"
+    },
+    "appearance": {
+      "title": "外观设置",
+      "theme": "应用主题:",
+      "language": "语言:"
+    },
+    "network": {
+      "title": "网络设置",
+      "use_proxy": "使用代理服务器",
+      "proxy_address": "代理地址:",
+      "proxy_port": "代理端口:"
+    },
+    "advanced": {
+      "title": "高级设置",
+      "user_agent": "User-Agent:",
+      "custom_ua_placeholder": "输入自定义 User-Agent",
+      "custom_ua_label": "自定义 User-Agent:"
+    },
+    "buttons": {
+      "reset": "重置为默认值",
+      "apply": "应用设置"
+    },
+    "messages": {
+      "success": "成功",
+      "saved": "设置已成功保存并应用",
+      "error": "错误",
+      "save_failed": "保存设置时发生错误：{error}",
+      "select_dir": "选择默认下载目录",
+      "reset_confirm": "确认重置",
+      "reset_message": "确定要将所有设置重置为默认值吗？"
+    }
+  },
+  "system_tray": {
+    "tooltip": "加密视频下载器",
+    "tooltip_running": "加密视频下载器 - {count} 个任务运行中",
+    "menu": {
+      "show": "显示",
+      "hide": "隐藏",
+      "start_all": "开始所有任务",
+      "pause_all": "暂停所有任务",
+      "exit": "退出"
+    }
+  },
+  "dialogs": {
+    "browse_directory": "选择下载目录",
+    "task_error": "对话框错误",
+    "task_error_message": "无法打开任务对话框: {error}",
+    "batch_import_error": "批量导入错误",
+    "batch_import_error_message": "无法打开批量导入对话框: {error}",
+    "settings_error": "设置错误",
+    "settings_error_message": "无法打开设置对话框: {error}",
+    "about_error": "关于错误",
+    "about_error_message": "无法打开关于对话框: {error}",
+    "media_processing": "媒体处理",
+    "media_processing_message": "媒体处理功能即将推出",
+    "batch_convert": "批量转换",
+    "batch_convert_message": "批量转换功能即将推出",
+    "confirm_exit": "确认退出",
+    "confirm_exit_message": "还有 {count} 个任务正在进行中，确定要退出吗？",
+    "settings_saved": "设置已保存",
+    "settings_saved_message": "设置已成功保存到文件",
+    "save_failed": "保存失败",
+    "save_failed_message": "设置保存失败: {error}"
+  },  "task_dialog": {
+    "title": "创建新任务",    "basic_info": {
+      "title": "创建新下载任务",
+      "subtitle": "配置下载参数并添加到任务队列",
+      "card_title": "基础信息",
+      "task_name": "任务名称:",
+      "name_placeholder": "输入任务名称...",
+      "video_url": "视频基础URL:",
+      "url_placeholder": "输入M3U8或视频URL...",
+      "key_url": "密钥URL:",
+      "key_placeholder": "输入密钥URL（可选）...",
+      "segments": "片段数量:",
+      "output_file": "输出文件:",
+      "output_placeholder": "选择保存位置和文件名...",
+      "browse_tooltip": "浏览保存位置",
+      "auto_extract": "自动提取信息"
+    },
+    "advanced_options": {
+      "title": "高级选项",
+      "priority": "任务优先级:",
+      "priority_high": "🔥 高优先级",
+      "priority_normal": "⚡ 普通优先级",
+      "priority_low": "🐌 低优先级",
+      "options": "选项:",
+      "auto_start": "添加后自动开始下载",
+      "notify_completion": "完成后显示通知"
+    },
+    "buttons": {
+      "cancel": "取消",
+      "create": "创建任务"
+    },
+    "errors": {
+      "input_error": "输入错误",
+      "no_url": "请输入视频基础URL",
+      "no_output": "请选择输出文件",
+      "extract_failed": "提取失败: {message}",
+      "extract_error": "提取过程出错: {error}"
+    },
+    "extraction": {
+      "progress": "正在分析M3U8...",
+      "cancel": "取消",
+      "title": "提取中",
+      "success": "提取成功",
+      "success_message": "成功提取M3U8信息:\n- 分辨率: {resolution}\n- 片段数: {segments}\n- 时长: {duration}秒\n- 加密方式: {encryption}"
+    },
+    "file_dialog": {
+      "save_title": "选择输出文件",
+      "video_filter": "视频文件 (*.mp4);;所有文件 (*)"
+    }
+  },
+  "about_dialog": {
+    "title": "关于",
+    "app_name": "VidTanium",
+    "version": "版本 1.0.0",
+    "tagline": "专业视频下载工具",
+    "github": "GitHub",
+    "check_updates": "检查更新",
+    "tabs": {
+      "about": "关于",
+      "features": "功能特性",
+      "license": "许可证",
+      "third_party": "第三方库"
+    },
+    "description": {
+      "title": "关于 VidTanium",
+      "content": "VidTanium 是一个强大而高效的视频下载工具，专为下载加密的M3U8视频流而设计。采用现代化技术构建，注重用户体验。"
+    },
+    "key_features": {
+      "title": "主要特性",
+      "encrypted_download": "支持加密M3U8视频流下载",
+      "high_speed": "多线程高速下载",
+      "smart_retry": "智能重试机制与错误恢复",
+      "modern_ui": "现代化美观用户界面",
+      "batch_support": "批量下载和处理支持"
+    },
+    "features": {
+      "download": {
+        "title": "下载功能",
+        "m3u8": "完整的M3U8播放列表支持与片段解析",
+        "encryption": "AES-128加密流解密",
+        "resume": "下载续传和错误恢复",
+        "metadata": "自动元数据检测和保留"
+      },
+      "performance": {
+        "title": "性能与效率",
+        "multithread": "多线程并行下载",
+        "async": "异步处理提升响应速度",
+        "optimization": "内存和带宽优化",
+        "monitoring": "实时进度监控和统计"
+      },
+      "interface": {
+        "title": "用户界面",
+        "modern": "现代化Fluent设计语言",
+        "themes": "明暗主题支持",
+        "responsive": "响应式自适应布局",
+        "i18n": "多语言国际化支持"
+      }
+    },
+    "license": {
+      "title": "许可证信息"
+    },
+    "third_party": {
+      "title": "第三方库",
+      "description": "VidTanium 基于这些优秀的开源库构建："
+    },
+    "libraries": {
+      "pyside6": "Qt for Python - 现代跨平台GUI框架",
+      "fluent_widgets": "Fluent设计组件，打造美观现代UI",
+      "cryptography": "Python密码学配方和原语",
+      "requests": "优雅简洁的Python HTTP库",
+      "aiohttp": "用于asyncio和Python的异步HTTP客户端/服务器框架"
+    },
+    "updates": {
+      "checking": "正在检查更新...",
+      "latest": "您正在使用最新版本！"
+    },
+    "about_content": "VidTanium 是一个强大而高效的视频下载工具，专为下载加密的M3U8视频流而设计。\n\n主要特性:\n• 支持加密M3U8视频流下载\n• 多线程高速下载\n• 智能重试机制\n• 现代化用户界面\n• 批量下载支持\n\n由开发者精心制作，致力于提供最佳的用户体验。",
+    "license_content": "MIT License\n\nCopyright (c) 2024 VidTanium\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.",
+    "third_party_content": "VidTanium 使用以下开源库:\n\n• PySide6 - Qt for Python\n• PyQt-Fluent-Widgets - 现代UI组件\n• cryptography - 加密支持\n• requests - HTTP库\n• aiohttp - 异步HTTP客户端",
+    "buttons": {
+      "close": "关闭"
+    }
+  },
+  "batch_url_dialog": {
+    "title": "批量导入URL",
+    "subtitle": "批量导入URL",
+    "tabs": {
+      "text_input": "文本输入",
+      "from_file": "从文件导入",
+      "from_web": "从网页抓取"
+    },
+    "text_tab": {
+      "title": "输入URL列表",
+      "placeholder": "请在此输入URL列表，每行一个URL：\n\nhttps://example.com/video1.m3u8\nhttps://example.com/video2.m3u8\n...",
+      "clear": "清空",
+      "paste": "粘贴剪贴板"
+    },
+    "file_tab": {
+      "title": "从文件导入URL",
+      "description": "选择包含URL列表的文件（每行一个URL）",
+      "select_file": "选择文件",
+      "file_filter": "文本文件 (*.txt);;所有文件 (*)",
+      "parse": "解析文件"
+    },
+    "web_tab": {
+      "title": "从网页抓取URL",
+      "description": "输入网页地址，自动抓取其中的M3U8链接",
+      "url_placeholder": "输入网页URL...",
+      "extract": "抓取链接"
+    },
+    "preview": {
+      "title": "URL预览",
+      "count": "共 {count} 个URL",
+      "empty": "暂无URL"
+    },
+    "settings": {
+      "title": "导入设置",
+      "auto_start": "导入后自动开始下载",
+      "priority": "任务优先级:",
+      "priority_high": "高优先级",
+      "priority_normal": "普通优先级", 
+      "priority_low": "低优先级"
+    },
+    "buttons": {
+      "import": "导入任务",
+      "cancel": "取消"
+    },
+    "messages": {
+      "no_urls": "请输入或选择URL",
+      "invalid_url": "无效的URL: {url}",
+      "parse_error": "解析错误: {error}",
+      "extract_success": "成功提取 {count} 个URL",      "extract_failed": "抓取失败: {error}"
+    }
+  },  "media_processing_dialog": {
+    "title": "媒体处理",
+    "subtitle": "媒体处理",
+    "processing_tabs": {
+      "convert": "格式转换",
+      "clip": "视频剪辑", 
+      "audio": "提取音频",
+      "compress": "视频压缩"
+    },
+    "convert_tab": {
+      "title": "格式转换选项",
+      "output_format": "输出格式:",
+      "video_codec": "视频编码:",
+      "audio_codec": "音频编码:",
+      "resolution": "分辨率:",
+      "framerate": "帧率:",
+      "width_placeholder": "宽",
+      "height_placeholder": "高",
+      "formats": {
+        "custom": "自定义"
+      },
+      "codecs": {
+        "copy": "复制",
+        "unchanged": "不变"
+      },
+      "tooltips": {
+        "video_codec": "选择视频编码格式",
+        "audio_codec": "选择音频编码格式", 
+        "framerate": "设置视频帧率，1表示保持原帧率"
+      },
+      "hints": {
+        "copy_faster": "提示：选择'复制'可以不重新编码，处理速度更快"
+      }
+    },
+    "clip_tab": {
+      "title": "视频剪辑选项",
+      "start_time": "开始时间:",
+      "end_time": "结束时间:",
+      "duration": "持续时间:",
+      "keep_codec": "保持原始编码（快速）",
+      "tooltips": {
+        "start_time": "设置剪辑起始时间",
+        "end_time": "设置剪辑结束时间",
+        "keep_codec": "保持原始编码可以加快处理速度，但可能在某些播放器中不兼容"
+      },
+      "hints": {
+        "precision": "提示：保持原始编码可以加快处理速度，但某些开始/结束位置可能不精确"
+      }
+    },
+    "audio_tab": {
+      "title": "音频提取选项",
+      "audio_format": "音频格式:",
+      "audio_quality": "音频质量:",
+      "hints": {
+        "quality_size": "提示：较高的质量设置会产生更大的文件"
+      }
+    },
+    "compress_tab": {
+      "title": "视频压缩选项",
+      "compression_method": "压缩方式:",
+      "quality_compression": "按质量压缩",
+      "size_compression": "按目标大小压缩",
+      "quality": "质量:",
+      "target_size": "目标大小:",
+      "tooltips": {
+        "quality_compression": "通过控制视频质量来压缩",
+        "size_compression": "将视频压缩到指定大小",
+        "quality": "CRF值：0为无损，51为最低质量，通常23-28为合理范围",
+        "target_size": "设置压缩后的目标文件大小"
+      },
+      "hints": {
+        "methods": "提示：按质量压缩通常能获得更好的视觉效果，按大小压缩可以精确控制输出文件大小"
+      }
+    },
+    "file_section": {
+      "input_file": "输入文件:",
+      "output_file": "输出文件:",
+      "file_info": "文件信息:",
+      "browse": "浏览...",
+      "input_placeholder": "选择输入媒体文件...",
+      "output_placeholder": "选择输出位置...",
+      "select_input_prompt": "请选择输入文件"
+    },
+    "tabs": {
+      "basic": "基本设置",
+      "video": "视频设置", 
+      "audio": "音频设置",
+      "advanced": "高级选项"
+    },
+    "basic": {
+      "input_file": "输入文件:",
+      "output_file": "输出文件:",
+      "browse": "浏览",
+      "format": "输出格式:",
+      "quality": "质量预设:"
+    },
+    "video": {
+      "codec": "视频编码:",
+      "resolution": "分辨率:",
+      "bitrate": "比特率:",
+      "framerate": "帧率:"
+    },
+    "audio": {
+      "codec": "音频编码:",
+      "bitrate": "比特率:",
+      "sample_rate": "采样率:",
+      "channels": "声道数:"
+    },
+    "advanced": {
+      "custom_params": "自定义参数:",
+      "hwaccel": "硬件加速:",
+      "threads": "线程数:"
+    },
+    "buttons": {
+      "start": "开始处理",
+      "cancel": "取消",
+      "preview": "预览"
+    },
+    "messages": {
+      "no_input": "请选择输入文件",
+      "no_output": "请选择输出位置",
+      "processing": "正在处理...",
+      "completed": "处理完成",
+      "failed": "处理失败: {error}"
+    }
+  },
+  "common": {
+    "ok": "确定",
+    "cancel": "取消",
+    "yes": "是",
+    "no": "否",
+    "close": "关闭",
+    "save": "保存",
+    "load": "加载",
+    "delete": "删除",
+    "edit": "编辑",
+    "add": "添加",
+    "remove": "移除",
+    "start": "开始",
+    "pause": "暂停",
+    "stop": "停止",
+    "resume": "恢复",
+    "retry": "重试",
+    "refresh": "刷新",
+    "search": "搜索",
+    "filter": "筛选",
+    "import": "导入",
+    "export": "导出",
+    "browse": "浏览",
+    "select": "选择",
+    "apply": "应用",
+    "reset": "重置",
+    "clear": "清除",    "view": "查看",
+    "show": "显示",
+    "hide": "隐藏",
+    "unknown": "未知"
+  },
+  "log_viewer": {
+    "title": "日志查看器",
+    "subtitle": "查看和管理应用程序日志",
+    "export": {
+      "success": "成功导出 {count} 条日志到 {path}",
+      "error": "导出失败: {error}",
+      "title": "VidTanium 日志导出",
+      "export_time": "导出时间: {time}",
+      "total_entries": "总条目数: {count}",
+      "source": "来源: {source}",
+      "csv_headers": {
+        "timestamp": "时间戳",
+        "level": "级别", 
+        "message": "消息",
+        "source": "来源"
+      }
+    },
+    "filters": {
+      "title": "高级筛选",
+      "time_range": {
+        "all": "全部时间",
+        "hour": "最近1小时",
+        "6hours": "最近6小时",
+        "day": "最近1天",
+        "week": "最近1周",
+        "custom": "自定义时间"
+      }
+    }
+  },
+  "batch_conversion_dialog": {
+    "title": "批量媒体转换",
+    "subtitle": "批量处理和转换多个媒体文件",
+    "sections": {
+      "conversion_settings": "转换设置",
+      "file_selection": "文件选择"
+    },
+    "status": {
+      "ready": "就绪",
+      "processing": "正在处理...",
+      "completed": "处理完成",
+      "failed": "处理失败"
+    },
+    "buttons": {
+      "start": "开始转换",
+      "close": "关闭",
+      "pause": "暂停",
+      "resume": "恢复"
+    }
+  },
+  "schedule_manager": {
+    "title": "计划任务管理",
+    "auto_refresh": "自动刷新",
+    "filters": {
+      "all": "全部任务",
+      "pending": "等待中",
+      "running": "运行中", 
+      "completed": "已完成",
+      "failed": "失败"
+    },
+    "actions": {
+      "start": "开始",
+      "pause": "暂停",
+      "stop": "停止",
+      "delete": "删除",
+      "edit": "编辑"
+    },
+    "messages": {
+      "no_tasks": "暂无计划任务",
+      "task_started": "任务已开始",
+      "task_paused": "任务已暂停",
+      "task_stopped": "任务已停止",
+      "task_deleted": "任务已删除",
+      "confirm_delete": "确认删除任务？"
+    }
+  },
+  "task_manager": {
+    "title": "下载管理器",
+    "stats": {
+      "total": "总计",
+      "active": "活跃",
+      "completed": "已完成",
+      "speed": "速度"
+    },
+    "search_placeholder": "搜索下载...",
+    "filter": {
+      "all": "全部任务",
+      "downloading": "下载中",
+      "paused": "已暂停",
+      "completed": "已完成",
+      "failed": "失败"
+    },
+    "actions": {
+      "start_selected": "启动选中",
+      "pause_selected": "暂停选中",
+      "clear_completed": "清除已完成"
+    },
+    "clear_completed": "清除已完成",
+    "clear_completed_confirm": {
+      "title": "清除已完成任务",
+      "message": "确定要清除所有已完成的任务吗？此操作无法撤销。"
+    },
+    "delete_confirm": {
+      "title": "删除任务",
+      "message": "确定要删除此下载任务吗？此操作无法撤销。"
+    },
+    "empty": {
+      "title": "暂无下载",
+      "description": "开始下载视频，它们将在这里以美观的方式展示并便于管理。"
+    },
+    "status": {
+      "pending": "等待中",
+      "downloading": "下载中",
+      "paused": "已暂停",
+      "completed": "已完成",
+      "failed": "失败",
+      "cancelled": "已取消"
+    },  
+    "start": "开始",
+    "pause": "暂停",
+    "stop": "停止",
+    "delete": "删除",
+    "file_size": "文件大小",
+    "save_path": "保存路径",
+    "expand_details": "显示详情",
+    "collapse_details": "隐藏详情"
+  },
+  "task": {
+    "status": {
+      "waiting": "等待中",
+      "downloading": "下载中",
+      "paused": "已暂停",
+      "completed": "已完成",
+      "error": "错误",
+      "cancelled": "已取消"
+    }
+  }
+}

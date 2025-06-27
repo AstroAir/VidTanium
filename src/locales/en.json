@@ -1,0 +1,668 @@
+{
+  "app": {
+    "title": "VidTanium - Video Download Tool",
+    "name": "VidTanium"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "download": "Download Manager",
+    "logs": "Activity Logs",
+    "settings": "Settings"
+  },
+  "dashboard": {
+    "title": "VidTanium Dashboard",
+    "subtitle": "Manage your video download tasks",
+    "stats": {
+      "total_tasks": "Total Tasks",
+      "running": "Running",
+      "completed": "Completed", 
+      "avg_speed": "Average Speed"
+    },
+    "quick_actions": {
+      "title": "Quick Actions",
+      "url_placeholder": "Enter video URL or M3U8 address...",
+      "add_task": "Add Task",
+      "paste_url": "Paste URL"
+    },
+    "batch_operations": {
+      "title": "Batch Operations",
+      "import_urls": "Import URL File",
+      "start_all": "Start All",
+      "pause_all": "Pause All"
+    },
+    "media_processing": {
+      "title": "Media Processing",
+      "process_files": "Process Media Files",
+      "batch_convert": "Batch Convert"
+    },
+    "recent_tasks": {
+      "title": "Recent Tasks",
+      "view_all": "View All Tasks"
+    },
+    "system_status": {
+      "title": "System Status",
+      "cpu_usage": "CPU Usage",
+      "memory_usage": "Memory Usage",
+      "network_status": "Network Status",
+      "normal": "Normal"
+    },
+    "recent_logs": {
+      "title": "Recent Logs",
+      "view_all": "View All Logs",
+      "default_text": "System starting...\nWaiting for tasks to be added..."
+    },
+    "settings_section": {
+      "title": "Settings",
+      "app_settings": "App Settings",
+      "about_app": "About App"
+    },
+    "task_status": {
+      "waiting": "Waiting"
+    }
+  },
+  "download": {
+    "title": "Download Manager",
+    "search_placeholder": "Search tasks...",
+    "filter": {
+      "all": "All Tasks",
+      "running": "Running",
+      "paused": "Paused", 
+      "completed": "Completed",
+      "failed": "Failed"
+    },
+    "buttons": {
+      "refresh": "Refresh",
+      "new_task": "New Task",
+      "batch_import": "Batch Import",
+      "start_all": "Start All",
+      "pause_all": "Pause All",
+      "clear_completed": "Clear Completed"
+    },
+    "task_details": {
+      "title": "Task Details",
+      "select_task": "Select a task to view details"
+    },
+    "real_time_logs": {
+      "title": "Real-time Logs",
+      "waiting": "Waiting for task logs..."
+    }
+  },
+  "logs": {
+    "title": "Activity Logs",
+    "levels": {
+      "all": "All",
+      "debug": "Debug",
+      "info": "Info",
+      "warning": "Warning",
+      "error": "Error"
+    },
+    "buttons": {
+      "clear": "Clear Logs",
+      "export": "Export Logs"
+    },
+    "init_failed": "Log viewer initialization failed"
+  },
+  "settings": {
+    "title": "App Settings",
+    "subtitle": "Configure application appearance and behavior",
+    "nav_title": "Settings Categories",
+    "categories": {
+      "general": "General Settings",
+      "download": "Download Settings", 
+      "appearance": "Appearance Settings",
+      "network": "Network Settings",
+      "advanced": "Advanced Settings"
+    },
+    "general": {
+      "download_dir": {
+        "title": "Download Directory",
+        "label": "Default download directory:",
+        "browse": "Browse"
+      },
+      "behavior": {
+        "title": "Behavior Settings",
+        "auto_cleanup": "Auto cleanup temporary files",
+        "auto_start": "Auto start downloads",
+        "notifications": "Enable notifications"
+      },
+      "updates": {
+        "title": "Update Settings",
+        "check_updates": "Check for updates on startup",
+        "max_recent_files": "Max recent files:"
+      }
+    },
+    "download": {
+      "title": "Download Settings",
+      "max_concurrent": "Max concurrent downloads:",
+      "retry_attempts": "Download retry attempts:",
+      "timeout": "Connection timeout:",
+      "timeout_suffix": " seconds"
+    },
+    "appearance": {
+      "title": "Appearance Settings",
+      "theme": "App theme:",
+      "language": "Language:"
+    },
+    "network": {
+      "title": "Network Settings",
+      "use_proxy": "Use proxy server",
+      "proxy_address": "Proxy address:",
+      "proxy_port": "Proxy port:"
+    },
+    "advanced": {
+      "title": "Advanced Settings",
+      "user_agent": "User-Agent:",
+      "custom_ua_placeholder": "Enter custom User-Agent",
+      "custom_ua_label": "Custom User-Agent:"
+    },
+    "buttons": {
+      "reset": "Reset to Defaults",
+      "apply": "Apply Settings"
+    },
+    "messages": {
+      "success": "Success",
+      "saved": "Settings saved and applied successfully",
+      "error": "Error",
+      "save_failed": "Error saving settings: {error}",
+      "select_dir": "Select default download directory",
+      "reset_confirm": "Confirm Reset",
+      "reset_message": "Are you sure you want to reset all settings to default values?"
+    }
+  },
+  "system_tray": {
+    "tooltip": "Encrypted Video Downloader",
+    "tooltip_running": "Encrypted Video Downloader - {count} tasks running",
+    "menu": {
+      "show": "Show",
+      "hide": "Hide", 
+      "start_all": "Start All Tasks",
+      "pause_all": "Pause All Tasks",
+      "exit": "Exit"
+    }
+  },
+  "dialogs": {
+    "browse_directory": "Select download directory",
+    "task_error": "Task Dialog Error",
+    "task_error_message": "Cannot open task dialog: {error}",
+    "batch_import_error": "Batch Import Error", 
+    "batch_import_error_message": "Cannot open batch import dialog: {error}",
+    "settings_error": "Settings Error",
+    "settings_error_message": "Cannot open settings dialog: {error}",
+    "about_error": "About Error",
+    "about_error_message": "Cannot open about dialog: {error}",
+    "media_processing": "Media Processing",
+    "media_processing_message": "Media processing feature coming soon",
+    "batch_convert": "Batch Convert",
+    "batch_convert_message": "Batch convert feature coming soon",
+    "confirm_exit": "Confirm Exit",
+    "confirm_exit_message": "There are {count} tasks still running. Are you sure you want to exit?",
+    "settings_saved": "Settings Saved",
+    "settings_saved_message": "Settings saved successfully to file",    "save_failed": "Save Failed", 
+    "save_failed_message": "Settings save failed: {error}"
+  },  "task_dialog": {
+    "title": "Create New Task",    "basic_info": {
+      "title": "Create New Download Task",
+      "subtitle": "Configure download parameters and add to task queue",
+      "card_title": "Basic Information",
+      "task_name": "Task Name:",
+      "name_placeholder": "Enter task name...",
+      "video_url": "Video Base URL:",
+      "url_placeholder": "Enter M3U8 or video URL...",
+      "key_url": "Key URL:",
+      "key_placeholder": "Enter key URL (optional)...",
+      "segments": "Segment Count:",
+      "output_file": "Output File:",
+      "output_placeholder": "Select save location and filename...",
+      "browse_tooltip": "Browse save location",
+      "auto_extract": "Auto Extract Info"
+    },
+    "advanced_options": {
+      "title": "Advanced Options",
+      "priority": "Task Priority:",
+      "priority_high": "🔥 High Priority",
+      "priority_normal": "⚡ Normal Priority",
+      "priority_low": "🐌 Low Priority",
+      "options": "Options:",
+      "auto_start": "Auto start download after adding",
+      "notify_completion": "Show notification when completed"
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "create": "Create Task"
+    },
+    "errors": {
+      "input_error": "Input Error",
+      "no_url": "Please enter video base URL",
+      "no_output": "Please select output file",
+      "extract_failed": "Extraction failed: {message}",
+      "extract_error": "Error during extraction: {error}"
+    },
+    "extraction": {
+      "progress": "Analyzing M3U8...",
+      "cancel": "Cancel",
+      "title": "Extracting",
+      "success": "Extraction Successful",
+      "success_message": "Successfully extracted M3U8 info:\n- Resolution: {resolution}\n- Segments: {segments}\n- Duration: {duration}s\n- Encryption: {encryption}"
+    },
+    "file_dialog": {
+      "save_title": "Select Output File",
+      "video_filter": "Video Files (*.mp4);;All Files (*)"
+    }
+  },
+  "about_dialog": {
+    "title": "About",
+    "app_name": "VidTanium",
+    "version": "Version 1.0.0",
+    "tagline": "Professional Video Downloader",
+    "github": "GitHub",
+    "check_updates": "Check Updates",
+    "tabs": {
+      "about": "About",
+      "features": "Features",
+      "license": "License",
+      "third_party": "Third Party"
+    },
+    "description": {
+      "title": "About VidTanium",
+      "content": "VidTanium is a powerful and efficient video download tool designed for downloading encrypted M3U8 video streams. Built with modern technologies and user experience in mind."
+    },
+    "key_features": {
+      "title": "Key Features",
+      "encrypted_download": "Support for encrypted M3U8 video stream downloads",
+      "high_speed": "Multi-threaded high-speed downloads",
+      "smart_retry": "Smart retry mechanism with error recovery",
+      "modern_ui": "Modern and beautiful user interface",
+      "batch_support": "Batch download and processing support"
+    },
+    "features": {
+      "download": {
+        "title": "Download Capabilities",
+        "m3u8": "Full M3U8 playlist support with segment parsing",
+        "encryption": "AES-128 encrypted stream decryption",
+        "resume": "Download resumption and error recovery",
+        "metadata": "Automatic metadata detection and preservation"
+      },
+      "performance": {
+        "title": "Performance & Efficiency",
+        "multithread": "Multi-threaded parallel downloading",
+        "async": "Asynchronous processing for better responsiveness",
+        "optimization": "Memory and bandwidth optimization",
+        "monitoring": "Real-time progress monitoring and statistics"
+      },
+      "interface": {
+        "title": "User Interface",
+        "modern": "Modern Fluent Design language",
+        "themes": "Light and dark theme support",
+        "responsive": "Responsive and adaptive layouts",
+        "i18n": "Multi-language internationalization support"
+      }
+    },
+    "license": {
+      "title": "License Information"
+    },
+    "third_party": {
+      "title": "Third-Party Libraries",
+      "description": "VidTanium is built upon these excellent open-source libraries:"
+    },
+    "libraries": {
+      "pyside6": "Qt for Python - Modern cross-platform GUI framework",
+      "fluent_widgets": "Fluent Design components for beautiful modern UI",
+      "cryptography": "Cryptographic recipes and primitives for Python",
+      "requests": "Elegant and simple HTTP library for Python",
+      "aiohttp": "Async HTTP client/server framework for asyncio and Python"
+    },
+    "updates": {
+      "checking": "Checking for updates...",
+      "latest": "You are using the latest version!"
+    },
+    "about_content": "VidTanium is a powerful and efficient video download tool designed for downloading encrypted M3U8 video streams.\n\nKey Features:\n• Support for encrypted M3U8 video stream downloads\n• Multi-threaded high-speed downloads\n• Smart retry mechanism\n• Modern user interface\n• Batch download support\n\nCrafted with care by developers, committed to providing the best user experience.",
+    "license_content": "MIT License\n\nCopyright (c) 2024 VidTanium\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.",
+    "third_party_content": "VidTanium uses the following open-source libraries:\n\n• PySide6 - Qt for Python\n• PyQt-Fluent-Widgets - Modern UI components\n• cryptography - Encryption support\n• requests - HTTP library\n• aiohttp - Async HTTP client",
+    "buttons": {
+      "close": "Close"
+    }
+  },
+  "batch_url_dialog": {
+    "title": "Batch Import URLs",
+    "subtitle": "Batch Import URLs", 
+    "tabs": {
+      "text_input": "Text Input",
+      "from_file": "Import from File",
+      "from_web": "Extract from Web"
+    },
+    "text_tab": {
+      "title": "Enter URL List",
+      "placeholder": "Enter URL list here, one URL per line:\n\nhttps://example.com/video1.m3u8\nhttps://example.com/video2.m3u8\n...",
+      "clear": "Clear",
+      "paste": "Paste Clipboard"
+    },
+    "file_tab": {
+      "title": "Import URLs from File",
+      "description": "Select a file containing URL list (one URL per line)",
+      "select_file": "Select File",
+      "file_filter": "Text Files (*.txt);;All Files (*)",
+      "parse": "Parse File"
+    },
+    "web_tab": {
+      "title": "Extract URLs from Web",
+      "description": "Enter web page URL to automatically extract M3U8 links",
+      "url_placeholder": "Enter web page URL...",
+      "extract": "Extract Links"
+    },
+    "preview": {
+      "title": "URL Preview",
+      "count": "Total {count} URLs",
+      "empty": "No URLs"
+    },
+    "settings": {
+      "title": "Import Settings",
+      "auto_start": "Auto start download after import",
+      "priority": "Task Priority:",
+      "priority_high": "High Priority",
+      "priority_normal": "Normal Priority",
+      "priority_low": "Low Priority"
+    },
+    "buttons": {
+      "import": "Import Tasks",
+      "cancel": "Cancel"
+    },
+    "messages": {
+      "no_urls": "Please enter or select URLs",
+      "invalid_url": "Invalid URL: {url}",
+      "parse_error": "Parse error: {error}",
+      "extract_success": "Successfully extracted {count} URLs",      "extract_failed": "Extraction failed: {error}"
+    }
+  },  "media_processing_dialog": {
+    "title": "Media Processing",
+    "subtitle": "Media Processing",
+    "processing_tabs": {
+      "convert": "Format Conversion",
+      "clip": "Video Clipping",
+      "audio": "Extract Audio", 
+      "compress": "Video Compression"
+    },
+    "convert_tab": {
+      "title": "Format Conversion Options",
+      "output_format": "Output Format:",
+      "video_codec": "Video Codec:",
+      "audio_codec": "Audio Codec:",
+      "resolution": "Resolution:",
+      "framerate": "Frame Rate:",
+      "width_placeholder": "Width",
+      "height_placeholder": "Height",
+      "formats": {
+        "custom": "Custom"
+      },
+      "codecs": {
+        "copy": "Copy",
+        "unchanged": "Unchanged"
+      },
+      "tooltips": {
+        "video_codec": "Select video codec format",
+        "audio_codec": "Select audio codec format",
+        "framerate": "Set video frame rate, 1 means keep original frame rate"
+      },
+      "hints": {
+        "copy_faster": "Tip: Selecting 'Copy' will not re-encode, processing is faster"
+      }
+    },
+    "clip_tab": {
+      "title": "Video Clipping Options",
+      "start_time": "Start Time:",
+      "end_time": "End Time:",
+      "duration": "Duration:",
+      "keep_codec": "Keep Original Codec (Fast)",
+      "tooltips": {
+        "start_time": "Set clipping start time",
+        "end_time": "Set clipping end time",
+        "keep_codec": "Keeping original codec can speed up processing but may be incompatible with some players"
+      },
+      "hints": {
+        "precision": "Tip: Keeping original codec can speed up processing, but some start/end positions may not be precise"
+      }
+    },
+    "audio_tab": {
+      "title": "Audio Extraction Options",
+      "audio_format": "Audio Format:",
+      "audio_quality": "Audio Quality:",
+      "hints": {
+        "quality_size": "Tip: Higher quality settings will produce larger files"
+      }
+    },
+    "compress_tab": {
+      "title": "Video Compression Options",
+      "compression_method": "Compression Method:",
+      "quality_compression": "Compress by Quality",
+      "size_compression": "Compress by Target Size",
+      "quality": "Quality:",
+      "target_size": "Target Size:",
+      "tooltips": {
+        "quality_compression": "Compress by controlling video quality",
+        "size_compression": "Compress video to specified size",
+        "quality": "CRF value: 0 is lossless, 51 is lowest quality, typically 23-28 is reasonable range",
+        "target_size": "Set target file size after compression"
+      },
+      "hints": {
+        "methods": "Tip: Quality compression usually achieves better visual results, size compression allows precise control of output file size"
+      }
+    },
+    "file_section": {
+      "input_file": "Input File:",
+      "output_file": "Output File:",
+      "file_info": "File Info:",
+      "browse": "Browse...",
+      "input_placeholder": "Select input media file...",
+      "output_placeholder": "Select output location...",
+      "select_input_prompt": "Please select input file"
+    },
+    "tabs": {
+      "basic": "Basic Settings",
+      "video": "Video Settings",
+      "audio": "Audio Settings", 
+      "advanced": "Advanced Options"
+    },
+    "basic": {
+      "input_file": "Input File:",
+      "output_file": "Output File:",
+      "browse": "Browse",
+      "format": "Output Format:",
+      "quality": "Quality Preset:"
+    },
+    "video": {
+      "codec": "Video Codec:",
+      "resolution": "Resolution:",
+      "bitrate": "Bitrate:",
+      "framerate": "Frame Rate:"
+    },
+    "audio": {
+      "codec": "Audio Codec:",
+      "bitrate": "Bitrate:",
+      "sample_rate": "Sample Rate:",
+      "channels": "Channels:"
+    },
+    "advanced": {
+      "custom_params": "Custom Parameters:",
+      "hwaccel": "Hardware Acceleration:",
+      "threads": "Thread Count:"
+    },
+    "buttons": {
+      "start": "Start Processing",
+      "cancel": "Cancel",
+      "preview": "Preview"
+    },
+    "messages": {
+      "no_input": "Please select input file",
+      "no_output": "Please select output location",
+      "processing": "Processing...",
+      "completed": "Processing completed",
+      "failed": "Processing failed: {error}"
+    }
+  },
+  "common": {
+    "ok": "OK",
+    "cancel": "Cancel",
+    "yes": "Yes",
+    "no": "No",
+    "close": "Close",
+    "save": "Save",
+    "load": "Load",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "remove": "Remove",
+    "start": "Start",
+    "pause": "Pause",
+    "stop": "Stop",
+    "resume": "Resume",
+    "retry": "Retry",
+    "refresh": "Refresh",
+    "search": "Search",
+    "filter": "Filter",
+    "import": "Import",
+    "export": "Export",
+    "browse": "Browse",
+    "select": "Select",
+    "apply": "Apply",
+    "reset": "Reset",
+    "clear": "Clear",    "view": "View",
+    "show": "Show",
+    "hide": "Hide",
+    "unknown": "Unknown"
+  },
+  "log_viewer": {
+    "title": "Log Viewer",
+    "subtitle": "View and manage application logs",
+    "export": {
+      "success": "Successfully exported {count} log entries to {path}",
+      "error": "Export failed: {error}",
+      "title": "VidTanium Log Export",
+      "export_time": "Export time: {time}",
+      "total_entries": "Total entries: {count}",
+      "source": "Source: {source}",
+      "csv_headers": {
+        "timestamp": "Timestamp",
+        "level": "Level",
+        "message": "Message", 
+        "source": "Source"
+      }
+    },
+    "filters": {
+      "title": "Advanced Filters",
+      "time_range": {
+        "all": "All Time",
+        "hour": "Last 1 Hour",
+        "6hours": "Last 6 Hours",
+        "day": "Last 1 Day",
+        "week": "Last 1 Week",
+        "custom": "Custom Time"
+      }
+    }
+  },
+  "batch_conversion_dialog": {
+    "title": "Batch Media Conversion",
+    "subtitle": "Batch process and convert multiple media files",
+    "sections": {
+      "conversion_settings": "Conversion Settings",
+      "file_selection": "File Selection"
+    },
+    "status": {
+      "ready": "Ready",
+      "processing": "Processing...",
+      "completed": "Processing completed",
+      "failed": "Processing failed"
+    },
+    "buttons": {
+      "start": "Start Conversion",
+      "close": "Close",
+      "pause": "Pause",
+      "resume": "Resume"
+    }
+  },
+  "schedule_manager": {
+    "title": "Schedule Manager",
+    "auto_refresh": "Auto Refresh",
+    "filters": {
+      "all": "All Tasks",
+      "pending": "Pending",
+      "running": "Running",
+      "completed": "Completed", 
+      "failed": "Failed"
+    },
+    "actions": {
+      "start": "Start",
+      "pause": "Pause",
+      "stop": "Stop",
+      "delete": "Delete",
+      "edit": "Edit"
+    },
+    "messages": {
+      "no_tasks": "No scheduled tasks",
+      "task_started": "Task started",
+      "task_paused": "Task paused",
+      "task_stopped": "Task stopped",
+      "task_deleted": "Task deleted",
+      "confirm_delete": "Confirm delete task?"
+    }
+  },
+  "task_manager": {
+    "title": "Download Manager",
+    "stats": {
+      "total": "Total",
+      "active": "Active",
+      "completed": "Completed", 
+      "speed": "Speed"
+    },
+    "search_placeholder": "Search downloads...",
+    "filter": {
+      "all": "All Tasks",
+      "downloading": "Downloading",
+      "paused": "Paused",
+      "completed": "Completed", 
+      "failed": "Failed"
+    },
+    "actions": {
+      "start_selected": "Start Selected",
+      "pause_selected": "Pause Selected",
+      "clear_completed": "Clear Completed"
+    },
+    "clear_completed": "Clear Completed",
+    "clear_completed_confirm": {
+      "title": "Clear Completed Tasks",
+      "message": "Are you sure you want to clear all completed tasks? This action cannot be undone."
+    },
+    "delete_confirm": {
+      "title": "Delete Task",
+      "message": "Are you sure you want to delete this download task? This action cannot be undone."
+    },
+    "empty": {
+      "title": "No Downloads Yet",
+      "description": "Start downloading videos to see them appear here. Your downloads will be beautifully organized and easy to manage."
+    },
+    "status": {
+      "pending": "Pending",
+      "downloading": "Downloading",
+      "paused": "Paused",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "start": "Start",
+    "pause": "Pause",
+    "stop": "Stop",
+    "delete": "Delete",
+    "file_size": "File Size",
+    "save_path": "Save Path",
+    "expand_details": "Show Details",
+    "collapse_details": "Hide Details"
+  },
+  "task": {
+    "status": {
+      "waiting": "Waiting",
+      "downloading": "Downloading",
+      "paused": "Paused",
+      "completed": "Completed",
+      "error": "Error",
+      "cancelled": "Cancelled"
+    }
+  }
+}

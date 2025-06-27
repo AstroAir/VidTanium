@@ -62,26 +62,26 @@ class TaskActionButtons(QWidget):
         self._clear_connections()
 
         if hasattr(self, 'enable_button'):
-            self._connections.append(
-                (self.enable_button.clicked, lambda: enable_fn(task_id))
-            )
+            connection = (self.enable_button.clicked, lambda: enable_fn(task_id))
+            self.enable_button.clicked.connect(connection[1])
+            self._connections.append(connection)
 
         if hasattr(self, 'disable_button'):
-            self._connections.append(
-                (self.disable_button.clicked, lambda: disable_fn(task_id))
-            )
+            connection = (self.disable_button.clicked, lambda: disable_fn(task_id))
+            self.disable_button.clicked.connect(connection[1])
+            self._connections.append(connection)
 
-        self._connections.append(
-            (self.run_button.clicked, lambda: run_fn(task_id))
-        )
+        run_connection = (self.run_button.clicked, lambda: run_fn(task_id))
+        self.run_button.clicked.connect(run_connection[1])
+        self._connections.append(run_connection)
 
-        self._connections.append(
-            (self.info_button.clicked, lambda: info_fn(task_id))
-        )
+        info_connection = (self.info_button.clicked, lambda: info_fn(task_id))
+        self.info_button.clicked.connect(info_connection[1])
+        self._connections.append(info_connection)
 
-        self._connections.append(
-            (self.delete_button.clicked, lambda: delete_fn(task_id))
-        )
+        delete_connection = (self.delete_button.clicked, lambda: delete_fn(task_id))
+        self.delete_button.clicked.connect(delete_connection[1])
+        self._connections.append(delete_connection)
 
     def _clear_layout(self):
         """清除布局中的所有按钮"""

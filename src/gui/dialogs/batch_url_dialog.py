@@ -1,6 +1,5 @@
 from PySide6.QtWidgets import (
-    QVBoxLayout, QHBoxLayout, QLabel, QWidget, QFileDialog, QDialog, QDialogButtonBox,
-    QApplication, QFormLayout, QButtonGroup, QMessageBox
+    QVBoxLayout, QHBoxLayout, QWidget, QFileDialog, QDialog, QScrollArea, QFormLayout, QApplication
 )
 from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtGui import QIcon
@@ -8,14 +7,15 @@ import os
 import logging
 
 from qfluentwidgets import (
-    TabWidget as QTabWidgetFluent,  # type: ignore
+    Pivot,
     PushButton, LineEdit, CheckBox,
     TextEdit, SpinBox, ComboBox, CardWidget, BodyLabel,
     SubtitleLabel, StrongBodyLabel, ProgressBar, FluentIcon,
-    InfoBarPosition, SimpleCardWidget, InfoBar
+    InfoBarPosition, InfoBar, PrimaryPushButton
 )
 
 from src.core.url_extractor import URLExtractor
+from src.gui.utils.i18n import tr
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class BatchURLDialog(QDialog):
         self.settings = settings
         self.urls = []
 
-        self.setWindowTitle("批量导入URL")
+        self.setWindowTitle(tr("batch_url_dialog.title"))
         self.setMinimumSize(750, 550)
         self.resize(750, 550)
         self.setWindowIcon(QIcon(":/images/link.png"))  # 假设有这个图标资源
@@ -40,102 +40,138 @@ class BatchURLDialog(QDialog):
         self._create_ui()
 
     def _create_ui(self):
-        """创建界面"""
+        """创建界面（优化布局和控件尺寸）"""
         # 主布局
         main_layout = QVBoxLayout(self)
-        main_layout.setSpacing(12)
-        main_layout.setContentsMargins(15, 15, 15, 15)
-
-        # 标题
-        self.title_label = SubtitleLabel("批量导入URL")
+        main_layout.setSpacing(18)
+        main_layout.setContentsMargins(24, 24, 24, 24)        # 标题
+        self.title_label = SubtitleLabel(tr("batch_url_dialog.subtitle"))
+        self.title_label.setStyleSheet("font-size: 22px;")
         main_layout.addWidget(self.title_label)
 
-        # 创建选项卡
-        self.tabs = QTabWidgetFluent()
-
-        # 文本输入选项卡
+        # 创建选项卡 - 使用Pivot而不是TabWidget
+        self.tabs = Pivot(self)
+        self.tabs.setFixedHeight(48)        # 文本输入选项卡
         self.text_tab = QWidget()
         self._create_text_tab()
-        self.tabs.addTab(self.text_tab, "文本输入")
+        self.tabs.addItem(
+            routeKey="text",
+            text=tr("batch_url_dialog.tabs.text_input"),
+            onClick=lambda: self._switch_tab(self.text_tab)
+        )
 
         # 文件选项卡
         self.file_tab = QWidget()
         self._create_file_tab()
-        self.tabs.addTab(self.file_tab, "从文件导入")
+        self.tabs.addItem(
+            routeKey="file",
+            text=tr("batch_url_dialog.tabs.from_file"),
+            onClick=lambda: self._switch_tab(self.file_tab)
+        )
 
         # 网页抓取选项卡
         self.web_tab = QWidget()
         self._create_web_tab()
-        self.tabs.addTab(self.web_tab, "从网页抓取")
+        self.tabs.addItem(
+            routeKey="web",
+            text=tr("batch_url_dialog.tabs.from_web"),
+            onClick=lambda: self._switch_tab(self.web_tab)
+        )
 
         main_layout.addWidget(self.tabs)
+
+        # 创建堆叠布局来容纳不同的选项卡内容，外层加滚动区域
+        self.stacked_widget = QWidget()
+        self.stacked_layout = QVBoxLayout(self.stacked_widget)
+        self.stacked_layout.setContentsMargins(0, 0, 0, 0)
+        self.stacked_layout.setSpacing(0)
+        # 默认显示文本输入选项卡
+        self.stacked_layout.addWidget(self.text_tab)
+        self.current_tab = self.text_tab
+
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setWidget(self.stacked_widget)
+        main_layout.addWidget(self.scroll_area, 1)
 
         # URL列表预览
         preview_card = CardWidget(self)
         preview_layout = QVBoxLayout(preview_card)
-        preview_layout.setContentsMargins(15, 15, 15, 15)
-
-        # 预览标题
-        preview_title = StrongBodyLabel("URL预览")
+        preview_layout.setContentsMargins(18, 18, 18, 18)
+        preview_layout.setSpacing(10)        # 预览标题
+        preview_title = StrongBodyLabel(tr("batch_url_dialog.preview.title"))
         preview_layout.addWidget(preview_title)
 
         self.url_preview = TextEdit()
         self.url_preview.setReadOnly(True)
-        self.url_preview.setFixedHeight(120)
-        self.url_preview.setPlaceholderText("待导入的URL将显示在这里...")
+        self.url_preview.setMinimumHeight(100)
+        self.url_preview.setMaximumHeight(180)
+        self.url_preview.setPlaceholderText(tr("batch_url_dialog.preview.empty"))
         preview_layout.addWidget(self.url_preview)
 
         # URL统计
-        self.url_count_label = BodyLabel("已检测到 0 个URL")
+        self.url_count_label = BodyLabel(tr("batch_url_dialog.preview.count").format(count=0))
         preview_layout.addWidget(self.url_count_label)
 
         main_layout.addWidget(preview_card)
 
-        # 添加标准按钮
-        self.button_box = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Cancel | QDialogButtonBox.StandardButton.Ok)
-        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setText("导入")
-        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setIcon(
-            FluentIcon.DOWNLOAD)  # type: ignore
-        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
-        self.button_box.button(QDialogButtonBox.StandardButton.Cancel).setText("取消")
+        # Fluent 风格按钮替换 QDialogButtonBox
+        button_layout = QHBoxLayout()
+        button_layout.setSpacing(16)
+        button_layout.setContentsMargins(0, 0, 0, 0)
+        button_layout.addStretch()
 
-        # 连接按钮信号
-        self.button_box.accepted.connect(self._import_urls)
-        self.button_box.rejected.connect(self.reject)
+        self.cancel_button = PushButton(tr("batch_url_dialog.buttons.cancel"))
+        self.cancel_button.setIcon(FluentIcon.CANCEL)
+        self.cancel_button.setFixedSize(100, 36)
+        self.cancel_button.clicked.connect(self.reject)
+        button_layout.addWidget(self.cancel_button)
 
-        main_layout.addWidget(self.button_box)
+        self.ok_button = PrimaryPushButton(tr("batch_url_dialog.buttons.import"))
+        self.ok_button.setIcon(FluentIcon.DOWNLOAD)
+        self.ok_button.setFixedSize(120, 36)
+        self.ok_button.setEnabled(False)
+        self.ok_button.clicked.connect(self._import_urls)
+        button_layout.addWidget(self.ok_button)
+
+        main_layout.addLayout(button_layout)
+
+    def _switch_tab(self, tab_widget):
+        """切换选项卡"""
+        if self.current_tab:
+            self.stacked_layout.removeWidget(self.current_tab)
+            self.current_tab.setParent(None)
+
+        self.stacked_layout.addWidget(tab_widget)
+        self.current_tab = tab_widget
 
     def _create_text_tab(self):
-        """创建文本输入选项卡"""
         layout = QVBoxLayout(self.text_tab)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(10)
+        layout.setContentsMargins(18, 18, 18, 18)
+        layout.setSpacing(12)
 
-        # 说明文本
-        hint_label = BodyLabel("请输入要导入的URL，每行一个:")
+        hint_label = BodyLabel(tr("batch_url_dialog.text_tab.title"))
         layout.addWidget(hint_label)
 
-        # 文本输入区域
         self.text_input = TextEdit()
-        self.text_input.setPlaceholderText("在此粘贴URL...")
+        self.text_input.setPlaceholderText(tr("batch_url_dialog.text_tab.placeholder"))
+        self.text_input.setMinimumHeight(100)
         self.text_input.textChanged.connect(self._process_text_input)
         layout.addWidget(self.text_input)
 
         # 操作按钮
         buttons_layout = QHBoxLayout()
         buttons_layout.setContentsMargins(0, 5, 0, 5)
-
-        self.paste_button = PushButton("从剪贴板粘贴")
-        self.paste_button.setIcon(FluentIcon.COPY)
+        buttons_layout.setSpacing(10)
+        self.paste_button = PushButton(tr("batch_url_dialog.text_tab.paste"))
+        self.paste_button.setIcon(FluentIcon.COPY.icon())
         self.paste_button.clicked.connect(self._paste_from_clipboard)
         buttons_layout.addWidget(self.paste_button)
-
-        self.clear_button = PushButton("清空")
-        self.clear_button.setIcon(FluentIcon.DELETE)
+        self.clear_button = PushButton(tr("batch_url_dialog.text_tab.clear"))
+        self.clear_button.setIcon(FluentIcon.DELETE.icon())
         self.clear_button.clicked.connect(self._clear_text)
         buttons_layout.addWidget(self.clear_button)
-
+        buttons_layout.addStretch()
         layout.addLayout(buttons_layout)
 
         # 选项
@@ -143,142 +179,96 @@ class BatchURLDialog(QDialog):
         options_layout = QFormLayout(options_card)
         options_layout.setContentsMargins(15, 10, 15, 10)
         options_layout.setSpacing(10)
-
-        # 正则表达式过滤
         options_title = StrongBodyLabel("过滤选项")
         options_layout.addRow(options_title)
-
         self.regex_input = LineEdit()
         self.regex_input.setPlaceholderText("例如: .*\\.mp4|.*\\.m3u8")
         self.regex_input.textChanged.connect(self._process_text_input)
         options_layout.addRow("正则表达式过滤:", self.regex_input)
-
         layout.addWidget(options_card)
+        layout.addStretch()
 
     def _create_file_tab(self):
-        """创建文件选项卡"""
         layout = QVBoxLayout(self.file_tab)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(10)
-
-        # 说明文本
+        layout.setContentsMargins(18, 18, 18, 18)
+        layout.setSpacing(12)
         hint_label = BodyLabel("从文本文件导入URL:")
         layout.addWidget(hint_label)
-
-        # 文件选择
         file_card = CardWidget(self)
         file_card_layout = QVBoxLayout(file_card)
         file_card_layout.setContentsMargins(15, 15, 15, 15)
         file_card_layout.setSpacing(10)
-
         file_layout = QHBoxLayout()
-
         self.file_path_input = LineEdit()
         self.file_path_input.setReadOnly(True)
         self.file_path_input.setPlaceholderText("选择文件...")
         file_layout.addWidget(self.file_path_input)
-
         self.browse_button = PushButton("浏览...")
-        self.browse_button.setIcon(FluentIcon.FOLDER)
+        self.browse_button.setIcon(FluentIcon.FOLDER.icon())
         self.browse_button.clicked.connect(self._browse_file)
         file_layout.addWidget(self.browse_button)
-
         file_card_layout.addLayout(file_layout)
-
-        # 加载按钮
         self.load_file_button = PushButton("加载文件")
-        self.load_file_button.setIcon(FluentIcon.DOCUMENT)
+        self.load_file_button.setIcon(FluentIcon.DOCUMENT.icon())
         self.load_file_button.setEnabled(False)
         self.load_file_button.clicked.connect(self._load_file)
         file_card_layout.addWidget(self.load_file_button)
-
         layout.addWidget(file_card)
-
-        # 选项
         options_card = CardWidget(self)
         options_layout = QFormLayout(options_card)
         options_layout.setContentsMargins(15, 10, 15, 10)
         options_layout.setSpacing(10)
-
-        # 标题
         options_title = StrongBodyLabel("过滤选项")
         options_layout.addRow(options_title)
-
-        # 正则表达式过滤
         self.file_regex_input = LineEdit()
         self.file_regex_input.setPlaceholderText("例如: .*\\.mp4|.*\\.m3u8")
         options_layout.addRow("正则表达式过滤:", self.file_regex_input)
-
         layout.addWidget(options_card)
         layout.addStretch()
 
     def _create_web_tab(self):
-        """创建网页抓取选项卡"""
         layout = QVBoxLayout(self.web_tab)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(10)
-
-        # 说明文本
+        layout.setContentsMargins(18, 18, 18, 18)
+        layout.setSpacing(12)
         hint_label = BodyLabel("从网页中抓取媒体URL:")
         layout.addWidget(hint_label)
-
-        # 网页URL输入卡片
         url_card = CardWidget(self)
         url_card_layout = QVBoxLayout(url_card)
         url_card_layout.setContentsMargins(15, 15, 15, 15)
         url_card_layout.setSpacing(10)
-
         url_layout = QFormLayout()
         url_layout.setSpacing(10)
-
         self.web_url_input = LineEdit()
         self.web_url_input.setPlaceholderText("输入网页URL...")
         url_layout.addRow("网页URL:", self.web_url_input)
-
         url_card_layout.addLayout(url_layout)
-
-        # 抓取按钮
         self.fetch_button = PushButton("抓取URL")
-        self.fetch_button.setIcon(FluentIcon.GLOBE)
+        self.fetch_button.setIcon(FluentIcon.GLOBE.icon())
         self.fetch_button.clicked.connect(self._fetch_urls_from_web)
         url_card_layout.addWidget(self.fetch_button)
-
         layout.addWidget(url_card)
-
-        # 选项
         options_card = CardWidget(self)
         options_layout = QFormLayout(options_card)
         options_layout.setContentsMargins(15, 10, 15, 10)
         options_layout.setSpacing(10)
-
-        # 标题
         options_title = StrongBodyLabel("抓取选项")
         options_layout.addRow(options_title)
-
-        # 媒体类型
         media_layout = QVBoxLayout()
         media_layout.setSpacing(5)
-
         self.video_check = CheckBox("视频 (.mp4, .flv, .avi, 等)")
         self.video_check.setChecked(True)
         media_layout.addWidget(self.video_check)
-
         self.m3u8_check = CheckBox("HLS流 (.m3u8)")
         self.m3u8_check.setChecked(True)
         media_layout.addWidget(self.m3u8_check)
-
         self.audio_check = CheckBox("音频 (.mp3, .aac, .wav, 等)")
         media_layout.addWidget(self.audio_check)
-
         options_layout.addRow("媒体类型:", media_layout)
-
-        # 递归深度
         self.depth_spin = SpinBox()
         self.depth_spin.setRange(0, 3)
         self.depth_spin.setValue(0)
         self.depth_spin.setToolTip("抓取链接页面的深度 (0表示只抓取当前页面)")
         options_layout.addRow("递归深度:", self.depth_spin)
-
         layout.addWidget(options_card)
         layout.addStretch()
 
@@ -492,16 +482,10 @@ class BatchURLDialog(QDialog):
     def _update_url_preview(self, urls):
         """更新URL预览"""
         self.urls = urls
-
-        # 更新预览文本框
         preview_text = "\n".join(urls)
         self.url_preview.setText(preview_text)
-
-        # 更新URL计数
         self.url_count_label.setText(f"已检测到 {len(urls)} 个URL")
-
-        # 启用/禁用导入按钮
-        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(len(urls) > 0)
+        self.ok_button.setEnabled(len(urls) > 0)
 
     def _import_urls(self):
         """导入URL"""

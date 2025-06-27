@@ -1,7 +1,7 @@
 """
-日志详情面板组件
+Log Detail Panel Component
 
-显示单条日志的详细信息
+Displays detailed information for a single log entry.
 """
 
 from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout
@@ -14,32 +14,32 @@ from qfluentwidgets import (
 
 
 class LogDetailPanel(CardWidget):
-    """日志详情面板组件"""
+    """Log detail panel component."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self._create_ui()
 
     def _create_ui(self):
-        """创建界面"""
+        """Create the UI."""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(8, 8, 8, 8)
 
-        # 标题栏
+        # Header bar
         header_layout = QHBoxLayout()
-        self.detail_title = StrongBodyLabel("日志详情", self)
+        self.detail_title = StrongBodyLabel("Log Details", self)
         header_layout.addWidget(self.detail_title)
 
-        # 关闭按钮
+        # Close button
         self.close_detail_btn = ToolButton(FluentIcon.CLOSE, self)
         self.close_detail_btn.setIconSize(QSize(12, 12))
-        self.close_detail_btn.setToolTip("关闭详情面板")
+        self.close_detail_btn.setToolTip("Close detail panel")
         self.close_detail_btn.clicked.connect(lambda: self.setVisible(False))
         header_layout.addWidget(self.close_detail_btn)
 
         layout.addLayout(header_layout)
 
-        # 详情内容
+        # Detail content
         self.detail_text = TextEdit(self)
         self.detail_text.setReadOnly(True)
         layout.addWidget(self.detail_text)
@@ -47,7 +47,7 @@ class LogDetailPanel(CardWidget):
         self._apply_styles()
 
     def _apply_styles(self):
-        """应用样式"""
+        """Apply styles."""
         self.detail_text.setStyleSheet("""
             TextEdit {
                 border: none;
@@ -56,34 +56,37 @@ class LogDetailPanel(CardWidget):
         """)
 
     def set_word_wrap(self, enabled):
-        """设置自动换行"""
+        """Set word wrap."""
         from PySide6.QtGui import QTextOption
         mode = QTextOption.WrapMode.WordWrap if enabled else QTextOption.WrapMode.NoWrap
         self.detail_text.setWordWrapMode(mode)
 
     def set_font(self, font):
-        """设置字体"""
+        """Set font."""
         self.detail_text.setFont(font)
 
     def set_log_details(self, log_entry):
         """
-        显示日志详情
+        Display log details.
 
         Args:
-            log_entry: LogEntry对象
+            log_entry: LogEntry object
         """
-        # 构建详情文本
+        # Build detailed text
         details = (
-            f"时间: {log_entry.timestamp_str}\n"
-            f"级别: {log_entry.level.upper()}\n"
-            f"信息: {log_entry.message}\n\n"
+            f"Time: {log_entry.timestamp_str}\n"
+            f"Level: {log_entry.level.upper()}\n"
+            f"Message: {log_entry.message}\n"
         )
 
+        if log_entry.source:
+            details += f"Source: {log_entry.source}\n"
+
         if log_entry.details:
-            details += f"详细信息:\n{log_entry.details}\n"
+            details += f"\nDetails:\n{log_entry.details}\n"
 
         self.detail_text.setPlainText(details)
 
     def clear(self):
-        """清空详情"""
+        """Clear details."""
         self.detail_text.clear()

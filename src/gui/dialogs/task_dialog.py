@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFileDialog, QFormLayout,
-    QDialogButtonBox, QMessageBox, QProgressDialog, QWidget
+    QDialogButtonBox, QMessageBox, QProgressDialog, QWidget, QSpacerItem, QSizePolicy
 )
 from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtGui import QIcon
@@ -8,139 +8,252 @@ import os
 
 from qfluentwidgets import (
     PushButton, LineEdit, CheckBox, SpinBox, ComboBox,
-    CardWidget, StrongBodyLabel, InfoBar, InfoBarPosition,
-    SimpleCardWidget, SubtitleLabel, FluentIcon
+    StrongBodyLabel, InfoBar, InfoBarPosition,
+    CardWidget, SubtitleLabel, FluentIcon, BodyLabel, PrimaryPushButton,
+    ToolButton, TransparentToolButton, SearchLineEdit, IconWidget, 
+    setTheme, Theme, isDarkTheme
 )
+
+from src.gui.utils.i18n import tr
 
 
 class TaskDialog(QDialog):
-    """新建任务对话框"""
+    """Modern Task Creation Dialog with Fluent Design"""
 
     def __init__(self, settings, parent=None):
         super().__init__(parent)
 
         self.settings = settings
 
-        self.setWindowTitle("新建下载任务")
-        self.setMinimumSize(550, 480)
-        self.resize(550, 480)
+        self.setWindowTitle(tr("task_dialog.title"))
+        self.setMinimumSize(600, 550)
+        self.resize(600, 550)
         self.setWindowIcon(FluentIcon.DOWNLOAD.icon())
 
+        # Apply theme-aware styling
+        self._apply_theme_styles()
         self._create_ui()
 
+    def _apply_theme_styles(self):
+        """Apply theme-aware styles"""
+        if isDarkTheme():
+            # Dark theme styles
+            self.setStyleSheet("""
+                QDialog {
+                    background-color: #2d2d30;
+                    border: 1px solid #404040;
+                    border-radius: 8px;
+                }
+                QFormLayout QLabel {
+                    color: #ffffff;
+                    font-weight: 500;
+                    padding-right: 8px;
+                }
+            """)
+        else:
+            # Light theme styles
+            self.setStyleSheet("""
+                QDialog {
+                    background-color: #ffffff;
+                    border: 1px solid #e5e5e5;
+                    border-radius: 8px;
+                }
+                QFormLayout QLabel {
+                    color: #323130;
+                    font-weight: 500;
+                    padding-right: 8px;
+                }
+            """)
+
     def _create_ui(self):
-        """创建界面"""
-        # 主布局
+        """Create modern UI with Fluent Design"""
+        # Main layout with proper spacing
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(20, 15, 20, 15)
-        main_layout.setSpacing(15)
+        main_layout.setContentsMargins(24, 20, 24, 20)
+        main_layout.setSpacing(20)
 
-        # 标题
-        self.title_label = SubtitleLabel("新建下载任务")
-        main_layout.addWidget(self.title_label)
+        # Header section
+        self._create_header(main_layout)
+        
+        # Content section with cards
+        self._create_content(main_layout)
+        
+        # Action buttons
+        self._create_actions(main_layout)
 
-        # 基本信息卡片
-        basic_card = CardWidget()
+        # Fill default values
+        self._fill_defaults()
+
+    def _create_header(self, parent_layout):
+        """Create modern header section"""
+        header_layout = QHBoxLayout()
+        header_layout.setSpacing(12)
+
+        # Icon
+        icon_widget = IconWidget(FluentIcon.DOWNLOAD)
+        icon_widget.setFixedSize(32, 32)
+        header_layout.addWidget(icon_widget)
+
+        # Title and subtitle
+        text_layout = QVBoxLayout()
+        text_layout.setSpacing(4)
+        text_layout.setContentsMargins(0, 0, 0, 0)
+        
+        title_label = SubtitleLabel(tr("task_dialog.basic_info.title"))
+        title_label.setObjectName("titleLabel")
+        text_layout.addWidget(title_label)
+        
+        subtitle_label = BodyLabel(tr("task_dialog.basic_info.subtitle"))
+        if isDarkTheme():
+            subtitle_label.setStyleSheet("color: rgba(255, 255, 255, 0.6);")
+        else:
+            subtitle_label.setStyleSheet("color: rgba(0, 0, 0, 0.6);")
+        text_layout.addWidget(subtitle_label)
+        
+        header_layout.addLayout(text_layout)
+        header_layout.addStretch()
+
+        parent_layout.addLayout(header_layout)
+
+    def _create_content(self, parent_layout):
+        """Create content section with modern cards"""
+        # Basic Information Card
+        self.basic_card = CardWidget()
+        self.basic_card.setMinimumHeight(280)
+        basic_card_layout = QVBoxLayout(self.basic_card)
+        basic_card_layout.setContentsMargins(24, 20, 24, 24)
+        basic_card_layout.setSpacing(16)        # Card title
+        basic_title = StrongBodyLabel(tr("task_dialog.basic_info.card_title"))
+        basic_title.setStyleSheet("font-weight: 600; font-size: 14px;")
+        basic_card_layout.addWidget(basic_title)
+        
+        # Form layout
         basic_layout = QFormLayout()
-        basic_layout.setContentsMargins(15, 15, 15, 15)
-        basic_layout.setSpacing(12)
-        basic_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
-        basic_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
-
-        # 添加卡片标题
-        basic_title = StrongBodyLabel("基本信息")
-        basic_layout.addRow(basic_title)
-
-        # 任务名称
+        basic_layout.setContentsMargins(0, 0, 0, 0)
+        basic_layout.setVerticalSpacing(16)
+        basic_layout.setHorizontalSpacing(16)
+        basic_layout.setLabelAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        basic_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)        # Task name
         self.name_input = LineEdit()
-        self.name_input.setPlaceholderText("输入任务名称")
-        basic_layout.addRow("任务名称:", self.name_input)
+        self.name_input.setPlaceholderText(tr("task_dialog.basic_info.name_placeholder"))
+        self.name_input.setMinimumHeight(36)
+        basic_layout.addRow(tr("task_dialog.basic_info.task_name"), self.name_input)
 
-        # 视频基础URL
+        # Video URL with extract button
         url_layout = QHBoxLayout()
-        self.base_url_input = LineEdit()
-        self.base_url_input.setPlaceholderText("输入视频M3U8地址")
-        url_layout.addWidget(self.base_url_input)
+        url_layout.setSpacing(8)
+        url_layout.setContentsMargins(0, 0, 0, 0)        
+        self.base_url_input = SearchLineEdit()
+        self.base_url_input.setPlaceholderText(tr("task_dialog.basic_info.url_placeholder"))
+        self.base_url_input.setMinimumHeight(36)
+        url_layout.addWidget(self.base_url_input, 1)
 
-        self.extract_button = PushButton("提取")
-        self.extract_button.setIcon(FluentIcon.DOWNLOAD)
+        self.extract_button = PrimaryPushButton(tr("task_dialog.basic_info.auto_extract"))
+        self.extract_button.setIcon(FluentIcon.SEARCH)
+        self.extract_button.setFixedSize(80, 36)
         self.extract_button.clicked.connect(self._extract_m3u8_info)
         url_layout.addWidget(self.extract_button)
 
-        basic_layout.addRow("视频URL:", url_layout)
-
-        # 密钥URL
+        basic_layout.addRow(tr("task_dialog.basic_info.video_url"), url_layout)        # Key URL
         self.key_url_input = LineEdit()
-        self.key_url_input.setPlaceholderText("输入视频密钥URL")
-        basic_layout.addRow("密钥URL:", self.key_url_input)
+        self.key_url_input.setPlaceholderText(tr("task_dialog.basic_info.key_placeholder"))
+        self.key_url_input.setMinimumHeight(36)
+        basic_layout.addRow(tr("task_dialog.basic_info.key_url"), self.key_url_input)
 
-        # 视频片段数量
+        # Segments count
         self.segments_input = SpinBox()
         self.segments_input.setRange(1, 10000)
         self.segments_input.setValue(200)
-        basic_layout.addRow("视频片段数量:", self.segments_input)
+        self.segments_input.setMinimumHeight(36)
+        basic_layout.addRow(tr("task_dialog.basic_info.segments"), self.segments_input)
 
-        # 输出文件
+        # Output file
         output_layout = QHBoxLayout()
+        output_layout.setSpacing(8)
+        output_layout.setContentsMargins(0, 0, 0, 0)        
         self.output_input = LineEdit()
-        self.output_input.setPlaceholderText("选择保存位置...")
-        output_layout.addWidget(self.output_input)
+        self.output_input.setPlaceholderText(tr("task_dialog.basic_info.output_placeholder"))
+        self.output_input.setMinimumHeight(36)
+        output_layout.addWidget(self.output_input, 1)
 
-        self.browse_button = PushButton("浏览...")
-        self.browse_button.setIcon(FluentIcon.SAVE)
+        self.browse_button = ToolButton(FluentIcon.FOLDER)
+        self.browse_button.setFixedSize(36, 36)
+        self.browse_button.setToolTip(tr("task_dialog.basic_info.browse_tooltip"))
         self.browse_button.clicked.connect(self._browse_output)
         output_layout.addWidget(self.browse_button)
 
-        basic_layout.addRow("输出文件:", output_layout)
+        basic_layout.addRow(tr("task_dialog.basic_info.output_file"), output_layout)
 
-        basic_card.setLayout(basic_layout)
-        main_layout.addWidget(basic_card)
+        basic_card_layout.addLayout(basic_layout)
+        parent_layout.addWidget(self.basic_card)
+        
+        # Advanced Options Card
+        self.advanced_card = CardWidget()
+        self.advanced_card.setMinimumHeight(160)
+        advanced_card_layout = QVBoxLayout(self.advanced_card)
+        advanced_card_layout.setContentsMargins(24, 20, 24, 24)
+        advanced_card_layout.setSpacing(16)        # Card title
+        advanced_title = StrongBodyLabel(tr("task_dialog.advanced_options.title"))
+        advanced_title.setStyleSheet("font-weight: 600; font-size: 14px;")
+        advanced_card_layout.addWidget(advanced_title)
 
-        # 高级选项卡片
-        advanced_card = CardWidget()
+        # Form layout for advanced options
         advanced_layout = QFormLayout()
-        advanced_layout.setContentsMargins(15, 15, 15, 15)
-        advanced_layout.setSpacing(12)
-        advanced_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
-        advanced_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
-
-        # 添加卡片标题
-        advanced_title = StrongBodyLabel("高级选项")
-        advanced_layout.addRow(advanced_title)
-
-        # 优先级
+        advanced_layout.setContentsMargins(0, 0, 0, 0)
+        advanced_layout.setVerticalSpacing(16)
+        advanced_layout.setHorizontalSpacing(16)
+        advanced_layout.setLabelAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        advanced_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)        # Priority
         self.priority_combo = ComboBox()
-        self.priority_combo.addItem("高", "high")
-        self.priority_combo.addItem("中", "normal")
-        self.priority_combo.addItem("低", "low")
-        self.priority_combo.setCurrentIndex(1)  # 默认选中"中"
-        advanced_layout.addRow("任务优先级:", self.priority_combo)
+        self.priority_combo.addItem(tr("task_dialog.advanced_options.priority_high"), "high")
+        self.priority_combo.addItem(tr("task_dialog.advanced_options.priority_normal"), "normal") 
+        self.priority_combo.addItem(tr("task_dialog.advanced_options.priority_low"), "low")
+        self.priority_combo.setCurrentIndex(1)
+        self.priority_combo.setMinimumHeight(36)
+        advanced_layout.addRow(tr("task_dialog.advanced_options.priority"), self.priority_combo)
 
-        # 自动开始
-        self.auto_start_check = CheckBox("添加后自动开始下载")
+        # Options
+        options_widget = QWidget()
+        options_layout = QVBoxLayout(options_widget)
+        options_layout.setContentsMargins(0, 0, 0, 0)
+        options_layout.setSpacing(8)        
+        self.auto_start_check = CheckBox(tr("task_dialog.advanced_options.auto_start"))
         self.auto_start_check.setChecked(True)
-        advanced_layout.addRow("", self.auto_start_check)
+        options_layout.addWidget(self.auto_start_check)
+        
+        self.notify_check = CheckBox(tr("task_dialog.advanced_options.notify_completion"))
+        self.notify_check.setChecked(True)
+        options_layout.addWidget(self.notify_check)
+        
+        advanced_layout.addRow(tr("task_dialog.advanced_options.options"), options_widget)
 
-        advanced_card.setLayout(advanced_layout)
-        main_layout.addWidget(advanced_card)
+        advanced_card_layout.addLayout(advanced_layout)
+        parent_layout.addWidget(self.advanced_card)
 
-        # 使用标准按钮盒
-        self.button_box = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setText("确定")
-        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setIcon(FluentIcon.ACCEPT.icon())
-        self.button_box.button(QDialogButtonBox.StandardButton.Cancel).setText("取消")
-        self.button_box.button(
-            QDialogButtonBox.StandardButton.Cancel).setIcon(FluentIcon.CANCEL.icon())
+    def _create_actions(self, parent_layout):
+        """Create action buttons"""
+        # Add spacer
+        parent_layout.addItem(QSpacerItem(20, 16, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed))
+        
+        # Button layout
+        button_layout = QHBoxLayout()
+        button_layout.setSpacing(12)
+        button_layout.setContentsMargins(0, 0, 0, 0)
+        button_layout.addStretch()        # Cancel button
+        self.cancel_button = PushButton(tr("task_dialog.buttons.cancel"))
+        self.cancel_button.setIcon(FluentIcon.CANCEL)
+        self.cancel_button.setFixedSize(100, 36)
+        self.cancel_button.clicked.connect(self.reject)
+        button_layout.addWidget(self.cancel_button)
+        
+        # Create button
+        self.create_button = PrimaryPushButton(tr("task_dialog.buttons.create"))
+        self.create_button.setIcon(FluentIcon.ACCEPT)
+        self.create_button.setFixedSize(120, 36)
+        self.create_button.clicked.connect(self._on_ok)
+        button_layout.addWidget(self.create_button)
 
-        # 连接信号
-        self.button_box.accepted.connect(self._on_ok)
-        self.button_box.rejected.connect(self.reject)
-
-        main_layout.addWidget(self.button_box)
-
-        # 填充默认值
-        self._fill_defaults()
+        parent_layout.addLayout(button_layout)
 
     def _fill_defaults(self):
         """填充默认值"""
@@ -153,13 +266,11 @@ class TaskDialog(QDialog):
         """浏览输出文件"""
         output_dir = self.settings.get("general", "output_directory", "")
         filename, _ = QFileDialog.getSaveFileName(
-            self, "选择输出文件", output_dir, "视频文件 (*.mp4);;所有文件 (*)"
+            self, tr("task_dialog.file_dialog.save_title"), output_dir, tr("task_dialog.file_dialog.video_filter")
         )
 
         if filename:
-            self.output_input.setText(filename)
-
-            # 更新默认输出目录
+            self.output_input.setText(filename)            # 更新默认输出目录
             self.settings.set("general", "output_directory",
                               os.path.dirname(filename))
 
@@ -167,15 +278,16 @@ class TaskDialog(QDialog):
         """确定按钮点击"""
         # 验证输入
         if not self.base_url_input.text():
-            self._show_error("请输入视频基础URL")
+            self._show_error(tr("task_dialog.errors.no_url"))
             return
 
-        if not self.key_url_input.text():
-            self._show_error("请输入密钥URL")
-            return
+        # 密钥URL不是必需的，注释掉这个检查
+        # if not self.key_url_input.text():
+        #     self._show_error("请输入密钥URL")
+        #     return
 
         if not self.output_input.text():
-            self._show_error("请选择输出文件")
+            self._show_error(tr("task_dialog.errors.no_output"))
             return
 
         # 创建任务名称（如果未提供）
@@ -189,19 +301,27 @@ class TaskDialog(QDialog):
 
     def _show_error(self, message):
         """显示错误消息"""
-        QMessageBox.warning(self, "输入错误", message)
+        InfoBar.error(
+            title=tr("task_dialog.errors.input_error"),
+            content=message,
+            orient=Qt.Orientation.Horizontal,
+            isClosable=True,
+            position=InfoBarPosition.TOP,
+            duration=3000,
+            parent=self
+        )
 
     def _extract_m3u8_info(self):
         """从M3U8 URL自动提取信息"""
         url = self.base_url_input.text().strip()
         if not url:
-            self._show_error("请输入M3U8 URL")
+            self._show_error(tr("task_dialog.errors.no_url"))
             return
 
         # 显示加载对话框
-        progress = QProgressDialog("正在分析M3U8...", "取消", 0, 0, self)
+        progress = QProgressDialog(tr("task_dialog.extraction.progress"), tr("task_dialog.extraction.cancel"), 0, 0, self)
         progress.setWindowModality(Qt.WindowModality.WindowModal)
-        progress.setWindowTitle("提取中")
+        progress.setWindowTitle(tr("task_dialog.extraction.title"))
         progress.setMinimumDuration(0)
         progress.setValue(0)
         progress.show()
@@ -215,13 +335,11 @@ class TaskDialog(QDialog):
             headers = {"User-Agent": user_agent} if user_agent else None
 
             # 提取信息
-            result = extract_m3u8_info(url, headers)
-
-            # 关闭进度对话框
+            result = extract_m3u8_info(url, headers)            # 关闭进度对话框
             progress.close()
 
             if not result["success"]:
-                self._show_error(f"提取失败: {result['message']}")
+                self._show_error(tr("task_dialog.errors.extract_failed").format(message=result['message']))
                 return
 
             # 填充表单
@@ -244,23 +362,23 @@ class TaskDialog(QDialog):
                 name = basename(path)
                 if name:
                     name = name.split(".")[0]  # 移除扩展名
-                    self.name_input.setText(name)
-
-            # 显示提取结果
+                    self.name_input.setText(name)            # 显示提取结果
+            resolution = result['selected_stream']['resolution'] if 'resolution' in result['selected_stream'] else tr("common.unknown")
             QMessageBox.information(
                 self,
-                "提取成功",
-                f"成功提取M3U8信息:\n"
-                f"- 分辨率: {result['selected_stream']['resolution'] if 'resolution' in result['selected_stream'] else '未知'}\n"
-                f"- 片段数: {result['segments']}\n"
-                f"- 时长: {int(result['duration'])}秒\n"
-                f"- 加密方式: {result['encryption']}"
+                tr("task_dialog.extraction.success"),
+                tr("task_dialog.extraction.success_message").format(
+                    resolution=resolution,
+                    segments=result['segments'],
+                    duration=int(result['duration']),
+                    encryption=result['encryption']
+                )
             )
 
         except Exception as e:
             progress.close()
             import traceback
-            self._show_error(f"提取过程出错: {str(e)}\n{traceback.format_exc()}")
+            self._show_error(tr("task_dialog.errors.extract_error").format(error=str(e)))
 
     def get_task_data(self):
         """获取任务数据"""

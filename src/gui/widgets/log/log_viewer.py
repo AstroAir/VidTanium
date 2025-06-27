@@ -1,416 +1,1421 @@
 """
-日志查看器主组件
+Enhanced log viewer with modern Fluent Design and comprehensive functionality
 
-集成所有日志子组件，提供完整的日志查看功能
+Provides comprehensive log viewing, filtering, and management functionality
+Uses FluentWindow for modern UI and PipsPager for pagination
 """
 
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSplitter, QMenu
-from PySide6.QtCore import Qt, Signal, QTimer, QPoint
-from PySide6.QtGui import QTextCharFormat, QColor, QFont, QTextOption
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QMenu, QFileDialog, QSplitter
+from PySide6.QtCore import Qt, Signal, QTimer, QPoint, QSize, QThread
+from PySide6.QtGui import QTextCharFormat, QColor, QAction, QFont
 
-from qfluentwidgets import TextEdit, CheckBox, CardWidget, FluentIcon  # type: ignore
+from qfluentwidgets import (
+    CheckBox, FluentIcon as FIF,
+    CardWidget, ElevatedCardWidget,
+    PushButton, TransparentToolButton, SearchLineEdit, ComboBox,
+    BodyLabel, CaptionLabel, StrongBodyLabel, SubtitleLabel,
+    SmoothScrollArea, FluentWindow, MSFluentWindow, NavigationItemPosition,
+    PipsPager, InfoBar, InfoBarPosition, TeachingTip, InfoBarIcon,
+    Slider, SpinBox, ToggleButton, ProgressBar, RoundMenu, Action,
+    TextEdit as FluentTextEdit, PlainTextEdit
+)
 
-# import os # Unused
 import re
-from datetime import datetime
-from typing import List, Optional, Any
-
-from .log_entry import LogEntry  # Assuming LogEntry is properly typed
-# Assuming LogDetailPanel is properly typed
-from .log_detail_panel import LogDetailPanel
-from .log_toolbar import LogToolbar  # Assuming LogToolbar is properly typed
-from .log_filter_bar import LogFilterBar
-
-
-class LogViewer(QWidget):
-    """日志查看器组件"""
-
-    # 信号定义
-    logCleared = Signal()
-    logSaved = Signal(str)  # 传递保存的文件路径
-
-    def __init__(self, parent: Optional[QWidget] = None):
-        super().__init__(parent)
-        self.log_entries: List[LogEntry] = []  # 存储所有日志
-        self.filtered_entries: List[LogEntry] = []  # 存储过滤后的日志
-        self.max_log_entries: int = 5000  # 最大日志条目数
-        self.auto_cleanup_timer: QTimer = QTimer(
-            self)  # 自动清理定时器, initialized here
-        self._create_ui()
-        self._setup_auto_cleanup()
-        self._connect_signals()
-
-    def _create_ui(self):
-        """创建界面"""
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(4)
-
-        # 顶部工具栏
-        self.toolbar: LogToolbar = LogToolbar(self)
-        layout.addWidget(self.toolbar)
-
-        # 搜索和过滤区域
-        self.filter_bar: LogFilterBar = LogFilterBar(self)
-        layout.addWidget(self.filter_bar)
-
-        # 主分割视图：日志文本 + 详情面板
-        self.splitter = QSplitter(Qt.Orientation.Vertical, self)
-
-        # 日志文本框
-        self.log_card: CardWidget = CardWidget(self)  # type: ignore
-        log_layout = QVBoxLayout(self.log_card)
-        log_layout.setContentsMargins(8, 8, 8, 8)
-        log_layout.setSpacing(0)
-
-        self.log_text: TextEdit = TextEdit(self.log_card)  # type: ignore
-        self.log_text.setReadOnly(True)
-        self.log_text.document().setMaximumBlockCount(self.max_log_entries)
-
-        # 设置适合阅读的字体和样式
-        log_font = QFont("Consolas", 9)
-        self.log_text.setFont(log_font)
-        self.log_text.setWordWrapMode(QTextOption.WrapMode.NoWrap)  # 禁用自动换行
-
-        # 右键菜单
-        self.log_text.setContextMenuPolicy(
-            Qt.ContextMenuPolicy.CustomContextMenu)
-        self.log_text.customContextMenuRequested.connect(
-            self._show_context_menu)
-
-        log_layout.addWidget(self.log_text)
-
-        self.splitter.addWidget(self.log_card)
-
-        # 详情面板
-        self.detail_panel: LogDetailPanel = LogDetailPanel(self)
-        self.detail_panel.set_font(QFont("Consolas", 9))
-        self.splitter.addWidget(self.detail_panel)
-        self.splitter.setStretchFactor(0, 3)  # 日志区域占比更大
-        self.splitter.setStretchFactor(1, 1)
-
-        # 默认隐藏详情面板
-        self.detail_panel.setVisible(False)
-
-        layout.addWidget(self.splitter)
-
-        # 状态栏
-        status_layout = QHBoxLayout()
-        status_layout.setContentsMargins(4, 2, 4, 2)
-
-        self.status_label: QLabel = QLabel("日志条目: 0")
-        status_layout.addWidget(self.status_label)
-
-        status_layout.addStretch()
-
-        self.auto_scroll: CheckBox = CheckBox("自动滚动")  # type: ignore
-        self.auto_scroll.setChecked(True)
-        self.auto_scroll.setToolTip("新日志出现时自动滚动到底部")
-        status_layout.addWidget(self.auto_scroll)
-
-        self.wrap_text: CheckBox = CheckBox("自动换行")  # type: ignore
-        self.wrap_text.setChecked(False)
-        self.wrap_text.toggled.connect(self._toggle_word_wrap)
-        status_layout.addWidget(self.wrap_text)
-
-        layout.addLayout(status_layout)
-
-        # 设置样式
-        self._apply_styles()
-
-    def _connect_signals(self):
-        """连接信号槽"""
-        # 过滤栏
-        self.filter_bar.filterChanged.connect(self._filter_logs)
-
-        # 工具栏
-        if hasattr(self.toolbar, 'clearRequested'):
-            self.toolbar.clearRequested.connect(self._clear_logs)
-        if hasattr(self.toolbar, 'saveRequested'):
-            self.toolbar.saveRequested.connect(self._save_logs)
-        if hasattr(self.toolbar, 'copyRequested'):
-            self.toolbar.copyRequested.connect(self._copy_selected)
-        if hasattr(self.toolbar, 'selectAllRequested'):
-            self.toolbar.selectAllRequested.connect(self.log_text.selectAll)
-        if hasattr(self.toolbar, 'detailPanelToggled'):
-            self.toolbar.detailPanelToggled.connect(self._toggle_detail_panel)
-        if hasattr(self.toolbar, 'exportHtmlRequested'):
-            self.toolbar.exportHtmlRequested.connect(self._export_html)
-        if hasattr(self.toolbar, 'autoCleanToggled'):
-            self.toolbar.autoCleanToggled.connect(self._toggle_auto_cleanup)
-        if hasattr(self.toolbar, 'zoomInRequested'):
-            self.toolbar.zoomInRequested.connect(self._zoom_in)
-        if hasattr(self.toolbar, 'zoomOutRequested'):
-            self.toolbar.zoomOutRequested.connect(self._zoom_out)
-
-    def _apply_styles(self):
-        """应用样式"""
-        # 设置日志文本框样式
-        self.log_text.setStyleSheet("""
-            TextEdit {
-                border: none;
-                background-color: #f8f8f8;
-            }
-        """)
-
-    def _setup_auto_cleanup(self):
-        """设置自动清理"""
-        # self.auto_cleanup_timer = QTimer(self) # Moved to __init__
-        self.auto_cleanup_timer.timeout.connect(self._perform_auto_cleanup)
-        # Start is conditional based on toolbar state in _toggle_auto_cleanup
-        # For initial state, if toolbar.auto_clean_action is checked by default:
-        if hasattr(self.toolbar, 'auto_clean_action') and self.toolbar.auto_clean_action.isChecked():
-            self.auto_cleanup_timer.start(60 * 1000)
-
-    def _perform_auto_cleanup(self):
-        """执行自动清理"""
-        if not hasattr(self.toolbar, 'auto_clean_action') or not self.toolbar.auto_clean_action.isChecked():
-            return
-
-        # 如果日志条目超过最大值的80%，则清理最旧的20%
-        if len(self.log_entries) > self.max_log_entries * 0.8:
-            entries_to_remove = int(len(self.log_entries) * 0.2)
-            self.log_entries = self.log_entries[entries_to_remove:]
-            self._filter_logs()  # 重新应用过滤器
-            self.add_log_entry(
-                f"已自动清理 {entries_to_remove} 条旧日志...", level="info")
-
-    def _toggle_auto_cleanup(self, checked: bool):
-        """开关自动清理"""
-        if checked and not self.auto_cleanup_timer.isActive():
-            self.auto_cleanup_timer.start(60 * 1000)
-            self.add_log_entry("已启用日志自动清理功能", level="info")
-        elif not checked and self.auto_cleanup_timer.isActive():
-            self.auto_cleanup_timer.stop()
-            self.add_log_entry("已禁用日志自动清理功能", level="info")
-
-    def _toggle_word_wrap(self, checked: bool):
-        """切换自动换行"""
-        self.log_text.setWordWrapMode(
-            QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere if checked else QTextOption.WrapMode.NoWrap)
-        self.detail_panel.set_word_wrap(checked)
-
-    def _toggle_detail_panel(self, visible: bool):
-        """切换详情面板显示"""
-        self.detail_panel.setVisible(visible)
-
-    def _zoom_in(self):
-        """放大字体"""
-        self._zoom_text(1.1)
-
-    def _zoom_out(self):
-        """缩小字体"""
-        self._zoom_text(0.9)
-
-    def _zoom_text(self, factor: float):
-        """调整文本大小"""
-        font = self.log_text.font()
-        new_size = max(7, int(font.pointSize() * factor))
-        font.setPointSize(new_size)
-        self.log_text.setFont(font)
-        self.detail_panel.set_font(font)
-
-    def add_log_entry(self, message: str, level: str = "info", details: Optional[Any] = None, timestamp: Optional[datetime] = None):
-        """
-        添加日志条目
-        level: 'info', 'warning', 'error'
-        """
-        # 创建日志条目对象
-        entry = LogEntry(message, level, details, timestamp)
-
-        # 添加到日志列表
-        self.log_entries.append(entry)
-
-        # 如果超过最大条目数，移除最老的
-        if len(self.log_entries) > self.max_log_entries:
-            self.log_entries.pop(0)
-
-        # 应用过滤器
-        self._filter_logs()
-
-        # 更新状态栏
-        self.status_label.setText(f"日志条目: {len(self.log_entries)}")
-
-    def _filter_logs(self):
-        """过滤日志显示"""
-        # 获取过滤条件
-        search_text = self.filter_bar.get_search_text().lower()
-        level_filter = self.filter_bar.get_level_filter()
-        date_filter = self.filter_bar.get_date_filter()
-
-        # 使用增量更新过滤日志
-        updated_entries = []
-        for entry in self.log_entries:
-            # 搜索文本过滤
-            if not entry.matches_search(search_text):
-                continue
-
-            # 级别过滤
-            if not entry.matches_level_filter(level_filter):
-                continue
-
-            # 时间过滤
-            if not entry.matches_date_filter(date_filter):
-                continue
-
-            # 通过所有过滤条件
-            updated_entries.append(entry)
-
-        # 比较更新后的条目与当前显示的条目
-        if updated_entries != self.filtered_entries:
-            self.filtered_entries = updated_entries
-            self._update_log_display()
-
-    def _update_log_display(self):
-        """更新日志显示"""
-        # 保存当前滚动位置
-        scrollbar = self.log_text.verticalScrollBar()
-        previous_pos = scrollbar.value()
-        at_bottom = previous_pos == scrollbar.maximum()
-
-        self.log_text.clear()
-
-        # 创建文本格式
-        info_format = QTextCharFormat()
-        info_format.setForeground(QColor(0, 0, 0))  # 黑色
-
-        warning_format = QTextCharFormat()
-        warning_format.setForeground(QColor(180, 90, 0))  # 橙色
-
-        error_format = QTextCharFormat()
-        error_format.setForeground(QColor(200, 0, 0))  # 红色
-
-        # 添加日志
-        cursor = self.log_text.textCursor()
-        for entry in self.filtered_entries:
-            format_to_use: QTextCharFormat
-            if entry.level == "error":
-                format_to_use = error_format
-            elif entry.level == "warning":
-                format_to_use = warning_format
-            else:
-                format_to_use = info_format
-
-            cursor.insertText(entry.display_text + "\n", format_to_use)
-
-        # 恢复滚动位置或滚动到底部
-        if self.auto_scroll.isChecked() or at_bottom:
-            scrollbar.setValue(scrollbar.maximum())
-        else:
-            scrollbar.setValue(min(previous_pos, scrollbar.maximum()))
-
-    def _show_context_menu(self, pos: QPoint):
-        """显示右键菜单"""
-        menu = QMenu(self)
-
-        # 添加菜单项
-        copy_action = menu.addAction(
-            FluentIcon.COPY.icon(), "复制")  # type: ignore
-        copy_action.triggered.connect(self._copy_selected)
-
-        if self.log_text.textCursor().hasSelection():
-            show_details_action = menu.addAction(
-                FluentIcon.INFO.icon(), "显示详情")  # type: ignore
-            show_details_action.triggered.connect(self._show_selected_details)
-
-        menu.addSeparator()
-
-        if hasattr(self.toolbar, 'clear_action'):
-            menu.addAction(self.toolbar.clear_action)
-        if hasattr(self.toolbar, 'save_action'):
-            menu.addAction(self.toolbar.save_action)
-
-        # 显示菜单
-        menu.exec(self.log_text.mapToGlobal(pos))
-
-    def _copy_selected(self):
-        """复制选中文本"""
-        self.log_text.copy()
-
-    def _show_selected_details(self):
-        """显示选中日志的详细信息"""
-        selected_text = self.log_text.textCursor().selectedText()
-        if not selected_text:
-            return
-
-        # 尝试提取时间戳和级别以识别日志条目
-        match = re.search(r'\[([\d\-\s:]+)\]\s+\[([A-Z]+)\]', selected_text)
-        if match:
-            timestamp_str_match = match.group(1)
-            level_match = match.group(2)
-
-            # 查找对应的日志条目
-            for entry in self.log_entries:
-                if entry.timestamp_str and entry.timestamp_str in timestamp_str_match and entry.level.upper() == level_match.upper():
-                    # 显示详情
-                    self.detail_panel.setVisible(True)
-                    if hasattr(self.toolbar, 'set_detail_panel_visible'):
-                        self.toolbar.set_detail_panel_visible(True)
-                    self.detail_panel.set_log_details(entry)
-                    break
-
-    def _clear_logs(self):
-        """清空日志"""
-        self.log_text.clear()
-        self.log_entries.clear()
-        self.filtered_entries.clear()
-        self.status_label.setText("日志条目: 0")
-        self.detail_panel.setVisible(False)
-        if hasattr(self.toolbar, 'set_detail_panel_visible'):
-            self.toolbar.set_detail_panel_visible(False)
-        self.detail_panel.clear()
-        self.logCleared.emit()
-
-    def _save_logs(self, filename: str):
-        """保存日志到文件"""
+import json
+import os
+from datetime import datetime, timedelta
+from typing import List, Optional, Dict, Any
+from pathlib import Path
+
+from .log_entry import LogEntry
+from ...utils.i18n import tr
+from ...utils.theme import VidTaniumTheme, ThemeManager
+
+
+class LogExportThread(QThread):
+    """Background thread for log export operations"""
+
+    exportProgress = Signal(int)  # Progress percentage
+    exportFinished = Signal(str)  # Result message
+    exportError = Signal(str)     # Error message
+
+    def __init__(self, log_entries: List[LogEntry], export_path: str, export_format: str = "txt"):
+        super().__init__()
+        self.log_entries = log_entries
+        self.export_path = export_path
+        self.export_format = export_format
+
+    def run(self):
         try:
-            with open(filename, 'w', encoding='utf-8') as f:
-                # 写入所有过滤后的日志
-                for entry in self.filtered_entries:
-                    f.write(entry.display_text + "\n")
+            total_entries = len(self.log_entries)
 
-            self.add_log_entry(f"日志已保存到: {filename}", level="info")
-            self.logSaved.emit(filename)
+            if self.export_format == "txt":
+                self._export_as_txt()
+            elif self.export_format == "html":
+                self._export_as_html()
+            elif self.export_format == "json":
+                self._export_as_json()
+            elif self.export_format == "csv":
+                self._export_as_csv()
+
+            self.exportFinished.emit(
+                tr("log_viewer.export.success", count=total_entries, path=self.export_path))
+
         except Exception as e:
-            self.add_log_entry(f"保存日志失败: {e}", level="error")
+            self.exportError.emit(tr("log_viewer.export.error", error=str(e)))
 
-    def _export_html(self, filename: str):
-        """导出日志为HTML格式"""
-        try:
-            with open(filename, 'w', encoding='utf-8') as f:
-                # 写入HTML头
-                f.write("""<!DOCTYPE html>
+    def _export_as_txt(self):
+        with open(self.export_path, 'w', encoding='utf-8') as f:
+            f.write(tr("log_viewer.export.title") + "\n")
+            f.write("=" * 50 + "\n")
+            f.write(tr("log_viewer.export.export_time", time=datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + "\n")
+            f.write(tr("log_viewer.export.total_entries", count=len(self.log_entries)) + "\n\n")
+
+            for i, entry in enumerate(self.log_entries):
+                f.write(
+                    f"[{entry.timestamp.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}] ")
+                f.write(f"{entry.level.upper()}: {entry.message}\n")
+                if hasattr(entry, 'source') and getattr(entry, 'source', ''):
+                    f.write(f"  {tr('log_viewer.export.source', source=getattr(entry, 'source', ''))}\n")
+
+                f.write("\n")
+
+                # Update progress
+                progress = int((i + 1) / len(self.log_entries) * 100)
+                self.exportProgress.emit(progress)
+
+    def _export_as_html(self):
+        with open(self.export_path, 'w', encoding='utf-8') as f:
+            f.write("""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>VidTanium 日志</title>
+    <title>{tr("log_viewer.export.title")}</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .log { margin-bottom: 2px; font-family: Consolas, monospace; }
-        .info { color: black; }
-        .warning { color: #b45a00; }
-        .error { color: #c80000; }
-        h1 { color: #333; }
-        .summary { background-color: #f0f0f0; padding: 10px; margin-bottom: 20px; border-radius: 4px; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .header { background: #0078d4; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .log-entry { background: white; margin: 8px 0; padding: 12px; border-radius: 6px; border-left: 4px solid #ccc; }
+        .DEBUG { border-left-color: #666; }
+        .INFO { border-left-color: #0078d4; }
+        .WARNING { border-left-color: #ffb900; }
+        .ERROR { border-left-color: #d13438; }
+        .CRITICAL { border-left-color: #a80000; }
+        .timestamp { color: #666; font-size: 0.9em; }
+        .level { font-weight: bold; padding: 2px 8px; border-radius: 4px; color: white; }
+        .level.DEBUG { background: #666; }
+        .level.INFO { background: #0078d4; }
+        .level.WARNING { background: #ffb900; }
+        .level.ERROR { background: #d13438; }
+        .level.CRITICAL { background: #a80000; }
+        .message { margin: 8px 0; }
+        .source { color: #666; font-style: italic; font-size: 0.9em; }
     </style>
 </head>
-<body>
-    <h1>VidTanium 日志导出</h1>
-    <div class="summary">
-        <p>导出时间: %s</p>
-        <p>日志条目数: %d</p>
+<body>""")
+
+            f.write(f"""
+    <div class="header">
+        <h1>{tr("log_viewer.export.title")}</h1>
+        <p>{tr("log_viewer.export.export_time", time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))}</p>
+        <p>{tr("log_viewer.export.total_entries", count=len(self.log_entries))}</p>
     </div>
-""" % (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), len(self.filtered_entries)))
+""")
 
-                # 写入日志条目
-                for entry in self.filtered_entries:
-                    css_class = entry.level
+            for i, entry in enumerate(self.log_entries):
+                level_class = entry.level.upper()
+                f.write(f"""
+    <div class="log-entry {level_class}">
+        <div class="timestamp">{entry.timestamp.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}</div>
+        <span class="level {level_class}">{entry.level.upper()}</span>
+        <div class="message">{entry.message}</div>""")
+
+                if hasattr(entry, 'source') and getattr(entry, 'source', ''):
                     f.write(
-                        f'<div class="log {css_class}">{entry.display_text}</div>\n')
+                        f'        <div class="source">{tr("log_viewer.export.source", source=getattr(entry, "source", ""))}</div>')
 
-                # 写入HTML尾
-                f.write("</body>\n</html>")
+                f.write("    </div>")
 
-            self.add_log_entry(f"日志已导出为HTML: {filename}", level="info")
-        except Exception as e:
-            self.add_log_entry(f"导出HTML失败: {e}", level="error")
+                progress = int((i + 1) / len(self.log_entries) * 100)
+                self.exportProgress.emit(progress)
+
+            f.write("""
+</body>
+</html>""")
+
+    def _export_as_json(self):
+        data = {
+            "export_info": {
+                "export_time": datetime.now().isoformat(),
+                "total_entries": len(self.log_entries),
+                "application": "VidTanium"
+            },
+            "logs": []
+        }
+
+        for i, entry in enumerate(self.log_entries):
+            log_data = {
+                "timestamp": entry.timestamp.isoformat(),
+                "level": entry.level,
+                "message": entry.message
+            }
+            if hasattr(entry, 'source') and getattr(entry, 'source', ''):
+                log_data["source"] = getattr(entry, 'source', '')
+
+            data["logs"].append(log_data)
+
+            progress = int((i + 1) / len(self.log_entries) * 100)
+            self.exportProgress.emit(progress)
+
+        with open(self.export_path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+    def _export_as_csv(self):
+        import csv
+
+        with open(self.export_path, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow([
+                tr("log_viewer.export.csv_headers.timestamp"),
+                tr("log_viewer.export.csv_headers.level"), 
+                tr("log_viewer.export.csv_headers.message"),
+                tr("log_viewer.export.csv_headers.source")
+            ])
+
+            for i, entry in enumerate(self.log_entries):
+                source = getattr(entry, 'source', '') or ''
+                writer.writerow([
+                    entry.timestamp.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
+                    entry.level,
+                    entry.message,
+                    source
+                ])
+
+                progress = int((i + 1) / len(self.log_entries) * 100)
+                self.exportProgress.emit(progress)
+
+
+class AdvancedLogFilter(ElevatedCardWidget):
+    """Advanced log filtering widget with multiple criteria"""
+
+    filterChanged = Signal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.date_filter_enabled = False
+        self.time_range_start = None
+        self.time_range_end = None
+        self._setup_ui()
+
+    def _setup_ui(self):
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(16, 12, 16, 12)
+        layout.setSpacing(12)
+
+        # Title
+        title_label = StrongBodyLabel(tr("log_viewer.filters.title"))
+        title_label.setStyleSheet(
+            "font-size: 14px; color: #323130; margin-bottom: 8px;")
+        layout.addWidget(title_label)
+
+        # Quick filters row
+        quick_filters_layout = QHBoxLayout()
+
+        # Time range quick filters
+        self.time_quick_combo = ComboBox()
+        self.time_quick_combo.addItems([
+            tr("log_viewer.filters.time_range.all"),
+            tr("log_viewer.filters.time_range.hour"),
+            tr("log_viewer.filters.time_range.6hours"),
+            tr("log_viewer.filters.time_range.day"),
+            tr("log_viewer.filters.time_range.week"),
+            tr("log_viewer.filters.time_range.custom")
+        ])
+        self.time_quick_combo.currentTextChanged.connect(
+            self._on_time_filter_changed)
+
+        quick_filters_layout.addWidget(CaptionLabel("时间范围:"))
+        quick_filters_layout.addWidget(self.time_quick_combo)
+        quick_filters_layout.addStretch()
+
+        layout.addLayout(quick_filters_layout)
+
+        # Level filter with counts
+        level_layout = QHBoxLayout()
+        self.level_checkboxes = {}
+
+        for level in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
+            checkbox = CheckBox(level)
+            checkbox.setChecked(True)
+            checkbox.toggled.connect(self.filterChanged.emit)
+            self.level_checkboxes[level] = checkbox
+            level_layout.addWidget(checkbox)
+
+        level_layout.addStretch()
+        layout.addLayout(level_layout)
+
+        # Advanced search
+        search_layout = QHBoxLayout()
+        self.regex_search = SearchLineEdit()
+        self.regex_search.setPlaceholderText("支持正则表达式搜索...")
+        self.regex_search.textChanged.connect(self.filterChanged.emit)
+
+        self.regex_enabled = CheckBox("启用正则")
+        self.regex_enabled.toggled.connect(self.filterChanged.emit)
+
+        search_layout.addWidget(self.regex_search, 1)
+        search_layout.addWidget(self.regex_enabled)
+
+        layout.addLayout(search_layout)
+
+    def _on_time_filter_changed(self, filter_text: str):
+        now = datetime.now()
+
+        if filter_text == "全部时间":
+            self.date_filter_enabled = False
+        elif filter_text == "最近1小时":
+            self.date_filter_enabled = True
+            self.time_range_start = now - timedelta(hours=1)
+            self.time_range_end = now
+        elif filter_text == "最近6小时":
+            self.date_filter_enabled = True
+            self.time_range_start = now - timedelta(hours=6)
+            self.time_range_end = now
+        elif filter_text == "最近24小时":
+            self.date_filter_enabled = True
+            self.time_range_start = now - timedelta(hours=24)
+            self.time_range_end = now
+        elif filter_text == "最近3天":
+            self.date_filter_enabled = True
+            self.time_range_start = now - timedelta(days=3)
+            self.time_range_end = now
+        elif filter_text == "最近7天":
+            self.date_filter_enabled = True
+            self.time_range_start = now - timedelta(days=7)
+            self.time_range_end = now
+        elif filter_text == "自定义时间":
+            # TODO: Show date/time picker dialog
+            pass
+
+        self.filterChanged.emit()
+
+    def get_enabled_levels(self) -> List[str]:
+        return [level for level, checkbox in self.level_checkboxes.items()
+                if checkbox.isChecked()]
+
+    def get_search_text(self) -> str:
+        return self.regex_search.text()
+
+    def is_regex_enabled(self) -> bool:
+        return self.regex_enabled.isChecked()
+
+    def should_include_entry(self, entry: LogEntry) -> bool:
+        # Time filter
+        if self.date_filter_enabled:
+            if self.time_range_start and entry.timestamp < self.time_range_start:
+                return False
+            if self.time_range_end and entry.timestamp > self.time_range_end:
+                return False
+
+        # Level filter
+        if entry.level not in self.get_enabled_levels():
+            return False
+
+        # Search filter
+        search_text = self.get_search_text()
+        if search_text:
+            search_content = f"{entry.message} {getattr(entry, 'source', '')}"
+
+            if self.is_regex_enabled():
+                try:
+                    if not re.search(search_text, search_content, re.IGNORECASE):
+                        return False
+                except re.error:
+                    # Invalid regex, fall back to plain text search
+                    if search_text.lower() not in search_content.lower():
+                        return False
+            else:
+                if search_text.lower() not in search_content.lower():
+                    return False
+
+        return True
+
+
+class LogDetailViewer(FluentTextEdit):
+    """Detailed view for individual log entries"""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setReadOnly(True)
+        self.setMaximumHeight(200)
+        self._setup_style()
+
+    def _setup_style(self):
+        self.setStyleSheet("""
+            QTextEdit {
+                background-color: #fafafa;
+                border: 1px solid #e0e0e0;
+                border-radius: 6px;
+                padding: 12px;
+                font-family: 'Consolas', 'Monaco', monospace;
+                font-size: 11px;
+                line-height: 1.4;
+            }
+        """)
+
+    def show_log_entry(self, entry: LogEntry):
+        details = f"""时间: {entry.timestamp.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}
+级别: {entry.level.upper()}
+消息: {entry.message}"""
+
+        if hasattr(entry, 'source') and getattr(entry, 'source', ''):
+            details += f"\n来源: {getattr(entry, 'source', '')}"
+
+        # Add any additional details if available
+        if hasattr(entry, 'details') and entry.details:
+            details += f"\n\n详细信息:\n{entry.details}"
+
+        self.setPlainText(details)
+
+
+class CustomSeparator(QWidget):
+    """Custom separator widget"""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedHeight(1)
+        self.setStyleSheet("""
+            QWidget {
+                background-color: rgba(0, 0, 0, 0.1);
+                border: none;
+            }
+        """)
+
+
+class ModernBadge(QLabel):
+    """Modern badge widget with Fluent Design"""
+
+    def __init__(self, text="", parent=None):
+        super().__init__(text, parent)
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setStyleSheet("""
+            QLabel {
+                background-color: #69797e;
+                color: white;
+                border-radius: 10px;
+                padding: 4px 8px;
+                font-size: 11px;
+                font-weight: 600;
+                min-width: 50px;
+                border: 1px solid rgba(0, 0, 0, 0.1);
+            }
+        """)
+
+    def setLevel(self, level: str):
+        """Set badge style based on log level"""
+        level_colors = {
+            'DEBUG': '#666666',
+            'INFO': '#0078d4',
+            'WARNING': '#ffb900',
+            'ERROR': '#d13438',
+            'CRITICAL': '#a80000'
+        }
+
+        color = level_colors.get(level.upper(), '#666666')
+        self.setStyleSheet(f"""
+            QLabel {{
+                background-color: {color};
+                color: white;
+                border-radius: 10px;
+                padding: 4px 8px;
+                font-size: 11px;
+                font-weight: 600;
+                min-width: 50px;
+                border: 1px solid rgba(0, 0, 0, 0.1);
+            }}
+        """)
+
+
+class EnhancedLogEntry(ElevatedCardWidget):
+    """Enhanced log entry widget with interactive features"""
+
+    entryClicked = Signal(LogEntry)
+    entryDoubleClicked = Signal(LogEntry)
+
+    def __init__(self, log_entry: LogEntry, parent=None):
+        super().__init__(parent)
+        self.log_entry = log_entry
+        self.is_selected = False
+        self._create_ui()
+        self._setup_style()
+
+    def _create_ui(self):
+        """Create the enhanced log entry UI"""
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(20, 12, 20, 12)
+        layout.setSpacing(12)
+        layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
+
+        # Timestamp with modern styling
+        time_label = CaptionLabel(
+            self.log_entry.timestamp.strftime("%H:%M:%S.%f")[:-3])
+        time_label.setFixedWidth(80)
+        time_label.setAlignment(Qt.AlignmentFlag.AlignVCenter)
+        time_label.setStyleSheet("""
+            CaptionLabel {
+                color: #666;
+                font-family: 'Segoe UI', 'Microsoft YaHei';
+                font-size: 11px;
+                font-weight: 500;
+                background-color: rgba(0, 0, 0, 0.03);
+                border-radius: 6px;
+                padding: 4px 8px;
+            }
+        """)
+
+        # Level badge with modern design
+        level_badge = ModernBadge(self.log_entry.level)
+        level_badge.setLevel(self.log_entry.level)
+        level_badge.setFixedWidth(60)
+
+        # Message with enhanced typography
+        message_label = BodyLabel(self.log_entry.message)
+        message_label.setWordWrap(True)
+        message_label.setAlignment(Qt.AlignmentFlag.AlignVCenter)
+        message_label.setStyleSheet("""
+            BodyLabel {
+                font-family: 'Segoe UI', 'Microsoft YaHei';
+                font-size: 13px;
+                line-height: 1.4;
+                color: #323130;
+            }
+        """)
+
+        # Source info with modern styling
+        source_text = getattr(self.log_entry, 'source', '') or ''
+        if source_text:
+            source_label = CaptionLabel(f"[{source_text}]")
+            source_label.setStyleSheet("""
+                CaptionLabel {
+                    color: #605e5c;
+                    font-family: 'Segoe UI', 'Microsoft YaHei';
+                    font-size: 10px;
+                    background-color: rgba(96, 94, 92, 0.1);
+                    border-radius: 4px;
+                    padding: 2px 6px;
+                }
+            """)
+            source_label.setAlignment(Qt.AlignmentFlag.AlignVCenter)
+        else:
+            source_label = QLabel()
+            source_label.setVisible(False)
+
+        layout.addWidget(time_label)
+        layout.addWidget(level_badge)
+        layout.addWidget(message_label, 1)
+        layout.addWidget(source_label)
+
+        self.setMinimumHeight(48)
+        self.setMaximumHeight(120)
+
+    def _setup_style(self):
+        """Setup enhanced entry styling"""
+        level_bg_colors = {
+            'DEBUG': 'rgba(102, 102, 102, 0.02)',
+            'INFO': 'rgba(0, 120, 212, 0.02)',
+            'WARNING': 'rgba(255, 185, 0, 0.02)',
+            'ERROR': 'rgba(209, 52, 56, 0.02)',
+            'CRITICAL': 'rgba(168, 0, 0, 0.02)'
+        }
+
+        bg_color = level_bg_colors.get(
+            self.log_entry.level.upper(), 'transparent')
+        self.setStyleSheet(f"""
+            EnhancedLogEntry {{
+                background-color: {bg_color};
+                border-radius: 8px;
+                border: 1px solid rgba(0, 0, 0, 0.05);
+                margin: 2px 0px;
+            }}
+            EnhancedLogEntry:hover {{
+                background-color: rgba(0, 120, 212, 0.06);
+                border: 1px solid rgba(0, 120, 212, 0.15);
+            }}
+        """)
+
+    def mousePressEvent(self, e):
+        """Handle mouse press events"""
+        if e.button() == Qt.MouseButton.LeftButton:
+            self.entryClicked.emit(self.log_entry)
+        super().mousePressEvent(e)
+
+    def mouseDoubleClickEvent(self, event):
+        """Handle double click events"""
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.entryDoubleClicked.emit(self.log_entry)
+        super().mouseDoubleClickEvent(event)
+
+    def set_selected(self, selected: bool):
+        """Set selection state"""
+        self.is_selected = selected
+        if selected:
+            self.setStyleSheet(self.styleSheet() + """
+                EnhancedLogEntry {
+                    background-color: rgba(0, 120, 212, 0.1);
+                    border: 2px solid #0078d4;
+                }
+            """)
+
+
+class EnhancedPaginatedLogContainer(QWidget):
+    """Enhanced paginated container for log entries with advanced features"""
+
+    entrySelected = Signal(LogEntry)
+    entryDoubleClicked = Signal(LogEntry)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.log_entries: List[LogEntry] = []
+        self.filtered_entries: List[LogEntry] = []
+        self.entries_per_page = 50
+        self.current_page = 0
+        self.selected_entry = None
+        self.entry_widgets: List[EnhancedLogEntry] = []
+        self._setup_ui()
+
+    def _setup_ui(self):
+        """Setup the enhanced paginated UI"""
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(8)
+
+        # Log entries container
+        self.scroll_area = SmoothScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+        self.log_container = QWidget()
+        self.log_layout = QVBoxLayout(self.log_container)
+        self.log_layout.setContentsMargins(0, 0, 0, 0)
+        self.log_layout.setSpacing(2)
+
+        # Empty state
+        self.empty_widget = self._create_empty_state()
+        self.log_layout.addWidget(self.empty_widget)
+        self.log_layout.addStretch()
+
+        self.scroll_area.setWidget(self.log_container)
+        layout.addWidget(self.scroll_area, 1)
+
+        # Pagination controls
+        pagination_layout = QHBoxLayout()
+        pagination_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # Page info
+        self.page_info_label = CaptionLabel("第 0 页，共 0 页")
+        self.page_info_label.setStyleSheet("color: #666; font-size: 12px;")
+
+        # Pagination widget
+        self.pager = PipsPager()
+        self.pager.setPageNumber(1)
+        self.pager.setVisibleNumber(10)
+        self.pager.currentIndexChanged.connect(self._on_page_changed)
+
+        # Page size control
+        page_size_layout = QHBoxLayout()
+        page_size_label = CaptionLabel("每页条数:")
+        self.page_size_combo = ComboBox()
+        self.page_size_combo.addItems(["25", "50", "100", "200"])
+        self.page_size_combo.setCurrentText("50")
+        self.page_size_combo.currentTextChanged.connect(
+            self._on_page_size_changed)
+
+        page_size_layout.addWidget(page_size_label)
+        page_size_layout.addWidget(self.page_size_combo)
+
+        pagination_layout.addLayout(page_size_layout)
+        pagination_layout.addSpacing(20)
+        pagination_layout.addWidget(self.page_info_label)
+        pagination_layout.addSpacing(20)
+        pagination_layout.addWidget(self.pager)
+
+        layout.addLayout(pagination_layout)
+
+    def _create_empty_state(self) -> QWidget:
+        """Create modern empty state widget"""
+        widget = ElevatedCardWidget()
+        layout = QVBoxLayout(widget)
+        layout.setContentsMargins(40, 40, 40, 40)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.setSpacing(16)
+
+        # Icon with modern styling
+        icon_label = QLabel()
+        icon_label.setFixedSize(64, 64)
+        icon_label.setPixmap(FIF.HISTORY.icon().pixmap(64, 64))
+        icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        icon_label.setStyleSheet("""
+            QLabel { 
+                opacity: 0.6; 
+                background-color: rgba(0, 120, 212, 0.1);
+                border-radius: 32px;
+                padding: 16px;
+            }
+        """)
+
+        # Enhanced text
+        title_label = SubtitleLabel("暂无日志条目")
+        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title_label.setStyleSheet(
+            "font-size: 18px; color: #323130; font-weight: 600;")
+
+        desc_label = BodyLabel("应用程序运行时的日志消息将显示在这里")
+        desc_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        desc_label.setStyleSheet("color: #605e5c; font-size: 14px;")
+
+        layout.addWidget(icon_label)
+        layout.addWidget(title_label)
+        layout.addWidget(desc_label)
+
+        return widget
+
+    def _on_page_changed(self, index: int):
+        """Handle page change"""
+        self.current_page = index
+        self._update_display()
+
+    def _on_page_size_changed(self, size_text: str):
+        """Handle page size change"""
+        try:
+            new_size = int(size_text)
+            self.entries_per_page = new_size
+            self.current_page = 0
+            self._update_pagination()
+            self._update_display()
+        except ValueError:
+            pass
+
+    def add_log_entry(self, entry: LogEntry):
+        """Add a new log entry"""
+        self.log_entries.append(entry)
+        self.filtered_entries = self.log_entries.copy()  # Reset filter
+        self._update_pagination()
+
+        # If we're on the last page, show the new entry
+        total_pages = max(1, (len(self.filtered_entries) +
+                          self.entries_per_page - 1) // self.entries_per_page)
+        if self.current_page == total_pages - 1:
+            self._update_display()
+
+    def clear_entries(self):
+        """Clear all log entries"""
+        self.log_entries.clear()
+        self.filtered_entries.clear()
+        self.current_page = 0
+        self.selected_entry = None
+        self._update_pagination()
+        self._update_display()
+
+    def apply_filter(self, filter_func):
+        """Apply a filter function to entries"""
+        self.filtered_entries = [
+            entry for entry in self.log_entries if filter_func(entry)]
+        self.current_page = 0
+        self._update_pagination()
+        self._update_display()
+
+    def _update_pagination(self):
+        """Update pagination controls"""
+        total_entries = len(self.filtered_entries)
+        total_pages = max(
+            1, (total_entries + self.entries_per_page - 1) // self.entries_per_page)
+
+        self.pager.setPageNumber(total_pages)
+
+        # Update page info
+        if total_entries == 0:
+            self.page_info_label.setText("暂无数据")
+        else:
+            current_page_display = self.current_page + 1
+            self.page_info_label.setText(
+                f"第 {current_page_display} 页，共 {total_pages} 页 (总计 {total_entries} 条)")
+
+    def _update_display(self):
+        """Update the displayed log entries for current page"""
+        # Clear existing widgets (except empty state and stretch)
+        self.entry_widgets.clear()
+        while self.log_layout.count() > 2:
+            child = self.log_layout.takeAt(1)
+            if child.widget():
+                child.widget().deleteLater()
+
+        total_entries = len(self.filtered_entries)
+
+        if total_entries == 0:
+            self.empty_widget.setVisible(True)
+            return
+
+        self.empty_widget.setVisible(False)
+
+        # Calculate entries for current page
+        start_idx = self.current_page * self.entries_per_page
+        end_idx = min(start_idx + self.entries_per_page, total_entries)
+
+        # Add entries for current page
+        for i in range(start_idx, end_idx):
+            entry_widget = EnhancedLogEntry(self.filtered_entries[i])
+            entry_widget.entryClicked.connect(self._on_entry_clicked)
+            entry_widget.entryDoubleClicked.connect(
+                self._on_entry_double_clicked)
+
+            self.entry_widgets.append(entry_widget)
+            self.log_layout.insertWidget(
+                self.log_layout.count() - 1, entry_widget)
+
+        # Auto-scroll to top of page
+        QTimer.singleShot(
+            10, lambda: self.scroll_area.verticalScrollBar().setValue(0))
+
+    def _on_entry_clicked(self, entry: LogEntry):
+        """Handle entry click"""
+        # Clear previous selection
+        for widget in self.entry_widgets:
+            widget.set_selected(False)
+
+        # Set new selection
+        sender = self.sender()
+        if isinstance(sender, EnhancedLogEntry):
+            sender.set_selected(True)
+            self.selected_entry = entry
+            self.entrySelected.emit(entry)
+
+    def _on_entry_double_clicked(self, entry: LogEntry):
+        """Handle entry double click"""
+        self.entryDoubleClicked.emit(entry)
+
+    def get_selected_entry(self) -> Optional[LogEntry]:
+        """Get currently selected entry"""
+        return self.selected_entry
+
+
+class LogViewer(QWidget):
+    """Enhanced log viewer with comprehensive features and modern design"""
+
+    # Signals
+    logCleared = Signal()
+    logSaved = Signal(str)
+    logEntrySelected = Signal(LogEntry)
+
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__(parent)
+        self.max_log_entries: int = 10000  # Increased for better pagination
+        self.auto_scroll_enabled: bool = True
+        self.auto_refresh_enabled: bool = True
+        self.refresh_interval: int = 5000  # 5 seconds
+
+        # Statistics
+        self.log_stats: Dict[str, int] = {
+            'DEBUG': 0, 'INFO': 0, 'WARNING': 0, 'ERROR': 0, 'CRITICAL': 0
+        }
+
+        # Initialize UI components
+        self.advanced_filter: Optional[AdvancedLogFilter] = None
+        self.log_container: Optional[EnhancedPaginatedLogContainer] = None
+        self.log_detail_viewer: Optional[LogDetailViewer] = None
+        self.export_thread: Optional[LogExportThread] = None
+
+        # Statistics widgets
+        self.debug_stat: Optional[QWidget] = None
+        self.info_stat: Optional[QWidget] = None
+        self.warning_stat: Optional[QWidget] = None
+        self.error_stat: Optional[QWidget] = None
+
+        # Timers
+        self.cleanup_timer = QTimer(self)
+        self.refresh_timer = QTimer(self)
+
+        self._create_ui()
+        self._setup_timers()
+        self._connect_signals()
+
+    def _create_ui(self):
+        """Create the enhanced UI with modern design"""
+        from PySide6.QtWidgets import QSizePolicy
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setSpacing(8)  # Reduced spacing
+
+        # Header with themed design - more compact
+        header_card = ElevatedCardWidget()
+        header_card.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        header_card.setStyleSheet(VidTaniumTheme.get_card_style())
+        header_layout = QVBoxLayout(header_card)
+        header_layout.setContentsMargins(20, 12, 20, 12)  # Reduced vertical padding
+        header_layout.setSpacing(8)  # Reduced spacing
+
+        # Title section with modern typography
+        title_section = QHBoxLayout()
+
+        # Modern title with icon - more compact
+        title_container = QHBoxLayout()
+        title_icon = QLabel()
+        title_icon.setPixmap(FIF.HISTORY.icon().pixmap(20, 20))  # Smaller icon
+        title_icon.setStyleSheet("margin-right: 6px;")
+
+        title_label = SubtitleLabel("活动日志")  # Simplified title
+        title_label.setStyleSheet(f"""
+            font-size: {VidTaniumTheme.FONT_SIZE_HEADING}; 
+            font-weight: {VidTaniumTheme.FONT_WEIGHT_SEMIBOLD}; 
+            color: {VidTaniumTheme.TEXT_PRIMARY};
+        """)  # Themed styling
+
+        title_container.addWidget(title_icon)
+        title_container.addWidget(title_label)
+        title_container.addStretch()
+
+        # Enhanced statistics with modern cards
+        stats_layout = QHBoxLayout()
+        stats_layout.setSpacing(8)  # Reduced spacing for better alignment
+        stats_layout.setContentsMargins(0, 0, 0, 0)
+
+        # Statistics badges with themed colors
+        self.debug_stat = self._create_modern_stat_badge("调试", 0, VidTaniumTheme.TEXT_TERTIARY)
+        self.info_stat = self._create_modern_stat_badge("信息", 0, VidTaniumTheme.INFO_BLUE)
+        self.warning_stat = self._create_modern_stat_badge("警告", 0, VidTaniumTheme.WARNING_ORANGE)
+        self.error_stat = self._create_modern_stat_badge("错误", 0, VidTaniumTheme.ERROR_RED)
+
+        stats_layout.addWidget(self.debug_stat)
+        stats_layout.addWidget(self.info_stat)
+        stats_layout.addWidget(self.warning_stat)
+        stats_layout.addWidget(self.error_stat)
+        # Remove excessive stretch
+
+        title_section.addLayout(title_container)
+        title_section.addStretch()
+        title_section.addLayout(stats_layout)
+
+        header_layout.addLayout(title_section)
+
+        # Enhanced controls section - more compact
+        controls_layout = QHBoxLayout()
+        controls_layout.setSpacing(12)
+        controls_layout.setContentsMargins(0, 8, 0, 0)
+
+        # Options - grouped together
+        options_layout = QHBoxLayout()
+        options_layout.setSpacing(16)
+        
+        self.auto_scroll_check = CheckBox("自动滚动")
+        self.auto_scroll_check.setChecked(True)
+        self.auto_scroll_check.toggled.connect(self._on_auto_scroll_toggled)
+
+        self.auto_refresh_check = CheckBox("自动刷新")
+        self.auto_refresh_check.setChecked(True)
+        self.auto_refresh_check.toggled.connect(self._on_auto_refresh_toggled)
+        
+        options_layout.addWidget(self.auto_scroll_check)
+        options_layout.addWidget(self.auto_refresh_check)
+
+        # Action buttons with modern styling - more compact
+        button_container = QHBoxLayout()
+        button_container.setSpacing(6)
+
+        self.clear_btn = PushButton("清空日志")  # More descriptive text
+        self.clear_btn.setIcon(FIF.DELETE)
+        self.clear_btn.clicked.connect(self._clear_logs)
+        self.clear_btn.setMinimumWidth(90)
+
+        self.export_btn = PushButton("导出日志")  # More descriptive text
+        self.export_btn.setIcon(FIF.SAVE)
+        self.export_btn.clicked.connect(self._export_logs)
+        self.export_btn.setMinimumWidth(90)
+
+        self.refresh_btn = TransparentToolButton(FIF.SYNC)
+        self.refresh_btn.setIconSize(QSize(16, 16))
+        self.refresh_btn.setToolTip("手动刷新")
+        self.refresh_btn.clicked.connect(self._refresh_logs)
+
+        button_container.addWidget(self.clear_btn)
+        button_container.addWidget(self.export_btn)
+        button_container.addWidget(self.refresh_btn)
+
+        # Arrange controls with better spacing
+        controls_layout.addLayout(options_layout)
+        controls_layout.addStretch()
+        controls_layout.addLayout(button_container)
+
+        header_layout.addLayout(controls_layout)
+        layout.addWidget(header_card)
+
+        # Main content area with improved layout
+        content_widget = QWidget()
+        content_layout = QVBoxLayout(content_widget)
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.setSpacing(8)
+
+        # Filter section at top (more accessible)
+        filter_card = ElevatedCardWidget()
+        filter_layout = QHBoxLayout(filter_card)
+        filter_layout.setContentsMargins(16, 8, 16, 8)
+        filter_layout.setSpacing(12)
+
+        # Time range filter
+        time_label = CaptionLabel("时间范围:")
+        self.time_filter_combo = ComboBox()
+        self.time_filter_combo.addItems(["全部", "最近1小时", "最近6小时", "最近1天"])
+        self.time_filter_combo.setFixedWidth(120)
+
+        # Level checkboxes - horizontal layout
+        level_layout = QHBoxLayout()
+        level_layout.setSpacing(8)
+        self.level_checkboxes = {}
+        for level, label in [("DEBUG", "DE"), ("INFO", "I"), ("WARNING", "WARN"), ("ERROR", "ER"), ("CRITICAL", "CRIT")]:
+            checkbox = CheckBox(label)
+            checkbox.setChecked(True)
+            checkbox.setToolTip(level)
+            self.level_checkboxes[level] = checkbox
+            level_layout.addWidget(checkbox)
+
+        # Search box
+        self.search_box = SearchLineEdit()
+        self.search_box.setPlaceholderText("支持正则表达式搜索...")
+        self.search_box.setFixedWidth(200)
+
+        self.regex_enabled = CheckBox("启用正则")
+
+        # Layout filter controls horizontally
+        filter_layout.addWidget(time_label)
+        filter_layout.addWidget(self.time_filter_combo)
+        filter_layout.addLayout(level_layout)
+        filter_layout.addStretch()
+        filter_layout.addWidget(self.search_box)
+        filter_layout.addWidget(self.regex_enabled)
+
+        content_layout.addWidget(filter_card)
+
+        # Log container - full width
+        self.log_container = EnhancedPaginatedLogContainer()
+        content_layout.addWidget(self.log_container, 1)
+
+        layout.addWidget(content_widget, 1)
+
+    def _create_modern_stat_badge(self, label: str, count: int, color: str) -> QWidget:
+        """Create a modern statistics badge with themed design"""
+        widget = CardWidget()
+        widget.setFixedSize(80, 50)  # Smaller, more compact size
+        widget.setStyleSheet(VidTaniumTheme.get_card_style())
+
+        layout = QVBoxLayout(widget)
+        layout.setContentsMargins(8, 6, 8, 6)
+        layout.setSpacing(2)
+
+        # Count with themed typography
+        count_label = StrongBodyLabel(str(count))
+        count_label.setStyleSheet(f"""
+            StrongBodyLabel {{
+                font-size: {VidTaniumTheme.FONT_SIZE_SUBHEADING}; 
+                font-weight: {VidTaniumTheme.FONT_WEIGHT_BOLD};
+                color: {color};
+            }}
+        """)
+        count_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # Label with themed styling
+        label_label = CaptionLabel(label)
+        label_label.setStyleSheet(f"""
+            CaptionLabel {{
+                color: {VidTaniumTheme.TEXT_SECONDARY};
+                font-size: {VidTaniumTheme.FONT_SIZE_MICRO};
+                font-weight: {VidTaniumTheme.FONT_WEIGHT_MEDIUM};
+            }}
+        """)
+        label_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        layout.addWidget(count_label)
+        layout.addWidget(label_label)
+
+        # Store references for updates
+        setattr(widget, 'count_label', count_label)
+        setattr(widget, 'color', color)
+
+        # Add subtle border based on color
+        widget.setStyleSheet(f"""
+            CardWidget {{
+                border-left: 3px solid {color};
+                background-color: rgba(255, 255, 255, 0.8);
+            }}
+            CardWidget:hover {{
+                background-color: rgba(255, 255, 255, 1.0);
+            }}
+        """)
+
+        return widget
+
+    def _setup_timers(self):
+        """Setup automatic timers"""
+        # Cleanup timer
+        self.cleanup_timer.timeout.connect(self._cleanup_old_entries)
+        self.cleanup_timer.start(60000)  # Clean up every minute
+
+        # Auto-refresh timer
+        self.refresh_timer.timeout.connect(self._auto_refresh)
+        self.refresh_timer.start(self.refresh_interval)
+
+    def _connect_signals(self):
+        """Connect internal signals"""
+        # Connect new filter controls
+        if hasattr(self, 'time_filter_combo'):
+            self.time_filter_combo.currentTextChanged.connect(self._apply_filter)
+        
+        if hasattr(self, 'search_box'):
+            self.search_box.textChanged.connect(self._apply_filter)
+            
+        if hasattr(self, 'regex_enabled'):
+            self.regex_enabled.toggled.connect(self._apply_filter)
+            
+        # Connect level checkboxes
+        if hasattr(self, 'level_checkboxes'):
+            for checkbox in self.level_checkboxes.values():
+                checkbox.toggled.connect(self._apply_filter)
+
+        if self.log_container:
+            self.log_container.entrySelected.connect(self._on_entry_selected)
+            self.log_container.entryDoubleClicked.connect(
+                self._on_entry_double_clicked)
+
+    def _on_auto_scroll_toggled(self, enabled: bool):
+        """Handle auto-scroll toggle"""
+        self.auto_scroll_enabled = enabled
+
+    def _on_auto_refresh_toggled(self, enabled: bool):
+        """Handle auto-refresh toggle"""
+        self.auto_refresh_enabled = enabled
+        if enabled:
+            self.refresh_timer.start(self.refresh_interval)
+        else:
+            self.refresh_timer.stop()
+
+    def _apply_advanced_filter(self):
+        """Apply advanced filter to log entries"""
+        if not self.log_container or not self.advanced_filter:
+            return
+
+        self.log_container.apply_filter(
+            self.advanced_filter.should_include_entry)
+
+        # Show filter feedback
+        filtered_count = len(self.log_container.filtered_entries)
+        total_count = len(self.log_container.log_entries)
+
+        if filtered_count != total_count:
+            InfoBar.info(
+                title="筛选结果",
+                content=f"从 {total_count} 条记录中筛选出 {filtered_count} 条",
+                orient=Qt.Orientation.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP,
+                duration=2000,
+                parent=self
+            )
+
+    def _on_entry_selected(self, entry: LogEntry):
+        """Handle log entry selection"""
+        if self.log_detail_viewer:
+            self.log_detail_viewer.show_log_entry(entry)
+        self.logEntrySelected.emit(entry)
+
+    def _on_entry_double_clicked(self, entry: LogEntry):
+        """Handle log entry double-click"""
+        # Show detailed dialog or expanded view
+        InfoBar.info(
+            title="日志详情",
+            content=f"双击了日志: {entry.message[:50]}...",
+            orient=Qt.Orientation.Horizontal,
+            isClosable=True,
+            position=InfoBarPosition.TOP,
+            duration=2000,
+            parent=self
+        )
+
+    def _clear_logs(self):
+        """Clear all log entries with confirmation"""
+        if self.log_container:
+            self.log_container.clear_entries()
+
+        self.log_stats = {level: 0 for level in self.log_stats}
+        self._update_statistics()
+
+        # Clear detail viewer
+        if self.log_detail_viewer:
+            self.log_detail_viewer.clear()
+
+        # Show success info
+        InfoBar.success(
+            title="清空完成",
+            content="所有日志记录已清空",
+            orient=Qt.Orientation.Horizontal,
+            isClosable=True,
+            position=InfoBarPosition.TOP,
+            duration=1500,
+            parent=self
+        )
+
+        self.logCleared.emit()
+
+    def _export_logs(self):
+        """Export logs with format selection"""
+        if not self.log_container or not self.log_container.filtered_entries:
+            InfoBar.warning(
+                title="导出警告",
+                content="没有可导出的日志条目",
+                orient=Qt.Orientation.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP,
+                duration=2000,
+                parent=self
+            )
+            return
+
+        # Show format selection dialog
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        file_dialog = QFileDialog(self)
+        file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
+        file_dialog.setFileMode(QFileDialog.FileMode.AnyFile)
+        file_dialog.setNameFilters([
+            "文本文件 (*.txt)",
+            "HTML文件 (*.html)",
+            "JSON文件 (*.json)",
+            "CSV文件 (*.csv)"
+        ])
+        file_dialog.setDefaultSuffix("txt")
+        file_dialog.selectFile(f"vidtanium_logs_{timestamp}")
+
+        if file_dialog.exec() == QFileDialog.DialogCode.Accepted:
+            file_path = file_dialog.selectedFiles()[0]
+            selected_filter = file_dialog.selectedNameFilter()
+
+            # Determine format from filter
+            if "HTML" in selected_filter:
+                export_format = "html"
+            elif "JSON" in selected_filter:
+                export_format = "json"
+            elif "CSV" in selected_filter:
+                export_format = "csv"
+            else:
+                export_format = "txt"
+
+            # Start export in background thread
+            self.export_thread = LogExportThread(
+                self.log_container.filtered_entries, file_path, export_format)
+            self.export_thread.exportProgress.connect(self._on_export_progress)
+            self.export_thread.exportFinished.connect(self._on_export_finished)
+            self.export_thread.exportError.connect(self._on_export_error)
+            self.export_thread.start()
+
+            # Show progress info
+            InfoBar.info(
+                title="导出中...",
+                content=f"正在导出 {len(self.log_container.filtered_entries)} 条日志",
+                orient=Qt.Orientation.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP,
+                duration=3000,
+                parent=self
+            )
+
+    def _on_export_progress(self, progress: int):
+        """Handle export progress"""
+        # Could update a progress bar here
+        pass
+
+    def _on_export_finished(self, message: str):
+        """Handle export completion"""
+        InfoBar.success(
+            title="导出完成",
+            content=message,
+            orient=Qt.Orientation.Horizontal,
+            isClosable=True,
+            position=InfoBarPosition.TOP,
+            duration=3000,
+            parent=self
+        )
+        self.logSaved.emit(message)
+
+    def _on_export_error(self, error: str):
+        """Handle export error"""
+        InfoBar.error(
+            title="导出失败",
+            content=error,
+            orient=Qt.Orientation.Horizontal,
+            isClosable=True,
+            position=InfoBarPosition.TOP,
+            duration=3000,
+            parent=self
+        )
+
+    def _refresh_logs(self):
+        """Manual refresh of log display"""
+        if self.advanced_filter:
+            self._apply_advanced_filter()
+
+        InfoBar.success(
+            title="刷新完成",
+            content="日志显示已刷新",
+            orient=Qt.Orientation.Horizontal,
+            isClosable=True,
+            position=InfoBarPosition.TOP,
+            duration=1000,
+            parent=self
+        )
+
+    def _auto_refresh(self):
+        """Auto refresh if enabled"""
+        if self.auto_refresh_enabled:
+            self._apply_advanced_filter()
+
+    def _cleanup_old_entries(self):
+        """Clean up old log entries to prevent memory issues"""
+        if not self.log_container:
+            return
+
+        if len(self.log_container.log_entries) > self.max_log_entries:
+            # Remove oldest entries
+            excess_count = len(
+                self.log_container.log_entries) - self.max_log_entries
+
+            for _ in range(excess_count):
+                if self.log_container.log_entries:
+                    removed_entry = self.log_container.log_entries.pop(0)
+                    self.log_stats[removed_entry.level] = max(
+                        0, self.log_stats[removed_entry.level] - 1)
+
+            # Update filtered entries as well
+            self.log_container.filtered_entries = [
+                entry for entry in self.log_container.filtered_entries
+                if entry in self.log_container.log_entries
+            ]
+
+            self.log_container._update_pagination()
+            self.log_container._update_display()
+            self._update_statistics()
+
+    def _update_statistics(self):
+        """Update log statistics display"""
+        stat_widgets = [
+            (self.debug_stat, 'DEBUG'),
+            (self.info_stat, 'INFO'),
+            (self.warning_stat, 'WARNING'),
+            (self.error_stat, 'ERROR')
+        ]
+
+        for widget, level in stat_widgets:
+            if widget:
+                count_label = getattr(widget, 'count_label', None)
+                if count_label:
+                    count_label.setText(str(self.log_stats[level]))
+
+    def add_log_entry(self, level: str, message: str, source: Optional[str] = None, timestamp: Optional[datetime] = None):
+        """Add a new log entry with enhanced features"""
+        if timestamp is None:
+            timestamp = datetime.now()
+
+        # Create log entry
+        entry = LogEntry(level=level, message=message,
+                         timestamp=timestamp, source=source)
+
+        # Update statistics
+        self.log_stats[level] = self.log_stats.get(level, 0) + 1
+        self._update_statistics()
+
+        # Add to container
+        if self.log_container:
+            self.log_container.add_log_entry(entry)
+
+        # Auto-apply current filter
+        if self.advanced_filter:
+            self._apply_advanced_filter()
+
+        # Show notification for error/critical levels
+        if level in ['ERROR', 'CRITICAL']:
+            InfoBar.error(
+                title=f"{level} 日志",
+                content=message[:50] + "..." if len(message) > 50 else message,
+                orient=Qt.Orientation.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP_RIGHT,
+                duration=3000,
+                parent=self
+            )
+
+    def get_log_count(self) -> Dict[str, int]:
+        """Get current log statistics"""
+        return self.log_stats.copy()
+
+    def get_selected_entry(self) -> Optional[LogEntry]:
+        """Get currently selected log entry"""
+        if self.log_container:
+            return self.log_container.get_selected_entry()
+        return None
+
+    def set_max_entries(self, max_entries: int):
+        """Set maximum number of log entries"""
+        self.max_log_entries = max_entries
+
+    def set_refresh_interval(self, interval: int):
+        """Set auto-refresh interval in milliseconds"""
+        self.refresh_interval = interval
+        if self.auto_refresh_enabled:
+            self.refresh_timer.start(interval)
+
+    def _apply_filter(self):
+        """Apply the new simplified filter"""
+        if not self.log_container:
+            return
+
+        def should_include_entry(entry: LogEntry) -> bool:
+            # Check level filter
+            if hasattr(self, 'level_checkboxes'):
+                level_enabled = self.level_checkboxes.get(entry.level.upper(), None)
+                if level_enabled and not level_enabled.isChecked():
+                    return False
+
+            # Check search filter
+            if hasattr(self, 'search_box'):
+                search_text = self.search_box.text().strip()
+                if search_text:
+                    if hasattr(self, 'regex_enabled') and self.regex_enabled.isChecked():
+                        try:
+                            import re
+                            if not re.search(search_text, entry.message, re.IGNORECASE):
+                                return False
+                        except:
+                            # Invalid regex, fall back to normal search
+                            if search_text.lower() not in entry.message.lower():
+                                return False
+                    else:
+                        if search_text.lower() not in entry.message.lower():
+                            return False
+
+            # Check time filter
+            if hasattr(self, 'time_filter_combo'):
+                time_filter = self.time_filter_combo.currentText()
+                if time_filter != "全部":
+                    from datetime import datetime, timedelta
+                    now = datetime.now()
+                    if time_filter == "最近1小时":
+                        cutoff = now - timedelta(hours=1)
+                    elif time_filter == "最近6小时":
+                        cutoff = now - timedelta(hours=6)
+                    elif time_filter == "最近1天":
+                        cutoff = now - timedelta(days=1)
+                    else:
+                        cutoff = None
+                    
+                    if cutoff and entry.timestamp < cutoff:
+                        return False
+
+            return True
+
+        self.log_container.apply_filter(should_include_entry)
