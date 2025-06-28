@@ -62,3 +62,13 @@ class ScheduleToolbar(QToolBar):
     def set_details_checked(self, checked):
         """设置详情按钮的选中状态"""
         self.view_details_action.setChecked(checked)
+
+    def update_locale(self, translations):
+        """更新工具栏按钮的文本以适应当前语言环境"""
+        self.new_task_action.setText(translations.get("new_task", "新建计划"))
+        self.new_task_action.setToolTip(translations.get("new_task_tooltip", "创建新的计划任务"))
+        self.refresh_action.setText(translations.get("refresh", "刷新"))
+        self.refresh_action.setToolTip(translations.get("refresh_tooltip", "刷新任务列表"))
+        self.enable_all_action.setText(translations.get("enable_all", "全部启用"))
+        self.disable_all_action.setText(translations.get("disable_all", "全部禁用"))
+        self.view_details_action.setText(translations.get("view_details", "查看详情"))

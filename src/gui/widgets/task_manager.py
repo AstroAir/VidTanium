@@ -15,6 +15,8 @@ from qfluentwidgets import (
 from ..utils.formatters import format_speed, format_bytes, format_time, format_percentage, format_eta
 from ..utils.i18n import tr
 from ..utils.theme import VidTaniumTheme, ThemeManager
+# Import optimized progress components
+from ..utils.fluent_progress import FluentProgressBar, ProgressCardWidget, CompactProgressBar
 
 
 class ModernStatusBadge(QLabel):
@@ -178,59 +180,23 @@ class EnhancedTaskItem(CardWidget):
         self.main_layout.addLayout(header_layout)
     
     def _create_progress_section(self):
-        """Create beautiful progress visualization"""
+        """Create beautiful progress visualization with Fluent Design"""
         progress_container = QWidget()
         progress_layout = QVBoxLayout(progress_container)
         progress_layout.setContentsMargins(0, 8, 0, 8)
         progress_layout.setSpacing(8)
         
-        # Progress bar with themed gradient
-        self.progress_bar = ProgressBar()
-        self.progress_bar.setFixedHeight(6)
-        self.progress_bar.setStyleSheet(f"""
-            QProgressBar {{
-                border: none;
-                border-radius: 3px;
-                background-color: {VidTaniumTheme.BG_OVERLAY};
-            }}
-            QProgressBar::chunk {{
-                border-radius: 3px;
-                background: {VidTaniumTheme.GRADIENT_PRIMARY};
-            }}
-        """)
+        # Use the new optimized progress card
+        self.progress_card = ProgressCardWidget()
+        self.progress_card.setTitle("Download Progress")
         
-        # Progress info
-        progress_info_layout = QHBoxLayout()
-        progress_info_layout.setSpacing(16)
+        # Connect the legacy progress bar references for compatibility
+        self.progress_bar = self.progress_card.progress_bar
+        self.progress_label = self.progress_card.percentage_label
+        self.speed_label = self.progress_card.speed_label
+        self.eta_label = self.progress_card.eta_label
         
-        self.progress_label = CaptionLabel("0%")
-        self.progress_label.setStyleSheet(f"""
-            color: {VidTaniumTheme.TEXT_PRIMARY}; 
-            font-weight: {VidTaniumTheme.FONT_WEIGHT_SEMIBOLD};
-        """)
-        
-        self.speed_label = CaptionLabel("0 KB/s")
-        self.speed_label.setStyleSheet(f"""
-            color: {VidTaniumTheme.SUCCESS_GREEN}; 
-            font-weight: {VidTaniumTheme.FONT_WEIGHT_SEMIBOLD};
-        """)
-        
-        self.eta_label = CaptionLabel("--:--")
-        self.eta_label.setStyleSheet(f"""
-            color: {VidTaniumTheme.WARNING_ORANGE}; 
-            font-weight: {VidTaniumTheme.FONT_WEIGHT_SEMIBOLD};
-        """)
-        
-        progress_info_layout.addWidget(self.progress_label)
-        progress_info_layout.addWidget(QLabel("•"))
-        progress_info_layout.addWidget(self.speed_label)
-        progress_info_layout.addWidget(QLabel("•"))
-        progress_info_layout.addWidget(self.eta_label)
-        progress_info_layout.addStretch()
-        
-        progress_layout.addWidget(self.progress_bar)
-        progress_layout.addLayout(progress_info_layout)
-        
+        progress_layout.addWidget(self.progress_card)
         self.main_layout.addWidget(progress_container)
     
     def _create_details_section(self):

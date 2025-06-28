@@ -16,6 +16,9 @@ from qfluentwidgets import (
     IconWidget, PrimaryPushButton, SearchLineEdit
 )
 
+# Import optimized progress components  
+from ..utils.fluent_progress import ProgressCardWidget, FluentProgressBar
+
 from src.core.media_processor import MediaProcessor
 from src.gui.utils.i18n import tr
 
@@ -131,12 +134,25 @@ class MediaProcessingDialog(QDialog):
         main_layout.addWidget(self.pivot)
         main_layout.addWidget(self.stacked_widget)
 
-        # 进度区域
-        self.progress_bar = ProgressBar()
-        self.progress_bar.setVisible(False)
-        self.progress_bar.setTextVisible(True)
-        self.progress_bar.setFixedHeight(10)
-        main_layout.addWidget(self.progress_bar)        # 按钮
+        # 进度区域 - 使用优化的Fluent Design进度条
+        self.progress_card = ProgressCardWidget()
+        self.progress_card.setTitle("Processing Progress")
+        self.progress_card.setVisible(False)
+        
+        # 保持向后兼容性的引用
+        self.progress_bar = self.progress_card.progress_bar
+        
+        # Add methods for compatibility
+        def set_progress_visible(visible):
+            self.progress_card.setVisible(visible)
+        
+        def set_progress_format(format_string):
+            self.progress_card.setStatus(format_string)
+            
+        self.progress_bar.setVisible = set_progress_visible
+        self.progress_bar.setFormat = set_progress_format
+        
+        main_layout.addWidget(self.progress_card)        # 按钮
         self.button_box = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Cancel | QDialogButtonBox.StandardButton.Ok)
         self.button_box.button(QDialogButtonBox.StandardButton.Ok).setText(tr("media_processing_dialog.buttons.start"))

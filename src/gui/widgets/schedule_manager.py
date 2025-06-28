@@ -19,11 +19,21 @@ from .schedule.task_details_widget import TaskDetailsWidget
 from .schedule.task_table import TaskTable
 from .schedule.schedule_toolbar import ScheduleToolbar
 
+# 导入国际化支持
+from ..utils.i18n import tr
+
 logger = logging.getLogger(__name__)
 
 
 class ScheduleManager(QWidget):
-    """计划任务管理器界面"""
+    """计划任务管理器界面
+    
+    已完全集成国际化(i18n)系统：
+    - 所有用户可见文本都通过翻译函数 tr() 获取
+    - 支持动态语言切换，调用 update_locale() 方法
+    - 翻译键值存储在 locales/zh_CN.json 和 locales/en.json 中的 schedule_manager 节点下
+    - 子组件也需要实现 update_locale() 方法以支持完整的语言切换
+    """
 
     # 可配置的自动刷新间隔（毫秒）
     AUTO_REFRESH_INTERVAL_MS = 30 * 1000  # 默认30秒
@@ -53,13 +63,13 @@ class ScheduleManager(QWidget):
         title_layout = QHBoxLayout()
         title_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.title_label = SubtitleLabel("计划任务管理")
+        self.title_label = SubtitleLabel(tr("schedule_manager.title"))
         title_layout.addWidget(self.title_label)
 
         title_layout.addStretch()
 
         # 自动刷新开关
-        self.auto_refresh = ToggleButton("自动刷新")
+        self.auto_refresh = ToggleButton(tr("schedule_manager.auto_refresh"))
         self.auto_refresh.setChecked(True)
         title_layout.addWidget(self.auto_refresh)
 
@@ -83,11 +93,17 @@ class ScheduleManager(QWidget):
         filter_layout = QHBoxLayout()
 
         self.search_input = SearchLineEdit()
-        self.search_input.setPlaceholderText("搜索任务...")
+        self.search_input.setPlaceholderText(tr("schedule_manager.search.placeholder"))
         filter_layout.addWidget(self.search_input, 2)
 
         self.filter_combo = ComboBox()
-        self.filter_combo.addItems(["全部任务", "已启用", "已禁用", "一次性", "定期任务"])
+        self.filter_combo.addItems([
+            tr("schedule_manager.filters.all"),
+            tr("schedule_manager.filters.enabled"), 
+            tr("schedule_manager.filters.disabled"),
+            tr("schedule_manager.filters.one_time"),
+            tr("schedule_manager.filters.recurring")
+        ])
         filter_layout.addWidget(self.filter_combo, 1)
 
         table_layout.addLayout(filter_layout)
@@ -98,7 +114,7 @@ class ScheduleManager(QWidget):
 
         # 状态栏
         status_layout = QHBoxLayout()
-        self.status_label = QLabel("加载中...")
+        self.status_label = QLabel(tr("schedule_manager.loading"))
         status_layout.addWidget(self.status_label)
 
         status_layout.addStretch()
@@ -166,12 +182,12 @@ class ScheduleManager(QWidget):
         """更新刷新倒计时"""
         if self.refresh_timer and self.refresh_timer.isActive():
             seconds = self.refresh_timer.remainingTime() // 1000
-            self.next_update_label.setText(f"{seconds}秒后刷新")
+            self.next_update_label.setText(tr("schedule_manager.status_bar.refresh_in", seconds=seconds))
 
             # 每秒更新倒计时
             QTimer.singleShot(1000, self._update_refresh_countdown)
         else:
-            self.next_update_label.setText("自动刷新已关闭")
+            self.next_update_label.setText(tr("schedule_manager.auto_refresh_off"))
 
     def _toggle_auto_refresh(self, enabled):
         """切换自动刷新"""
@@ -180,7 +196,7 @@ class ScheduleManager(QWidget):
             self._update_refresh_countdown()
         elif self.refresh_timer:
             self.refresh_timer.stop()
-            self.next_update_label.setText("自动刷新已关闭")
+            self.next_update_label.setText(tr("schedule_manager.auto_refresh_off"))
 
     def _auto_refresh(self):
         """自动刷新"""
@@ -201,7 +217,7 @@ class ScheduleManager(QWidget):
         # 更新状态栏信息
         visible_rows = self.task_table.get_visible_rows_count()
         total_rows = self.task_table.get_total_rows_count()
-        self.status_label.setText(f"显示 {visible_rows}/{total_rows} 个任务")
+        self.status_label.setText(tr("schedule_manager.status_bar.showing", visible=visible_rows, total=total_rows))
 
     def _populate_tasks(self):
         """填充任务列表"""
@@ -260,28 +276,28 @@ class ScheduleManager(QWidget):
             return
 
         # 创建上下文菜单
-        menu = RoundMenu("Task Actions", self)
+        menu = RoundMenu(tr("schedule_manager.context_menu.task_actions"), self)
 
         # 添加不同操作基于任务状态
         if task.enabled:
-            disable_action = Action(FluentIcon.PAUSE, "禁用")
+            disable_action = Action(FluentIcon.PAUSE, tr("schedule_manager.actions.disable"))
             disable_action.triggered.connect(
                 lambda: self.task_action_requested.emit(task_id, "disable"))
             menu.addAction(disable_action)
         else:
-            enable_action = Action(FluentIcon.PLAY, "启用")
+            enable_action = Action(FluentIcon.PLAY, tr("schedule_manager.actions.enable"))
             enable_action.triggered.connect(
                 lambda: self.task_action_requested.emit(task_id, "enable"))
             menu.addAction(enable_action)
 
         # 立即执行
-        run_now_action = Action(FluentIcon.PLAY_SOLID, "立即执行")
+        run_now_action = Action(FluentIcon.PLAY_SOLID, tr("schedule_manager.actions.run_now"))
         run_now_action.triggered.connect(
             lambda: self.task_action_requested.emit(task_id, "run_now"))
         menu.addAction(run_now_action)
 
         # 查看详情
-        view_details_action = Action(FluentIcon.INFO, "查看详情")
+        view_details_action = Action(FluentIcon.INFO, tr("schedule_manager.actions.view_details"))
         view_details_action.triggered.connect(
             lambda: self._show_task_details(task_id))
         menu.addAction(view_details_action)
@@ -289,7 +305,7 @@ class ScheduleManager(QWidget):
         menu.addSeparator()
 
         # 删除操作
-        remove_action = Action(FluentIcon.DELETE, "删除")
+        remove_action = Action(FluentIcon.DELETE, tr("schedule_manager.actions.delete"))
         remove_action.triggered.connect(
             lambda: self.task_action_requested.emit(task_id, "remove"))
         menu.addAction(remove_action)
@@ -299,7 +315,8 @@ class ScheduleManager(QWidget):
 
     def _on_enable_all(self):
         """启用所有任务"""
-        result = MessageBox("确认操作", "是否要启用所有任务？", self).exec()
+        result = MessageBox(tr("schedule_manager.batch_operations.title"), 
+                           tr("schedule_manager.messages.confirm_enable_all"), self).exec()
         if not result:
             return
 
@@ -312,13 +329,16 @@ class ScheduleManager(QWidget):
                 enabled_count += 1
 
         if enabled_count > 0:
-            self.show_message("批量操作", f"已启用 {enabled_count} 个任务")
+            self.show_message(tr("schedule_manager.batch_operations.title"), 
+                            tr("schedule_manager.messages.batch_enabled", count=enabled_count))
         else:
-            self.show_message("批量操作", "没有需要启用的任务", type_="info")
+            self.show_message(tr("schedule_manager.batch_operations.title"), 
+                            tr("schedule_manager.messages.no_tasks_to_enable"), type_="info")
 
     def _on_disable_all(self):
         """禁用所有任务"""
-        result = MessageBox("确认操作", "是否要禁用所有任务？", self).exec()
+        result = MessageBox(tr("schedule_manager.batch_operations.title"), 
+                           tr("schedule_manager.messages.confirm_disable_all"), self).exec()
         if not result:
             return
 
@@ -331,9 +351,11 @@ class ScheduleManager(QWidget):
                 disabled_count += 1
 
         if disabled_count > 0:
-            self.show_message("批量操作", f"已禁用 {disabled_count} 个任务")
+            self.show_message(tr("schedule_manager.batch_operations.title"), 
+                            tr("schedule_manager.messages.batch_disabled", count=disabled_count))
         else:
-            self.show_message("批量操作", "没有需要禁用的任务", type_="info")
+            self.show_message(tr("schedule_manager.batch_operations.title"), 
+                            tr("schedule_manager.messages.no_tasks_to_disable"), type_="info")
 
     def show_message(self, title, content, type_="success"):
         """显示消息通知"""
@@ -362,3 +384,35 @@ class ScheduleManager(QWidget):
                     self.task_details.current_task and
                     self.task_details.current_task.task_id == task_id):
                 self.task_details.update_task(task)
+
+    def update_locale(self):
+        """更新界面语言"""
+        # 更新标题和按钮文本
+        self.title_label.setText(tr("schedule_manager.title"))
+        self.auto_refresh.setText(tr("schedule_manager.auto_refresh"))
+        
+        # 更新搜索框占位符
+        self.search_input.setPlaceholderText(tr("schedule_manager.search.placeholder"))
+        
+        # 更新过滤器选项
+        self.filter_combo.clear()
+        self.filter_combo.addItems([
+            tr("schedule_manager.filters.all"),
+            tr("schedule_manager.filters.enabled"), 
+            tr("schedule_manager.filters.disabled"),
+            tr("schedule_manager.filters.one_time"),
+            tr("schedule_manager.filters.recurring")
+        ])
+        
+        # 更新状态标签
+        if hasattr(self, 'task_table'):
+            visible_rows = self.task_table.get_visible_rows_count()
+            total_rows = self.task_table.get_total_rows_count()
+            self.status_label.setText(tr("schedule_manager.status_bar.showing", visible=visible_rows, total=total_rows))
+        
+        # 更新刷新状态文本
+        if self.refresh_timer and self.refresh_timer.isActive():
+            self._update_refresh_countdown()
+        else:
+            self.next_update_label.setText(tr("schedule_manager.auto_refresh_off"))
+        

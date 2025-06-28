@@ -370,7 +370,8 @@
       "no_urls": "Please enter or select URLs",
       "invalid_url": "Invalid URL: {url}",
       "parse_error": "Parse error: {error}",
-      "extract_success": "Successfully extracted {count} URLs",      "extract_failed": "Extraction failed: {error}"
+      "extract_success": "Successfully extracted {count} URLs",
+      "extract_failed": "Extraction failed: {error}"
     }
   },  "media_processing_dialog": {
     "title": "Media Processing",
@@ -581,19 +582,82 @@
   "schedule_manager": {
     "title": "Schedule Manager",
     "auto_refresh": "Auto Refresh",
+    "auto_refresh_off": "Auto refresh is off",
+    "loading": "Loading...",
     "filters": {
       "all": "All Tasks",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "one_time": "One Time",
+      "recurring": "Recurring",
       "pending": "Pending",
       "running": "Running",
       "completed": "Completed", 
       "failed": "Failed"
     },
+    "search": {
+      "placeholder": "Search tasks..."
+    },
+    "toolbar": {
+      "new_task": "New Task",
+      "refresh": "Refresh",
+      "enable_all": "Enable All",
+      "disable_all": "Disable All",
+      "view_details": "View Details"
+    },
+    "table": {
+      "name": "Task Name",
+      "type": "Type",
+      "status": "Status",
+      "last_run": "Last Run",
+      "next_run": "Next Run"
+    },
+    "status": {
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "running": "Running",
+      "completed": "Completed",
+      "failed": "Failed",
+      "waiting": "Waiting"
+    },
+    "task_types": {
+      "download": "Download Task",
+      "cleanup": "Cleanup Task",
+      "backup": "Backup Task",
+      "custom": "Custom Task"
+    },
     "actions": {
+      "enable": "Enable",
+      "disable": "Disable",
       "start": "Start",
       "pause": "Pause",
       "stop": "Stop",
       "delete": "Delete",
-      "edit": "Edit"
+      "edit": "Edit",
+      "run_now": "Run Now",
+      "view_details": "View Details"
+    },
+    "context_menu": {
+      "task_actions": "Task Actions"
+    },
+    "details": {
+      "title": "Task Details",
+      "basic_info": "Basic Information",
+      "execution_info": "Execution Information",
+      "task_id": "Task ID",
+      "task_name": "Task Name",
+      "task_type": "Task Type",
+      "description": "Description",
+      "enabled": "Enabled",
+      "created_time": "Created Time",
+      "last_run_time": "Last Run",
+      "next_run_time": "Next Run",
+      "run_count": "Run Count",
+      "success_count": "Success Count",
+      "failure_count": "Failure Count",
+      "schedule_type": "Schedule Type",
+      "schedule_expression": "Schedule Expression",
+      "no_task_selected": "No task selected"
     },
     "messages": {
       "no_tasks": "No scheduled tasks",
@@ -601,7 +665,24 @@
       "task_paused": "Task paused",
       "task_stopped": "Task stopped",
       "task_deleted": "Task deleted",
-      "confirm_delete": "Confirm delete task?"
+      "task_enabled": "Task enabled",
+      "task_disabled": "Task disabled",
+      "confirm_delete": "Confirm delete task?",
+      "confirm_enable_all": "Do you want to enable all tasks?",
+      "confirm_disable_all": "Do you want to disable all tasks?",
+      "batch_enabled": "Enabled {count} tasks",
+      "batch_disabled": "Disabled {count} tasks",
+      "no_tasks_to_enable": "No tasks to enable",
+      "no_tasks_to_disable": "No tasks to disable"
+    },
+    "status_bar": {
+      "showing": "Showing {visible}/{total} tasks",
+      "refresh_in": "Refresh in {seconds}s"
+    },
+    "batch_operations": {
+      "title": "Batch Operations",
+      "enable_all": "Enable All",
+      "disable_all": "Disable All"
     }
   },
   "task_manager": {
