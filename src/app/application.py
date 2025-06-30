@@ -24,11 +24,15 @@ class Application(QApplication):
         self.setApplicationName("Video Downloader")
         self.setApplicationVersion("1.0.0")
         self.setOrganizationName("Development Team")
-        self.setOrganizationDomain("example.com")        # Apply language
-        self._apply_language()        # Initialize i18n system
+        self.setOrganizationDomain("example.com")
+
+        # Initialize i18n system first
         init_i18n()
         self._i18n_initialized = True
-        
+
+        # Apply language
+        self._apply_language()
+
         # Apply pending locale if any
         if hasattr(self, '_pending_locale'):
             set_locale(self._pending_locale)

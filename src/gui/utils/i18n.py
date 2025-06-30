@@ -26,9 +26,33 @@ class I18nManager:
         self.current_locale = default_locale
         self.translations: Dict[str, Dict[str, Any]] = {}
         self.locales_dir = Path(__file__).parent.parent.parent / "locales"
+        self._is_initialized = False
         
         # Load all available translations
         self._load_translations()
+        self._validate_translations()
+    
+    def _validate_translations(self) -> None:
+        """Validate that essential translations are available"""
+        if not self.translations:
+            logger.error("No translations loaded! Application may not function properly.")
+            return
+            
+        # Check if default locale exists
+        if self.default_locale not in self.translations:
+            logger.warning(f"Default locale '{self.default_locale}' not found. Available: {list(self.translations.keys())}")
+            # Fall back to any available locale
+            if self.translations:
+                self.default_locale = list(self.translations.keys())[0]
+                self.current_locale = self.default_locale
+                logger.info(f"Using fallback locale: {self.default_locale}")
+        
+        self._is_initialized = True
+        logger.info(f"I18n initialized with {len(self.translations)} locales: {list(self.translations.keys())}")
+    
+    def is_initialized(self) -> bool:
+        """Check if i18n system is properly initialized"""
+        return self._is_initialized
     
     def _load_translations(self) -> None:
         """Load all translation files from the locales directory."""
@@ -133,10 +157,15 @@ class I18nManager:
             if translation is None and locale != self.default_locale:
                 translation = self._get_nested_value(self.translations.get(self.default_locale, {}), key)
             
+            # Fallback to English if still not found and current locale is not English
+            if translation is None and locale != "en" and self.default_locale != "en":
+                translation = self._get_nested_value(self.translations.get("en", {}), key)
+            
             # Fallback to key itself if still not found
             if translation is None:
-                logger.warning(f"Translation not found for key: {key}")
-                return key
+                logger.warning(f"Translation not found for key: {key} in any available locale")
+                # Return the last part of the key as fallback (e.g., "title" from "dashboard.welcome.title")
+                return key.split('.')[-1].replace('_', ' ').title()
             
             # Substitute variables if provided
             if kwargs:
@@ -151,7 +180,8 @@ class I18nManager:
             
         except Exception as e:
             logger.error(f"Error getting translation for key {key}: {e}")
-            return key
+            # Return a more user-friendly fallback
+            return key.split('.')[-1].replace('_', ' ').title()
     
     def _get_nested_value(self, data: Dict[str, Any], key: str) -> Optional[str]:
         """
@@ -224,7 +254,15 @@ def tr(key: str, **kwargs) -> str:
     Returns:
         str: Translated string
     """
-    return get_i18n_manager().tr(key, **kwargs)
+    try:
+        manager = get_i18n_manager()
+        if not manager.is_initialized():
+            logger.warning("I18n manager not properly initialized, returning fallback")
+            return key.split('.')[-1].replace('_', ' ').title()
+        return manager.tr(key, **kwargs)
+    except Exception as e:
+        logger.error(f"Error in tr() function for key {key}: {e}")
+        return key.split('.')[-1].replace('_', ' ').title()
 
 
 def set_locale(locale: str) -> bool:

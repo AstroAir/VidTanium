@@ -22,32 +22,41 @@ from qfluentwidgets import (
 
 import re
 import json
+import csv
 import os
 from datetime import datetime, timedelta
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Callable
 from pathlib import Path
 
 from .log_entry import LogEntry
 from ...utils.i18n import tr
 from ...utils.theme import VidTaniumTheme, ThemeManager
 
+# Import thread pool - use try/except for graceful fallback
+try:
+    from src.core.thread_pool import submit_task, get_thread_pool
+    THREAD_POOL_AVAILABLE = True
+except ImportError:
+    # Fallback if thread pool is not available
+    THREAD_POOL_AVAILABLE = False
+    submit_task = None
+    get_thread_pool = None
 
-class LogExportThread(QThread):
-    """Background thread for log export operations"""
 
-    exportProgress = Signal(int)  # Progress percentage
-    exportFinished = Signal(str)  # Result message
-    exportError = Signal(str)     # Error message
+class LogExportWorker:
+    """Worker class for log export operations using thread pool"""
 
     def __init__(self, log_entries: List[LogEntry], export_path: str, export_format: str = "txt"):
-        super().__init__()
         self.log_entries = log_entries
         self.export_path = export_path
         self.export_format = export_format
 
-    def run(self):
+    def export_logs(self) -> str:
+        """Export logs and return success message"""
         try:
             total_entries = len(self.log_entries)
+            if total_entries == 0:
+                raise ValueError("没有日志条目可导出")
 
             if self.export_format == "txt":
                 self._export_as_txt()
@@ -57,40 +66,38 @@ class LogExportThread(QThread):
                 self._export_as_json()
             elif self.export_format == "csv":
                 self._export_as_csv()
+            else:
+                raise ValueError(f"不支持的导出格式: {self.export_format}")
 
-            self.exportFinished.emit(
-                tr("log_viewer.export.success", count=total_entries, path=self.export_path))
+            return f"成功导出 {total_entries} 条日志到 {self.export_path}"
 
         except Exception as e:
-            self.exportError.emit(tr("log_viewer.export.error", error=str(e)))
+            raise Exception(f"导出失败: {str(e)}")
 
     def _export_as_txt(self):
+        """Export logs as text file"""
         with open(self.export_path, 'w', encoding='utf-8') as f:
-            f.write(tr("log_viewer.export.title") + "\n")
+            f.write("VidTanium 日志导出\n")
             f.write("=" * 50 + "\n")
-            f.write(tr("log_viewer.export.export_time", time=datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + "\n")
-            f.write(tr("log_viewer.export.total_entries", count=len(self.log_entries)) + "\n\n")
+            f.write(f"导出时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            f.write(f"日志条目总数: {len(self.log_entries)}\n\n")
 
-            for i, entry in enumerate(self.log_entries):
+            for entry in self.log_entries:
                 f.write(
                     f"[{entry.timestamp.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}] ")
                 f.write(f"{entry.level.upper()}: {entry.message}\n")
                 if hasattr(entry, 'source') and getattr(entry, 'source', ''):
-                    f.write(f"  {tr('log_viewer.export.source', source=getattr(entry, 'source', ''))}\n")
-
+                    f.write(f"  来源: {getattr(entry, 'source', '')}\n")
                 f.write("\n")
 
-                # Update progress
-                progress = int((i + 1) / len(self.log_entries) * 100)
-                self.exportProgress.emit(progress)
-
     def _export_as_html(self):
+        """Export logs as HTML file"""
         with open(self.export_path, 'w', encoding='utf-8') as f:
             f.write("""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>{tr("log_viewer.export.title")}</title>
+    <title>VidTanium 日志导出</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 20px; background: #f5f5f5; }
         .header { background: #0078d4; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
@@ -115,13 +122,13 @@ class LogExportThread(QThread):
 
             f.write(f"""
     <div class="header">
-        <h1>{tr("log_viewer.export.title")}</h1>
-        <p>{tr("log_viewer.export.export_time", time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))}</p>
-        <p>{tr("log_viewer.export.total_entries", count=len(self.log_entries))}</p>
+        <h1>VidTanium 日志导出</h1>
+        <p>导出时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+        <p>日志条目总数: {len(self.log_entries)}</p>
     </div>
 """)
 
-            for i, entry in enumerate(self.log_entries):
+            for entry in self.log_entries:
                 level_class = entry.level.upper()
                 f.write(f"""
     <div class="log-entry {level_class}">
@@ -131,18 +138,16 @@ class LogExportThread(QThread):
 
                 if hasattr(entry, 'source') and getattr(entry, 'source', ''):
                     f.write(
-                        f'        <div class="source">{tr("log_viewer.export.source", source=getattr(entry, "source", ""))}</div>')
+                        f'        <div class="source">来源: {getattr(entry, "source", "")}</div>')
 
                 f.write("    </div>")
-
-                progress = int((i + 1) / len(self.log_entries) * 100)
-                self.exportProgress.emit(progress)
 
             f.write("""
 </body>
 </html>""")
 
     def _export_as_json(self):
+        """Export logs as JSON file"""
         data = {
             "export_info": {
                 "export_time": datetime.now().isoformat(),
@@ -152,7 +157,7 @@ class LogExportThread(QThread):
             "logs": []
         }
 
-        for i, entry in enumerate(self.log_entries):
+        for entry in self.log_entries:
             log_data = {
                 "timestamp": entry.timestamp.isoformat(),
                 "level": entry.level,
@@ -163,25 +168,18 @@ class LogExportThread(QThread):
 
             data["logs"].append(log_data)
 
-            progress = int((i + 1) / len(self.log_entries) * 100)
-            self.exportProgress.emit(progress)
-
         with open(self.export_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
     def _export_as_csv(self):
+        """Export logs as CSV file"""
         import csv
 
         with open(self.export_path, 'w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
-            writer.writerow([
-                tr("log_viewer.export.csv_headers.timestamp"),
-                tr("log_viewer.export.csv_headers.level"), 
-                tr("log_viewer.export.csv_headers.message"),
-                tr("log_viewer.export.csv_headers.source")
-            ])
+            writer.writerow(["时间戳", "级别", "消息", "来源"])
 
-            for i, entry in enumerate(self.log_entries):
+            for entry in self.log_entries:
                 source = getattr(entry, 'source', '') or ''
                 writer.writerow([
                     entry.timestamp.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
@@ -189,9 +187,6 @@ class LogExportThread(QThread):
                     entry.message,
                     source
                 ])
-
-                progress = int((i + 1) / len(self.log_entries) * 100)
-                self.exportProgress.emit(progress)
 
 
 class AdvancedLogFilter(ElevatedCardWidget):
@@ -212,7 +207,7 @@ class AdvancedLogFilter(ElevatedCardWidget):
         layout.setSpacing(12)
 
         # Title
-        title_label = StrongBodyLabel(tr("log_viewer.filters.title"))
+        title_label = StrongBodyLabel("日志筛选")
         title_label.setStyleSheet(
             "font-size: 14px; color: #323130; margin-bottom: 8px;")
         layout.addWidget(title_label)
@@ -223,12 +218,13 @@ class AdvancedLogFilter(ElevatedCardWidget):
         # Time range quick filters
         self.time_quick_combo = ComboBox()
         self.time_quick_combo.addItems([
-            tr("log_viewer.filters.time_range.all"),
-            tr("log_viewer.filters.time_range.hour"),
-            tr("log_viewer.filters.time_range.6hours"),
-            tr("log_viewer.filters.time_range.day"),
-            tr("log_viewer.filters.time_range.week"),
-            tr("log_viewer.filters.time_range.custom")
+            "全部时间",
+            "最近1小时",
+            "最近6小时",
+            "最近24小时",
+            "最近3天",
+            "最近7天",
+            "自定义时间"
         ])
         self.time_quick_combo.currentTextChanged.connect(
             self._on_time_filter_changed)
@@ -822,7 +818,7 @@ class LogViewer(QWidget):
         self.advanced_filter: Optional[AdvancedLogFilter] = None
         self.log_container: Optional[EnhancedPaginatedLogContainer] = None
         self.log_detail_viewer: Optional[LogDetailViewer] = None
-        self.export_thread: Optional[LogExportThread] = None
+        self.current_export_worker: Optional[Any] = None
 
         # Statistics widgets
         self.debug_stat: Optional[QWidget] = None
@@ -851,7 +847,8 @@ class LogViewer(QWidget):
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         header_card.setStyleSheet(VidTaniumTheme.get_card_style())
         header_layout = QVBoxLayout(header_card)
-        header_layout.setContentsMargins(20, 12, 20, 12)  # Reduced vertical padding
+        header_layout.setContentsMargins(
+            20, 12, 20, 12)  # Reduced vertical padding
         header_layout.setSpacing(8)  # Reduced spacing
 
         # Title section with modern typography
@@ -880,10 +877,14 @@ class LogViewer(QWidget):
         stats_layout.setContentsMargins(0, 0, 0, 0)
 
         # Statistics badges with themed colors
-        self.debug_stat = self._create_modern_stat_badge("调试", 0, VidTaniumTheme.TEXT_TERTIARY)
-        self.info_stat = self._create_modern_stat_badge("信息", 0, VidTaniumTheme.INFO_BLUE)
-        self.warning_stat = self._create_modern_stat_badge("警告", 0, VidTaniumTheme.WARNING_ORANGE)
-        self.error_stat = self._create_modern_stat_badge("错误", 0, VidTaniumTheme.ERROR_RED)
+        self.debug_stat = self._create_modern_stat_badge(
+            "调试", 0, VidTaniumTheme.TEXT_TERTIARY)
+        self.info_stat = self._create_modern_stat_badge(
+            "信息", 0, VidTaniumTheme.INFO_BLUE)
+        self.warning_stat = self._create_modern_stat_badge(
+            "警告", 0, VidTaniumTheme.WARNING_ORANGE)
+        self.error_stat = self._create_modern_stat_badge(
+            "错误", 0, VidTaniumTheme.ERROR_RED)
 
         stats_layout.addWidget(self.debug_stat)
         stats_layout.addWidget(self.info_stat)
@@ -905,7 +906,7 @@ class LogViewer(QWidget):
         # Options - grouped together
         options_layout = QHBoxLayout()
         options_layout.setSpacing(16)
-        
+
         self.auto_scroll_check = CheckBox("自动滚动")
         self.auto_scroll_check.setChecked(True)
         self.auto_scroll_check.toggled.connect(self._on_auto_scroll_toggled)
@@ -913,7 +914,7 @@ class LogViewer(QWidget):
         self.auto_refresh_check = CheckBox("自动刷新")
         self.auto_refresh_check.setChecked(True)
         self.auto_refresh_check.toggled.connect(self._on_auto_refresh_toggled)
-        
+
         options_layout.addWidget(self.auto_scroll_check)
         options_layout.addWidget(self.auto_refresh_check)
 
@@ -1055,10 +1056,14 @@ class LogViewer(QWidget):
     def _setup_timers(self):
         """Setup automatic timers"""
         # Cleanup timer
+        if not hasattr(self, 'cleanup_timer') or self.cleanup_timer is None:
+            self.cleanup_timer = QTimer(self)
         self.cleanup_timer.timeout.connect(self._cleanup_old_entries)
         self.cleanup_timer.start(60000)  # Clean up every minute
 
         # Auto-refresh timer
+        if not hasattr(self, 'refresh_timer') or self.refresh_timer is None:
+            self.refresh_timer = QTimer(self)
         self.refresh_timer.timeout.connect(self._auto_refresh)
         self.refresh_timer.start(self.refresh_interval)
 
@@ -1066,14 +1071,15 @@ class LogViewer(QWidget):
         """Connect internal signals"""
         # Connect new filter controls
         if hasattr(self, 'time_filter_combo'):
-            self.time_filter_combo.currentTextChanged.connect(self._apply_filter)
-        
+            self.time_filter_combo.currentTextChanged.connect(
+                self._apply_filter)
+
         if hasattr(self, 'search_box'):
             self.search_box.textChanged.connect(self._apply_filter)
-            
+
         if hasattr(self, 'regex_enabled'):
             self.regex_enabled.toggled.connect(self._apply_filter)
-            
+
         # Connect level checkboxes
         if hasattr(self, 'level_checkboxes'):
             for checkbox in self.level_checkboxes.values():
@@ -1092,9 +1098,13 @@ class LogViewer(QWidget):
         """Handle auto-refresh toggle"""
         self.auto_refresh_enabled = enabled
         if enabled:
+            if not hasattr(self, 'refresh_timer') or self.refresh_timer is None:
+                self.refresh_timer = QTimer(self)
+                self.refresh_timer.timeout.connect(self._auto_refresh)
             self.refresh_timer.start(self.refresh_interval)
         else:
-            self.refresh_timer.stop()
+            if hasattr(self, 'refresh_timer') and self.refresh_timer is not None:
+                self.refresh_timer.stop()
 
     def _apply_advanced_filter(self):
         """Apply advanced filter to log entries"""
@@ -1139,36 +1149,99 @@ class LogViewer(QWidget):
         )
 
     def _clear_logs(self):
-        """Clear all log entries with confirmation"""
-        if self.log_container:
-            self.log_container.clear_entries()
+        """Clear all log entries with confirmation - now non-blocking"""
+        def clear_operation():
+            """Actual clearing operation run in thread pool"""
+            try:
+                if self.log_container:
+                    # Get current count for reporting
+                    count = len(self.log_container.log_entries)
+                    # Clear entries
+                    self.log_container.clear_entries()
+                    return count
+                return 0
+            except Exception as e:
+                raise Exception(f"清空日志失败: {str(e)}")
 
-        self.log_stats = {level: 0 for level in self.log_stats}
-        self._update_statistics()
+        def on_clear_success(count):
+            """Handle successful clearing"""
+            self.log_stats = {level: 0 for level in self.log_stats}
+            self._update_statistics()
 
-        # Clear detail viewer
-        if self.log_detail_viewer:
-            self.log_detail_viewer.clear()
+            # Clear detail viewer
+            if self.log_detail_viewer:
+                self.log_detail_viewer.clear()
 
-        # Show success info
-        InfoBar.success(
-            title="清空完成",
-            content="所有日志记录已清空",
+            # Show success info
+            InfoBar.success(
+                title="清空完成",
+                content=f"已清空 {count} 条日志记录",
+                orient=Qt.Orientation.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP,
+                duration=1500,
+                parent=self
+            )
+            self.logCleared.emit()
+
+        def on_clear_error(error_info):
+            """Handle clearing error"""
+            exc_type, exc_value, exc_traceback = error_info
+            InfoBar.error(
+                title="清空失败",
+                content=str(exc_value),
+                orient=Qt.Orientation.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP,
+                duration=3000,
+                parent=self
+            )
+
+        # Show immediate feedback
+        InfoBar.info(
+            title="清空中...",
+            content="正在清空日志记录",
             orient=Qt.Orientation.Horizontal,
             isClosable=True,
             position=InfoBarPosition.TOP,
-            duration=1500,
+            duration=1000,
             parent=self
         )
 
-        self.logCleared.emit()
+        # Submit to thread pool for non-blocking operation
+        if THREAD_POOL_AVAILABLE and submit_task:
+            submit_task(
+                clear_operation,
+                callback=on_clear_success,
+                error_callback=on_clear_error
+            )
+        else:
+            # Fallback to direct execution if thread pool not available
+            try:
+                count = clear_operation()
+                on_clear_success(count)
+            except Exception as e:
+                on_clear_error((type(e), e, None))
 
     def _export_logs(self):
-        """Export logs with format selection"""
+        """Export logs with format selection - now using thread pool"""
         if not self.log_container or not self.log_container.filtered_entries:
             InfoBar.warning(
                 title="导出警告",
                 content="没有可导出的日志条目",
+                orient=Qt.Orientation.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP,
+                duration=2000,
+                parent=self
+            )
+            return
+
+        # Check if export is already in progress
+        if self.current_export_worker is not None:
+            InfoBar.warning(
+                title="导出进行中",
+                content="当前已有导出任务正在进行，请等待完成后再试",
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
@@ -1206,15 +1279,39 @@ class LogViewer(QWidget):
             else:
                 export_format = "txt"
 
-            # Start export in background thread
-            self.export_thread = LogExportThread(
+            # Create export worker
+            export_worker = LogExportWorker(
                 self.log_container.filtered_entries, file_path, export_format)
-            self.export_thread.exportProgress.connect(self._on_export_progress)
-            self.export_thread.exportFinished.connect(self._on_export_finished)
-            self.export_thread.exportError.connect(self._on_export_error)
-            self.export_thread.start()
 
-            # Show progress info
+            def on_export_success(message):
+                """Handle successful export"""
+                self.current_export_worker = None
+                InfoBar.success(
+                    title="导出完成",
+                    content=message,
+                    orient=Qt.Orientation.Horizontal,
+                    isClosable=True,
+                    position=InfoBarPosition.TOP,
+                    duration=3000,
+                    parent=self
+                )
+                self.logSaved.emit(message)
+
+            def on_export_error(error_info):
+                """Handle export error"""
+                self.current_export_worker = None
+                exc_type, exc_value, exc_traceback = error_info
+                InfoBar.error(
+                    title="导出失败",
+                    content=str(exc_value),
+                    orient=Qt.Orientation.Horizontal,
+                    isClosable=True,
+                    position=InfoBarPosition.TOP,
+                    duration=3000,
+                    parent=self
+                )
+
+            # Show immediate feedback
             InfoBar.info(
                 title="导出中...",
                 content=f"正在导出 {len(self.log_container.filtered_entries)} 条日志",
@@ -1225,50 +1322,75 @@ class LogViewer(QWidget):
                 parent=self
             )
 
-    def _on_export_progress(self, progress: int):
-        """Handle export progress"""
-        # Could update a progress bar here
-        pass
-
-    def _on_export_finished(self, message: str):
-        """Handle export completion"""
-        InfoBar.success(
-            title="导出完成",
-            content=message,
-            orient=Qt.Orientation.Horizontal,
-            isClosable=True,
-            position=InfoBarPosition.TOP,
-            duration=3000,
-            parent=self
-        )
-        self.logSaved.emit(message)
-
-    def _on_export_error(self, error: str):
-        """Handle export error"""
-        InfoBar.error(
-            title="导出失败",
-            content=error,
-            orient=Qt.Orientation.Horizontal,
-            isClosable=True,
-            position=InfoBarPosition.TOP,
-            duration=3000,
-            parent=self
-        )
+            # Submit to thread pool
+            if THREAD_POOL_AVAILABLE and submit_task:
+                self.current_export_worker = submit_task(
+                    export_worker.export_logs,
+                    callback=on_export_success,
+                    error_callback=on_export_error
+                )
+            else:
+                # Fallback to direct execution if thread pool not available
+                try:
+                    result = export_worker.export_logs()
+                    on_export_success(result)
+                except Exception as e:
+                    on_export_error((type(e), e, None))
 
     def _refresh_logs(self):
-        """Manual refresh of log display"""
-        if self.advanced_filter:
-            self._apply_advanced_filter()
+        """Manual refresh of log display - now non-blocking"""
+        def refresh_operation():
+            """Actual refresh operation"""
+            try:
+                if self.advanced_filter:
+                    # Apply current filters
+                    return "refresh_completed"
+                return "no_filter"
+            except Exception as e:
+                raise Exception(f"刷新失败: {str(e)}")
 
-        InfoBar.success(
-            title="刷新完成",
-            content="日志显示已刷新",
-            orient=Qt.Orientation.Horizontal,
-            isClosable=True,
-            position=InfoBarPosition.TOP,
-            duration=1000,
-            parent=self
-        )
+        def on_refresh_success(result):
+            """Handle successful refresh"""
+            if result == "refresh_completed":
+                self._apply_advanced_filter()
+
+            InfoBar.success(
+                title="刷新完成",
+                content="日志显示已刷新",
+                orient=Qt.Orientation.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP,
+                duration=1000,
+                parent=self
+            )
+
+        def on_refresh_error(error_info):
+            """Handle refresh error"""
+            exc_type, exc_value, exc_traceback = error_info
+            InfoBar.error(
+                title="刷新失败",
+                content=str(exc_value),
+                orient=Qt.Orientation.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP,
+                duration=2000,
+                parent=self
+            )
+
+        # Submit to thread pool for non-blocking operation
+        if THREAD_POOL_AVAILABLE and submit_task:
+            submit_task(
+                refresh_operation,
+                callback=on_refresh_success,
+                error_callback=on_refresh_error
+            )
+        else:
+            # Fallback to direct execution if thread pool not available
+            try:
+                result = refresh_operation()
+                on_refresh_success(result)
+            except Exception as e:
+                on_refresh_error((type(e), e, None))
 
     def _auto_refresh(self):
         """Auto refresh if enabled"""
@@ -1287,6 +1409,7 @@ class LogViewer(QWidget):
 
             for _ in range(excess_count):
                 if self.log_container.log_entries:
+                    self.log_container.log_entries.pop(0)
                     removed_entry = self.log_container.log_entries.pop(0)
                     self.log_stats[removed_entry.level] = max(
                         0, self.log_stats[removed_entry.level] - 1)
@@ -1314,6 +1437,7 @@ class LogViewer(QWidget):
             if widget:
                 count_label = getattr(widget, 'count_label', None)
                 if count_label:
+                    count_label.setText(str(self.log_stats.get(level, 0)))
                     count_label.setText(str(self.log_stats[level]))
 
     def add_log_entry(self, level: str, message: str, source: Optional[str] = None, timestamp: Optional[datetime] = None):
@@ -1367,6 +1491,9 @@ class LogViewer(QWidget):
         """Set auto-refresh interval in milliseconds"""
         self.refresh_interval = interval
         if self.auto_refresh_enabled:
+            if not hasattr(self, 'refresh_timer') or self.refresh_timer is None:
+                self.refresh_timer = QTimer(self)
+                self.refresh_timer.timeout.connect(self._auto_refresh)
             self.refresh_timer.start(interval)
 
     def _apply_filter(self):
@@ -1377,7 +1504,8 @@ class LogViewer(QWidget):
         def should_include_entry(entry: LogEntry) -> bool:
             # Check level filter
             if hasattr(self, 'level_checkboxes'):
-                level_enabled = self.level_checkboxes.get(entry.level.upper(), None)
+                level_enabled = self.level_checkboxes.get(
+                    entry.level.upper(), None)
                 if level_enabled and not level_enabled.isChecked():
                     return False
 
@@ -1387,7 +1515,6 @@ class LogViewer(QWidget):
                 if search_text:
                     if hasattr(self, 'regex_enabled') and self.regex_enabled.isChecked():
                         try:
-                            import re
                             if not re.search(search_text, entry.message, re.IGNORECASE):
                                 return False
                         except:
@@ -1412,10 +1539,45 @@ class LogViewer(QWidget):
                         cutoff = now - timedelta(days=1)
                     else:
                         cutoff = None
-                    
+
                     if cutoff and entry.timestamp < cutoff:
                         return False
 
             return True
 
         self.log_container.apply_filter(should_include_entry)
+
+    def cleanup(self):
+        """Clean up resources when the widget is being destroyed"""
+        # Cancel any ongoing export operation
+        if self.current_export_worker is not None:
+            self.current_export_worker = None
+
+        # Stop any timers if they exist
+        if hasattr(self, 'refresh_timer') and self.refresh_timer is not None:
+            self.refresh_timer.stop()
+            self.refresh_timer.deleteLater()
+            self.refresh_timer = None
+        if hasattr(self, 'cleanup_timer') and self.cleanup_timer is not None:
+            self.cleanup_timer.stop()
+            self.cleanup_timer.deleteLater()
+            self.cleanup_timer = None
+
+    def closeEvent(self, event):
+        """Handle close event"""
+        self.cleanup()
+        super().closeEvent(event)
+
+    def showEvent(self, event):
+        """Handle show event - ensure proper initialization"""
+        super().showEvent(event)
+        # Ensure components are properly initialized when shown
+        if not hasattr(self, 'export_thread'):
+            self.export_thread = None
+
+    def __del__(self):
+        """Destructor - ensure cleanup is called"""
+        try:
+            self.cleanup()
+        except Exception:
+            pass  # Ignore errors during destruction

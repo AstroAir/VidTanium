@@ -573,6 +573,15 @@ class MainWindow(FluentWindow):
             except Exception as ex:
                 logger.error(f"Error cleaning up theme listener: {ex}")
 
+        # Cleanup log viewer if it exists
+        if hasattr(self, 'log_viewer') and self.log_viewer:
+            try:
+                if hasattr(self.log_viewer, 'cleanup'):
+                    self.log_viewer.cleanup()
+                    logger.info("Log viewer cleaned up")
+            except Exception as ex:
+                logger.error(f"Error cleaning up log viewer: {ex}")
+
         if self.download_manager and active_tasks_list:
             try:
                 # Stop all tasks before closing

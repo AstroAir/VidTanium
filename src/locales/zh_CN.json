@@ -12,11 +12,24 @@
   "dashboard": {
     "title": "VidTanium 仪表板",
     "subtitle": "管理您的视频下载任务",
+    "welcome": {
+      "title": "欢迎使用 VidTanium",
+      "subtitle": "强大的视频下载工具",
+      "description": "轻松下载和管理您的视频内容"
+    },
+    "actions": {
+      "new_download": "新建下载",
+      "batch_import": "批量导入",
+      "clear_cache": "清理缓存",
+      "open_settings": "打开设置"
+    },
     "stats": {
       "total_tasks": "总任务数",
       "running": "运行中",
       "completed": "已完成",
-      "avg_speed": "平均速度"
+      "avg_speed": "平均速度",
+      "active_downloads": "活跃下载",
+      "total_speed": "总速度"
     },
     "quick_actions": {
       "title": "快速操作",
@@ -44,7 +57,11 @@
       "cpu_usage": "CPU 使用率",
       "memory_usage": "内存使用",
       "network_status": "网络状态",
-      "normal": "正常"
+      "normal": "正常",
+      "download_threads": "下载线程",
+      "temp_files": "临时文件",
+      "cache_size": "缓存大小",
+      "network_usage": "网络使用"
     },
     "recent_logs": {
       "title": "最近日志",
