@@ -2,8 +2,7 @@
 Dashboard Task Preview Component
 """
 from typing import TYPE_CHECKING, Optional, Dict
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QSizePolicy
 from qfluentwidgets import (
     BodyLabel, SubtitleLabel, CaptionLabel, IconWidget, CardWidget,
     FluentIcon as FIF, ProgressRing, TextEdit
@@ -28,26 +27,31 @@ class DashboardTaskPreview(QWidget):
         self._setup_ui()
     
     def _setup_ui(self):
-        """Setup the task preview UI"""
-        # Main card container
+        """Setup the task preview UI with responsive design"""
+        # Main card container with responsive sizing
         card = CardWidget()
-        card.setMinimumHeight(300)
+        card.setMinimumHeight(280)
+        card.setMaximumHeight(500)  # Prevent excessive growth
+        
+        # Set responsive size policy
+        # Set responsive size policy
+        card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        
         card.setStyleSheet(VidTaniumTheme.get_card_style())
-
         layout = QVBoxLayout(card)
-        layout.setContentsMargins(24, 24, 24, 24)
-        layout.setSpacing(16)
+        layout.setContentsMargins(20, 20, 20, 20)  # Slightly reduced margins
+        layout.setSpacing(12)  # Reduced spacing
 
         # Header
         header_layout = self._create_header()
         layout.addLayout(header_layout)
 
-        # Task preview content
+        # Task preview content with responsive layout
         self.task_preview_content = QWidget()
         preview_layout = QVBoxLayout(self.task_preview_content)
-        preview_layout.setSpacing(8)
+        preview_layout.setSpacing(6)  # Reduced spacing for better fit
 
-        # Sample recent tasks (placeholder)
+        # Sample recent tasks (placeholder) - limit to visible amount
         for i in range(3):
             task_item = self._create_preview_task_item(
                 f"Sample Task {i+1}",
@@ -57,7 +61,7 @@ class DashboardTaskPreview(QWidget):
             preview_layout.addWidget(task_item)
 
         preview_layout.addStretch()
-        layout.addWidget(self.task_preview_content)
+        layout.addWidget(self.task_preview_content, 1)  # Give content stretch factor
         
         # Set up main layout
         main_layout = QVBoxLayout(self)
@@ -87,11 +91,16 @@ class DashboardTaskPreview(QWidget):
         return header_layout
 
     def _create_preview_task_item(self, name: str, status: str, progress: int) -> QWidget:
-        """Create a preview task item"""
+        """Create a preview task item with responsive design"""
         item = QWidget()
-        item.setFixedHeight(60)
+        item.setMinimumHeight(50)  # Minimum height for readability
+        item.setMaximumHeight(70)  # Maximum height to prevent excessive growth
+        
+        # Set responsive size policy
+        # Set responsive size policy
+        item.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        
         item.setStyleSheet(f"""
-            QWidget {{
                 background-color: {VidTaniumTheme.BG_CARD};
                 border-radius: {VidTaniumTheme.RADIUS_MEDIUM};
                 border: 1px solid {VidTaniumTheme.BORDER_LIGHT};

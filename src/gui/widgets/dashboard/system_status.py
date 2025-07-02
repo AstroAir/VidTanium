@@ -31,15 +31,21 @@ class DashboardSystemStatus(QWidget):
         self._connect_signals()
     
     def _setup_ui(self):
-        """Setup the system status UI"""
-        # Main card container
+        """Setup the system status UI with responsive design"""
+        # Main card container with responsive sizing
         card = CardWidget()
-        card.setMinimumHeight(300)
+        card.setMinimumHeight(280)
+        card.setMaximumHeight(500)  # Prevent excessive growth
+        
+        # Set responsive size policy
+        from PySide6.QtWidgets import QSizePolicy
+        card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        
         card.setStyleSheet(VidTaniumTheme.get_card_style())
 
         layout = QVBoxLayout(card)
-        layout.setContentsMargins(24, 24, 24, 24)
-        layout.setSpacing(16)
+        layout.setContentsMargins(20, 20, 20, 20)  # Slightly reduced margins
+        layout.setSpacing(12)  # Reduced spacing
 
         # Header
         header_layout = self._create_header()

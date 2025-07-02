@@ -4,12 +4,10 @@ Provides translation functions and language management.
 """
 
 import json
-import logging
 import os
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 class I18nManager:

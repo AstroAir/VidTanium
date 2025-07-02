@@ -1,7 +1,6 @@
 """
 Main window for VidTanium application - refactored version
 """
-import logging
 from typing import Any, Dict, List, Optional, Union, Callable
 from src.core.downloader import ProgressDict, TaskStatus as CoreTaskStatus
 from PySide6.QtWidgets import (
@@ -14,6 +13,7 @@ from PySide6.QtGui import (
     QPixmap, QColor, QPainter, QCloseEvent
 )
 from ..core.downloader import DownloadManager
+from loguru import logger
 
 from qfluentwidgets import (
     FluentIcon, InfoBar, InfoBarPosition,
@@ -37,8 +37,6 @@ from .dialogs.batch_url_dialog import BatchURLDialog
 from src.core.downloader import DownloadTask
 from .utils.formatters import format_speed
 from .utils.i18n import tr
-
-logger = logging.getLogger(__name__)
 
 
 class AppType(QApplication):
@@ -166,14 +164,17 @@ class MainWindow(FluentWindow):
         self.log_interface: QWidget
         self.settings_interface: QWidget        # Timers for real-time updates
         self.auto_save_timer: QTimer
+        
+        # Performance optimization: adaptive stats update timer
         self.stats_update_timer: QTimer = QTimer(self)
         self.stats_update_timer.timeout.connect(self._update_statistics)
-        self.stats_update_timer.start(2000)  # Update every 2 seconds for better responsiveness
+        self._last_active_tasks = 0
+        self._adaptive_update_interval()  # Start with adaptive interval
         
         # Task refresh timer for syncing with download manager
         self.task_refresh_timer: QTimer = QTimer(self)
         self.task_refresh_timer.timeout.connect(self._refresh_task_list)
-        self.task_refresh_timer.start(1000)  # Refresh every 1 second
+        self.task_refresh_timer.start(5000)  # Reduced frequency: refresh every 5 seconds
 
         # Connect download manager signals if available
         if self.download_manager:
@@ -182,10 +183,23 @@ class MainWindow(FluentWindow):
             self.download_manager.on_task_completed = self.on_task_completed
             self.download_manager.on_task_failed = self.on_task_failed
 
-        # Setup main window
+        # Setup main window with responsive sizing
         self.setWindowTitle(tr("app.title"))
-        self.setMinimumSize(1200, 800)
-        self.resize(1400, 900)
+        self.setMinimumSize(1000, 700)  # Reduced minimum size for smaller screens
+        
+        # Set initial size based on screen resolution
+        from PySide6.QtWidgets import QApplication
+        screen = QApplication.primaryScreen()
+        if screen:
+            screen_size = screen.availableGeometry()
+            # Use 80% of screen size as default, but respect min/max bounds
+            width = min(max(int(screen_size.width() * 0.8), 1000), 1600)
+            height = min(max(int(screen_size.height() * 0.8), 700), 1000)
+            self.resize(width, height)
+        else:
+            # Fallback for cases where screen info isn't available
+            self.resize(1200, 800)
+            
         self.setWindowIcon(FluentIcon.VIDEO.icon())
 
         # Initialize UI
@@ -253,13 +267,13 @@ class MainWindow(FluentWindow):
         )
 
     def _create_download_interface(self) -> QWidget:
-        """Create download management interface"""
+        """Create download management interface with responsive design"""
         interface = QWidget()
         main_layout = QVBoxLayout(interface)
-        main_layout.setContentsMargins(24, 24, 24, 24)
-        main_layout.setSpacing(20)
+        main_layout.setContentsMargins(20, 20, 20, 20)  # Reduced margins for better space usage
+        main_layout.setSpacing(16)  # Reduced spacing
 
-        # Top toolbar
+        # Top toolbar with responsive layout
         toolbar_layout = QHBoxLayout()
 
         # Title
@@ -267,14 +281,15 @@ class MainWindow(FluentWindow):
         toolbar_layout.addWidget(title)
         toolbar_layout.addStretch()
 
-        # Search box
+        # Search box with responsive sizing
         search_box = LineEdit()
         search_box.setPlaceholderText(tr("download.search_placeholder"))
-        search_box.setFixedWidth(200)
+        search_box.setMinimumWidth(150)  # Use minimum width instead of fixed
+        search_box.setMaximumWidth(250)  # Set maximum to prevent excessive growth
         search_box.setFixedHeight(35)
         toolbar_layout.addWidget(search_box)
 
-        # Filter dropdown
+        # Filter dropdown with responsive sizing
         filter_combo = ComboBox()
         filter_combo.addItems([
             tr("download.filter.all"), 
@@ -283,7 +298,8 @@ class MainWindow(FluentWindow):
             tr("download.filter.completed"), 
             tr("download.filter.failed")
         ])
-        filter_combo.setFixedWidth(120)
+        filter_combo.setMinimumWidth(100)  # Use minimum width
+        filter_combo.setMaximumWidth(140)  # Set maximum width
         filter_combo.setFixedHeight(35)
         toolbar_layout.addWidget(filter_combo)
 
@@ -365,12 +381,19 @@ class MainWindow(FluentWindow):
         return interface
 
     def _create_task_details_panel(self) -> QWidget:
-        """Create task details panel"""
+        """Create task details panel with responsive design"""
         panel = QWidget()
-        panel.setFixedWidth(300)
+        # Use minimum and maximum widths instead of fixed width
+        panel.setMinimumWidth(250)
+        panel.setMaximumWidth(400)
+        
+        # Set size policy for responsive behavior
+        from PySide6.QtWidgets import QSizePolicy
+        panel.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+        
         layout = QVBoxLayout(panel)
         layout.setContentsMargins(12, 0, 0, 0)
-        layout.setSpacing(16)
+        layout.setSpacing(12)  # Reduced spacing
 
         # Panel title
         title = StrongBodyLabel(tr("download.task_details.title"))
@@ -379,8 +402,8 @@ class MainWindow(FluentWindow):
         # Details card
         details_card = ElevatedCardWidget()
         details_layout = QVBoxLayout(details_card)
-        details_layout.setContentsMargins(16, 16, 16, 16)
-        details_layout.setSpacing(12)
+        details_layout.setContentsMargins(12, 12, 12, 12)  # Reduced margins
+        details_layout.setSpacing(8)  # Reduced spacing
 
         # Task information
         info_label = BodyLabel(tr("download.task_details.select_task"))
@@ -393,8 +416,8 @@ class MainWindow(FluentWindow):
         # Real-time log card
         log_card = ElevatedCardWidget()
         log_layout = QVBoxLayout(log_card)
-        log_layout.setContentsMargins(16, 16, 16, 16)
-        log_layout.setSpacing(12)
+        log_layout.setContentsMargins(12, 12, 12, 12)  # Reduced margins
+        log_layout.setSpacing(8)  # Reduced spacing
 
         log_title = StrongBodyLabel(tr("download.real_time_logs.title"))
         log_layout.addWidget(log_title)
@@ -493,9 +516,47 @@ class MainWindow(FluentWindow):
         except Exception as e:
             logger.error(f"Error refreshing task list: {e}")
 
-    def _update_statistics(self) -> None:
-        """Update dashboard statistics"""
+    def _adaptive_update_interval(self) -> None:
+        """Adaptive stats update interval based on task activity"""
         try:
+            # Check if there are active tasks
+            has_active_tasks = False
+            if self.download_manager and hasattr(self.download_manager, 'tasks'):
+                tasks = getattr(self.download_manager, 'tasks', {})
+                active_tasks = sum(1 for task in tasks.values()
+                                 if getattr(task, 'status', '') == 'downloading')
+                has_active_tasks = active_tasks > 0
+                self._last_active_tasks = active_tasks
+            
+            # Adaptive interval: frequent updates when active, slower when idle
+            if has_active_tasks:
+                interval = 2000  # 2 seconds when active
+            else:
+                interval = 10000  # 10 seconds when idle
+                
+            self.stats_update_timer.start(interval)
+            logger.debug(f"Stats update interval set to {interval}ms (active tasks: {has_active_tasks})")
+        except Exception as e:
+            logger.error(f"Error setting adaptive update interval: {e}")
+            # Fallback to default interval
+            self.stats_update_timer.start(5000)
+    
+    def _update_statistics(self) -> None:
+        """Update dashboard statistics with adaptive interval adjustment"""
+        try:
+            # Check if we need to adjust update frequency
+            current_active_tasks = 0
+            if self.download_manager and hasattr(self.download_manager, 'tasks'):
+                tasks = getattr(self.download_manager, 'tasks', {})
+                current_active_tasks = sum(1 for task in tasks.values()
+                                         if getattr(task, 'status', '') == 'downloading')
+            
+            # Adjust interval if task activity changed
+            if current_active_tasks != self._last_active_tasks:
+                self._last_active_tasks = current_active_tasks
+                self._adaptive_update_interval()
+            
+            # Update statistics
             if self.dashboard_component and hasattr(self.dashboard_component, 'update_statistics'):
                 self.dashboard_component.update_statistics()
             if self.dashboard_component and hasattr(self.dashboard_component, 'update_task_preview'):
@@ -601,13 +662,74 @@ class MainWindow(FluentWindow):
     def show_new_task_dialog(self) -> None:
         """Show new task dialog"""
         try:
-            dialog = TaskDialog(self)
+            dialog = TaskDialog(self.settings, self)
             if dialog.exec() == TaskDialog.DialogCode.Accepted:
-                # Handle task creation
-                pass
+                # Get task data from dialog
+                task_data = dialog.get_task_data()
+                
+                # Validate task data
+                if not task_data.get("base_url") or not task_data.get("output_file"):
+                    InfoBar.warning(
+                        title=tr("dialogs.task_error"), 
+                        content=tr("dialogs.validation_error", message="Base URL and output file are required"),
+                        orient=Qt.Orientation.Horizontal, isClosable=True,
+                        position=InfoBarPosition.TOP, duration=3000, parent=self
+                    )
+                    return
+                
+                # Create download task
+                from src.core.downloader import DownloadTask, TaskPriority
+                
+                # Map priority string to enum
+                priority_map = {
+                    "high": TaskPriority.HIGH,
+                    "normal": TaskPriority.NORMAL,
+                    "low": TaskPriority.LOW
+                }
+                priority = priority_map.get(task_data.get("priority", "normal"), TaskPriority.NORMAL)
+                
+                task = DownloadTask(
+                    name=task_data.get("name") or "Download Task",
+                    base_url=task_data.get("base_url"),
+                    key_url=task_data.get("key_url"),
+                    segments=task_data.get("segments", 200),
+                    output_file=task_data.get("output_file"),
+                    settings=self.settings,
+                    priority=priority
+                )
+                
+                # Add task to download manager
+                if self.download_manager:
+                    task_id = self.download_manager.add_task(task)
+                    
+                    # Auto-start if requested
+                    if task_data.get("auto_start", False):
+                        self.download_manager.start_task(task_id)
+                    
+                    # Show success message
+                    InfoBar.success(
+                        title=tr("dialogs.task_created"), 
+                        content=tr("dialogs.task_created_message", name=task.name),
+                        orient=Qt.Orientation.Horizontal, isClosable=True,
+                        position=InfoBarPosition.TOP, duration=3000, parent=self
+                    )
+                    
+                    # Update task manager display
+                    if hasattr(self, 'task_manager') and self.task_manager:
+                        self.task_manager.refresh_from_manager()
+                else:
+                    InfoBar.error(
+                        title=tr("dialogs.task_error"), 
+                        content=tr("dialogs.download_manager_error"),
+                        orient=Qt.Orientation.Horizontal, isClosable=True,
+                        position=InfoBarPosition.TOP, duration=3000, parent=self
+                    )
+                    
         except Exception as e:
+            logger.error(f"Error creating new task: {e}")
             InfoBar.error(
-                title=tr("dialogs.task_error"), content=tr("dialogs.task_error_message", error=e),
+                title=tr("dialogs.task_error"), 
+                content=tr("dialogs.task_error_message", error=str(e)),
                 orient=Qt.Orientation.Horizontal, isClosable=True,
                 position=InfoBarPosition.TOP, duration=3000, parent=self
             )

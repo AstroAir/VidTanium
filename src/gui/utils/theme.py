@@ -315,6 +315,67 @@ class VidTaniumTheme:
                     border-color: {cls.BORDER_ACCENT};
                 }}
             """
+    
+    # ========================================
+    # RESPONSIVE DESIGN UTILITIES
+    # ========================================
+    
+    @classmethod
+    def get_responsive_font_size(cls, base_size: str, scale_factor: float = 1.0) -> str:
+        """Get responsive font size based on scale factor"""
+        base_value = int(base_size.replace('px', ''))
+        scaled_value = max(8, int(base_value * scale_factor))  # Minimum 8px
+        return f"{scaled_value}px"
+    
+    @classmethod
+    def get_responsive_spacing(cls, base_spacing: str, scale_factor: float = 1.0) -> str:
+        """Get responsive spacing based on scale factor"""
+        base_value = int(base_spacing.replace('px', ''))
+        scaled_value = max(2, int(base_value * scale_factor))  # Minimum 2px
+        return f"{scaled_value}px"
+    
+    @classmethod
+    def get_responsive_card_style(cls, hover_enabled: bool = True, scale_factor: float = 1.0) -> str:
+        """Get responsive card styling with scaling"""
+        padding = cls.get_responsive_spacing(cls.SPACE_LG, scale_factor)
+        border_radius = cls.get_responsive_spacing(cls.RADIUS_LARGE, scale_factor)
+        
+        hover_style = f"""
+            CardWidget:hover {{
+                background-color: {cls.BG_CARD_HOVER};
+                border: 1px solid {cls.BORDER_ACCENT};
+            }}
+        """ if hover_enabled else ""
+        
+        return f"""
+            CardWidget {{
+                background-color: {cls.BG_CARD};
+                border: 1px solid {cls.BORDER_LIGHT};
+                border-radius: {border_radius};
+                padding: {padding};
+            }}
+            {hover_style}
+        """
+    
+    @classmethod
+    def get_adaptive_margins(cls, container_width: int) -> tuple:
+        """Get adaptive margins based on container width"""
+        if container_width < 800:
+            return (12, 12, 12, 12)  # Small margins for narrow screens
+        elif container_width < 1200:
+            return (16, 16, 16, 16)  # Medium margins
+        else:
+            return (24, 24, 24, 24)  # Large margins for wide screens
+    
+    @classmethod
+    def get_adaptive_spacing(cls, container_width: int) -> int:
+        """Get adaptive spacing based on container width"""
+        if container_width < 800:
+            return 8   # Tight spacing for narrow screens
+        elif container_width < 1200:
+            return 12  # Medium spacing
+        else:
+            return 16  # Generous spacing for wide screens
 
 
 class ThemeManager:

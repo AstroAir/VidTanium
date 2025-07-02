@@ -29,10 +29,16 @@ class DashboardHeroSection(QWidget):
         self._connect_signals()
     
     def _setup_ui(self):
-        """Setup the hero section UI"""
-        # Main hero card
+        """Setup the hero section UI with responsive design"""
+        # Main hero card with responsive sizing
         self.hero_card = CardWidget()
-        self.hero_card.setFixedHeight(160)
+        self.hero_card.setMinimumHeight(120)  # Minimum height
+        self.hero_card.setMaximumHeight(180)  # Maximum height to prevent excessive growth
+        
+        # Set responsive size policy
+        from PySide6.QtWidgets import QSizePolicy
+        self.hero_card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        
         self.hero_card.setStyleSheet(f"""
             CardWidget {{
                 background: {VidTaniumTheme.GRADIENT_HERO};
@@ -43,12 +49,13 @@ class DashboardHeroSection(QWidget):
         
         # Add themed shadow effect
         self.hero_card.setGraphicsEffect(ThemeManager.get_colored_shadow_effect(
-            VidTaniumTheme.PRIMARY_BLUE, 50
+            VidTaniumTheme.PRIMARY_BLUE, 40
         ))
         
         layout = QHBoxLayout(self.hero_card)
-        layout.setContentsMargins(40, 30, 40, 30)
-        layout.setSpacing(30)
+        # Use responsive margins
+        layout.setContentsMargins(24, 20, 24, 20)
+        layout.setSpacing(20)
 
         # Welcome content
         content_layout = self._create_welcome_content()
@@ -59,8 +66,8 @@ class DashboardHeroSection(QWidget):
         # App icon/logo area
         icon_container = self._create_app_icon()
 
-        layout.addLayout(content_layout)
-        layout.addLayout(buttons_layout)
+        layout.addLayout(content_layout, 2)  # Give content more space
+        layout.addLayout(buttons_layout, 1)  # Buttons take less space
         layout.addStretch()
         layout.addWidget(icon_container)
         

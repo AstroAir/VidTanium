@@ -1,8 +1,12 @@
 import sys
 import os
+from .logging_config import ensure_logging_configured
 from loguru import logger
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QObject, QTranslator, QLocale
+
+# Ensure logging is configured first
+ensure_logging_configured()
 
 from .settings import Settings
 from src.core.downloader import DownloadManager

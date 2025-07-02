@@ -102,7 +102,10 @@ class ThreadPoolManager(QObject):
             
         # Submit to thread pool
         self.pool.start(worker)
-        logger.debug(f"Task submitted to thread pool: {function.__name__}")
+        
+        # Only log non-stats tasks to reduce noise
+        if function.__name__ != '_calculate_stats':
+            logger.debug(f"Task submitted to thread pool: {function.__name__}")
         
         return worker
     

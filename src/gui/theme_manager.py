@@ -2,12 +2,10 @@
 Enhanced theme manager for VidTanium with QFluentWidgets integration
 """
 
-import logging
 from typing import Optional
 from PySide6.QtCore import QObject, Signal, QTimer
 from qfluentwidgets import setTheme, Theme, qconfig, SystemThemeListener, isDarkTheme
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 class ThemeManager(QObject):

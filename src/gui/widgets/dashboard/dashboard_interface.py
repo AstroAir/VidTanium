@@ -40,7 +40,7 @@ class DashboardInterface(QObject):
         self.animation_timer.start(2000)  # Update every 2 seconds
 
     def create_interface(self) -> QWidget:
-        """Create the beautiful dashboard interface using components"""
+        """Create the beautiful dashboard interface using components with responsive design"""
         interface = ScrollArea()
         interface.setWidgetResizable(True)
         interface.setObjectName("dashboard_scroll_area")
@@ -52,33 +52,39 @@ class DashboardInterface(QObject):
             }}
         """)
 
-        # Main container with beautiful styling
+        # Main container with responsive layout
         main_container = QWidget()
         main_layout = QVBoxLayout(main_container)
-        main_layout.setContentsMargins(30, 30, 30, 30)
-        main_layout.setSpacing(30)
+        # Use relative margins for better scaling
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(20)
 
         # Create component instances
         self.hero_section = DashboardHeroSection(self.main_window)
         main_layout.addWidget(self.hero_section)
 
-        # Statistics dashboard
+        # Statistics dashboard with responsive layout
         self.stats_section = DashboardStatsSection(self.main_window)
         main_layout.addWidget(self.stats_section)
 
-        # Content cards section
+        # Content cards section with responsive layout
         content_layout = QHBoxLayout()
-        content_layout.setSpacing(24)
+        content_layout.setSpacing(16)  # Reduced spacing for better space usage
 
-        # Task preview card
+        # Task preview card with responsive sizing
         self.task_preview = DashboardTaskPreview(self.main_window)
-        content_layout.addWidget(self.task_preview, 2)
-
-        # System status card
+        
+        # System status card with responsive sizing
         self.system_status = DashboardSystemStatus(self.main_window)
-        content_layout.addWidget(self.system_status, 1)
+        
+        # Use stretch factors for responsive layout
+        content_layout.addWidget(self.task_preview, 2)  # Takes 2/3 of space
+        content_layout.addWidget(self.system_status, 1) # Takes 1/3 of space
 
         main_layout.addLayout(content_layout)
+        
+        # Add stretch at the bottom to push content up
+        main_layout.addStretch()
 
         interface.setWidget(main_container)
         return interface

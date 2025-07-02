@@ -75,6 +75,10 @@
     },
     "task_status": {
       "waiting": "等待中"
+    },
+    "success": {
+      "cache_cleared": "缓存已清理",
+      "cache_cleared_message": "应用程序缓存已成功清理"
     }
   },
   "download": {
@@ -199,10 +203,14 @@
   },
   "dialogs": {
     "browse_directory": "选择下载目录",
-    "task_error": "对话框错误",
-    "task_error_message": "无法打开任务对话框: {error}",
+    "task_error": "任务错误",
+    "task_error_message": "创建任务失败：{error}",
+    "task_created": "任务已创建",
+    "task_created_message": "成功创建任务：{name}",
+    "validation_error": "验证错误",
+    "download_manager_error": "下载管理器不可用",
     "batch_import_error": "批量导入错误",
-    "batch_import_error_message": "无法打开批量导入对话框: {error}",
+    "batch_import_error_message": "批量导入URL失败：{error}",
     "settings_error": "设置错误",
     "settings_error_message": "无法打开设置对话框: {error}",
     "about_error": "关于错误",
