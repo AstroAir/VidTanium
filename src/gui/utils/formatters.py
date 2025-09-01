@@ -2,13 +2,14 @@
 Utility functions for formatting data in the UI
 """
 
+
 def format_speed(speed_bytes_per_sec: float) -> str:
     """
     Format download speed in human-readable format
-    
+
     Args:
         speed_bytes_per_sec: Speed in bytes per second
-        
+
     Returns:
         Formatted speed string (e.g., "1.5 MB/s")
     """
@@ -30,10 +31,10 @@ def format_speed(speed_bytes_per_sec: float) -> str:
 def format_bytes(bytes_count: int) -> str:
     """
     Format byte count in human-readable format
-    
+
     Args:
         bytes_count: Number of bytes
-        
+
     Returns:
         Formatted size string (e.g., "1.5 MB")
     """
@@ -55,10 +56,10 @@ def format_bytes(bytes_count: int) -> str:
 def format_time(seconds: float) -> str:
     """
     Format time duration in human-readable format
-    
+
     Args:
         seconds: Duration in seconds
-        
+
     Returns:
         Formatted time string (e.g., "1h 23m 45s")
     """
@@ -88,12 +89,12 @@ def format_time(seconds: float) -> str:
 def format_percentage(completed: int, total: int, decimals: int = 1) -> str:
     """
     Format percentage with proper error handling
-    
+
     Args:
         completed: Number of completed items
         total: Total number of items
         decimals: Number of decimal places
-        
+
     Returns:
         Formatted percentage string (e.g., "75.5%")
     """
@@ -110,17 +111,17 @@ def format_percentage(completed: int, total: int, decimals: int = 1) -> str:
 def format_eta(estimated_seconds: float) -> str:
     """
     Format estimated time of arrival
-    
+
     Args:
         estimated_seconds: Estimated seconds remaining
-        
+
     Returns:
         Formatted ETA string (e.g., "ETA: 5m 32s", "ETA: calculating...")
     """
     try:
         if estimated_seconds is None or estimated_seconds <= 0:
             return "ETA: calculating..."
-        
+
         time_str = format_time(estimated_seconds)
         return f"ETA: {time_str}"
     except (ValueError, TypeError):
@@ -130,10 +131,10 @@ def format_eta(estimated_seconds: float) -> str:
 def format_task_status(status: str) -> str:
     """
     Format task status for display
-    
+
     Args:
         status: Raw status string
-        
+
     Returns:
         Formatted status string
     """
@@ -148,19 +149,19 @@ def format_task_status(status: str) -> str:
         'cancelled': '已取消',
         'canceled': '已取消'
     }
-    
+
     return status_map.get(status.lower(), status.title())
 
 
 def safe_divide(numerator: float, denominator: float, default: float = 0.0) -> float:
     """
     Safe division with default fallback
-    
+
     Args:
         numerator: The dividend
         denominator: The divisor
         default: Default value if division fails
-        
+
     Returns:
         Result of division or default value
     """
@@ -175,12 +176,12 @@ def safe_divide(numerator: float, denominator: float, default: float = 0.0) -> f
 def clamp(value: float, min_val: float, max_val: float) -> float:
     """
     Clamp a value between minimum and maximum bounds
-    
+
     Args:
         value: Value to clamp
         min_val: Minimum allowed value
         max_val: Maximum allowed value
-        
+
     Returns:
         Clamped value
     """
@@ -188,3 +189,29 @@ def clamp(value: float, min_val: float, max_val: float) -> float:
         return max(min_val, min(max_val, value))
     except (ValueError, TypeError):
         return min_val
+
+
+def format_size(bytes_count: int) -> str:
+    """
+    Format byte count in human-readable format (alias for format_bytes)
+
+    Args:
+        bytes_count: Number of bytes
+
+    Returns:
+        Formatted size string (e.g., "1.5 MB")
+    """
+    return format_bytes(bytes_count)
+
+
+def format_duration(seconds: float) -> str:
+    """
+    Format time duration in human-readable format (alias for format_time)
+
+    Args:
+        seconds: Duration in seconds
+
+    Returns:
+        Formatted time string (e.g., "1h 23m 45s")
+    """
+    return format_time(seconds)

@@ -17,7 +17,7 @@ def decrypt_data(data: bytes, key: bytes, iv: bytes, last_block: bool = False) -
     """
     try:
         # Create decryptor
-        cipher = AES.new(key, AES.MODE_CBC, iv)  # type: ignore
+        cipher = AES.new(key, AES.MODE_CBC, iv)
 
         # Ensure data length is a multiple of 16 bytes
         pad_len = len(data) % 16
@@ -32,9 +32,9 @@ def decrypt_data(data: bytes, key: bytes, iv: bytes, last_block: bool = False) -
         # If this is the last block and there's padding, remove it
         if last_block and pad_len != 0:
             # Keep only the original length data
-            return decrypted_data[:-pad_len]
+            return bytes(decrypted_data[:-pad_len])
 
-        return decrypted_data
+        return bytes(decrypted_data)
 
     except Exception as e:
         logger.error(f"Error decrypting data: {e}", exc_info=True)

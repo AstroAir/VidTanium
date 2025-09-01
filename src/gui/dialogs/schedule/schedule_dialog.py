@@ -7,8 +7,8 @@ import logging
 from typing import Optional, Dict, Any
 import datetime
 
-from qfluentwidgets import (  # type: ignore
-    CardWidget, SubtitleLabel, FluentIcon, InfoBar,
+from qfluentwidgets import (
+    CardWidget, SubtitleLabel, FluentIcon as FIF, InfoBar,
     InfoBarPosition
 )
 
@@ -35,7 +35,7 @@ class ScheduleDialog(QDialog):
         self.setWindowTitle("计划下载任务")
         self.setMinimumSize(550, 480)
         self.resize(550, 480)
-        self.setWindowIcon(FluentIcon.CALENDAR.icon())
+        self.setWindowIcon(FIF.CALENDAR.icon())
 
         self._create_ui()
 
@@ -47,7 +47,7 @@ class ScheduleDialog(QDialog):
         main_layout.setSpacing(15)
 
         # 标题
-        self.title_label = SubtitleLabel("计划下载任务")  # type: ignore
+        self.title_label = SubtitleLabel("计划下载任务")
         main_layout.addWidget(self.title_label)
 
         # 任务信息组件
@@ -55,7 +55,7 @@ class ScheduleDialog(QDialog):
         main_layout.addWidget(self.task_info_widget)
 
         # 计划设置组件
-        self.schedule_card = CardWidget(self)  # type: ignore
+        self.schedule_card = CardWidget(self)
         schedule_layout = QVBoxLayout(self.schedule_card)
         schedule_layout.setContentsMargins(0, 0, 0, 0)
 
@@ -76,13 +76,13 @@ class ScheduleDialog(QDialog):
         ok_button = self.button_box.button(QDialogButtonBox.StandardButton.Ok)
         if ok_button:
             ok_button.setText("确定")
-            ok_button.setIcon(FluentIcon.ACCEPT.icon())  # type: ignore
+            ok_button.setIcon(FIF.ACCEPT.icon())
 
         cancel_button = self.button_box.button(
             QDialogButtonBox.StandardButton.Cancel)
         if cancel_button:
             cancel_button.setText("取消")
-            cancel_button.setIcon(FluentIcon.CANCEL.icon())  # type: ignore
+            cancel_button.setIcon(FIF.CANCEL.icon())
 
         # 连接按钮信号
         self.button_box.accepted.connect(self._on_ok)
@@ -108,24 +108,24 @@ class ScheduleDialog(QDialog):
         """确定按钮点击"""
         # 验证输入
         if not self.task_info_widget.get_task_name():
-            InfoBar.error(  # type: ignore
+            InfoBar.error(
                 title="输入错误",
                 content="请输入任务名称",
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
-                position=InfoBarPosition.TOP,  # type: ignore
+                position=InfoBarPosition.TOP,
                 duration=3000,
                 parent=self
             )
             return
 
         if not self.schedule_options_widget.validate():
-            InfoBar.error(  # type: ignore
+            InfoBar.error(
                 title="输入错误",
                 content="请至少选择一天",
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
-                position=InfoBarPosition.TOP,  # type: ignore
+                position=InfoBarPosition.TOP,
                 duration=3000,
                 parent=self
             )
@@ -176,12 +176,12 @@ class ScheduleDialog(QDialog):
             self.task_created.emit(task)
 
             # 显示成功消息
-            InfoBar.success(  # type: ignore
+            InfoBar.success(
                 title="任务创建成功",
                 content=f"已成功创建计划任务: {task.name}",
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
-                position=InfoBarPosition.BOTTOM_RIGHT,  # type: ignore
+                position=InfoBarPosition.BOTTOM_RIGHT,
                 duration=3000,
                 parent=self
             )
@@ -195,12 +195,12 @@ class ScheduleDialog(QDialog):
             import traceback
             traceback.print_exc()
 
-            InfoBar.error(  # type: ignore
+            InfoBar.error(
                 title="创建任务失败",
                 content=f"创建任务出错: {str(e)}",
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
-                position=InfoBarPosition.TOP,  # type: ignore
+                position=InfoBarPosition.TOP,
                 duration=5000,
                 parent=self
             )

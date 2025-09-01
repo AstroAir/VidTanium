@@ -187,27 +187,117 @@ VidTanium stores configuration in:
 
 #### Main Configuration
 
-Edit `config/config.json`:
+Edit `config/config.json` with comprehensive settings:
 
 ```json
 {
-    "download": {
-        "concurrent_tasks": 5,
-        "retry_attempts": 3,
-        "timeout": 30,
-        "default_directory": "~/Downloads/VidTanium"
+    "general": {
+        "output_directory": "~/Downloads/VidTanium",
+        "auto_cleanup": true,
+        "language": "auto",
+        "theme": "system",
+        "check_updates": true,
+        "max_recent_files": 10
     },
-    "ui": {
-        "theme": "auto",
-        "language": "en"
+    "download": {
+        "max_concurrent_tasks": 3,
+        "max_workers_per_task": 10,
+        "max_retries": 5,
+        "retry_delay": 2,
+        "request_timeout": 60,
+        "chunk_size": 8192,
+        "bandwidth_limit": 0
     },
     "advanced": {
-        "ffmpeg_path": "ffmpeg",
-        "temp_directory": "temp",
-        "log_level": "INFO"
+        "proxy": "",
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "verify_ssl": true,
+        "ffmpeg_path": "",
+        "keep_temp_files": false,
+        "debug_logging": false
+    },
+    "ui": {
+        "show_detailed_progress": true,
+        "minimize_to_tray": false,
+        "show_notifications": true,
+        "confirm_on_exit": true,
+        "window_geometry": "",
+        "window_state": ""
+    },
+    "monitoring": {
+        "enable_bandwidth_monitoring": true,
+        "bandwidth_sample_interval": 1.0,
+        "max_bandwidth_samples": 3600,
+        "enable_performance_analytics": true,
+        "eta_algorithm": "adaptive"
+    },
+    "error_handling": {
+        "enable_circuit_breaker": true,
+        "circuit_breaker_threshold": 5,
+        "circuit_breaker_timeout": 60,
+        "max_error_history": 1000,
+        "enable_intelligent_retry": true
+    },
+    "queue_management": {
+        "enable_smart_prioritization": true,
+        "queue_optimization_interval": 30,
+        "max_queue_size": 100,
+        "priority_boost_factor": 1.5
     }
 }
 ```
+
+#### Configuration Categories
+
+**General Settings**:
+- `output_directory`: Default download location
+- `auto_cleanup`: Automatic temporary file cleanup
+- `language`: Interface language (auto, en, zh)
+- `theme`: UI theme (system, light, dark)
+- `check_updates`: Automatic update checking
+
+**Download Settings**:
+- `max_concurrent_tasks`: Maximum simultaneous downloads
+- `max_workers_per_task`: Threads per download task
+- `max_retries`: Maximum retry attempts for failed segments
+- `retry_delay`: Base delay between retry attempts
+- `request_timeout`: HTTP request timeout in seconds
+- `chunk_size`: Download chunk size in bytes
+- `bandwidth_limit`: Maximum bandwidth usage (0 = unlimited)
+
+**Advanced Settings**:
+- `proxy`: HTTP/HTTPS proxy configuration
+- `user_agent`: Custom user agent string
+- `verify_ssl`: SSL certificate verification
+- `ffmpeg_path`: Custom FFmpeg executable path
+- `keep_temp_files`: Preserve temporary files for debugging
+- `debug_logging`: Enable detailed debug logging
+
+**UI Settings**:
+- `show_detailed_progress`: Display detailed progress information
+- `minimize_to_tray`: Minimize to system tray instead of taskbar
+- `show_notifications`: Enable desktop notifications
+- `confirm_on_exit`: Show confirmation dialog when closing
+
+**Monitoring Settings**:
+- `enable_bandwidth_monitoring`: Real-time bandwidth tracking
+- `bandwidth_sample_interval`: Monitoring sample frequency
+- `max_bandwidth_samples`: Maximum stored bandwidth samples
+- `enable_performance_analytics`: Performance metrics collection
+- `eta_algorithm`: ETA calculation method (linear, exponential, adaptive)
+
+**Error Handling Settings**:
+- `enable_circuit_breaker`: Circuit breaker pattern protection
+- `circuit_breaker_threshold`: Failure threshold for circuit breaker
+- `circuit_breaker_timeout`: Recovery timeout in seconds
+- `max_error_history`: Maximum stored error records
+- `enable_intelligent_retry`: Context-aware retry strategies
+
+**Queue Management Settings**:
+- `enable_smart_prioritization`: Intelligent task prioritization
+- `queue_optimization_interval`: Queue optimization frequency
+- `max_queue_size`: Maximum queued tasks
+- `priority_boost_factor`: Priority adjustment factor
 
 ## Troubleshooting Installation
 

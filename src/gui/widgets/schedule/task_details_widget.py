@@ -8,7 +8,7 @@ from datetime import datetime
 
 from qfluentwidgets import (
     PushButton, CardWidget, StrongBodyLabel, BodyLabel,
-    FluentIcon, TransparentToolButton, LineEdit
+    FluentIcon as FIF, TransparentToolButton, LineEdit
 )
 from src.core.scheduler import TaskType
 
@@ -35,7 +35,7 @@ class TaskDetailsWidget(CardWidget):
         header_layout.addStretch()
 
         # 关闭按钮
-        self.close_button = TransparentToolButton(FluentIcon.CLOSE, self)
+        self.close_button = TransparentToolButton(FIF.CLOSE, self)
         self.close_button.setIconSize(QSize(12, 12))
         self.close_button.clicked.connect(lambda: self.setVisible(False))
         header_layout.addWidget(self.close_button)
@@ -116,15 +116,15 @@ class TaskDetailsWidget(CardWidget):
         actions_layout = QHBoxLayout()
 
         self.enable_button = PushButton("启用")
-        self.enable_button.setIcon(FluentIcon.PLAY)
+        self.enable_button.setIcon(FIF.PLAY)
         actions_layout.addWidget(self.enable_button)
 
         self.run_now_button = PushButton("立即执行")
-        self.run_now_button.setIcon(FluentIcon.PLAY_SOLID)
+        self.run_now_button.setIcon(FIF.PLAY_SOLID)
         actions_layout.addWidget(self.run_now_button)
 
         self.delete_button = PushButton("删除")
-        self.delete_button.setIcon(FluentIcon.DELETE)
+        self.delete_button.setIcon(FIF.DELETE)
         actions_layout.addWidget(self.delete_button)
 
         layout.addLayout(actions_layout)
@@ -199,10 +199,10 @@ class TaskDetailsWidget(CardWidget):
         # 启用/禁用按钮
         if task.enabled:
             self.enable_button.setText("禁用")
-            self.enable_button.setIcon(FluentIcon.PAUSE)
+            self.enable_button.setIcon(FIF.PAUSE)
         else:
             self.enable_button.setText("启用")
-            self.enable_button.setIcon(FluentIcon.PLAY)
+            self.enable_button.setIcon(FIF.PLAY)
 
         # 显示详情面板
         self.setVisible(True)

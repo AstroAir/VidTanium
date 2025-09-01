@@ -28,31 +28,31 @@ class TaskActionButtons(QWidget):
         # 根据任务状态添加不同按钮
         if task.enabled:
             # 禁用按钮
-            disable_button = ToolButton(FluentIcon.PAUSE)
+            disable_button = ToolButton(FIF.PAUSE)
             disable_button.setToolTip("禁用")
             self._layout.addWidget(disable_button)
             self.disable_button = disable_button
         else:
             # 启用按钮
-            enable_button = ToolButton(FluentIcon.PLAY)
+            enable_button = ToolButton(FIF.PLAY)
             enable_button.setToolTip("启用")
             self._layout.addWidget(enable_button)
             self.enable_button = enable_button
 
         # 运行按钮
-        run_button = ToolButton(FluentIcon.PLAY_SOLID)
+        run_button = ToolButton(FIF.PLAY_SOLID)
         run_button.setToolTip("立即执行")
         self._layout.addWidget(run_button)
         self.run_button = run_button
 
         # 详情按钮
-        info_button = ToolButton(FluentIcon.INFO)
+        info_button = ToolButton(FIF.INFO)
         info_button.setToolTip("查看详情")
         self._layout.addWidget(info_button)
         self.info_button = info_button
 
         # 删除按钮
-        delete_button = ToolButton(FluentIcon.DELETE)
+        delete_button = ToolButton(FIF.DELETE)
         delete_button.setToolTip("删除")
         self._layout.addWidget(delete_button)
         self.delete_button = delete_button

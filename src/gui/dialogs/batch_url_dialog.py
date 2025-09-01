@@ -7,11 +7,20 @@ import os
 import logging
 
 from qfluentwidgets import (
+    # Navigation
     Pivot,
-    PushButton, LineEdit, CheckBox,
-    TextEdit, SpinBox, ComboBox, CardWidget, BodyLabel,
-    SubtitleLabel, StrongBodyLabel, ProgressBar, FluentIcon,
-    InfoBarPosition, InfoBar, PrimaryPushButton
+    # Buttons
+    PushButton, PrimaryPushButton,
+    # Input Components
+    LineEdit, CheckBox, TextEdit, SpinBox, ComboBox,
+    # Cards and Layout
+    ElevatedCardWidget,
+    # Labels and Text
+    BodyLabel, SubtitleLabel, StrongBodyLabel,
+    # Progress and Feedback
+    ProgressBar, InfoBar, InfoBarPosition,
+    # Icons
+    FluentIcon as FIF
 )
 
 from src.core.url_extractor import URLExtractor
@@ -95,7 +104,7 @@ class BatchURLDialog(QDialog):
         main_layout.addWidget(self.scroll_area, 1)
 
         # URL列表预览
-        preview_card = CardWidget(self)
+        preview_card = ElevatedCardWidget(self)
         preview_layout = QVBoxLayout(preview_card)
         preview_layout.setContentsMargins(18, 18, 18, 18)
         preview_layout.setSpacing(10)        # 预览标题
@@ -106,11 +115,13 @@ class BatchURLDialog(QDialog):
         self.url_preview.setReadOnly(True)
         self.url_preview.setMinimumHeight(100)
         self.url_preview.setMaximumHeight(180)
-        self.url_preview.setPlaceholderText(tr("batch_url_dialog.preview.empty"))
+        self.url_preview.setPlaceholderText(
+            tr("batch_url_dialog.preview.empty"))
         preview_layout.addWidget(self.url_preview)
 
         # URL统计
-        self.url_count_label = BodyLabel(tr("batch_url_dialog.preview.count").format(count=0))
+        self.url_count_label = BodyLabel(
+            tr("batch_url_dialog.preview.count").format(count=0))
         preview_layout.addWidget(self.url_count_label)
 
         main_layout.addWidget(preview_card)
@@ -122,13 +133,14 @@ class BatchURLDialog(QDialog):
         button_layout.addStretch()
 
         self.cancel_button = PushButton(tr("batch_url_dialog.buttons.cancel"))
-        self.cancel_button.setIcon(FluentIcon.CANCEL)
+        self.cancel_button.setIcon(FIF.CANCEL)
         self.cancel_button.setFixedSize(100, 36)
         self.cancel_button.clicked.connect(self.reject)
         button_layout.addWidget(self.cancel_button)
 
-        self.ok_button = PrimaryPushButton(tr("batch_url_dialog.buttons.import"))
-        self.ok_button.setIcon(FluentIcon.DOWNLOAD)
+        self.ok_button = PrimaryPushButton(
+            tr("batch_url_dialog.buttons.import"))
+        self.ok_button.setIcon(FIF.DOWNLOAD)
         self.ok_button.setFixedSize(120, 36)
         self.ok_button.setEnabled(False)
         self.ok_button.clicked.connect(self._import_urls)
@@ -154,7 +166,8 @@ class BatchURLDialog(QDialog):
         layout.addWidget(hint_label)
 
         self.text_input = TextEdit()
-        self.text_input.setPlaceholderText(tr("batch_url_dialog.text_tab.placeholder"))
+        self.text_input.setPlaceholderText(
+            tr("batch_url_dialog.text_tab.placeholder"))
         self.text_input.setMinimumHeight(100)
         self.text_input.textChanged.connect(self._process_text_input)
         layout.addWidget(self.text_input)
@@ -164,18 +177,18 @@ class BatchURLDialog(QDialog):
         buttons_layout.setContentsMargins(0, 5, 0, 5)
         buttons_layout.setSpacing(10)
         self.paste_button = PushButton(tr("batch_url_dialog.text_tab.paste"))
-        self.paste_button.setIcon(FluentIcon.COPY.icon())
+        self.paste_button.setIcon(FIF.COPY.icon())
         self.paste_button.clicked.connect(self._paste_from_clipboard)
         buttons_layout.addWidget(self.paste_button)
         self.clear_button = PushButton(tr("batch_url_dialog.text_tab.clear"))
-        self.clear_button.setIcon(FluentIcon.DELETE.icon())
+        self.clear_button.setIcon(FIF.DELETE.icon())
         self.clear_button.clicked.connect(self._clear_text)
         buttons_layout.addWidget(self.clear_button)
         buttons_layout.addStretch()
         layout.addLayout(buttons_layout)
 
         # 选项
-        options_card = CardWidget(self)
+        options_card = ElevatedCardWidget(self)
         options_layout = QFormLayout(options_card)
         options_layout.setContentsMargins(15, 10, 15, 10)
         options_layout.setSpacing(10)
@@ -194,7 +207,7 @@ class BatchURLDialog(QDialog):
         layout.setSpacing(12)
         hint_label = BodyLabel("从文本文件导入URL:")
         layout.addWidget(hint_label)
-        file_card = CardWidget(self)
+        file_card = ElevatedCardWidget(self)
         file_card_layout = QVBoxLayout(file_card)
         file_card_layout.setContentsMargins(15, 15, 15, 15)
         file_card_layout.setSpacing(10)
@@ -204,17 +217,17 @@ class BatchURLDialog(QDialog):
         self.file_path_input.setPlaceholderText("选择文件...")
         file_layout.addWidget(self.file_path_input)
         self.browse_button = PushButton("浏览...")
-        self.browse_button.setIcon(FluentIcon.FOLDER.icon())
+        self.browse_button.setIcon(FIF.FOLDER.icon())
         self.browse_button.clicked.connect(self._browse_file)
         file_layout.addWidget(self.browse_button)
         file_card_layout.addLayout(file_layout)
         self.load_file_button = PushButton("加载文件")
-        self.load_file_button.setIcon(FluentIcon.DOCUMENT.icon())
+        self.load_file_button.setIcon(FIF.DOCUMENT.icon())
         self.load_file_button.setEnabled(False)
         self.load_file_button.clicked.connect(self._load_file)
         file_card_layout.addWidget(self.load_file_button)
         layout.addWidget(file_card)
-        options_card = CardWidget(self)
+        options_card = ElevatedCardWidget(self)
         options_layout = QFormLayout(options_card)
         options_layout.setContentsMargins(15, 10, 15, 10)
         options_layout.setSpacing(10)
@@ -232,7 +245,7 @@ class BatchURLDialog(QDialog):
         layout.setSpacing(12)
         hint_label = BodyLabel("从网页中抓取媒体URL:")
         layout.addWidget(hint_label)
-        url_card = CardWidget(self)
+        url_card = ElevatedCardWidget(self)
         url_card_layout = QVBoxLayout(url_card)
         url_card_layout.setContentsMargins(15, 15, 15, 15)
         url_card_layout.setSpacing(10)
@@ -243,11 +256,11 @@ class BatchURLDialog(QDialog):
         url_layout.addRow("网页URL:", self.web_url_input)
         url_card_layout.addLayout(url_layout)
         self.fetch_button = PushButton("抓取URL")
-        self.fetch_button.setIcon(FluentIcon.GLOBE.icon())
+        self.fetch_button.setIcon(FIF.GLOBE.icon())
         self.fetch_button.clicked.connect(self._fetch_urls_from_web)
         url_card_layout.addWidget(self.fetch_button)
         layout.addWidget(url_card)
-        options_card = CardWidget(self)
+        options_card = ElevatedCardWidget(self)
         options_layout = QFormLayout(options_card)
         options_layout.setContentsMargins(15, 10, 15, 10)
         options_layout.setSpacing(10)
@@ -419,7 +432,7 @@ class BatchURLDialog(QDialog):
         progress.setFormat("正在抓取URL...")
 
         # 添加到URL卡片的底部
-        url_card = self.web_tab.findChild(CardWidget)
+        url_card = self.web_tab.findChild(ElevatedCardWidget)
         if url_card:
             url_card_layout = url_card.layout()
             if url_card_layout:
@@ -438,7 +451,7 @@ class BatchURLDialog(QDialog):
                 url, headers, extensions)
 
             # 移除进度条并恢复按钮
-            url_card = self.web_tab.findChild(CardWidget)
+            url_card = self.web_tab.findChild(ElevatedCardWidget)
             if url_card:
                 layout = url_card.layout()
                 if layout:
@@ -461,7 +474,7 @@ class BatchURLDialog(QDialog):
 
         except Exception as e:
             # 移除进度条并恢复按钮
-            url_card = self.web_tab.findChild(CardWidget)
+            url_card = self.web_tab.findChild(ElevatedCardWidget)
             if url_card:
                 layout = url_card.layout()
                 if layout:

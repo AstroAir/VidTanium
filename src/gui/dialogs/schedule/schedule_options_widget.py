@@ -4,7 +4,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QDateTime, Signal
 from typing import Optional, List
 
-from qfluentwidgets import (  # type: ignore
+from qfluentwidgets import (
     RadioButton, CheckBox, SpinBox, StrongBodyLabel, DateTimeEdit
 )
 
@@ -30,7 +30,7 @@ class ScheduleOptionsWidget(QWidget):
         schedule_layout.setSpacing(15)
 
         # 添加卡片标题
-        schedule_title = StrongBodyLabel("计划设置")  # type: ignore
+        schedule_title = StrongBodyLabel("计划设置")
         schedule_layout.addWidget(schedule_title)
 
         # 任务类型选择
@@ -39,19 +39,19 @@ class ScheduleOptionsWidget(QWidget):
 
         self.type_group = QButtonGroup(self)
 
-        self.one_time_radio = RadioButton("一次性")  # type: ignore
+        self.one_time_radio = RadioButton("一次性")
         self.type_group.addButton(self.one_time_radio, 0)
         type_layout.addWidget(self.one_time_radio)
 
-        self.daily_radio = RadioButton("每天")  # type: ignore
+        self.daily_radio = RadioButton("每天")
         self.type_group.addButton(self.daily_radio, 1)
         type_layout.addWidget(self.daily_radio)
 
-        self.weekly_radio = RadioButton("每周")  # type: ignore
+        self.weekly_radio = RadioButton("每周")
         self.type_group.addButton(self.weekly_radio, 2)
         type_layout.addWidget(self.weekly_radio)
 
-        self.interval_radio = RadioButton("间隔")  # type: ignore
+        self.interval_radio = RadioButton("间隔")
         self.type_group.addButton(self.interval_radio, 3)
         type_layout.addWidget(self.interval_radio)
 
@@ -61,7 +61,7 @@ class ScheduleOptionsWidget(QWidget):
         self.type_group.buttonClicked.connect(self._update_schedule_options)
         self.type_group.buttonClicked.connect(
             lambda btn: self.type_changed.emit(
-                self.type_group.id(btn))  # type: ignore
+                self.type_group.id(btn))
         )
 
         # 时间设置区域
@@ -73,7 +73,7 @@ class ScheduleOptionsWidget(QWidget):
         self.schedule_options_layout.setContentsMargins(0, 0, 0, 0)
 
         # 运行时间
-        self.datetime_edit = DateTimeEdit(  # type: ignore
+        self.datetime_edit = DateTimeEdit(
             QDateTime.currentDateTime().addSecs(3600))  # 默认一小时后
         self.datetime_edit.setCalendarPopup(True)
         self.datetime_edit.setDisplayFormat("yyyy-MM-dd HH:mm:ss")
@@ -86,13 +86,13 @@ class ScheduleOptionsWidget(QWidget):
         self.interval_layout.setContentsMargins(0, 0, 0, 0)
         self.interval_layout.setSpacing(10)
 
-        self.interval_hours = SpinBox()  # type: ignore
+        self.interval_hours = SpinBox()
         self.interval_hours.setRange(0, 999)
         self.interval_hours.setValue(1)
         self.interval_hours.setSuffix(" 小时")
         self.interval_layout.addWidget(self.interval_hours)
 
-        self.interval_minutes = SpinBox()  # type: ignore
+        self.interval_minutes = SpinBox()
         self.interval_minutes.setRange(0, 59)
         self.interval_minutes.setValue(0)
         self.interval_minutes.setSuffix(" 分钟")
@@ -109,7 +109,7 @@ class ScheduleOptionsWidget(QWidget):
         # self.days_checks initialized in __init__
         days_text = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
         for day_name in days_text:
-            check = CheckBox(day_name)  # type: ignore
+            check = CheckBox(day_name)
             self.days_checks.append(check)
             self.days_layout.addWidget(check)
 
@@ -176,8 +176,8 @@ class ScheduleOptionsWidget(QWidget):
     def get_interval_seconds(self) -> int:
         """获取间隔时间（秒）"""
         if self.get_task_type() == TaskType.INTERVAL:
-            hours = self.interval_hours.value()
-            minutes = self.interval_minutes.value()
+            hours = int(self.interval_hours.value())
+            minutes = int(self.interval_minutes.value())
             return hours * 3600 + minutes * 60
         return 0
 

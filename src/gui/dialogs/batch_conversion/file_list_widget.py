@@ -7,8 +7,8 @@ from PySide6.QtCore import Qt, Signal
 import os
 from typing import List, Optional
 
-from qfluentwidgets import (  # type: ignore
-    PushButton, FluentIcon, InfoBar, InfoBarPosition
+from qfluentwidgets import (
+    PushButton, FluentIcon as FIF, InfoBar, InfoBarPosition
 )
 
 
@@ -46,23 +46,23 @@ class FileListWidget(QWidget):
         file_buttons_layout.setSpacing(8)
 
         self.add_files_button = PushButton("添加文件")
-        self.add_files_button.setIcon(FluentIcon.ADD)
+        self.add_files_button.setIcon(FIF.ADD)
         self.add_files_button.clicked.connect(self._add_files)
         file_buttons_layout.addWidget(self.add_files_button)
 
         self.add_folder_button = PushButton("添加文件夹")
-        self.add_folder_button.setIcon(FluentIcon.FOLDER)
+        self.add_folder_button.setIcon(FIF.FOLDER)
         self.add_folder_button.clicked.connect(self._add_folder)
         file_buttons_layout.addWidget(self.add_folder_button)
 
         self.remove_files_button = PushButton("移除选中")
-        self.remove_files_button.setIcon(FluentIcon.REMOVE)
+        self.remove_files_button.setIcon(FIF.REMOVE)
         self.remove_files_button.clicked.connect(self._remove_selected_files)
         file_buttons_layout.addWidget(self.remove_files_button)
 
         self.clear_files_button = PushButton("清空全部")
-        # Assuming FluentIcon.CLEAR is valid
-        self.clear_files_button.setIcon(FluentIcon.BRUSH)
+        # Assuming FIF.CLEAR is valid
+        self.clear_files_button.setIcon(FIF.BRUSH)
         self.clear_files_button.clicked.connect(self.clear_files)
         file_buttons_layout.addWidget(self.clear_files_button)
 
@@ -119,7 +119,7 @@ class FileListWidget(QWidget):
 
             self._notify_file_list_changed()
 
-            InfoBar.success(  # type: ignore
+            InfoBar.success(
                 title="文件已添加",
                 content=f"从文件夹中添加了 {added_files} 个媒体文件",
                 orient=Qt.Orientation.Horizontal,

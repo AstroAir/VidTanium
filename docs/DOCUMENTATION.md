@@ -5,13 +5,29 @@
 1. [Project Overview](#project-overview)
 2. [Architecture](#architecture)
 3. [Core Components](#core-components)
+   - [Download Manager](#1-download-manager-srccoredloaderpy)
+   - [Enhanced Error Handling](#enhanced-error-handling)
+   - [Monitoring & Analytics](#monitoring--analytics)
+   - [Queue Management](#queue-management)
+   - [Task State Management](#task-state-management)
 4. [User Interface](#user-interface)
+   - [Main Window](#main-window)
+   - [Analytics Dashboard](#analytics-dashboard)
+   - [Responsive Design](#responsive-design)
 5. [Installation & Setup](#installation--setup)
 6. [Usage Guide](#usage-guide)
 7. [Configuration](#configuration)
 8. [Development](#development)
 9. [Testing](#testing)
 10. [API Reference](#api-reference)
+
+## Quick Navigation
+
+- **🚀 Getting Started**: [Installation Guide](INSTALLATION.md) → [User Manual](USER_MANUAL.md#getting-started)
+- **👨‍💻 Development**: [Developer Guide](DEVELOPER_GUIDE.md) → [Project Structure](PROJECT_STRUCTURE.md)
+- **📚 API Documentation**: [API Reference](API_REFERENCE.md) → [Error Handling API](API_REFERENCE.md#enhanced-error-handling-api)
+- **🔧 Configuration**: [Installation Guide](INSTALLATION.md#configuration) → [Advanced Settings](INSTALLATION.md#configuration-categories)
+- **🐛 Troubleshooting**: [User Manual](USER_MANUAL.md#troubleshooting) → [Error Diagnostics](USER_MANUAL.md#advanced-error-handling--diagnostics)
 
 ## Project Overview
 
@@ -43,7 +59,7 @@
 
 VidTanium follows a modular architecture with clear separation of concerns:
 
-```
+```text
 VidTanium/
 ├── src/
 │   ├── app/           # Application layer
@@ -64,7 +80,13 @@ VidTanium/
 
 ## Core Components
 
+For complete API reference, see [API Reference](API_REFERENCE.md).
+
 ### 1. Download Manager (`src/core/downloader.py`)
+
+**Related Components**: [Error Handler](#enhanced-error-handling), [Queue Manager](#queue-management), [Bandwidth Monitor](#bandwidth-monitoring)
+**User Guide**: [Download Manager Interface](USER_MANUAL.md#download-manager)
+**Developer Guide**: [Download Manager Architecture](DEVELOPER_GUIDE.md#download-manager)
 
 The heart of VidTanium's download functionality, responsible for:
 

@@ -11,7 +11,7 @@ from PySide6.QtCore import Qt, Signal, QTimer
 from qfluentwidgets import (
     ScrollArea, SettingCardGroup, 
     SwitchSettingCard, OptionsSettingCard, PushSettingCard, 
-    ComboBoxSettingCard, FluentIcon, Theme, setTheme, qconfig,
+    ComboBoxSettingCard, FluentIcon as FIF, Theme, setTheme, qconfig,
     PrimaryPushButton, PushButton, MessageBox,
     TitleLabel, SubtitleLabel, BodyLabel, StrongBodyLabel,
     ElevatedCardWidget, CardWidget, Pivot, IconWidget,
@@ -110,11 +110,11 @@ class SettingsInterface(QWidget):
         self.nav_buttons = {}
         
         categories = [
-            ("general", tr("settings.categories.general"), FluentIcon.HOME),
-            ("download", tr("settings.categories.download"), FluentIcon.DOWNLOAD),
-            ("appearance", tr("settings.categories.appearance"), FluentIcon.PALETTE),
-            ("network", tr("settings.categories.network"), FluentIcon.WIFI),
-            ("advanced", tr("settings.categories.advanced"), FluentIcon.SETTING)
+            ("general", tr("settings.categories.general"), FIF.HOME),
+            ("download", tr("settings.categories.download"), FIF.DOWNLOAD),
+            ("appearance", tr("settings.categories.appearance"), FIF.PALETTE),
+            ("network", tr("settings.categories.network"), FIF.WIFI),
+            ("advanced", tr("settings.categories.advanced"), FIF.SETTING)
         ]
         
         for key, name, icon in categories:
@@ -250,7 +250,7 @@ class SettingsInterface(QWidget):
         output_h_layout.addWidget(self.output_dir_input)
         
         browse_btn = PrimaryPushButton(tr("settings.general.download_dir.browse"))
-        browse_btn.setIcon(FluentIcon.FOLDER)
+        browse_btn.setIcon(FIF.FOLDER)
         browse_btn.clicked.connect(self._browse_output_directory)
         output_h_layout.addWidget(browse_btn)
         

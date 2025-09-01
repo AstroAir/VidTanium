@@ -13,16 +13,43 @@ VidTanium is a modern, feature-rich video download tool specifically designed fo
 
 ### ✨ Key Features
 
+#### Core Download Engine
+
 - 🔐 **Encrypted M3U8 Support** - Full AES-128 encryption support with automatic key handling
 - 🚀 **Multi-threaded Downloads** - High-speed parallel downloading with configurable concurrency
-- 🎯 **Smart Retry Logic** - Intelligent error recovery and exponential backoff
-- 🎨 **Modern UI** - Beautiful Fluent Design interface built with PySide6
-- 📦 **Batch Processing** - Support for batch downloads and URL imports
+- 🎯 **Intelligent Retry System** - Advanced retry management with circuit breaker pattern
+- 📊 **Smart Queue Management** - Priority-based task scheduling with dynamic optimization
+- 🔄 **Batch Processing** - Support for batch downloads and URL imports with bulk operations
+
+#### Advanced Monitoring & Analytics
+
+- 📈 **Bandwidth Monitoring** - Real-time network performance tracking and optimization
+- ⏱️ **ETA Calculation** - Multiple algorithms (Linear, Exponential, Adaptive) for accurate time estimates
+- 📋 **Download History** - Comprehensive tracking and analytics of completed downloads
+- 🎯 **Progress Aggregation** - Multi-task progress monitoring with detailed statistics
+- 🔍 **Performance Analytics** - Network interface detection and baseline performance metrics
+
+#### Enhanced Error Handling
+
+- 🛡️ **Intelligent Error Recovery** - Categorized error handling with severity levels and context
+- 🔧 **User-Friendly Diagnostics** - Clear error messages with suggested actions
+- 🔄 **Circuit Breaker Protection** - Automatic fault tolerance and system protection
+- 📝 **Error Context Tracking** - Detailed diagnostic information for troubleshooting
+
+#### Modern User Interface
+
+- 🎨 **Fluent Design UI** - Beautiful, responsive interface built with PySide6
+- 📱 **Responsive Layout** - Adaptive UI that works across different screen sizes
+- 🎭 **Advanced Theme System** - Enhanced theming with system integration
+- 📊 **Analytics Dashboard** - Comprehensive metrics and performance visualization
+- 🔧 **Bulk Operations** - Efficient management of multiple download tasks
+
+#### Media Processing & Tools
+
 - 🎬 **Media Processing** - Built-in video conversion, editing, and compression
-- 📊 **Real-time Monitoring** - Live progress tracking and download statistics
 - ⏰ **Task Scheduling** - Automated download management and scheduling
 - 🌍 **Internationalization** - Multi-language support (English/Chinese)
-- 🎛️ **Advanced Configuration** - Comprehensive settings and preferences
+- 🎛️ **Advanced Configuration** - Comprehensive settings with bandwidth limiting and optimization
 
 ### 🏗️ Architecture
 
@@ -30,16 +57,37 @@ VidTanium is a modern, feature-rich video download tool specifically designed fo
 VidTanium/
 ├── src/
 │   ├── app/                    # Application lifecycle & startup
+│   │   ├── application.py      # Main application class
+│   │   └── settings.py         # Settings management
 │   ├── core/                   # Core business logic
-│   │   ├── analyzer.py         # Media content analysis
 │   │   ├── downloader.py       # Download management
+│   │   ├── url_extractor.py    # URL extraction and validation
 │   │   ├── media_processor.py  # Video processing
-│   │   ├── m3u8_parser.py     # Playlist parsing
-│   │   └── ...
+│   │   ├── scheduler.py        # Task scheduling
+│   │   ├── thread_pool.py      # Thread pool management
+│   │   ├── error_handler.py    # Enhanced error handling
+│   │   ├── retry_manager.py    # Intelligent retry management
+│   │   ├── bandwidth_monitor.py # Network performance monitoring
+│   │   ├── eta_calculator.py   # ETA calculation algorithms
+│   │   ├── task_state_manager.py # Task state persistence
+│   │   ├── queue_manager.py    # Advanced queue management
+│   │   ├── smart_prioritization_engine.py # Task prioritization
+│   │   ├── download_history_manager.py # Download history tracking
+│   │   ├── batch_progress_aggregator.py # Multi-task progress
+│   │   └── exceptions.py       # Custom exception hierarchy
 │   ├── gui/                    # User interface
 │   │   ├── main_window.py      # Main application window
+│   │   ├── theme_manager.py    # Enhanced theme management
 │   │   ├── widgets/            # Custom UI components
-│   │   └── dialogs/            # Dialog windows
+│   │   │   ├── dashboard/      # Analytics dashboard
+│   │   │   ├── task_manager.py # Task management interface
+│   │   │   ├── log/            # Log viewing components
+│   │   │   ├── settings/       # Settings interfaces
+│   │   │   ├── error_dialog.py # Error handling UI
+│   │   │   ├── analytics_dashboard.py # Performance analytics
+│   │   │   └── bulk_operations_manager.py # Bulk operations
+│   │   ├── dialogs/            # Dialog windows
+│   │   └── utils/              # UI utilities and responsive design
 │   └── locales/                # Translation files
 ├── config/                     # Configuration files
 ├── tests/                      # Test suites
@@ -97,48 +145,142 @@ python main.py --config "/path/to/config"
 
 ## 📖 Documentation
 
-| Document | Description |
-|----------|-------------|
-| [📋 User Manual](USER_MANUAL.md) | Step-by-step guide for end users |
-| [🔧 Developer Guide](DEVELOPER_GUIDE.md) | Development setup and contribution guide |
-| [📚 API Reference](API_REFERENCE.md) | Detailed API documentation |
-| [📖 Complete Documentation](DOCUMENTATION.md) | Comprehensive project documentation |
+### 📚 User Documentation
+
+| Document | Purpose | Best For |
+|----------|---------|----------|
+| [⚙️ Installation Guide](docs/INSTALLATION.md) | Setup and configuration | New users, system administrators |
+| [📋 User Manual](docs/USER_MANUAL.md) | Complete user guide with advanced features | End users, power users |
+| [🐛 Troubleshooting](docs/USER_MANUAL.md#troubleshooting) | Problem solving and diagnostics | Users experiencing issues |
+
+### 👨‍💻 Developer Documentation
+
+| Document | Purpose | Best For |
+|----------|---------|----------|
+| [🔧 Developer Guide](docs/DEVELOPER_GUIDE.md) | Development setup and architecture | Contributors, maintainers |
+| [📚 API Reference](docs/API_REFERENCE.md) | Comprehensive API documentation | Developers, integrators |
+| [🏗️ Project Structure](docs/PROJECT_STRUCTURE.md) | Project organization and components | New contributors, architects |
+| [📖 Technical Documentation](docs/DOCUMENTATION.md) | In-depth technical details | Advanced developers, researchers |
+
+### 🚀 Quick Start Paths
+
+**New Users** → [Installation](docs/INSTALLATION.md) → [First Steps](docs/USER_MANUAL.md#getting-started) → [Basic Usage](docs/USER_MANUAL.md#downloading-videos)
+
+**Developers** → [Developer Setup](docs/DEVELOPER_GUIDE.md#development-environment-setup) → [Architecture](docs/PROJECT_STRUCTURE.md) → [API Reference](docs/API_REFERENCE.md)
+
+**Advanced Users** → [Advanced Features](docs/USER_MANUAL.md#advanced-error-handling--diagnostics) → [Analytics Dashboard](docs/USER_MANUAL.md#analytics-dashboard) → [Configuration](docs/INSTALLATION.md#configuration-categories)
+
+**Troubleshooting** → [Built-in Diagnostics](docs/USER_MANUAL.md#intelligent-error-diagnosis) → [Common Issues](docs/USER_MANUAL.md#troubleshooting) → [Developer Support](docs/DEVELOPER_GUIDE.md)
 
 ## 🎯 Usage Examples
 
 ### Basic Download
 
 ```python
-from src.core.downloader import DownloadManager
-from src.core.analyzer import MediaAnalyzer
+from src.core.downloader import DownloadManager, DownloadTask, TaskPriority
+from src.core.url_extractor import URLExtractor
+from src.app.settings import Settings
 
 # Initialize components
-analyzer = MediaAnalyzer()
-downloader = DownloadManager()
+settings = Settings()
+downloader = DownloadManager(settings)
+url_extractor = URLExtractor()
 
-# Analyze and download
-url = "https://example.com/video.m3u8"
-media_info = await analyzer.analyze_url(url)
-task = await downloader.create_task(media_info)
-await downloader.start_download(task)
+# Start the download manager
+downloader.start()
+
+# Create and add download task
+task = DownloadTask(
+    name="Sample Video",
+    base_url="https://example.com/stream",
+    key_url="https://example.com/key.bin",
+    segments=100,
+    output_file="/path/to/output.mp4",
+    priority=TaskPriority.HIGH
+)
+
+task_id = downloader.add_task(task)
 ```
 
-### Batch Processing
+### Advanced Download with Error Handling
 
 ```python
-# Batch download multiple URLs
+from src.core import error_handler, retry_manager, bandwidth_monitor
+from src.core.exceptions import VidTaniumException, ErrorCategory
+
+# Initialize enhanced components
+error_handler.start()
+retry_manager.start()
+bandwidth_monitor.start()
+
+try:
+    # Create task with advanced error handling
+    task = DownloadTask(
+        name="Protected Video",
+        base_url="https://example.com/encrypted-stream",
+        key_url="https://example.com/encryption.key",
+        segments=200,
+        output_file="/downloads/video.mp4",
+        priority=TaskPriority.HIGH,
+        max_retries=5,
+        retry_delay=2.0
+    )
+
+    # Add task with monitoring
+    task_id = downloader.add_task(task)
+
+    # Monitor bandwidth during download
+    bandwidth_stats = bandwidth_monitor.get_current_stats()
+    print(f"Download speed: {bandwidth_stats.download_speed:.2f} MB/s")
+
+except VidTaniumException as e:
+    if e.category == ErrorCategory.NETWORK:
+        print(f"Network error: {e.message}")
+        print(f"Suggested actions: {e.suggested_actions}")
+    else:
+        print(f"Error: {e.message}")
+```
+
+### Batch Processing with Analytics
+
+```python
+from src.core import batch_progress_aggregator, queue_manager
+from src.core.smart_prioritization_engine import SmartPrioritizationEngine
+
+# Initialize batch processing components
+batch_aggregator = batch_progress_aggregator
+queue_mgr = queue_manager
+prioritization_engine = SmartPrioritizationEngine()
+
+# Batch download multiple URLs with smart prioritization
 urls = [
     "https://example.com/video1.m3u8",
     "https://example.com/video2.m3u8",
     "https://example.com/video3.m3u8"
 ]
 
-for url in urls:
-    media_info = await analyzer.analyze_url(url)
-    task = await downloader.create_task(media_info)
-    await downloader.queue_task(task)
+tasks = []
+for i, url in enumerate(urls):
+    task = DownloadTask(
+        name=f"Video {i+1}",
+        base_url=url,
+        segments=100,
+        output_file=f"/downloads/video_{i+1}.mp4",
+        priority=TaskPriority.NORMAL
+    )
+    tasks.append(task)
 
-await downloader.process_queue()
+# Apply smart prioritization
+prioritized_tasks = prioritization_engine.prioritize_tasks(tasks)
+
+# Add tasks to queue
+for task in prioritized_tasks:
+    queue_mgr.add_task(task)
+
+# Monitor batch progress
+batch_progress = batch_aggregator.get_batch_progress()
+print(f"Overall progress: {batch_progress.overall_percentage:.1f}%")
+print(f"ETA: {batch_progress.estimated_time_remaining}")
 ```
 
 ## 🛠️ Development
@@ -191,15 +333,41 @@ pytest tests/core/test_downloader.py
 pytest -v -s
 ```
 
-## 📊 Performance
+## 📊 Performance & Monitoring
 
-VidTanium is optimized for performance with:
+VidTanium is optimized for performance with advanced monitoring capabilities:
 
-- **Async/Await**: Non-blocking I/O operations
-- **Thread Pool**: Configurable concurrent downloads
-- **Memory Management**: Efficient handling of large files
-- **Caching**: Smart caching of metadata and configurations
-- **Progress Optimization**: Minimal overhead progress tracking
+### Core Performance Features
+
+- **Async/Await**: Non-blocking I/O operations for maximum efficiency
+- **Intelligent Thread Pool**: Dynamic thread management with configurable concurrency
+- **Memory Management**: Efficient handling of large files with memory optimization
+- **Smart Caching**: Intelligent caching of metadata, configurations, and network data
+- **Progress Optimization**: Minimal overhead progress tracking with real-time updates
+
+### Advanced Monitoring System
+
+- **Bandwidth Monitoring**: Real-time network performance tracking with historical data
+- **ETA Calculation**: Multiple algorithms (Linear, Exponential, Adaptive) for accurate predictions
+- **Performance Analytics**: Network interface detection and baseline performance metrics
+- **Resource Monitoring**: CPU, memory, and disk usage tracking during downloads
+- **Circuit Breaker Protection**: Automatic fault detection and system protection
+
+### Optimization Features
+
+- **Smart Prioritization**: Intelligent task ordering based on size, priority, and network conditions
+- **Adaptive Retry Logic**: Context-aware retry strategies with exponential backoff
+- **Bandwidth Limiting**: Configurable bandwidth throttling to prevent network congestion
+- **Queue Optimization**: Dynamic queue management with load balancing
+- **Connection Pooling**: Efficient HTTP connection reuse and management
+
+### Performance Metrics
+
+- **Download Speed**: Real-time and average download speeds with trend analysis
+- **Success Rate**: Task completion rates with error categorization
+- **Resource Utilization**: System resource usage monitoring and optimization
+- **Network Efficiency**: Connection success rates and retry statistics
+- **Time Estimates**: Accurate ETA calculations with confidence intervals
 
 ## 🤝 Contributing
 
@@ -220,13 +388,44 @@ We welcome contributions! Please see our [Developer Guide](DEVELOPER_GUIDE.md) f
 
 ## 🐛 Troubleshooting
 
-### Common Issues
+VidTanium includes an advanced error handling system that provides detailed diagnostics and suggested solutions.
+
+### Intelligent Error Diagnosis
+
+The application automatically categorizes errors and provides context-specific solutions:
+
+- **Network Errors**: Connection timeouts, SSL issues, HTTP errors
+- **Filesystem Errors**: Permission issues, disk space, file access
+- **Encryption Errors**: Key retrieval failures, decryption issues
+- **Resource Errors**: Memory limitations, CPU constraints
+- **System Errors**: Platform-specific issues, dependency problems
+
+### Common Issues & Solutions
 
 #### Download fails with SSL errors
 
 ```bash
-# Solution: Update certificates or disable SSL verification
+# Solution 1: Update certificates or disable SSL verification
 python main.py --no-ssl-verify
+
+# Solution 2: Configure SSL settings in advanced configuration
+# Edit config/config.json:
+{
+    "advanced": {
+        "verify_ssl": false,
+        "ssl_cert_path": "/path/to/certificates"
+    }
+}
+```
+
+#### Network connection issues
+
+```bash
+# Check bandwidth monitoring for network diagnostics
+# The application will automatically suggest:
+# - Retry with different timeout settings
+# - Use alternative network interfaces
+# - Enable circuit breaker protection
 ```
 
 #### FFmpeg not found
@@ -236,15 +435,42 @@ python main.py --no-ssl-verify
 # Windows: choco install ffmpeg
 # macOS: brew install ffmpeg
 # Linux: sudo apt install ffmpeg
+
+# Or specify custom FFmpeg path in settings:
+{
+    "advanced": {
+        "ffmpeg_path": "/custom/path/to/ffmpeg"
+    }
+}
+```
+
+#### Memory or performance issues
+
+```bash
+# The application provides automatic optimization suggestions:
+# - Reduce concurrent downloads
+# - Enable memory optimization mode
+# - Adjust chunk size for large files
+# - Use bandwidth limiting to reduce system load
 ```
 
 #### Permission errors on Windows
 
 ```bash
 # Run as administrator or check antivirus settings
+# The error handler will provide specific suggestions based on the error context
 ```
 
-For more troubleshooting tips, see the [User Manual](USER_MANUAL.md#troubleshooting).
+### Advanced Diagnostics
+
+Access detailed error information through:
+
+- **Error Dialog**: User-friendly error messages with suggested actions
+- **Analytics Dashboard**: Performance metrics and error trends
+- **Log Viewer**: Detailed technical logs with error context
+- **Status Widget**: Real-time system status and health monitoring
+
+For comprehensive troubleshooting, see the [User Manual](docs/USER_MANUAL.md#troubleshooting).
 
 ## 📄 License
 
@@ -257,6 +483,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [FFmpeg](https://ffmpeg.org/) - Multimedia processing framework
 - [aiofiles](https://github.com/Tinche/aiofiles) - Async file operations
 - [PyCryptodome](https://pycryptodome.readthedocs.io/) - Cryptographic library
+- [Loguru](https://github.com/Delgan/loguru) - Advanced logging with structured output
+- [Playwright](https://playwright.dev/python/) - Web automation for dynamic content extraction
+- [psutil](https://github.com/giampaolo/psutil) - System and process monitoring
+- [aiosqlite](https://github.com/omnilib/aiosqlite) - Async SQLite database operations
 
 ## 📞 Support
 

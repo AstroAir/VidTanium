@@ -108,13 +108,17 @@ Coordinates between layers:
 
 #### Business Layer (`src/core/`)
 
-Core application logic:
+Core application logic with advanced features:
 
-- **Download Management**: Video download orchestration
-- **Media Processing**: Video/audio manipulation
-- **Analysis**: URL and content analysis
-- **Scheduling**: Task queue and timing
-- **Thread Management**: Concurrent operation handling
+- **Download Management**: Video download orchestration with intelligent retry and queue management
+- **Error Handling**: Enhanced error categorization, recovery, and user-friendly reporting
+- **Monitoring & Analytics**: Real-time bandwidth monitoring, ETA calculation, and performance tracking
+- **Task Management**: Advanced task state management with persistence and recovery
+- **Queue Management**: Smart prioritization and optimization of download queues
+- **Media Processing**: Video/audio manipulation with advanced processing capabilities
+- **Analysis**: URL and content analysis with validation and extraction
+- **Scheduling**: Task queue and timing with automated management
+- **Thread Management**: Concurrent operation handling with advanced pool management
 
 #### Data Layer
 
@@ -150,38 +154,114 @@ class MediaProcessor:
         self.ffmpeg_path = ffmpeg_path or self._find_ffmpeg()
 ```
 
+## Advanced Architecture Patterns
+
+### Enhanced Error Handling Architecture
+
+VidTanium implements a sophisticated error handling system with multiple layers:
+
+#### Error Categorization Strategy
+
+```python
+from src.core.exceptions import ErrorCategory, ErrorSeverity, VidTaniumException
+
+class EnhancedErrorHandler:
+    def categorize_error(self, exception: Exception) -> ErrorCategory:
+        """Intelligent error categorization based on exception type and context"""
+        if isinstance(exception, (ConnectionError, TimeoutError)):
+            return ErrorCategory.NETWORK
+        elif isinstance(exception, (PermissionError, FileNotFoundError)):
+            return ErrorCategory.FILESYSTEM
+        elif "decrypt" in str(exception).lower():
+            return ErrorCategory.ENCRYPTION
+        # ... additional categorization logic
+```
+
+#### Circuit Breaker Pattern Implementation
+
+```python
+from src.core.retry_manager import IntelligentRetryManager
+
+class CircuitBreaker:
+    def __init__(self, failure_threshold: int = 5, recovery_timeout: int = 60):
+        self.failure_threshold = failure_threshold
+        self.recovery_timeout = recovery_timeout
+        self.failure_count = 0
+        self.last_failure_time = None
+        self.state = "CLOSED"  # CLOSED, OPEN, HALF_OPEN
+
+    def can_execute(self) -> bool:
+        """Determine if operation can be executed based on circuit state"""
+        if self.state == "CLOSED":
+            return True
+        elif self.state == "OPEN":
+            if time.time() - self.last_failure_time > self.recovery_timeout:
+                self.state = "HALF_OPEN"
+                return True
+            return False
+        else:  # HALF_OPEN
+            return True
+```
+
+### Monitoring & Analytics Architecture
+
+#### Real-time Performance Monitoring
+
+```python
+from src.core.bandwidth_monitor import BandwidthMonitor
+
+class PerformanceMonitoringSystem:
+    def __init__(self):
+        self.bandwidth_monitor = BandwidthMonitor()
+        self.eta_calculator = ETACalculator()
+        self.task_state_manager = TaskStateManager()
+
+    def collect_metrics(self, task_id: str) -> Dict[str, Any]:
+        """Collect comprehensive performance metrics for a task"""
+        return {
+            'bandwidth': self.bandwidth_monitor.get_task_bandwidth(task_id),
+            'eta': self.eta_calculator.get_current_eta(task_id),
+            'state': self.task_state_manager.get_task_state(task_id)
+        }
+```
+
 ## Core Components Deep Dive
 
 ### Download Manager
 
-The `DownloadManager` is the heart of VidTanium's download functionality.
+The `DownloadManager` is the heart of VidTanium's download functionality with enhanced capabilities.
 
-#### Design Patterns
+#### Advanced Design Patterns
 
-**Producer-Consumer Pattern**:
+**Producer-Consumer with Priority Queue**:
 
 ```python
 class DownloadManager:
     def __init__(self):
-        self.tasks_queue = PriorityQueue()  # Producer adds tasks
+        self.tasks_queue = PriorityQueue()  # Producer adds tasks with priority
         self.scheduler_thread = Thread(target=self._scheduler_loop)  # Consumer processes tasks
+        self.smart_prioritization = SmartPrioritizationEngine()  # Dynamic prioritization
 ```
 
-**State Machine Pattern**:
+**Enhanced State Machine Pattern**:
 
 ```python
 class DownloadTask:
     def transition_to(self, new_status: TaskStatus):
-        # Validate state transitions
+        # Enhanced state validation with context
         valid_transitions = {
             TaskStatus.PENDING: [TaskStatus.RUNNING, TaskStatus.CANCELED],
             TaskStatus.RUNNING: [TaskStatus.PAUSED, TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELED],
             TaskStatus.PAUSED: [TaskStatus.RUNNING, TaskStatus.CANCELED],
+            TaskStatus.FAILED: [TaskStatus.RUNNING, TaskStatus.CANCELED],  # Allow retry
         }
-        
+
         if new_status not in valid_transitions.get(self.status, []):
             raise InvalidStateTransition(f"Cannot transition from {self.status} to {new_status}")
-        
+
+        # Persist state change
+        self.task_state_manager.save_transition(self.task_id, self.status, new_status)
+
         old_status = self.status
         self.status = new_status
         self.notify_status_change(old_status, new_status)

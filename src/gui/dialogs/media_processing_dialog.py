@@ -10,13 +10,13 @@ import logging
 from qfluentwidgets import (
     PushButton, LineEdit, CheckBox,
     TextEdit, SpinBox, ComboBox, BodyLabel, StrongBodyLabel,
-    ProgressBar, FluentIcon, CardWidget, Slider,
+    ProgressBar, FluentIcon as FIF, CardWidget, Slider,
     RadioButton, SubtitleLabel, InfoBar,
     InfoBarPosition, Pivot, TitleLabel,
     IconWidget, PrimaryPushButton, SearchLineEdit
 )
 
-# Import optimized progress components  
+# Import optimized progress components
 from ..utils.fluent_progress import ProgressCardWidget, FluentProgressBar
 
 from src.core.media_processor import MediaProcessor
@@ -46,7 +46,7 @@ class MediaProcessingDialog(QDialog):
         self.setWindowTitle(tr("media_processing_dialog.title"))
         self.setMinimumSize(650, 550)
         self.resize(650, 550)
-        self.setWindowIcon(FluentIcon.MOVIE.icon())
+        self.setWindowIcon(FIF.MOVIE.icon())
 
         self._create_ui()
 
@@ -61,7 +61,8 @@ class MediaProcessingDialog(QDialog):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(20, 15, 20, 15)
         main_layout.setSpacing(15)        # 标题
-        self.title_label = SubtitleLabel(tr("media_processing_dialog.subtitle"))
+        self.title_label = SubtitleLabel(
+            tr("media_processing_dialog.subtitle"))
         main_layout.addWidget(self.title_label)
 
         # 文件选择卡片
@@ -74,44 +75,56 @@ class MediaProcessingDialog(QDialog):
         input_layout = QHBoxLayout()
         self.input_file_input = LineEdit()
         self.input_file_input.setReadOnly(True)
-        self.input_file_input.setPlaceholderText(tr("media_processing_dialog.file_section.input_placeholder"))
+        self.input_file_input.setPlaceholderText(
+            tr("media_processing_dialog.file_section.input_placeholder"))
         self.input_file_input.textChanged.connect(self._input_file_changed)
         input_layout.addWidget(self.input_file_input)
 
-        self.browse_input_button = PushButton(tr("media_processing_dialog.file_section.browse"))
-        self.browse_input_button.setIcon(FluentIcon.FOLDER)
+        self.browse_input_button = PushButton(
+            tr("media_processing_dialog.file_section.browse"))
+        self.browse_input_button.setIcon(FIF.FOLDER)
         self.browse_input_button.clicked.connect(self._browse_input)
         input_layout.addWidget(self.browse_input_button)
 
-        file_layout.addRow(tr("media_processing_dialog.file_section.input_file"), input_layout)
+        file_layout.addRow(
+            tr("media_processing_dialog.file_section.input_file"), input_layout)
 
         # 输出文件
         output_layout = QHBoxLayout()
         self.output_file_input = LineEdit()
         self.output_file_input.setReadOnly(True)
-        self.output_file_input.setPlaceholderText(tr("media_processing_dialog.file_section.output_placeholder"))
+        self.output_file_input.setPlaceholderText(
+            tr("media_processing_dialog.file_section.output_placeholder"))
         output_layout.addWidget(self.output_file_input)
 
-        self.browse_output_button = PushButton(tr("media_processing_dialog.file_section.browse"))
-        self.browse_output_button.setIcon(FluentIcon.SAVE)
+        self.browse_output_button = PushButton(
+            tr("media_processing_dialog.file_section.browse"))
+        self.browse_output_button.setIcon(FIF.SAVE)
         self.browse_output_button.clicked.connect(self._browse_output)
         output_layout.addWidget(self.browse_output_button)
 
-        file_layout.addRow(tr("media_processing_dialog.file_section.output_file"), output_layout)        # 文件信息
-        self.file_info_label = BodyLabel(tr("media_processing_dialog.file_section.select_input_prompt"))
-        file_layout.addRow(tr("media_processing_dialog.file_section.file_info"), self.file_info_label)
+        file_layout.addRow(
+            tr("media_processing_dialog.file_section.output_file"), output_layout)        # 文件信息
+        self.file_info_label = BodyLabel(
+            tr("media_processing_dialog.file_section.select_input_prompt"))
+        file_layout.addRow(
+            tr("media_processing_dialog.file_section.file_info"), self.file_info_label)
 
         file_card.setLayout(file_layout)
         main_layout.addWidget(file_card)
-        
+
         # 处理选项选项卡
         self.pivot = Pivot()
         self.stacked_widget = QStackedWidget()
 
-        self.pivot.addItem(routeKey="convert", text=tr("media_processing_dialog.processing_tabs.convert"), onClick=lambda: self.stacked_widget.setCurrentIndex(0))
-        self.pivot.addItem(routeKey="clip", text=tr("media_processing_dialog.processing_tabs.clip"), onClick=lambda: self.stacked_widget.setCurrentIndex(1))
-        self.pivot.addItem(routeKey="audio", text=tr("media_processing_dialog.processing_tabs.audio"), onClick=lambda: self.stacked_widget.setCurrentIndex(2))
-        self.pivot.addItem(routeKey="compress", text=tr("media_processing_dialog.processing_tabs.compress"), onClick=lambda: self.stacked_widget.setCurrentIndex(3))
+        self.pivot.addItem(routeKey="convert", text=tr(
+            "media_processing_dialog.processing_tabs.convert"), onClick=lambda: self.stacked_widget.setCurrentIndex(0))
+        self.pivot.addItem(routeKey="clip", text=tr(
+            "media_processing_dialog.processing_tabs.clip"), onClick=lambda: self.stacked_widget.setCurrentIndex(1))
+        self.pivot.addItem(routeKey="audio", text=tr(
+            "media_processing_dialog.processing_tabs.audio"), onClick=lambda: self.stacked_widget.setCurrentIndex(2))
+        self.pivot.addItem(routeKey="compress", text=tr(
+            "media_processing_dialog.processing_tabs.compress"), onClick=lambda: self.stacked_widget.setCurrentIndex(3))
 
         # 转换格式选项卡
         self.convert_tab = QWidget()
@@ -138,35 +151,41 @@ class MediaProcessingDialog(QDialog):
         self.progress_card = ProgressCardWidget()
         self.progress_card.setTitle("Processing Progress")
         self.progress_card.setVisible(False)
-        
+
         # 保持向后兼容性的引用
         self.progress_bar = self.progress_card.progress_bar
-        
+
         # Add methods for compatibility
         def set_progress_visible(visible):
             self.progress_card.setVisible(visible)
-        
+
         def set_progress_format(format_string):
             self.progress_card.setStatus(format_string)
-            
+
         self.progress_bar.setVisible = set_progress_visible
         self.progress_bar.setFormat = set_progress_format
-        
+
         main_layout.addWidget(self.progress_card)        # 按钮
         self.button_box = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Cancel | QDialogButtonBox.StandardButton.Ok)
-        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setText(tr("media_processing_dialog.buttons.start"))
-        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setIcon(FluentIcon.PLAY.icon())
-        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
-        self.button_box.button(QDialogButtonBox.StandardButton.Cancel).setText(tr("common.cancel"))
+        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setText(
+            tr("media_processing_dialog.buttons.start"))
+        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setIcon(
+            FIF.PLAY.icon())
+        self.button_box.button(
+            QDialogButtonBox.StandardButton.Ok).setEnabled(False)
+        self.button_box.button(QDialogButtonBox.StandardButton.Cancel).setText(
+            tr("common.cancel"))
 
         self.button_box.accepted.connect(self._start_processing)
         self.button_box.rejected.connect(self.reject)
 
         main_layout.addWidget(self.button_box)
 
-        self.process_button = self.button_box.button(QDialogButtonBox.StandardButton.Ok)
-        self.cancel_button = self.button_box.button(QDialogButtonBox.StandardButton.Cancel)
+        self.process_button = self.button_box.button(
+            QDialogButtonBox.StandardButton.Ok)
+        self.cancel_button = self.button_box.button(
+            QDialogButtonBox.StandardButton.Cancel)
 
     def _create_convert_tab(self):
         """创建格式转换选项卡"""
@@ -175,7 +194,8 @@ class MediaProcessingDialog(QDialog):
         layout.setSpacing(15)
 
         # 添加选项卡标题
-        option_title = StrongBodyLabel(tr("media_processing_dialog.convert_tab.title"))
+        option_title = StrongBodyLabel(
+            tr("media_processing_dialog.convert_tab.title"))
         layout.addRow(option_title)
 
         # 输出格式
@@ -183,46 +203,60 @@ class MediaProcessingDialog(QDialog):
         self.format_combo.addItems(
             ["MP4", "MKV", "AVI", "MOV", "WebM", "FLV", tr("media_processing_dialog.convert_tab.formats.custom")])
         self.format_combo.currentIndexChanged.connect(self._update_output_file)
-        layout.addRow(tr("media_processing_dialog.convert_tab.output_format"), self.format_combo)
+        layout.addRow(
+            tr("media_processing_dialog.convert_tab.output_format"), self.format_combo)
 
         # 视频编码
         self.video_codec_combo = ComboBox()
-        self.video_codec_combo.addItems([tr("media_processing_dialog.convert_tab.codecs.copy"), "H.264", "H.265", "VP9", "AV1"])
-        self.video_codec_combo.setToolTip(tr("media_processing_dialog.convert_tab.tooltips.video_codec"))
-        layout.addRow(tr("media_processing_dialog.convert_tab.video_codec"), self.video_codec_combo)
+        self.video_codec_combo.addItems(
+            [tr("media_processing_dialog.convert_tab.codecs.copy"), "H.264", "H.265", "VP9", "AV1"])
+        self.video_codec_combo.setToolTip(
+            tr("media_processing_dialog.convert_tab.tooltips.video_codec"))
+        layout.addRow(
+            tr("media_processing_dialog.convert_tab.video_codec"), self.video_codec_combo)
 
         # 音频编码
         self.audio_codec_combo = ComboBox()
-        self.audio_codec_combo.addItems([tr("media_processing_dialog.convert_tab.codecs.copy"), "AAC", "MP3", "Opus", "FLAC"])
-        self.audio_codec_combo.setToolTip(tr("media_processing_dialog.convert_tab.tooltips.audio_codec"))
-        layout.addRow(tr("media_processing_dialog.convert_tab.audio_codec"), self.audio_codec_combo)
+        self.audio_codec_combo.addItems(
+            [tr("media_processing_dialog.convert_tab.codecs.copy"), "AAC", "MP3", "Opus", "FLAC"])
+        self.audio_codec_combo.setToolTip(
+            tr("media_processing_dialog.convert_tab.tooltips.audio_codec"))
+        layout.addRow(
+            tr("media_processing_dialog.convert_tab.audio_codec"), self.audio_codec_combo)
 
         # 分辨率
         resolution_layout = QHBoxLayout()
         self.resolution_x_input = LineEdit()
         self.resolution_x_input.setValidator(QIntValidator(1, 9999))
-        self.resolution_x_input.setPlaceholderText(tr("media_processing_dialog.convert_tab.width_placeholder"))
+        self.resolution_x_input.setPlaceholderText(
+            tr("media_processing_dialog.convert_tab.width_placeholder"))
         resolution_layout.addWidget(self.resolution_x_input)
 
         resolution_layout.addWidget(BodyLabel("x"))
 
         self.resolution_y_input = LineEdit()
         self.resolution_y_input.setValidator(QIntValidator(1, 9999))
-        self.resolution_y_input.setPlaceholderText(tr("media_processing_dialog.convert_tab.height_placeholder"))
+        self.resolution_y_input.setPlaceholderText(
+            tr("media_processing_dialog.convert_tab.height_placeholder"))
         resolution_layout.addWidget(self.resolution_y_input)
 
-        layout.addRow(tr("media_processing_dialog.convert_tab.resolution"), resolution_layout)
+        layout.addRow(
+            tr("media_processing_dialog.convert_tab.resolution"), resolution_layout)
 
         # 帧率
         self.fps_spin = SpinBox()
         self.fps_spin.setRange(1, 120)
         self.fps_spin.setValue(30)
-        self.fps_spin.setSpecialValueText(tr("media_processing_dialog.convert_tab.codecs.unchanged"))
-        self.fps_spin.setToolTip(tr("media_processing_dialog.convert_tab.tooltips.framerate"))
-        layout.addRow(tr("media_processing_dialog.convert_tab.framerate"), self.fps_spin)
+        self.fps_spin.setSpecialValueText(
+            tr("media_processing_dialog.convert_tab.codecs.unchanged"))
+        self.fps_spin.setToolTip(
+            tr("media_processing_dialog.convert_tab.tooltips.framerate"))
+        layout.addRow(
+            tr("media_processing_dialog.convert_tab.framerate"), self.fps_spin)
 
         # 添加说明
-        hint_label = BodyLabel(tr("media_processing_dialog.convert_tab.hints.copy_faster"))
+        hint_label = BodyLabel(
+            tr("media_processing_dialog.convert_tab.hints.copy_faster"))
         hint_label.setWordWrap(True)
         layout.addRow("", hint_label)
 
@@ -233,40 +267,49 @@ class MediaProcessingDialog(QDialog):
         layout.setSpacing(15)
 
         # 添加选项卡标题
-        option_title = StrongBodyLabel(tr("media_processing_dialog.clip_tab.title"))
+        option_title = StrongBodyLabel(
+            tr("media_processing_dialog.clip_tab.title"))
         layout.addRow(option_title)
 
         # 开始时间
         self.start_time_edit = QTimeEdit()
         self.start_time_edit.setDisplayFormat("HH:mm:ss")
         self.start_time_edit.setCurrentSectionIndex(0)
-        self.start_time_edit.setToolTip(tr("media_processing_dialog.clip_tab.tooltips.start_time"))
-        layout.addRow(tr("media_processing_dialog.clip_tab.start_time"), self.start_time_edit)
+        self.start_time_edit.setToolTip(
+            tr("media_processing_dialog.clip_tab.tooltips.start_time"))
+        layout.addRow(
+            tr("media_processing_dialog.clip_tab.start_time"), self.start_time_edit)
 
         # 结束时间
         self.end_time_edit = QTimeEdit()
         self.end_time_edit.setDisplayFormat("HH:mm:ss")
         self.end_time_edit.setTime(QTime(0, 5, 0))  # 默认5分钟
         self.end_time_edit.setCurrentSectionIndex(0)
-        self.end_time_edit.setToolTip(tr("media_processing_dialog.clip_tab.tooltips.end_time"))
-        layout.addRow(tr("media_processing_dialog.clip_tab.end_time"), self.end_time_edit)
+        self.end_time_edit.setToolTip(
+            tr("media_processing_dialog.clip_tab.tooltips.end_time"))
+        layout.addRow(
+            tr("media_processing_dialog.clip_tab.end_time"), self.end_time_edit)
 
         # 持续时间（自动计算）
         self.duration_label = StrongBodyLabel("00:05:00")
-        layout.addRow(tr("media_processing_dialog.clip_tab.duration"), self.duration_label)
+        layout.addRow(
+            tr("media_processing_dialog.clip_tab.duration"), self.duration_label)
 
         # 连接信号以更新持续时间
         self.start_time_edit.timeChanged.connect(self._update_duration)
         self.end_time_edit.timeChanged.connect(self._update_duration)
 
         # 保持原始编码
-        self.keep_codec_check = CheckBox(tr("media_processing_dialog.clip_tab.keep_codec"))
+        self.keep_codec_check = CheckBox(
+            tr("media_processing_dialog.clip_tab.keep_codec"))
         self.keep_codec_check.setChecked(True)
-        self.keep_codec_check.setToolTip(tr("media_processing_dialog.clip_tab.tooltips.keep_codec"))
+        self.keep_codec_check.setToolTip(
+            tr("media_processing_dialog.clip_tab.tooltips.keep_codec"))
         layout.addRow("", self.keep_codec_check)
 
         # 添加说明
-        hint_label = BodyLabel(tr("media_processing_dialog.clip_tab.hints.precision"))
+        hint_label = BodyLabel(
+            tr("media_processing_dialog.clip_tab.hints.precision"))
         hint_label.setWordWrap(True)
         layout.addRow("", hint_label)
 
@@ -277,7 +320,8 @@ class MediaProcessingDialog(QDialog):
         layout.setSpacing(15)
 
         # 添加选项卡标题
-        option_title = StrongBodyLabel(tr("media_processing_dialog.audio_tab.title"))
+        option_title = StrongBodyLabel(
+            tr("media_processing_dialog.audio_tab.title"))
         layout.addRow(option_title)
 
         # 音频格式
@@ -285,7 +329,8 @@ class MediaProcessingDialog(QDialog):
         self.audio_format_combo.addItems(["MP3", "AAC", "WAV", "FLAC", "Opus"])
         self.audio_format_combo.currentIndexChanged.connect(
             self._update_output_file)
-        layout.addRow(tr("media_processing_dialog.audio_tab.audio_format"), self.audio_format_combo)
+        layout.addRow(
+            tr("media_processing_dialog.audio_tab.audio_format"), self.audio_format_combo)
 
         # 音频质量
         # quality_hints = ["非常低", "低", "中等", "高", "非常高"]
@@ -293,10 +338,12 @@ class MediaProcessingDialog(QDialog):
         self.audio_quality_slider.setRange(0, 4)
         self.audio_quality_slider.setValue(2)
         # self.audio_quality_slider.setHints(quality_hints)
-        layout.addRow(tr("media_processing_dialog.audio_tab.audio_quality"), self.audio_quality_slider)
+        layout.addRow(
+            tr("media_processing_dialog.audio_tab.audio_quality"), self.audio_quality_slider)
 
         # 添加提示
-        hint_label = BodyLabel(tr("media_processing_dialog.audio_tab.hints.quality_size"))
+        hint_label = BodyLabel(
+            tr("media_processing_dialog.audio_tab.hints.quality_size"))
         hint_label.setWordWrap(True)
         layout.addRow("", hint_label)
 
@@ -307,7 +354,8 @@ class MediaProcessingDialog(QDialog):
         layout.setSpacing(15)
 
         # 添加选项卡标题
-        option_title = StrongBodyLabel(tr("media_processing_dialog.compress_tab.title"))
+        option_title = StrongBodyLabel(
+            tr("media_processing_dialog.compress_tab.title"))
         layout.addRow(option_title)
 
         # 压缩方式
@@ -320,17 +368,22 @@ class MediaProcessingDialog(QDialog):
 
         self.compression_type_group = QButtonGroup(self)
 
-        self.quality_radio = RadioButton(tr("media_processing_dialog.compress_tab.quality_compression"))
-        self.quality_radio.setToolTip(tr("media_processing_dialog.compress_tab.tooltips.quality_compression"))
+        self.quality_radio = RadioButton(
+            tr("media_processing_dialog.compress_tab.quality_compression"))
+        self.quality_radio.setToolTip(
+            tr("media_processing_dialog.compress_tab.tooltips.quality_compression"))
         self.compression_type_group.addButton(self.quality_radio, 0)
         compression_layout.addWidget(self.quality_radio)
 
-        self.size_radio = RadioButton(tr("media_processing_dialog.compress_tab.size_compression"))
-        self.size_radio.setToolTip(tr("media_processing_dialog.compress_tab.tooltips.size_compression"))
+        self.size_radio = RadioButton(
+            tr("media_processing_dialog.compress_tab.size_compression"))
+        self.size_radio.setToolTip(
+            tr("media_processing_dialog.compress_tab.tooltips.size_compression"))
         self.compression_type_group.addButton(self.size_radio, 1)
         compression_layout.addWidget(self.size_radio)
 
-        layout.addRow(tr("media_processing_dialog.compress_tab.compression_method"), compression_widget)
+        layout.addRow(
+            tr("media_processing_dialog.compress_tab.compression_method"), compression_widget)
 
         # 质量设置
         quality_hints = {0: "无损", 18: "高质量",
@@ -339,16 +392,20 @@ class MediaProcessingDialog(QDialog):
         self.quality_slider.setRange(0, 51)
         self.quality_slider.setValue(23)  # 默认23
         # self.quality_slider.setHints(quality_hints)
-        self.quality_slider.setToolTip(tr("media_processing_dialog.compress_tab.tooltips.quality"))
-        layout.addRow(tr("media_processing_dialog.compress_tab.quality"), self.quality_slider)
+        self.quality_slider.setToolTip(
+            tr("media_processing_dialog.compress_tab.tooltips.quality"))
+        layout.addRow(
+            tr("media_processing_dialog.compress_tab.quality"), self.quality_slider)
 
         # 目标大小
         self.target_size_spin = SpinBox()
         self.target_size_spin.setRange(1, 10000)
         self.target_size_spin.setValue(100)
         self.target_size_spin.setSuffix(" MB")
-        self.target_size_spin.setToolTip(tr("media_processing_dialog.compress_tab.tooltips.target_size"))
-        layout.addRow(tr("media_processing_dialog.compress_tab.target_size"), self.target_size_spin)
+        self.target_size_spin.setToolTip(
+            tr("media_processing_dialog.compress_tab.tooltips.target_size"))
+        layout.addRow(
+            tr("media_processing_dialog.compress_tab.target_size"), self.target_size_spin)
 
         # 设置默认选中
         self.quality_radio.setChecked(True)
@@ -359,7 +416,8 @@ class MediaProcessingDialog(QDialog):
             self._update_compression_ui)
 
         # 添加提示
-        hint_label = BodyLabel(tr("media_processing_dialog.compress_tab.hints.methods"))
+        hint_label = BodyLabel(
+            tr("media_processing_dialog.compress_tab.hints.methods"))
         hint_label.setWordWrap(True)
         layout.addRow("", hint_label)
 
@@ -380,7 +438,7 @@ class MediaProcessingDialog(QDialog):
                 isClosable=True,
                 position=InfoBarPosition.TOP,
                 duration=2000,
-                parent=self            )
+                parent=self)
 
     def _browse_output(self):
         """浏览输出文件"""
@@ -505,7 +563,8 @@ class MediaProcessingDialog(QDialog):
 
         # 解析输入文件路径
         input_dir = os.path.dirname(input_file)
-        input_name = os.path.splitext(os.path.basename(input_file))[0]        # 根据当前选项卡确定输出文件格式
+        input_name = os.path.splitext(os.path.basename(input_file))[
+            0]        # 根据当前选项卡确定输出文件格式
         current_tab = self.stacked_widget.currentIndex()
         output_ext = ""
 
@@ -853,7 +912,8 @@ class MediaProcessingDialog(QDialog):
             )
 
             # 发出失败信号
-            self.processing_completed.emit(False, f"处理出错: {str(e)}")            # 恢复UI
+            self.processing_completed.emit(
+                False, f"处理出错: {str(e)}")            # 恢复UI
             self._enable_ui()
 
     def _disable_ui(self):

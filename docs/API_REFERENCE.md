@@ -2,7 +2,17 @@
 
 ## Core API Documentation
 
-This document provides detailed API reference for VidTanium's core components.
+This document provides comprehensive API reference for VidTanium's core components, including advanced error handling, monitoring, analytics, and user interface systems.
+
+## Table of Contents
+
+1. [Download Manager API](#download-manager-api)
+2. [Enhanced Error Handling API](#enhanced-error-handling-api)
+3. [Monitoring & Analytics API](#monitoring--analytics-api)
+4. [Task Management API](#task-management-api)
+5. [Queue Management API](#queue-management-api)
+6. [User Interface API](#user-interface-api)
+7. [Configuration API](#configuration-api)
 
 ## Download Manager API
 
@@ -668,9 +678,239 @@ manager = DownloadManager(settings=app.settings)
 
 # Common settings sections:
 # - "download": Download-related settings
-# - "network": Network and proxy settings  
+# - "network": Network and proxy settings
 # - "advanced": Advanced configuration
 # - "ui": User interface preferences
+
+## Enhanced Error Handling API
+
+### EnhancedErrorHandler Class
+
+The `EnhancedErrorHandler` provides intelligent error categorization, handling, and user-friendly error reporting.
+
+```python
+from src.core.error_handler import EnhancedErrorHandler, error_handler
+from src.core.exceptions import VidTaniumException, ErrorCategory, ErrorSeverity
+
+# Initialize error handler
+handler = EnhancedErrorHandler()
+
+# Handle exceptions with context
+try:
+    # Some operation that might fail
+    pass
+except Exception as e:
+    enhanced_exception = handler.handle_exception(
+        e,
+        context=ErrorContext(url="https://example.com", task_id="task_123"),
+        operation_name="download_segment"
+    )
+    print(f"Error: {enhanced_exception.message}")
+    print(f"Category: {enhanced_exception.category}")
+    print(f"Suggested actions: {enhanced_exception.suggested_actions}")
+```
+
+#### Methods
+
+##### `handle_exception(exception: Exception, context: Optional[ErrorContext] = None, operation_name: str = "operation") -> VidTaniumException`
+
+Convert generic exception to VidTaniumException with enhanced information.
+
+**Parameters:**
+- `exception`: The original exception to handle
+- `context`: Optional error context with additional information
+- `operation_name`: Name of the operation that failed
+
+**Returns:**
+- `VidTaniumException`: Enhanced exception with categorization and suggested actions
+
+### VidTaniumException Hierarchy
+
+#### Base Exception Classes
+
+```python
+from src.core.exceptions import (
+    VidTaniumException, ErrorCategory, ErrorSeverity, ErrorContext,
+    NetworkException, ConnectionTimeoutException, HTTPException,
+    FilesystemException, EncryptionException, ValidationException,
+    ResourceException, SystemException, PermissionException
+)
+
+# Network-related exceptions
+try:
+    # Network operation
+    pass
+except ConnectionTimeoutException as e:
+    print(f"Connection timeout: {e.url} after {e.timeout_seconds}s")
+except HTTPException as e:
+    print(f"HTTP error {e.status_code}: {e.message}")
+
+# Filesystem exceptions
+except PermissionException as e:
+    print(f"Permission denied: {e.path}")
+    print(f"Required permissions: {e.required_permissions}")
+
+# Resource exceptions
+except MemoryException as e:
+    print(f"Memory error: {e.message}")
+    print(f"Required memory: {e.required_memory_mb}MB")
+```
+
+### IntelligentRetryManager Class
+
+The `IntelligentRetryManager` provides context-aware retry strategies with circuit breaker protection.
+
+```python
+from src.core.retry_manager import IntelligentRetryManager, retry_manager
+
+# Use global retry manager instance
+result = retry_manager.execute_with_retry(
+    operation=lambda: download_segment(url),
+    operation_id="download_segment_123",
+    context=ErrorContext(url=url, task_id="task_123"),
+    max_retries=5
+)
+
+# Async version
+result = await retry_manager.execute_with_retry_async(
+    operation=lambda: async_download_segment(url),
+    operation_id="async_download_123",
+    context=ErrorContext(url=url),
+    max_retries=3
+)
+```
+
+#### Methods
+
+##### `execute_with_retry(operation: Callable, operation_id: str, context: Optional[ErrorContext] = None, max_retries: Optional[int] = None) -> Any`
+
+Execute operation with intelligent retry logic.
+
+**Parameters:**
+- `operation`: Function to execute with retry logic
+- `operation_id`: Unique identifier for the operation
+- `context`: Optional error context for better retry decisions
+- `max_retries`: Maximum number of retry attempts (overrides default)
+
+**Returns:**
+- `Any`: Result of the successful operation
+
+**Raises:**
+- `VidTaniumException`: If operation fails after all retry attempts
+
+## Monitoring & Analytics API
+
+### BandwidthMonitor Class
+
+The `BandwidthMonitor` provides real-time network performance tracking and optimization recommendations.
+
+```python
+from src.core.bandwidth_monitor import BandwidthMonitor, bandwidth_monitor
+
+# Use global bandwidth monitor instance
+bandwidth_monitor.start()
+
+# Get current bandwidth statistics
+stats = bandwidth_monitor.get_current_stats()
+print(f"Download speed: {stats.download_speed:.2f} MB/s")
+print(f"Upload speed: {stats.upload_speed:.2f} MB/s")
+print(f"Active connections: {stats.active_connections}")
+
+# Get historical data
+history = bandwidth_monitor.get_bandwidth_history(duration_minutes=30)
+for sample in history:
+    print(f"Time: {sample.timestamp}, Speed: {sample.download_speed:.2f} MB/s")
+
+# Register callback for real-time updates
+def on_bandwidth_update(sample):
+    print(f"Current speed: {sample.download_speed:.2f} MB/s")
+
+bandwidth_monitor.register_callback(on_bandwidth_update)
+```
+
+### ETACalculator Class
+
+The `ETACalculator` provides accurate time estimation using multiple algorithms.
+
+```python
+from src.core.eta_calculator import ETACalculator, ETAAlgorithm, ETAResult
+
+# Initialize ETA calculator
+eta_calc = ETACalculator()
+
+# Calculate ETA using different algorithms
+linear_eta = eta_calc.calculate_eta(
+    completed_bytes=1024*1024*50,  # 50MB completed
+    total_bytes=1024*1024*200,     # 200MB total
+    algorithm=ETAAlgorithm.LINEAR
+)
+
+adaptive_eta = eta_calc.calculate_eta(
+    completed_bytes=1024*1024*50,
+    total_bytes=1024*1024*200,
+    algorithm=ETAAlgorithm.ADAPTIVE
+)
+
+print(f"Linear ETA: {linear_eta.estimated_seconds}s")
+print(f"Adaptive ETA: {adaptive_eta.estimated_seconds}s")
+print(f"Confidence: {adaptive_eta.confidence:.2f}")
+```
+
+### TaskStateManager Class
+
+The `TaskStateManager` provides persistent task state tracking and recovery.
+
+```python
+from src.core.task_state_manager import TaskStateManager, task_state_manager
+
+# Save task state
+task_state_manager.save_task_state(task_id, {
+    'progress': 0.75,
+    'downloaded_segments': 150,
+    'total_segments': 200,
+    'current_speed': 5.2,
+    'eta_seconds': 120
+})
+
+# Load task state for recovery
+state = task_state_manager.load_task_state(task_id)
+if state:
+    print(f"Resuming task at {state['progress']*100:.1f}% completion")
+
+# Get all task states
+all_states = task_state_manager.get_all_task_states()
+```
+
+### DownloadHistoryManager Class
+
+The `DownloadHistoryManager` provides comprehensive download tracking and analytics.
+
+```python
+from src.core.download_history_manager import DownloadHistoryManager, download_history_manager
+
+# Record completed download
+download_history_manager.record_download({
+    'task_id': 'task_123',
+    'name': 'Sample Video',
+    'url': 'https://example.com/video.m3u8',
+    'file_size': 1024*1024*200,  # 200MB
+    'duration_seconds': 300,
+    'average_speed': 0.67,  # MB/s
+    'completion_time': time.time(),
+    'success': True
+})
+
+# Get download history
+history = download_history_manager.get_download_history(limit=50)
+for download in history:
+    print(f"{download['name']}: {download['file_size']} bytes in {download['duration_seconds']}s")
+
+# Get analytics
+analytics = download_history_manager.get_analytics()
+print(f"Total downloads: {analytics['total_downloads']}")
+print(f"Success rate: {analytics['success_rate']:.2f}%")
+print(f"Average speed: {analytics['average_speed']:.2f} MB/s")
+```
 
 # Access settings in custom code
 max_concurrent = app.settings.get("download", "max_concurrent_tasks", 3)

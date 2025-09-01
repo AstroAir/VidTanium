@@ -1,5 +1,5 @@
 """
-Main window for VidTanium application - refactored version
+Main window for VidTanium application - Enhanced with responsive design
 """
 from typing import Any, Dict, List, Optional, Union, Callable
 from src.core.downloader import ProgressDict, TaskStatus as CoreTaskStatus
@@ -12,18 +12,25 @@ from PySide6.QtCore import Qt, QTimer, Slot
 from PySide6.QtGui import (
     QPixmap, QColor, QPainter, QCloseEvent
 )
-from ..core.downloader import DownloadManager
+from src.core.downloader import DownloadManager
 from loguru import logger
 
 from qfluentwidgets import (
-    FluentIcon, InfoBar, InfoBarPosition,
-    FluentWindow, NavigationItemPosition, FluentIcon as FIF,
-    TitleLabel, BodyLabel, PrimaryPushButton,
-    StrongBodyLabel, ScrollArea, ElevatedCardWidget,
-    LineEdit, TextEdit,
-    TransparentToolButton,
-    CheckBox, ComboBox
+    FluentIcon as FIF, InfoBar, InfoBarPosition,
+    FluentWindow, NavigationItemPosition,
+    TitleLabel, BodyLabel, PrimaryPushButton, StrongBodyLabel,
+    SmoothScrollArea, ElevatedCardWidget,
+    LineEdit, TextEdit, TransparentToolButton,
+    CheckBox, ComboBox,
+    SystemThemeListener, setTheme, Theme
 )
+
+# UI components
+from .widgets.navigation import NavigationPanel, ModernBreadcrumb
+from .widgets import dashboard
+Dashboard = dashboard.Dashboard  # type: ignore
+from .widgets.progress import ProgressCard, ProgressSummaryCard
+from .utils.design_system import DesignSystem
 
 from .widgets.task_manager import TaskManager
 from .widgets.log.log_viewer import LogViewer
@@ -31,6 +38,7 @@ from .widgets.dashboard.dashboard_interface import DashboardInterface
 # Settings interfaces
 from .widgets.settings import SettingsInterface, SettingsDialog
 from .theme_manager import ThemeManager
+from .utils.responsive import ResponsiveWidget, ResponsiveManager, ResponsiveContainer
 from .dialogs.task_dialog import TaskDialog
 from .dialogs.about_dialog import AboutDialog
 from .dialogs.batch_url_dialog import BatchURLDialog
@@ -42,7 +50,7 @@ from .utils.i18n import tr
 class AppType(QApplication):
     tray_icon: Any
 
-    def send_notification(self, title: str, message: str, icon: Optional[FluentIcon] = None, duration: int = 5000) -> None:
+    def send_notification(self, title: str, message: str, icon: Optional[FIF] = None, duration: int = 5000) -> None:
         """Send system notification"""
         # Implementation would be handled by the application
         pass
@@ -73,9 +81,9 @@ class SettingsType:
 class StatusInfoWidget(QWidget):
     """Status information widget with icon and text"""
 
-    def __init__(self, icon: Union[FluentIcon, QPixmap], text: str, parent: Optional[QWidget] = None):
+    def __init__(self, icon: Union[FIF, QPixmap], text: str, parent: Optional[QWidget] = None):
         super().__init__(parent)
-        self.icon: Union[FluentIcon, QPixmap] = icon
+        self.icon: Union[FIF, QPixmap] = icon
         self.text: str = text
         self.icon_color: Optional[QColor] = None
         self.icon_label: QLabel
@@ -97,7 +105,7 @@ class StatusInfoWidget(QWidget):
 
         self._update_icon()
 
-    def setContent(self, icon: Union[FluentIcon, QPixmap], text: str) -> None:
+    def setContent(self, icon: Union[FIF, QPixmap], text: str) -> None:
         """Update widget content"""
         self.icon = icon
         self.text = text
@@ -111,14 +119,14 @@ class StatusInfoWidget(QWidget):
 
     def _update_icon(self) -> None:
         """Update icon display"""
-        if isinstance(self.icon, FluentIcon):
+        if isinstance(self.icon, FIF):
             pixmap = self._create_colored_pixmap(self.icon, self.icon_color)
             self.icon_label.setPixmap(pixmap)
         elif isinstance(self.icon, QPixmap):
             self.icon_label.setPixmap(self.icon.scaled(
                 16, 16, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
 
-    def _create_colored_pixmap(self, fluent_icon: FluentIcon, color: Optional[QColor] = None) -> QPixmap:
+    def _create_colored_pixmap(self, fluent_icon: FIF, color: Optional[QColor] = None) -> QPixmap:
         """Create colored version of FluentIcon"""
         original_pixmap: QPixmap = fluent_icon.icon().pixmap(16, 16)
 
@@ -143,15 +151,19 @@ class StatusInfoWidget(QWidget):
 
 
 class MainWindow(FluentWindow):
-    """Main application window"""
+    """Enhanced main application window with responsive design"""
 
     def __init__(self, app: AppType, download_manager: "DownloadManager", settings: SettingsType, theme_manager=None):
         super().__init__()
         self.app: AppType = app
         self.download_manager: "DownloadManager" = download_manager
         self.settings: SettingsType = settings
-        self.theme_manager = theme_manager
+        self.theme_manager: ThemeManager = theme_manager
         self._force_close: bool = False
+        
+        # Initialize responsive manager
+        self.responsive_manager = ResponsiveManager.instance()
+        
         # Initialize interface components
         self.dashboard_component: Optional[DashboardInterface] = None
         self.task_manager: Optional[TaskManager] = None
@@ -162,19 +174,22 @@ class MainWindow(FluentWindow):
         self.home_interface: QWidget
         self.download_interface: QWidget
         self.log_interface: QWidget
-        self.settings_interface: QWidget        # Timers for real-time updates
-        self.auto_save_timer: QTimer
+        self.settings_interface: QWidget
         
+        # Timers for real-time updates
+        self.auto_save_timer: QTimer
+
         # Performance optimization: adaptive stats update timer
         self.stats_update_timer: QTimer = QTimer(self)
         self.stats_update_timer.timeout.connect(self._update_statistics)
         self._last_active_tasks = 0
         self._adaptive_update_interval()  # Start with adaptive interval
-        
+
         # Task refresh timer for syncing with download manager
         self.task_refresh_timer: QTimer = QTimer(self)
         self.task_refresh_timer.timeout.connect(self._refresh_task_list)
-        self.task_refresh_timer.start(5000)  # Reduced frequency: refresh every 5 seconds
+        # Reduced frequency: refresh every 5 seconds
+        self.task_refresh_timer.start(5000)
 
         # Connect download manager signals if available
         if self.download_manager:
@@ -183,24 +198,90 @@ class MainWindow(FluentWindow):
             self.download_manager.on_task_completed = self.on_task_completed
             self.download_manager.on_task_failed = self.on_task_failed
 
-        # Setup main window with responsive sizing
-        self.setWindowTitle(tr("app.title"))
-        self.setMinimumSize(1000, 700)  # Reduced minimum size for smaller screens
+        # Setup responsive window sizing
+        self._setup_responsive_window()
         
-        # Set initial size based on screen resolution
-        from PySide6.QtWidgets import QApplication
+        # Connect responsive callbacks
+        self.responsive_manager.add_breakpoint_callback(self._on_breakpoint_changed)
+        self.responsive_manager.add_orientation_callback(self._on_orientation_changed)
+        
+        # Setup UI and interfaces
+        self._setup_interfaces()
+        
+        # Apply theme enhancements
+        if self.theme_manager:
+            self.theme_manager.apply_widget_enhancement(self, "main-window")
+
+    def _setup_responsive_window(self):
+        """Setup responsive window sizing and behavior"""
+        self.setWindowTitle(tr("app.title"))
+        
+        # Set responsive minimum sizes based on breakpoints
         screen = QApplication.primaryScreen()
         if screen:
             screen_size = screen.availableGeometry()
-            # Use 80% of screen size as default, but respect min/max bounds
-            width = min(max(int(screen_size.width() * 0.8), 1000), 1600)
-            height = min(max(int(screen_size.height() * 0.8), 700), 1000)
-            self.resize(width, height)
-        else:
-            # Fallback for cases where screen info isn't available
-            self.resize(1200, 800)
+            screen_width = screen_size.width()
             
-        self.setWindowIcon(FluentIcon.VIDEO.icon())
+            # Determine minimum size based on screen size
+            if screen_width < 768:  # Small screens
+                self.setMinimumSize(600, 500)
+            elif screen_width < 1200:  # Medium screens
+                self.setMinimumSize(800, 600)
+            else:  # Large screens
+                self.setMinimumSize(1000, 700)
+            
+            # Set initial size as percentage of screen
+            width = min(max(int(screen_width * 0.8), self.minimumWidth()), 1600)
+            height = min(max(int(screen_size.height() * 0.8), self.minimumHeight()), 1000)
+            self.resize(width, height)
+            
+            # Update responsive manager with current size
+            self.responsive_manager.update_for_size(self.size())
+
+    def _on_breakpoint_changed(self, breakpoint: str):
+        """Handle responsive breakpoint changes"""
+        logger.debug(f"Main window adapting to breakpoint: {breakpoint}")
+        
+        # Adjust navigation panel based on breakpoint
+        if hasattr(self, 'navigationInterface'):
+            if breakpoint in ['xs', 'sm']:
+                # Collapse navigation on small screens
+                self.navigationInterface.setCollapsed(True)
+            else:
+                # Expand navigation on larger screens
+                self.navigationInterface.setCollapsed(False)
+        
+        # Adjust content layout
+        self._adjust_content_layout(breakpoint)
+        
+        # Update theme styling for new breakpoint
+        if self.theme_manager:
+            self.theme_manager._apply_custom_styling()
+
+    def _on_orientation_changed(self, orientation: Qt.Orientation):
+        """Handle orientation changes"""
+        logger.debug(f"Main window orientation changed: {orientation}")
+        # Additional orientation-specific adjustments can be added here
+
+    def _adjust_content_layout(self, breakpoint: str):
+        """Adjust content layout based on breakpoint"""
+        if not hasattr(self, 'dashboard_component') or not self.dashboard_component:
+            return
+            
+        # Adjust dashboard layout based on screen size
+        if breakpoint in ['xs', 'sm']:
+            # Stack components vertically on small screens
+            self.dashboard_component.set_layout_mode('vertical')
+        else:
+            # Use horizontal layout on larger screens
+            self.dashboard_component.set_layout_mode('horizontal')
+
+    def resizeEvent(self, event):
+        """Handle window resize events"""
+        super().resizeEvent(event)
+        self.responsive_manager.update_for_size(event.size())
+
+        self.setWindowIcon(FIF.VIDEO.icon())
 
         # Initialize UI
         self._create_interfaces()
@@ -217,7 +298,7 @@ class MainWindow(FluentWindow):
     def _create_interfaces(self) -> None:
         """Create all application interfaces"""
         # Dashboard interface
-        self.dashboard_component = DashboardInterface(self)
+        self.dashboard_component = Dashboard(self)  # EnhancedDashboardInterface alias
         self.home_interface = self.dashboard_component.create_interface()
         self.home_interface.setObjectName("home_interface")
 
@@ -234,7 +315,16 @@ class MainWindow(FluentWindow):
         self.settings_interface.setObjectName("settings_interface")
 
     def _init_navigation(self) -> None:
-        """Initialize navigation menu"""        # Dashboard
+        """Initialize navigation menu with enhanced styling"""
+        # Apply styling to navigation
+        self.navigationInterface.setStyleSheet(f"""
+            NavigationInterface {{
+                background: {DesignSystem.get_color('surface_adaptive')};
+                border-right: 1px solid {DesignSystem.get_color('border_adaptive')};
+            }}
+        """)
+
+        # Dashboard
         self.addSubInterface(
             self.home_interface,
             FIF.HOME,
@@ -266,11 +356,48 @@ class MainWindow(FluentWindow):
             NavigationItemPosition.BOTTOM
         )
 
+        # Apply enhanced navigation styling
+        self._apply_enhanced_styling()
+
+    def _apply_enhanced_styling(self):
+        """Apply styling to the main window"""
+        # Main window styling
+        self.setStyleSheet(f"""
+            FluentWindow {{
+                background: {DesignSystem.get_color('surface_adaptive')};
+            }}
+
+            /* Navigation item styling */
+            NavigationTreeWidget {{
+                background: transparent;
+                border: none;
+                outline: none;
+            }}
+
+            NavigationTreeWidget::item {{
+                padding: 8px 12px;
+                margin: 2px 8px;
+                border-radius: {DesignSystem.RADIUS['md']}px;
+                color: {DesignSystem.get_color('text_primary_adaptive')};
+            }}
+
+            NavigationTreeWidget::item:hover {{
+                background: {DesignSystem.get_color('surface_secondary_adaptive')};
+            }}
+
+            NavigationTreeWidget::item:selected {{
+                background: {DesignSystem.get_color('primary')};
+                color: white;
+                font-weight: 600;
+            }}
+        """)
+
     def _create_download_interface(self) -> QWidget:
         """Create download management interface with responsive design"""
         interface = QWidget()
         main_layout = QVBoxLayout(interface)
-        main_layout.setContentsMargins(20, 20, 20, 20)  # Reduced margins for better space usage
+        # Reduced margins for better space usage
+        main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(16)  # Reduced spacing
 
         # Top toolbar with responsive layout
@@ -285,17 +412,18 @@ class MainWindow(FluentWindow):
         search_box = LineEdit()
         search_box.setPlaceholderText(tr("download.search_placeholder"))
         search_box.setMinimumWidth(150)  # Use minimum width instead of fixed
-        search_box.setMaximumWidth(250)  # Set maximum to prevent excessive growth
+        # Set maximum to prevent excessive growth
+        search_box.setMaximumWidth(250)
         search_box.setFixedHeight(35)
         toolbar_layout.addWidget(search_box)
 
         # Filter dropdown with responsive sizing
         filter_combo = ComboBox()
         filter_combo.addItems([
-            tr("download.filter.all"), 
-            tr("download.filter.running"), 
-            tr("download.filter.paused"), 
-            tr("download.filter.completed"), 
+            tr("download.filter.all"),
+            tr("download.filter.running"),
+            tr("download.filter.paused"),
+            tr("download.filter.completed"),
             tr("download.filter.failed")
         ])
         filter_combo.setMinimumWidth(100)  # Use minimum width
@@ -386,11 +514,12 @@ class MainWindow(FluentWindow):
         # Use minimum and maximum widths instead of fixed width
         panel.setMinimumWidth(250)
         panel.setMaximumWidth(400)
-        
+
         # Set size policy for responsive behavior
         from PySide6.QtWidgets import QSizePolicy
-        panel.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
-        
+        panel.setSizePolicy(QSizePolicy.Policy.Preferred,
+                            QSizePolicy.Policy.Expanding)
+
         layout = QVBoxLayout(panel)
         layout.setContentsMargins(12, 0, 0, 0)
         layout.setSpacing(12)  # Reduced spacing
@@ -426,7 +555,8 @@ class MainWindow(FluentWindow):
         self.mini_log_viewer = TextEdit()
         self.mini_log_viewer.setReadOnly(True)
         self.mini_log_viewer.setMaximumHeight(200)
-        self.mini_log_viewer.setPlainText(tr("download.real_time_logs.waiting"))
+        self.mini_log_viewer.setPlainText(
+            tr("download.real_time_logs.waiting"))
         log_layout.addWidget(self.mini_log_viewer)
 
         layout.addWidget(log_card)
@@ -452,10 +582,10 @@ class MainWindow(FluentWindow):
         # Log level filter
         level_combo = ComboBox()
         level_combo.addItems([
-            tr("logs.levels.all"), 
-            tr("logs.levels.debug"), 
-            tr("logs.levels.info"), 
-            tr("logs.levels.warning"), 
+            tr("logs.levels.all"),
+            tr("logs.levels.debug"),
+            tr("logs.levels.info"),
+            tr("logs.levels.warning"),
             tr("logs.levels.error")
         ])
         level_combo.setFixedWidth(100)
@@ -488,12 +618,14 @@ class MainWindow(FluentWindow):
         """Create settings interface using the unified settings component"""
         # Create the unified settings interface
         settings_interface = SettingsInterface(self.settings, self)
-        settings_interface.settings_applied.connect(self._apply_settings_changes)
-        
+        settings_interface.settings_applied.connect(
+            self._apply_settings_changes)
+
         # Hide action buttons for embedded use
         settings_interface.hide_action_buttons()
-        
-        return settings_interface    # Settings methods have been moved to the unified SettingsInterface component
+
+        # Settings methods have been moved to the unified SettingsInterface component
+        return settings_interface
     # in src/gui/widgets/settings/settings_interface.py
 
     def _browse_output_directory(self, line_edit: LineEdit):
@@ -524,23 +656,24 @@ class MainWindow(FluentWindow):
             if self.download_manager and hasattr(self.download_manager, 'tasks'):
                 tasks = getattr(self.download_manager, 'tasks', {})
                 active_tasks = sum(1 for task in tasks.values()
-                                 if getattr(task, 'status', '') == 'downloading')
+                                   if getattr(task, 'status', '') == 'downloading')
                 has_active_tasks = active_tasks > 0
                 self._last_active_tasks = active_tasks
-            
+
             # Adaptive interval: frequent updates when active, slower when idle
             if has_active_tasks:
                 interval = 2000  # 2 seconds when active
             else:
                 interval = 10000  # 10 seconds when idle
-                
+
             self.stats_update_timer.start(interval)
-            logger.debug(f"Stats update interval set to {interval}ms (active tasks: {has_active_tasks})")
+            logger.debug(
+                f"Stats update interval set to {interval}ms (active tasks: {has_active_tasks})")
         except Exception as e:
             logger.error(f"Error setting adaptive update interval: {e}")
             # Fallback to default interval
             self.stats_update_timer.start(5000)
-    
+
     def _update_statistics(self) -> None:
         """Update dashboard statistics with adaptive interval adjustment"""
         try:
@@ -549,13 +682,13 @@ class MainWindow(FluentWindow):
             if self.download_manager and hasattr(self.download_manager, 'tasks'):
                 tasks = getattr(self.download_manager, 'tasks', {})
                 current_active_tasks = sum(1 for task in tasks.values()
-                                         if getattr(task, 'status', '') == 'downloading')
-            
+                                           if getattr(task, 'status', '') == 'downloading')
+
             # Adjust interval if task activity changed
             if current_active_tasks != self._last_active_tasks:
                 self._last_active_tasks = current_active_tasks
                 self._adaptive_update_interval()
-            
+
             # Update statistics
             if self.dashboard_component and hasattr(self.dashboard_component, 'update_statistics'):
                 self.dashboard_component.update_statistics()
@@ -613,11 +746,12 @@ class MainWindow(FluentWindow):
             # Use a simpler message box approach
             try:
                 from PySide6.QtWidgets import QMessageBox
-                reply = QMessageBox.question(                    self, tr("dialogs.confirm_exit"),
-                    tr("dialogs.confirm_exit_message", count=len(active_tasks_list)),
-                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                    QMessageBox.StandardButton.No
-                )
+                reply = QMessageBox.question(self, tr("dialogs.confirm_exit"),
+                                             tr("dialogs.confirm_exit_message",
+                                                count=len(active_tasks_list)),
+                                             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                             QMessageBox.StandardButton.No
+                                             )
                 if reply == QMessageBox.StandardButton.No:
                     e.ignore()
                     return
@@ -651,7 +785,8 @@ class MainWindow(FluentWindow):
                         task, 'id', getattr(task, 'task_id', None))
                     if task_id and hasattr(self.download_manager, 'pause_task'):
                         self.download_manager.pause_task(task_id)
-            except Exception as ex:                logger.error(f"Error stopping tasks on exit: {ex}")
+            except Exception as ex:
+                logger.error(f"Error stopping tasks on exit: {ex}")
 
         self.settings.save_settings()
         e.accept()
@@ -666,28 +801,30 @@ class MainWindow(FluentWindow):
             if dialog.exec() == TaskDialog.DialogCode.Accepted:
                 # Get task data from dialog
                 task_data = dialog.get_task_data()
-                
+
                 # Validate task data
                 if not task_data.get("base_url") or not task_data.get("output_file"):
                     InfoBar.warning(
-                        title=tr("dialogs.task_error"), 
-                        content=tr("dialogs.validation_error", message="Base URL and output file are required"),
+                        title=tr("dialogs.task_error"),
+                        content=tr("dialogs.validation_error",
+                                   message="Base URL and output file are required"),
                         orient=Qt.Orientation.Horizontal, isClosable=True,
                         position=InfoBarPosition.TOP, duration=3000, parent=self
                     )
                     return
-                
+
                 # Create download task
                 from src.core.downloader import DownloadTask, TaskPriority
-                
+
                 # Map priority string to enum
                 priority_map = {
                     "high": TaskPriority.HIGH,
                     "normal": TaskPriority.NORMAL,
                     "low": TaskPriority.LOW
                 }
-                priority = priority_map.get(task_data.get("priority", "normal"), TaskPriority.NORMAL)
-                
+                priority = priority_map.get(task_data.get(
+                    "priority", "normal"), TaskPriority.NORMAL)
+
                 task = DownloadTask(
                     name=task_data.get("name") or "Download Task",
                     base_url=task_data.get("base_url"),
@@ -697,38 +834,39 @@ class MainWindow(FluentWindow):
                     settings=self.settings,
                     priority=priority
                 )
-                
+
                 # Add task to download manager
                 if self.download_manager:
                     task_id = self.download_manager.add_task(task)
-                    
+
                     # Auto-start if requested
                     if task_data.get("auto_start", False):
                         self.download_manager.start_task(task_id)
-                    
+
                     # Show success message
                     InfoBar.success(
-                        title=tr("dialogs.task_created"), 
-                        content=tr("dialogs.task_created_message", name=task.name),
+                        title=tr("dialogs.task_created"),
+                        content=tr("dialogs.task_created_message",
+                                   name=task.name),
                         orient=Qt.Orientation.Horizontal, isClosable=True,
                         position=InfoBarPosition.TOP, duration=3000, parent=self
                     )
-                    
+
                     # Update task manager display
                     if hasattr(self, 'task_manager') and self.task_manager:
                         self.task_manager.refresh_from_manager()
                 else:
                     InfoBar.error(
-                        title=tr("dialogs.task_error"), 
+                        title=tr("dialogs.task_error"),
                         content=tr("dialogs.download_manager_error"),
                         orient=Qt.Orientation.Horizontal, isClosable=True,
                         position=InfoBarPosition.TOP, duration=3000, parent=self
                     )
-                    
+
         except Exception as e:
             logger.error(f"Error creating new task: {e}")
             InfoBar.error(
-                title=tr("dialogs.task_error"), 
+                title=tr("dialogs.task_error"),
                 content=tr("dialogs.task_error_message", error=str(e)),
                 orient=Qt.Orientation.Horizontal, isClosable=True,
                 position=InfoBarPosition.TOP, duration=3000, parent=self
@@ -916,7 +1054,7 @@ class MainWindow(FluentWindow):
             if hasattr(self, 'task_manager') and self.task_manager:
                 # Convert ProgressDict to standard dict for UI compatibility
                 progress_dict: dict = dict(progress_data)
-                
+
                 # Calculate actual progress percentage
                 if 'completed' in progress_dict and 'total' in progress_dict:
                     total = progress_dict.get('total', 1)
@@ -925,7 +1063,7 @@ class MainWindow(FluentWindow):
                         progress_dict['progress'] = (completed / total) * 100
                     else:
                         progress_dict['progress'] = 0
-                
+
                 # Format speed for display
                 if 'speed' in progress_dict and isinstance(progress_dict['speed'], (int, float)):
                     speed = progress_dict['speed']
@@ -933,15 +1071,16 @@ class MainWindow(FluentWindow):
                         progress_dict['speed_formatted'] = format_speed(speed)
                     else:
                         progress_dict['speed_formatted'] = "0 B/s"
-                
+
                 # Update the task manager
                 if hasattr(self.task_manager, 'update_task_progress'):
-                    self.task_manager.update_task_progress(task_id, progress_dict)
-                
+                    self.task_manager.update_task_progress(
+                        task_id, progress_dict)
+
                 # Update dashboard if available
                 if self.dashboard_component and hasattr(self.dashboard_component, 'update_statistics'):
                     self.dashboard_component.update_statistics()
-                    
+
         except Exception as e:
             logger.error(f"Error updating task progress for {task_id}: {e}")
 
@@ -1029,7 +1168,7 @@ class MainWindow(FluentWindow):
     def _setup_theme_system(self) -> None:
         """Setup automatic theme switching system"""
         try:
-            from qfluentwidgets import SystemThemeListener, setTheme, Theme
+
 
             # Create theme listener if system theme mode is selected
             theme_mode = self.settings.get("general", "theme", "system")
@@ -1051,7 +1190,7 @@ class MainWindow(FluentWindow):
             logger.error(f"Error setting up theme system: {e}", exc_info=True)
             # Fallback to default theme
             try:
-                from qfluentwidgets import setTheme, Theme
+
                 setTheme(Theme.AUTO)
             except:
                 pass

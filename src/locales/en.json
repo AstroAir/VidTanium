@@ -26,7 +26,7 @@
     "stats": {
       "total_tasks": "Total Tasks",
       "running": "Running",
-      "completed": "Completed", 
+      "completed": "Completed",
       "avg_speed": "Average Speed",
       "active_downloads": "Active Downloads",
       "total_speed": "Total Speed"
@@ -83,7 +83,7 @@
     "filter": {
       "all": "All Tasks",
       "running": "Running",
-      "paused": "Paused", 
+      "paused": "Paused",
       "completed": "Completed",
       "failed": "Failed"
     },
@@ -125,7 +125,7 @@
     "nav_title": "Settings Categories",
     "categories": {
       "general": "General Settings",
-      "download": "Download Settings", 
+      "download": "Download Settings",
       "appearance": "Appearance Settings",
       "network": "Network Settings",
       "advanced": "Advanced Settings"
@@ -191,7 +191,7 @@
     "tooltip_running": "Encrypted Video Downloader - {count} tasks running",
     "menu": {
       "show": "Show",
-      "hide": "Hide", 
+      "hide": "Hide",
       "start_all": "Start All Tasks",
       "pause_all": "Pause All Tasks",
       "exit": "Exit"
@@ -205,7 +205,7 @@
     "task_created_message": "Successfully created task: {name}",
     "validation_error": "Validation Error",
     "download_manager_error": "Download manager is not available",
-    "batch_import_error": "Batch Import Error", 
+    "batch_import_error": "Batch Import Error",
     "batch_import_error_message": "Failed to import batch URLs: {error}",
     "settings_error": "Settings Error",
     "settings_error_message": "Cannot open settings dialog: {error}",
@@ -218,10 +218,13 @@
     "confirm_exit": "Confirm Exit",
     "confirm_exit_message": "There are {count} tasks still running. Are you sure you want to exit?",
     "settings_saved": "Settings Saved",
-    "settings_saved_message": "Settings saved successfully to file",    "save_failed": "Save Failed", 
+    "settings_saved_message": "Settings saved successfully to file",
+    "save_failed": "Save Failed",
     "save_failed_message": "Settings save failed: {error}"
-  },  "task_dialog": {
-    "title": "Create New Task",    "basic_info": {
+  },
+  "task_dialog": {
+    "title": "Create New Task",
+    "basic_info": {
       "title": "Create New Download Task",
       "subtitle": "Configure download parameters and add to task queue",
       "card_title": "Basic Information",
@@ -345,7 +348,7 @@
   },
   "batch_url_dialog": {
     "title": "Batch Import URLs",
-    "subtitle": "Batch Import URLs", 
+    "subtitle": "Batch Import URLs",
     "tabs": {
       "text_input": "Text Input",
       "from_file": "Import from File",
@@ -394,13 +397,14 @@
       "extract_success": "Successfully extracted {count} URLs",
       "extract_failed": "Extraction failed: {error}"
     }
-  },  "media_processing_dialog": {
+  },
+  "media_processing_dialog": {
     "title": "Media Processing",
     "subtitle": "Media Processing",
     "processing_tabs": {
       "convert": "Format Conversion",
       "clip": "Video Clipping",
-      "audio": "Extract Audio", 
+      "audio": "Extract Audio",
       "compress": "Video Compression"
     },
     "convert_tab": {
@@ -480,7 +484,7 @@
     "tabs": {
       "basic": "Basic Settings",
       "video": "Video Settings",
-      "audio": "Audio Settings", 
+      "audio": "Audio Settings",
       "advanced": "Advanced Options"
     },
     "basic": {
@@ -546,7 +550,8 @@
     "select": "Select",
     "apply": "Apply",
     "reset": "Reset",
-    "clear": "Clear",    "view": "View",
+    "clear": "Clear",
+    "view": "View",
     "show": "Show",
     "hide": "Hide",
     "unknown": "Unknown"
@@ -564,7 +569,7 @@
       "csv_headers": {
         "timestamp": "Timestamp",
         "level": "Level",
-        "message": "Message", 
+        "message": "Message",
         "source": "Source"
       }
     },
@@ -613,7 +618,7 @@
       "recurring": "Recurring",
       "pending": "Pending",
       "running": "Running",
-      "completed": "Completed", 
+      "completed": "Completed",
       "failed": "Failed"
     },
     "search": {
@@ -711,7 +716,7 @@
     "stats": {
       "total": "Total",
       "active": "Active",
-      "completed": "Completed", 
+      "completed": "Completed",
       "speed": "Speed"
     },
     "search_placeholder": "Search downloads...",
@@ -719,7 +724,7 @@
       "all": "All Tasks",
       "downloading": "Downloading",
       "paused": "Paused",
-      "completed": "Completed", 
+      "completed": "Completed",
       "failed": "Failed"
     },
     "actions": {

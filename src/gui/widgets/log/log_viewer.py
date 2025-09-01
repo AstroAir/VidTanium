@@ -1,10 +1,9 @@
 """
-Enhanced log viewer with modern Fluent Design and comprehensive functionality
-
+Enhanced log viewer with responsive design and modern Fluent aesthetics
 Provides comprehensive log viewing, filtering, and management functionality
-Uses FluentWindow for modern UI and PipsPager for pagination
 """
 
+from typing import Union, Optional, Callable, Any, TYPE_CHECKING, cast
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QMenu, QFileDialog, QSplitter
 from PySide6.QtCore import Qt, Signal, QTimer, QPoint, QSize, QThread
 from PySide6.QtGui import QTextCharFormat, QColor, QAction, QFont
@@ -31,16 +30,648 @@ from pathlib import Path
 from .log_entry import LogEntry
 from ...utils.i18n import tr
 from ...utils.theme import VidTaniumTheme, ThemeManager
+from ...utils.responsive import ResponsiveWidget, ResponsiveManager, ResponsiveContainer
+from ...theme_manager import EnhancedThemeManager
+from loguru import logger
 
 # Import thread pool - use try/except for graceful fallback
+THREAD_POOL_AVAILABLE = False
+_thread_submit = None
+_thread_get_pool = None
+
 try:
     from src.core.thread_pool import submit_task, get_thread_pool
     THREAD_POOL_AVAILABLE = True
+    _thread_submit = submit_task
+    _thread_get_pool = get_thread_pool
 except ImportError:
-    # Fallback if thread pool is not available
-    THREAD_POOL_AVAILABLE = False
-    submit_task = None
-    get_thread_pool = None
+    pass
+
+# Define unified interface functions
+def safe_submit_task(function: Callable,
+                    *args,
+                    callback: Optional[Callable] = None,
+                    error_callback: Optional[Callable] = None,
+                    progress_callback: Optional[Callable] = None,
+                    **kwargs):
+    """Submit task to thread pool if available, otherwise do nothing"""
+    if THREAD_POOL_AVAILABLE and _thread_submit is not None:
+        return _thread_submit(function, *args, callback=callback,
+                             error_callback=error_callback,
+                             progress_callback=progress_callback, **kwargs)
+    return None
+
+def safe_get_thread_pool():
+    """Get thread pool if available, otherwise return None"""
+    if THREAD_POOL_AVAILABLE and _thread_get_pool is not None:
+        return _thread_get_pool()
+    return None
+
+# Aliases for backward compatibility
+submit_task = safe_submit_task
+get_thread_pool = safe_get_thread_pool
+
+
+class EnhancedLogViewer(ResponsiveWidget):
+    """Enhanced log viewer with responsive design and modern aesthetics"""
+    
+    log_cleared = Signal()
+    export_requested = Signal(str, str)  # format, filename
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        
+        self.responsive_manager = ResponsiveManager.instance()
+        self.theme_manager = None
+        
+        # Log management
+        self.log_entries: List[LogEntry] = []
+        self.filtered_entries: List[LogEntry] = []
+        self.current_filters = {
+            'level': 'all',
+            'search': '',
+            'time_range': 'all'
+        }
+        
+        # UI Components
+        self.toolbar: Optional[QWidget] = None
+        self.log_display: Optional[PlainTextEdit] = None
+        self.filter_panel: Optional[QWidget] = None
+        self.status_bar: Optional[QWidget] = None
+        
+        # Performance optimization
+        self._update_timer = QTimer()
+        self._update_timer.setSingleShot(True)
+        self._update_timer.timeout.connect(self._update_log_display)
+        self._pending_updates = False
+        
+        self._setup_ui()
+        self._setup_responsive_behavior()
+
+    def _setup_ui(self) -> None:
+        """Setup the enhanced log viewer UI"""
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        
+        # Create main container with responsive design
+        main_container = ResponsiveContainer()
+        container_layout = QVBoxLayout(main_container)
+        
+        # Enhanced toolbar
+        self._create_enhanced_toolbar(container_layout)
+        
+        # Content area with splitter for responsive layout
+        self._create_content_area(container_layout)
+        
+        # Enhanced status bar
+        self._create_enhanced_status_bar(container_layout)
+        
+        layout.addWidget(main_container)
+
+    def _create_enhanced_toolbar(self, layout: QVBoxLayout) -> None:
+        """Create enhanced toolbar with responsive design"""
+        toolbar_card = ElevatedCardWidget()
+        toolbar_layout = QHBoxLayout(toolbar_card)
+        
+        # Responsive margins
+        self._setup_responsive_margins(toolbar_layout)
+        toolbar_layout.setSpacing(12)
+        
+        # Title section
+        title_layout = QVBoxLayout()
+        title_layout.setSpacing(4)
+        
+        title_label = StrongBodyLabel(tr("log_viewer.title"))
+        title_label.setStyleSheet(f"""
+            QLabel {{
+                font-size: {VidTaniumTheme.FONT_SIZE_HEADING};
+                font-weight: {VidTaniumTheme.FONT_WEIGHT_BOLD};
+                color: {VidTaniumTheme.TEXT_PRIMARY};
+                margin: 0;
+            }}
+        """)
+        
+        subtitle_label = CaptionLabel(tr("log_viewer.subtitle"))
+        subtitle_label.setStyleSheet(f"""
+            QLabel {{
+                color: {VidTaniumTheme.TEXT_SECONDARY};
+                font-size: {VidTaniumTheme.FONT_SIZE_CAPTION};
+                margin: 0;
+            }}
+        """)
+        
+        title_layout.addWidget(title_label)
+        title_layout.addWidget(subtitle_label)
+        toolbar_layout.addLayout(title_layout)
+        
+        toolbar_layout.addStretch()
+        
+        # Control buttons with responsive layout
+        self._create_control_buttons(toolbar_layout)
+        
+        layout.addWidget(toolbar_card)
+        self.toolbar = toolbar_card
+
+    def _create_control_buttons(self, layout: QHBoxLayout) -> None:
+        """Create control buttons with responsive behavior"""
+        current_bp = self.responsive_manager.get_current_breakpoint()
+        
+        # Create button container
+        button_container = QWidget()
+        if current_bp.value in ['xs', 'sm']:
+            # Vertical layout for small screens
+            button_layout: Union[QVBoxLayout, QHBoxLayout] = QVBoxLayout(button_container)
+            button_layout.setSpacing(8)
+        else:
+            # Horizontal layout for larger screens
+            button_layout = QHBoxLayout(button_container)
+            button_layout.setSpacing(12)
+        
+        # Clear logs button
+        self.clear_btn = PushButton(tr("log_viewer.buttons.clear"))
+        self.clear_btn.setIcon(FIF.DELETE)
+        self.clear_btn.clicked.connect(self._clear_logs)
+        self._apply_button_styling(self.clear_btn, "danger")
+        
+        # Export logs button
+        self.export_btn = PushButton(tr("log_viewer.buttons.export"))
+        self.export_btn.setIcon(FIF.SAVE)
+        self.export_btn.clicked.connect(self._export_logs)
+        self._apply_button_styling(self.export_btn, "primary")
+        
+        # Refresh button
+        self.refresh_btn = TransparentToolButton(FIF.SYNC)
+        self.refresh_btn.setToolTip(tr("log_viewer.buttons.refresh"))
+        self.refresh_btn.clicked.connect(self._refresh_logs)
+        
+        button_layout.addWidget(self.clear_btn)
+        button_layout.addWidget(self.export_btn)
+        button_layout.addWidget(self.refresh_btn)
+        
+        layout.addWidget(button_container)
+
+    def _create_content_area(self, layout: QVBoxLayout):
+        """Create content area with responsive splitter"""
+        content_splitter = QSplitter(Qt.Orientation.Horizontal)
+        
+        # Filter panel (collapsible on small screens)
+        self._create_filter_panel(content_splitter)
+        
+        # Log display area
+        self._create_log_display(content_splitter)
+        
+        # Responsive splitter sizes
+        current_bp = self.responsive_manager.get_current_breakpoint()
+        if current_bp.value in ['xs', 'sm']:
+            # Stack vertically on small screens
+            content_splitter.setOrientation(Qt.Orientation.Vertical)
+            content_splitter.setSizes([100, 400])
+        else:
+            # Side by side on larger screens
+            content_splitter.setSizes([250, 750])
+        
+        layout.addWidget(content_splitter)
+
+    def _create_filter_panel(self, parent):
+        """Create enhanced filter panel"""
+        filter_card = CardWidget()
+        filter_card.setObjectName("log-filter-panel")
+        filter_layout = QVBoxLayout(filter_card)
+        
+        # Responsive margins
+        self._setup_responsive_margins(filter_layout)
+        filter_layout.setSpacing(16)
+        
+        # Filter header
+        filter_header = StrongBodyLabel(tr("log_viewer.filters.title"))
+        filter_header.setStyleSheet(f"""
+            QLabel {{
+                font-size: {VidTaniumTheme.FONT_SIZE_SUBHEADING};
+                font-weight: {VidTaniumTheme.FONT_WEIGHT_SEMIBOLD};
+                color: {VidTaniumTheme.TEXT_PRIMARY};
+                margin: 0;
+            }}
+        """)
+        filter_layout.addWidget(filter_header)
+        
+        # Search filter
+        search_layout = QVBoxLayout()
+        search_layout.setSpacing(8)
+        
+        search_label = BodyLabel(tr("log_viewer.filters.search"))
+        self.search_input = SearchLineEdit()
+        self.search_input.setPlaceholderText(tr("log_viewer.filters.search_placeholder"))
+        self.search_input.textChanged.connect(self._on_search_changed)
+        
+        search_layout.addWidget(search_label)
+        search_layout.addWidget(self.search_input)
+        filter_layout.addLayout(search_layout)
+        
+        # Level filter
+        level_layout = QVBoxLayout()
+        level_layout.setSpacing(8)
+        
+        level_label = BodyLabel(tr("log_viewer.filters.level"))
+        self.level_combo = ComboBox()
+        self.level_combo.addItems([
+            tr("log_viewer.filters.all_levels"),
+            "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"
+        ])
+        self.level_combo.currentTextChanged.connect(self._on_level_changed)
+        
+        level_layout.addWidget(level_label)
+        level_layout.addWidget(self.level_combo)
+        filter_layout.addLayout(level_layout)
+        
+        # Time range filter
+        time_layout = QVBoxLayout()
+        time_layout.setSpacing(8)
+        
+        time_label = BodyLabel(tr("log_viewer.filters.time_range"))
+        self.time_combo = ComboBox()
+        self.time_combo.addItems([
+            tr("log_viewer.filters.all_time"),
+            tr("log_viewer.filters.last_hour"),
+            tr("log_viewer.filters.last_day"),
+            tr("log_viewer.filters.last_week")
+        ])
+        self.time_combo.currentTextChanged.connect(self._on_time_changed)
+        
+        time_layout.addWidget(time_label)
+        time_layout.addWidget(self.time_combo)
+        filter_layout.addLayout(time_layout)
+        
+        filter_layout.addStretch()
+        
+        parent.addWidget(filter_card)
+        self.filter_panel = filter_card
+
+    def _create_log_display(self, parent):
+        """Create enhanced log display area"""
+        display_card = CardWidget()
+        display_card.setObjectName("log-display-area")
+        display_layout = QVBoxLayout(display_card)
+        display_layout.setContentsMargins(0, 0, 0, 0)
+        display_layout.setSpacing(0)
+        
+        # Log display with enhanced styling
+        self.log_display = PlainTextEdit()
+        self.log_display.setReadOnly(True)
+        self.log_display.setObjectName("log-text-display")
+        
+        # Apply enhanced styling
+        self._apply_log_display_styling()
+        
+        display_layout.addWidget(self.log_display)
+        parent.addWidget(display_card)
+
+    def _create_enhanced_status_bar(self, layout: QVBoxLayout):
+        """Create enhanced status bar"""
+        status_card = CardWidget()
+        status_card.setObjectName("log-status-bar")
+        status_layout = QHBoxLayout(status_card)
+        
+        # Responsive margins
+        self._setup_responsive_margins(status_layout)
+        status_layout.setSpacing(16)
+        
+        # Entry count
+        self.entry_count_label = CaptionLabel("0 entries")
+        self.entry_count_label.setStyleSheet(f"""
+            QLabel {{
+                color: {VidTaniumTheme.TEXT_SECONDARY};
+                font-size: {VidTaniumTheme.FONT_SIZE_CAPTION};
+            }}
+        """)
+        
+        # Filter status
+        self.filter_status_label = CaptionLabel("")
+        self.filter_status_label.setStyleSheet(f"""
+            QLabel {{
+                color: {VidTaniumTheme.TEXT_SECONDARY};
+                font-size: {VidTaniumTheme.FONT_SIZE_CAPTION};
+            }}
+        """)
+        
+        status_layout.addWidget(self.entry_count_label)
+        status_layout.addWidget(self.filter_status_label)
+        status_layout.addStretch()
+        
+        # Auto-scroll toggle
+        self.auto_scroll_toggle = ToggleButton()
+        self.auto_scroll_toggle.setText(tr("log_viewer.auto_scroll"))
+        self.auto_scroll_toggle.setChecked(True)
+        
+        status_layout.addWidget(self.auto_scroll_toggle)
+        
+        layout.addWidget(status_card)
+        self.status_bar = status_card
+
+    def _setup_responsive_margins(self, layout):
+        """Setup responsive margins"""
+        current_bp = self.responsive_manager.get_current_breakpoint()
+        
+        margin_config = {
+            'xs': 8,
+            'sm': 12,
+            'md': 16,
+            'lg': 20,
+            'xl': 24
+        }
+        
+        margin = margin_config.get(current_bp.value, 16)
+        layout.setContentsMargins(margin, margin//2, margin, margin//2)
+
+    def _apply_button_styling(self, button, style_type: str):
+        """Apply enhanced button styling"""
+        if not self.theme_manager:
+            return
+            
+        colors = self.theme_manager.get_theme_colors() if hasattr(self.theme_manager, 'get_theme_colors') else {}
+        
+        if style_type == "primary":
+            accent_color = getattr(self.theme_manager, 'ACCENT_COLORS', {}).get(
+                getattr(self.theme_manager, 'get_current_accent', lambda: 'blue')(), '#0078D4'
+            )
+            button.setStyleSheet(f"""
+                PushButton {{
+                    background-color: {accent_color};
+                    border: none;
+                    border-radius: 6px;
+                    color: white;
+                    padding: 8px 16px;
+                    font-weight: 600;
+                }}
+                PushButton:hover {{
+                    background-color: {accent_color}dd;
+                }}
+            """)
+        elif style_type == "danger":
+            button.setStyleSheet(f"""
+                PushButton {{
+                    background-color: {VidTaniumTheme.ERROR_RED};
+                    border: none;
+                    border-radius: 6px;
+                    color: white;
+                    padding: 8px 16px;
+                    font-weight: 600;
+                }}
+                PushButton:hover {{
+                    background-color: {VidTaniumTheme.ERROR_RED}dd;
+                }}
+            """)
+
+    def _apply_log_display_styling(self):
+        """Apply enhanced styling to log display"""
+        # Get theme colors
+        colors = {}
+        if self.theme_manager and hasattr(self.theme_manager, 'get_theme_colors'):
+            colors = self.theme_manager.get_theme_colors()
+        
+        background = colors.get('surface', VidTaniumTheme.BG_SURFACE)
+        text_color = colors.get('text_primary', VidTaniumTheme.TEXT_PRIMARY)
+        border = colors.get('border', VidTaniumTheme.BORDER_LIGHT)
+        
+        self.log_display.setStyleSheet(f"""
+            PlainTextEdit {{
+                background-color: {background};
+                color: {text_color};
+                border: 1px solid {border};
+                border-radius: 8px;
+                padding: 12px;
+                font-family: 'Consolas', 'Monaco', monospace;
+                font-size: 12px;
+                line-height: 1.4;
+            }}
+            PlainTextEdit QScrollBar:vertical {{
+                background: transparent;
+                width: 8px;
+                border-radius: 4px;
+            }}
+            PlainTextEdit QScrollBar::handle:vertical {{
+                background: rgba(255, 255, 255, 0.3);
+                border-radius: 4px;
+                min-height: 20px;
+            }}
+        """)
+
+    def _setup_responsive_behavior(self):
+        """Setup responsive behavior"""
+        self.responsive_manager.add_breakpoint_callback(self._on_breakpoint_changed)
+
+    def _on_breakpoint_changed(self, breakpoint: str):
+        """Handle breakpoint changes"""
+        logger.debug(f"Log viewer adapting to breakpoint: {breakpoint}")
+        
+        # Update control button layout
+        if hasattr(self, 'toolbar'):
+            layout = self.layout()
+            if layout and isinstance(layout, QVBoxLayout):
+                self._create_enhanced_toolbar(layout)
+        
+        # Update margins throughout
+        for widget in [self.toolbar, self.filter_panel, self.status_bar]:
+            if widget and widget.layout():
+                self._setup_responsive_margins(widget.layout())
+
+    def set_theme_manager(self, theme_manager: EnhancedThemeManager):
+        """Set theme manager for enhanced styling"""
+        self.theme_manager = theme_manager
+        self._apply_log_display_styling()
+        
+        # Update button styling
+        if hasattr(self, 'export_btn'):
+            self._apply_button_styling(self.export_btn, "primary")
+        if hasattr(self, 'clear_btn'):
+            self._apply_button_styling(self.clear_btn, "danger")
+
+    def add_log_entry(self, entry: LogEntry):
+        """Add a log entry with performance optimization"""
+        self.log_entries.append(entry)
+        
+        # Limit entries to prevent memory issues
+        if len(self.log_entries) > 10000:
+            self.log_entries = self.log_entries[-8000:]  # Keep last 8000 entries
+        
+        # Batch updates for better performance
+        if not self._pending_updates:
+            self._pending_updates = True
+            self._update_timer.start(100)  # Update after 100ms
+
+    def _update_log_display(self):
+        """Update log display with current filters"""
+        self._pending_updates = False
+        self._apply_filters()
+        self._refresh_display()
+        self._update_status()
+
+    def _apply_filters(self):
+        """Apply current filters to log entries"""
+        self.filtered_entries = []
+        
+        for entry in self.log_entries:
+            # Level filter
+            if (self.current_filters['level'] != 'all' and 
+                entry.level.upper() != self.current_filters['level']):
+                continue
+            
+            # Search filter
+            if (self.current_filters['search'] and 
+                self.current_filters['search'].lower() not in entry.message.lower()):
+                continue
+            
+            # Time filter
+            if not self._passes_time_filter(entry):
+                continue
+            
+            self.filtered_entries.append(entry)
+
+    def _passes_time_filter(self, entry: LogEntry) -> bool:
+        """Check if entry passes time filter"""
+        if self.current_filters['time_range'] == 'all':
+            return True
+        
+        now = datetime.now()
+        entry_time = entry.timestamp
+        
+        if self.current_filters['time_range'] == 'last_hour':
+            return bool(entry_time >= now - timedelta(hours=1))
+        elif self.current_filters['time_range'] == 'last_day':
+            return bool(entry_time >= now - timedelta(days=1))
+        elif self.current_filters['time_range'] == 'last_week':
+            return bool(entry_time >= now - timedelta(weeks=1))
+        
+        return True
+
+    def _refresh_display(self):
+        """Refresh the log display"""
+        if not self.log_display:
+            return
+        
+        self.log_display.clear()
+        
+        for entry in self.filtered_entries[-1000:]:  # Show last 1000 entries
+            formatted_entry = self._format_log_entry(entry)
+            self.log_display.appendPlainText(formatted_entry)
+        
+        # Auto-scroll to bottom if enabled
+        if self.auto_scroll_toggle and self.auto_scroll_toggle.isChecked():
+            cursor = self.log_display.textCursor()
+            cursor.movePosition(cursor.MoveOperation.End)
+            self.log_display.setTextCursor(cursor)
+
+    def _format_log_entry(self, entry: LogEntry) -> str:
+        """Format a log entry for display"""
+        timestamp = entry.timestamp.strftime('%H:%M:%S.%f')[:-3]
+        level = entry.level.upper().ljust(8)
+        return f"[{timestamp}] {level} {entry.message}"
+
+    def _update_status(self):
+        """Update status bar information"""
+        total_entries = len(self.log_entries)
+        filtered_entries = len(self.filtered_entries)
+        
+        if self.entry_count_label:
+            if total_entries == filtered_entries:
+                self.entry_count_label.setText(f"{total_entries} entries")
+            else:
+                self.entry_count_label.setText(f"{filtered_entries} of {total_entries} entries")
+        
+        # Update filter status
+        active_filters = []
+        if self.current_filters['level'] != 'all':
+            active_filters.append(f"Level: {self.current_filters['level']}")
+        if self.current_filters['search']:
+            active_filters.append(f"Search: {self.current_filters['search']}")
+        if self.current_filters['time_range'] != 'all':
+            active_filters.append(f"Time: {self.current_filters['time_range']}")
+        
+        if self.filter_status_label:
+            if active_filters:
+                self.filter_status_label.setText(f"Filters: {', '.join(active_filters)}")
+            else:
+                self.filter_status_label.setText("")
+
+    def _on_search_changed(self, text: str):
+        """Handle search filter change"""
+        self.current_filters['search'] = text
+        self._update_log_display()
+
+    def _on_level_changed(self, level: str):
+        """Handle level filter change"""
+        if level == tr("log_viewer.filters.all_levels"):
+            self.current_filters['level'] = 'all'
+        else:
+            self.current_filters['level'] = level
+        self._update_log_display()
+
+    def _on_time_changed(self, time_range: str):
+        """Handle time range filter change"""
+        time_map = {
+            tr("log_viewer.filters.all_time"): 'all',
+            tr("log_viewer.filters.last_hour"): 'last_hour',
+            tr("log_viewer.filters.last_day"): 'last_day',
+            tr("log_viewer.filters.last_week"): 'last_week'
+        }
+        self.current_filters['time_range'] = time_map.get(time_range, 'all')
+        self._update_log_display()
+
+    def _clear_logs(self):
+        """Clear all log entries"""
+        self.log_entries.clear()
+        self.filtered_entries.clear()
+        if self.log_display:
+            self.log_display.clear()
+        self._update_status()
+        self.log_cleared.emit()
+
+    def _refresh_logs(self):
+        """Refresh log display"""
+        self._update_log_display()
+
+    def _export_logs(self):
+        """Export logs to file"""
+        if not self.filtered_entries:
+            InfoBar.warning(
+                title=tr("log_viewer.messages.warning"),
+                content=tr("log_viewer.messages.no_logs_to_export"),
+                parent=self
+            )
+            return
+        
+        # Show export dialog
+        file_dialog = QFileDialog(self)
+        file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
+        file_dialog.setFileMode(QFileDialog.FileMode.AnyFile)
+        file_dialog.setNameFilters([
+            "Text files (*.txt)",
+            "HTML files (*.html)",
+            "JSON files (*.json)",
+            "CSV files (*.csv)"
+        ])
+        
+        if file_dialog.exec():
+            file_path = file_dialog.selectedFiles()[0]
+            selected_filter = file_dialog.selectedNameFilter()
+            
+            # Determine format
+            if "*.txt" in selected_filter:
+                format_type = "txt"
+            elif "*.html" in selected_filter:
+                format_type = "html"
+            elif "*.json" in selected_filter:
+                format_type = "json"
+            elif "*.csv" in selected_filter:
+                format_type = "csv"
+            else:
+                format_type = "txt"
+            
+            self.export_requested.emit(format_type, file_path)
+
+
+# Backward compatibility alias
+LogViewer = EnhancedLogViewer
 
 
 class LogExportWorker:
@@ -299,10 +930,10 @@ class AdvancedLogFilter(ElevatedCardWidget):
                 if checkbox.isChecked()]
 
     def get_search_text(self) -> str:
-        return self.regex_search.text()
+        return str(self.regex_search.text())
 
     def is_regex_enabled(self) -> bool:
-        return self.regex_enabled.isChecked()
+        return bool(self.regex_enabled.isChecked())
 
     def should_include_entry(self, entry: LogEntry) -> bool:
         # Time filter
@@ -363,8 +994,10 @@ class LogDetailViewer(FluentTextEdit):
 级别: {entry.level.upper()}
 消息: {entry.message}"""
 
-        if hasattr(entry, 'source') and getattr(entry, 'source', ''):
-            details += f"\n来源: {getattr(entry, 'source', '')}"
+        if hasattr(entry, 'source'):
+            source = getattr(entry, 'source', '')
+            if source:
+                details += f"\n来源: {source}"
 
         # Add any additional details if available
         if hasattr(entry, 'details') and entry.details:
@@ -574,7 +1207,7 @@ class EnhancedPaginatedLogContainer(QWidget):
         self.filtered_entries: List[LogEntry] = []
         self.entries_per_page = 50
         self.current_page = 0
-        self.selected_entry = None
+        self.selected_entry: Optional[LogEntry] = None
         self.entry_widgets: List[EnhancedLogEntry] = []
         self._setup_ui()
 
@@ -673,7 +1306,7 @@ class EnhancedPaginatedLogContainer(QWidget):
         layout.addWidget(title_label)
         layout.addWidget(desc_label)
 
-        return widget
+        return cast(QWidget, widget)
 
     def _on_page_changed(self, index: int):
         """Handle page change"""
@@ -794,7 +1427,7 @@ class EnhancedPaginatedLogContainer(QWidget):
         return self.selected_entry
 
 
-class LogViewer(QWidget):
+class ComprehensiveLogViewer(QWidget):
     """Enhanced log viewer with comprehensive features and modern design"""
 
     # Signals
@@ -1051,7 +1684,7 @@ class LogViewer(QWidget):
             }}
         """)
 
-        return widget
+        return cast(QWidget, widget)
 
     def _setup_timers(self):
         """Setup automatic timers"""
@@ -1209,7 +1842,7 @@ class LogViewer(QWidget):
         )
 
         # Submit to thread pool for non-blocking operation
-        if THREAD_POOL_AVAILABLE and submit_task:
+        if THREAD_POOL_AVAILABLE:
             submit_task(
                 clear_operation,
                 callback=on_clear_success,
@@ -1323,7 +1956,7 @@ class LogViewer(QWidget):
             )
 
             # Submit to thread pool
-            if THREAD_POOL_AVAILABLE and submit_task:
+            if THREAD_POOL_AVAILABLE:
                 self.current_export_worker = submit_task(
                     export_worker.export_logs,
                     callback=on_export_success,
@@ -1378,7 +2011,7 @@ class LogViewer(QWidget):
             )
 
         # Submit to thread pool for non-blocking operation
-        if THREAD_POOL_AVAILABLE and submit_task:
+        if THREAD_POOL_AVAILABLE:
             submit_task(
                 refresh_operation,
                 callback=on_refresh_success,

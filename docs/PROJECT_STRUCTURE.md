@@ -57,42 +57,63 @@ Business logic and data processing components.
 
 ```text
 src/core/
-├── __init__.py               # Package initialization
-├── analyzer.py               # Media content analysis
-├── decryptor.py             # Encryption/decryption handling
-├── downloader.py            # Download management
-├── m3u8_parser.py           # HLS playlist parsing
-├── media_processor.py       # Video processing
-├── merger.py                # File merging operations
-├── scheduler.py             # Task scheduling
-├── thread_pool.py           # Thread pool management
-├── url_extractor.py         # URL extraction and validation
-├── utils/                   # Core utilities
-│   ├── version_checker.py   # Version checking
-│   └── __pycache__/        # Python cache files
-└── __pycache__/            # Python cache files
+├── __init__.py                      # Package initialization and exports
+├── downloader.py                    # Download management and orchestration
+├── url_extractor.py                 # URL extraction and validation
+├── media_processor.py               # Video processing and conversion
+├── scheduler.py                     # Task scheduling and automation
+├── thread_pool.py                   # Thread pool management
+├── exceptions.py                    # Custom exception hierarchy
+├── error_handler.py                 # Enhanced error handling system
+├── retry_manager.py                 # Intelligent retry management
+├── task_state_manager.py            # Task state persistence
+├── bandwidth_monitor.py             # Network performance monitoring
+├── eta_calculator.py                # ETA calculation algorithms
+├── download_history_manager.py      # Download history tracking
+├── batch_progress_aggregator.py     # Multi-task progress aggregation
+├── queue_manager.py                 # Advanced queue management
+├── smart_prioritization_engine.py   # Task prioritization system
+├── utils/                           # Core utilities
+│   ├── version_checker.py           # Version checking
+│   └── __pycache__/                # Python cache files
+└── __pycache__/                    # Python cache files
 ```
 
 **Key Components:**
 
 #### Download System
 
-- `DownloadManager`: Core download orchestration
-- `DownloadTask`: Individual download task representation
-- `ThreadPool`: Concurrent execution management
+- `DownloadManager`: Core download orchestration with multi-threading
+- `DownloadTask`: Individual download task representation with state management
+- `ThreadPoolManager`: Advanced concurrent execution management
+- `QueueManager`: Intelligent task queuing and prioritization
+- `SmartPrioritizationEngine`: Dynamic task ordering based on multiple factors
+
+#### Enhanced Error Handling & Recovery
+
+- `EnhancedErrorHandler`: Intelligent error categorization and handling
+- `VidTaniumException`: Custom exception hierarchy with context information
+- `IntelligentRetryManager`: Context-aware retry strategies with circuit breaker
+- `TaskStateManager`: Persistent task state tracking and recovery
+
+#### Monitoring & Analytics
+
+- `BandwidthMonitor`: Real-time network performance tracking
+- `ETACalculator`: Advanced time estimation with multiple algorithms
+- `DownloadHistoryManager`: Comprehensive download tracking and analytics
+- `BatchProgressAggregator`: Multi-task progress monitoring and aggregation
 
 #### Media Processing
 
-- `MediaAnalyzer`: Content analysis and metadata extraction
-- `MediaProcessor`: Video conversion and editing
-- `M3U8Parser`: HLS playlist interpretation
-- `Decryptor`: AES encryption handling
+- `MediaProcessor`: Video conversion, editing, and compression
+- `URLExtractor`: URL validation, extraction, and processing
+- `TaskScheduler`: Task automation, timing, and scheduling
 
-#### Utilities
+#### Utilities & Support
 
-- `URLExtractor`: URL validation and processing
-- `Scheduler`: Task automation and timing
-- `Merger`: File combination operations
+- Version checking and update management
+- Configuration management and validation
+- Logging and diagnostic utilities
 
 ### GUI Layer (`src/gui/`)
 
@@ -100,50 +121,69 @@ User interface components built with PySide6.
 
 ```text
 src/gui/
-├── __init__.py              # Package initialization
-├── main_window.py           # Primary application window
-├── settings_interface.py    # Settings configuration UI
-├── theme_manager.py         # UI theme management
-├── dialogs/                 # Dialog windows
+├── __init__.py                      # Package initialization with enhanced components
+├── main_window.py                   # Primary application window with responsive design
+├── theme_manager.py                 # Enhanced theme management system
+├── dialogs/                         # Dialog windows
 │   ├── __init__.py
-│   ├── about_dialog.py      # About application dialog
-│   ├── batch_url_dialog.py  # Batch URL input dialog
-│   ├── media_processing_dialog.py  # Media processing options
-│   ├── schedule_dialog.py   # Task scheduling dialog
-│   ├── settings_config.py   # Settings configuration
-│   ├── task_dialog.py       # Task management dialog
-│   ├── batch_conversion/    # Batch conversion dialogs
-│   ├── batch_url/          # Batch URL dialogs
-│   ├── schedule/           # Scheduling dialogs
-│   └── settings/           # Settings dialogs
-├── utils/                   # GUI utilities
-│   ├── fluent_progress.py   # Progress bar widgets
-│   ├── fluent_progress_new.py  # Enhanced progress widgets
-│   ├── formatters.py        # Data formatting utilities
-│   ├── i18n.py             # Internationalization support
-│   ├── progress_reporter.py # Progress reporting system
-│   ├── theme.py            # Theme definitions
-│   └── __pycache__/        # Python cache files
-├── widgets/                 # Custom UI widgets
+│   ├── about_dialog.py              # About application dialog
+│   ├── batch_url_dialog.py          # Batch URL input dialog
+│   ├── task_dialog.py               # Task management dialog
+│   ├── confirmation_dialog.py       # Smart confirmation dialogs
+│   ├── media_processing_dialog.py   # Media processing options
+│   ├── schedule_dialog.py           # Task scheduling dialog
+│   ├── settings_config.py           # Settings configuration
+│   ├── batch_conversion/            # Batch conversion dialogs
+│   ├── batch_url/                   # Batch URL dialogs
+│   ├── schedule/                    # Scheduling dialogs
+│   └── settings/                    # Settings dialogs
+├── utils/                           # GUI utilities
+│   ├── design_system.py             # Design system and styling
+│   ├── formatters.py                # Data formatting utilities
+│   ├── i18n.py                      # Internationalization support
+│   ├── responsive.py                # Responsive design system
+│   ├── theme.py                     # Theme definitions
+│   └── __pycache__/                # Python cache files
+├── widgets/                         # Custom UI widgets
 │   ├── __init__.py
-│   ├── log_viewer.py        # Log display widget
-│   ├── schedule_manager.py  # Schedule management widget
-│   ├── system_tray.py      # System tray integration
-│   ├── task_manager.py     # Task management widget
-│   ├── dashboard/          # Dashboard components
-│   ├── log/               # Log-related widgets
-│   ├── schedule/          # Schedule widgets
-│   └── settings/          # Settings widgets
-└── __pycache__/           # Python cache files
+│   ├── task_manager.py              # Advanced task management widget
+│   ├── error_dialog.py              # Enhanced error presentation
+│   ├── status_widget.py             # Real-time status monitoring
+│   ├── tooltip.py                   # Smart tooltip system
+│   ├── analytics_dashboard.py       # Performance analytics dashboard
+│   ├── bulk_operations_manager.py   # Bulk operations interface
+│   ├── navigation.py                # Navigation components
+│   ├── progress.py                  # Advanced progress widgets
+│   ├── dashboard/                   # Dashboard components
+│   │   ├── dashboard_interface.py   # Main dashboard interface
+│   │   └── metric_cards.py          # Performance metric cards
+│   ├── log/                         # Log-related widgets
+│   │   ├── log_viewer.py            # Enhanced log display
+│   │   └── log_filters.py           # Log filtering system
+│   ├── schedule/                    # Schedule widgets
+│   └── settings/                    # Settings widgets
+│       ├── settings_interface.py    # Main settings interface
+│       └── advanced_settings.py    # Advanced configuration options
+└── __pycache__/                    # Python cache files
 ```
 
 **Key Components:**
 
 #### Main Interface
 
-- `MainWindow`: Primary application interface
-- `SettingsInterface`: Configuration management UI
-- `ThemeManager`: Dark/light theme switching
+- `MainWindow`: Primary application interface with responsive design and navigation
+- `DashboardInterface`: Enhanced download management dashboard with analytics
+- `EnhancedThemeManager`: Advanced theme management with system integration
+- `ResponsiveManager`: Adaptive UI system for different screen sizes
+
+#### Advanced Widgets
+
+- `TaskManager`: Comprehensive task management with bulk operations support
+- `AnalyticsDashboard`: Performance metrics and visualization dashboard
+- `BulkOperationsManager`: Efficient multi-task management interface
+- `ErrorDialog`: User-friendly error presentation with suggested solutions
+- `StatusWidget`: Real-time system status and health monitoring
+- `LogViewer`: Enhanced log display with filtering and search capabilities
 
 #### Specialized Dialogs
 

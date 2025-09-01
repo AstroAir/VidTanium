@@ -2,7 +2,7 @@ from PySide6.QtWidgets import (
     QWidget, QFormLayout
 )
 from PySide6.QtCore import Signal, Slot
-from qfluentwidgets import (  # type: ignore
+from qfluentwidgets import (
     ComboBox, SpinBox
 )
 from typing import Optional, Dict, Union
@@ -68,11 +68,11 @@ class EncodingSettingsWidget(QWidget):
 
     def get_video_codec(self) -> str:
         """获取视频编码设置"""
-        return self.video_codec_combo.currentText()
+        return str(self.video_codec_combo.currentText())
 
     def get_audio_codec(self) -> str:
         """获取音频编码设置"""
-        return self.audio_codec_combo.currentText()
+        return str(self.audio_codec_combo.currentText())
 
     def get_quality_settings(self) -> Dict[str, Union[str, int]]:
         """获取质量设置"""

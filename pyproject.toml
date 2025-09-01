@@ -13,10 +13,17 @@ dependencies = [
     "psutil>=7.0.0",
     "pycryptodome>=3.22.0",
     "pyside6>=6.9.0",
-    "pyside6-fluent-widgets[full]>=1.7.7",
+    "pyside6-fluent-widgets[full]>=1.8.7",
     "pytest>=8.3.5",
     "requests>=2.32.3",
 ]
 [[tool.uv.index]]
 url = "https://pypi.tuna.tsinghua.edu.cn/simple"
 default = true
+
+[dependency-groups]
+dev = [
+    "mypy>=1.17.1",
+    "types-psutil>=7.0.0.20250822",
+    "types-requests>=2.32.4.20250809",
+]

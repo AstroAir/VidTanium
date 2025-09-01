@@ -12,7 +12,7 @@ import logging
 from qfluentwidgets import (
     SearchLineEdit, InfoBar, InfoBarPosition, ComboBox,
     MessageBox, SubtitleLabel, ToggleButton, CardWidget,
-    Action, RoundMenu, FluentIcon
+    Action, RoundMenu, FluentIcon as FIF
 )
 
 from src.core.scheduler import TaskType
@@ -265,24 +265,24 @@ class ScheduleManager(QWidget):
 
         # 添加不同操作基于任务状态
         if task.enabled:
-            disable_action = Action(FluentIcon.PAUSE, "禁用")
+            disable_action = Action(FIF.PAUSE, "禁用")
             disable_action.triggered.connect(
                 lambda: self.task_action_requested.emit(task_id, "disable"))
             menu.addAction(disable_action)
         else:
-            enable_action = Action(FluentIcon.PLAY, "启用")
+            enable_action = Action(FIF.PLAY, "启用")
             enable_action.triggered.connect(
                 lambda: self.task_action_requested.emit(task_id, "enable"))
             menu.addAction(enable_action)
 
         # 立即执行
-        run_now_action = Action(FluentIcon.PLAY_SOLID, "立即执行")
+        run_now_action = Action(FIF.PLAY_SOLID, "立即执行")
         run_now_action.triggered.connect(
             lambda: self.task_action_requested.emit(task_id, "run_now"))
         menu.addAction(run_now_action)
 
         # 查看详情
-        view_details_action = Action(FluentIcon.INFO, "查看详情")
+        view_details_action = Action(FIF.INFO, "查看详情")
         view_details_action.triggered.connect(
             lambda: self._show_task_details(task_id))
         menu.addAction(view_details_action)
@@ -290,7 +290,7 @@ class ScheduleManager(QWidget):
         menu.addSeparator()
 
         # 删除操作
-        remove_action = Action(FluentIcon.DELETE, "删除")
+        remove_action = Action(FIF.DELETE, "删除")
         remove_action.triggered.connect(
             lambda: self.task_action_requested.emit(task_id, "remove"))
         menu.addAction(remove_action)

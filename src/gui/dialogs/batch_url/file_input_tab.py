@@ -4,8 +4,8 @@ from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QFileDialog, QF
 from PySide6.QtCore import Qt, Signal
 from typing import Optional, List
 
-from qfluentwidgets import (  # type: ignore
-    PushButton, LineEdit, CardWidget, BodyLabel, StrongBodyLabel, FluentIcon, InfoBarPosition, InfoBar
+from qfluentwidgets import (
+    PushButton, LineEdit, CardWidget, BodyLabel, StrongBodyLabel, FluentIcon as FIF, InfoBarPosition, InfoBar
 )
 
 from src.core.url_extractor import URLExtractor
@@ -28,32 +28,32 @@ class FileInputTab(QWidget):
         layout.setSpacing(10)
 
         # 说明文本
-        hint_label = BodyLabel("从文本文件导入URL:")  # type: ignore
+        hint_label = BodyLabel("从文本文件导入URL:")
         layout.addWidget(hint_label)
 
         # 文件选择
-        file_card = CardWidget(self)  # type: ignore
+        file_card = CardWidget(self)
         file_card_layout = QVBoxLayout(file_card)
         file_card_layout.setContentsMargins(15, 15, 15, 15)
         file_card_layout.setSpacing(10)
 
         file_layout = QHBoxLayout()
 
-        self.file_path_input = LineEdit()  # type: ignore
+        self.file_path_input = LineEdit()
         self.file_path_input.setReadOnly(True)
         self.file_path_input.setPlaceholderText("选择文件...")
         file_layout.addWidget(self.file_path_input)
 
-        self.browse_button = PushButton("浏览...")  # type: ignore
-        self.browse_button.setIcon(FluentIcon.FOLDER)  # type: ignore
+        self.browse_button = PushButton("浏览...")
+        self.browse_button.setIcon(FIF.FOLDER)
         self.browse_button.clicked.connect(self._browse_file)
         file_layout.addWidget(self.browse_button)
 
         file_card_layout.addLayout(file_layout)
 
         # 加载按钮
-        self.load_file_button = PushButton("加载文件")  # type: ignore
-        self.load_file_button.setIcon(FluentIcon.DOCUMENT)  # type: ignore
+        self.load_file_button = PushButton("加载文件")
+        self.load_file_button.setIcon(FIF.DOCUMENT)
         self.load_file_button.setEnabled(False)
         self.load_file_button.clicked.connect(self._load_file)
         file_card_layout.addWidget(self.load_file_button)
@@ -61,17 +61,17 @@ class FileInputTab(QWidget):
         layout.addWidget(file_card)
 
         # 选项
-        options_card = CardWidget(self)  # type: ignore
+        options_card = CardWidget(self)
         options_layout = QFormLayout(options_card)
         options_layout.setContentsMargins(15, 10, 15, 10)
         options_layout.setSpacing(10)
 
         # 标题
-        options_title = StrongBodyLabel("过滤选项")  # type: ignore
+        options_title = StrongBodyLabel("过滤选项")
         options_layout.addRow(options_title)
 
         # 正则表达式过滤
-        self.file_regex_input = LineEdit()  # type: ignore
+        self.file_regex_input = LineEdit()
         self.file_regex_input.setPlaceholderText("例如: .*\\.mp4|.*\\.m3u8")
         options_layout.addRow("正则表达式过滤:", self.file_regex_input)
 
@@ -102,22 +102,22 @@ class FileInputTab(QWidget):
                 file_path, pattern)
             self.urls_extracted.emit(urls)
 
-            InfoBar.success(  # type: ignore
+            InfoBar.success(
                 title="加载成功",
                 content=f"从文件中提取了 {len(urls)} 个URL",
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
-                position=InfoBarPosition.TOP,  # type: ignore
+                position=InfoBarPosition.TOP,
                 duration=2000,
                 parent=self
             )
         except Exception as e:
-            InfoBar.error(  # type: ignore
+            InfoBar.error(
                 title="加载失败",
                 content=f"加载文件出错: {str(e)}",
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
-                position=InfoBarPosition.TOP,  # type: ignore
+                position=InfoBarPosition.TOP,
                 duration=3000,
                 parent=self
             )

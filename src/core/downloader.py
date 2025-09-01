@@ -12,6 +12,18 @@ from typing import (
     Optional, List, Dict, Tuple, Set, Callable, Any, Union, Literal, Protocol, TypedDict
 )
 
+# Enhanced error handling imports
+from .exceptions import (
+    VidTaniumException, ErrorCategory, ErrorSeverity, ErrorContext,
+    NetworkException, ConnectionTimeoutException, HTTPException,
+    FilesystemException, InsufficientSpaceException, PermissionException,
+    EncryptionException, DecryptionKeyException, ValidationException,
+    InvalidURLException, InvalidSegmentException, ResourceException,
+    MemoryException, SystemException, ConfigurationException
+)
+from .error_handler import EnhancedErrorHandler, error_handler
+from .retry_manager import IntelligentRetryManager, retry_manager
+
 
 class TaskStatus(Enum):
     """Task status enumeration"""
@@ -232,28 +244,30 @@ class DownloadTask:
         if elapsed_time > 0:
             current_speed: float = bytes_downloaded / elapsed_time
             current_time = time.time()
-            
+
             # Track speed samples with timestamps for better accuracy
             if not hasattr(self, 'speed_samples'):
                 self.speed_samples = []
-            
+
             self.speed_samples.append((current_time, current_speed))
-            
+
             # Keep only speed samples from the last 30 seconds for better accuracy
             cutoff_time = current_time - 30.0
-            self.speed_samples = [(t, s) for t, s in self.speed_samples if t >= cutoff_time]
-            
+            self.speed_samples = [
+                (t, s) for t, s in self.speed_samples if t >= cutoff_time]
+
             # Calculate weighted average speed (more recent samples have higher weight)
             if self.speed_samples:
-                total_weight = 0
-                weighted_speed = 0
+                total_weight: float = 0.0
+                weighted_speed: float = 0.0
                 for sample_time, speed in self.speed_samples:
                     # Weight decreases exponentially with age
                     age = current_time - sample_time
-                    weight = max(0.1, 1.0 - (age / 30.0))  # Minimum weight of 0.1
+                    # Minimum weight of 0.1
+                    weight = max(0.1, 1.0 - (age / 30.0))
                     weighted_speed += speed * weight
                     total_weight += weight
-                
+
                 if total_weight > 0:
                     self.progress["speed"] = weighted_speed / total_weight
                 else:
@@ -268,13 +282,17 @@ class DownloadTask:
 
             # Estimate remaining time based on actual progress and current speed
             if self.progress["speed"] > 0 and self.progress["total"] > 0:
-                completed_ratio = self.progress["completed"] / self.progress["total"]
+                completed_ratio = self.progress["completed"] / \
+                    self.progress["total"]
                 if completed_ratio > 0 and self.progress["downloaded_bytes"] > 0:
                     # Estimate total download size based on current progress
-                    estimated_total_bytes = self.progress["downloaded_bytes"] / completed_ratio
-                    remaining_bytes = estimated_total_bytes - self.progress["downloaded_bytes"]
+                    estimated_total_bytes = self.progress["downloaded_bytes"] / \
+                        completed_ratio
+                    remaining_bytes = estimated_total_bytes - \
+                        self.progress["downloaded_bytes"]
                     if remaining_bytes > 0:
-                        self.progress["estimated_time"] = remaining_bytes / self.progress["speed"]
+                        self.progress["estimated_time"] = remaining_bytes / \
+                            self.progress["speed"]
                     else:
                         self.progress["estimated_time"] = 0
                 else:
@@ -293,7 +311,7 @@ EventTuple = Union[
 
 
 class DownloadManager:
-    """Download manager"""
+    """Enhanced download manager with intelligent error handling and retry mechanisms"""
 
     settings: Optional[SettingsProvider]
     tasks: Dict[str, DownloadTask]
@@ -313,8 +331,13 @@ class DownloadManager:
     event_queue: "Queue[EventTuple]"
     event_thread: Optional[threading.Thread]
 
+    # Enhanced error handling components
+    error_handler: EnhancedErrorHandler
+    retry_manager: IntelligentRetryManager
+    on_error_occurred: Optional[Callable[[str, VidTaniumException], None]]
+
     def __init__(self, settings: Optional[SettingsProvider] = None):
-        """Initialize download manager"""
+        """Initialize enhanced download manager with error handling"""
         self.settings = settings
         self.tasks = {}
         self.tasks_queue = PriorityQueue()
@@ -334,10 +357,48 @@ class DownloadManager:
         self.on_task_status_changed = None
         self.on_task_completed = None
         self.on_task_failed = None
+        self.on_error_occurred = None
 
-        # Event queue
-        self.event_queue = Queue()
-        self.event_thread = None
+        # Enhanced error handling components
+        self.error_handler = EnhancedErrorHandler()
+        self.retry_manager = IntelligentRetryManager(self.error_handler)
+
+    def _handle_task_error(self, task_id: str, exception: Exception, retry_count: int = 0) -> None:
+        """Handle task error with enhanced error reporting"""
+        task = self.tasks.get(task_id)
+
+        # Create error context
+        error_context = ErrorContext(
+            task_id=task_id,
+            task_name=task.name if task else None,
+            url=task.base_url if task else None,
+            file_path=task.output_file if task else None,
+            retry_count=retry_count
+        )
+
+        # Convert to VidTaniumException if needed
+        enhanced_exception = self.error_handler.handle_exception(
+            exception, error_context, f"task_{task_id}"
+        )
+
+        # Emit error signal if callback is set
+        if self.on_error_occurred:
+            self.on_error_occurred(task_id, enhanced_exception)
+
+        # Update task status if task exists
+        if task:
+            if enhanced_exception.severity == ErrorSeverity.CRITICAL:
+                task.status = TaskStatus.FAILED
+            elif not enhanced_exception.is_retryable:
+                task.status = TaskStatus.FAILED
+
+        logger.error(f"Task error handled: {enhanced_exception.get_user_friendly_message()}")
+
+    def _execute_with_retry(self, operation: Callable, operation_id: str, context: ErrorContext) -> Any:
+        """Execute operation with intelligent retry logic"""
+        return self.retry_manager.execute_with_retry(
+            operation, operation_id, context
+        )
 
     def start(self) -> None:
         """Start download manager"""
@@ -527,7 +588,6 @@ class DownloadManager:
             # Optionally emit a final status change or a specific "removed" event
             # self._emit_status_changed(task_id, task.status, TaskStatus.CANCELED) # Or a new "REMOVED" status
             return True
-        return False
 
     def _emit_status_changed(self, task_id: str, old_status: Optional[TaskStatus], new_status: TaskStatus) -> None:
         """Emit task status change event"""
@@ -545,34 +605,32 @@ class DownloadManager:
     def _emit_completed(self, task_id: str, success: bool, message: str) -> None:
         """Emit task completion event"""
         if success and self.on_task_completed:
-            event: EventTuple = ("completed", task_id, message)
-            self.event_queue.put(event)
+            completion_event: EventTuple = ("completed", task_id, message)
+            self.event_queue.put(completion_event)
         elif not success and self.on_task_failed:
-            event: EventTuple = ("failed", task_id, message)
-            self.event_queue.put(event)
+            failure_event: EventTuple = ("failed", task_id, message)
+            self.event_queue.put(failure_event)
 
     def _event_loop(self) -> None:
         """Event handling loop"""
-        
+
         while self.running:
             try:
                 # Get event from queue
                 event: EventTuple = self.event_queue.get(timeout=0.5)
-                
-                if not event:  # Should not happen with Queue.get unless None is put
-                    continue
-
                 event_type = event[0]
 
                 if event_type == "status_changed" and self.on_task_status_changed:
                     if len(event) >= 4:
                         _, task_id_ev, old_status_ev, new_status_ev = event
                         if isinstance(task_id_ev, str):
-                            self.on_task_status_changed(task_id_ev, old_status_ev, new_status_ev)
+                            self.on_task_status_changed(
+                                task_id_ev, old_status_ev, new_status_ev)
 
                 elif event_type == "progress" and self.on_task_progress:
                     if len(event) >= 3 and event[0] == "progress":
-                        progress_event = event  # Type should be Tuple[Literal["progress"], str, ProgressDict]
+                        # Type should be Tuple[Literal["progress"], str, ProgressDict]
+                        progress_event = event
                         task_id_ev = progress_event[1]
                         progress_ev = progress_event[2]
                         if isinstance(task_id_ev, str) and isinstance(progress_ev, dict):
@@ -580,7 +638,8 @@ class DownloadManager:
 
                 elif event_type == "completed" and self.on_task_completed:
                     if len(event) >= 3 and event[0] == "completed":
-                        completed_event = event  # Type should be Tuple[Literal["completed"], str, str]
+                        # Type should be Tuple[Literal["completed"], str, str]
+                        completed_event = event
                         task_id_ev = completed_event[1]
                         message_ev = completed_event[2]
                         if isinstance(task_id_ev, str) and isinstance(message_ev, str):
@@ -588,7 +647,8 @@ class DownloadManager:
 
                 elif event_type == "failed" and self.on_task_failed:
                     if len(event) >= 3 and event[0] == "failed":
-                        failed_event = event  # Type should be Tuple[Literal["failed"], str, str]
+                        # Type should be Tuple[Literal["failed"], str, str]
+                        failed_event = event
                         task_id_ev = failed_event[1]
                         message_ev = failed_event[2]
                         if isinstance(task_id_ev, str) and isinstance(message_ev, str):
@@ -619,9 +679,7 @@ class DownloadManager:
                     active_count: int = len(self.active_tasks)
                     if active_count < max_concurrent and not self.tasks_queue.empty():
                         try:
-                            # Type assertion for item from PriorityQueue
-                            # type: Tuple[int, float, str]
-                            _prio, _time, task_id_sched = self.tasks_queue.get_nowait()
+                            _prio, _time, task_id_sched = self.tasks_queue.get_nowait()  # type: Tuple[int, float, str]
 
                             if task_id_sched not in self.tasks:
                                 continue
@@ -645,15 +703,28 @@ class DownloadManager:
                 time.sleep(1)
 
     def _task_worker(self, task_id: str) -> None:
-        """Task worker thread function"""
+        """Enhanced task worker thread function with intelligent error handling"""
         from .decryptor import decrypt_data  # Assuming decrypt_data(bytes, bytes, bytes, bool) -> bytes
         # Assuming merge_files(List[str], str, Optional[SettingsProvider]) -> Dict[str, Any]
         from .merger import merge_files
 
         task = self.tasks.get(task_id)
         if not task:
-            logger.error(f"Task not found in worker: {task_id}")
+            error_context = ErrorContext(task_id=task_id)
+            exception = SystemException(
+                message=f"Task not found in worker: {task_id}",
+                context=error_context
+            )
+            self._handle_task_error(task_id, exception)
             return
+
+        # Create error context for this task
+        error_context = ErrorContext(
+            task_id=task_id,
+            task_name=task.name,
+            url=task.base_url,
+            file_path=task.output_file
+        )
 
         try:
             logger.info(
@@ -704,7 +775,8 @@ class DownloadManager:
                             task.key_url, timeout=timeout_val)
                         if response.status_code == 200:
                             task.key_data = response.content
-                            key_size = len(task.key_data) if task.key_data else 0
+                            key_size = len(
+                                task.key_data) if task.key_data else 0
                             logger.debug(
                                 f"Successfully downloaded encryption key ({key_size} bytes)")
                             break
@@ -783,7 +855,7 @@ class DownloadManager:
                         downloaded_this_segment = 0
                         chunk_start_time = time.time()
                         last_speed_update = chunk_start_time
-                        
+
                         with open(temp_filename, 'wb') as f:
                             for chunk in response.iter_content(chunk_size=chunk_size_val):
                                 if task.canceled_event.is_set():
@@ -810,12 +882,13 @@ class DownloadManager:
                                 task.progress["current_file_progress"] = downloaded_this_segment / \
                                     total_size if total_size > 0 else 0
                                 task.progress["downloaded_bytes"] += len(chunk)
-                                
+
                                 # Update speed calculation more accurately
                                 current_time = time.time()
                                 chunk_elapsed = current_time - chunk_process_start
                                 if current_time - last_speed_update >= 0.5:  # Update speed every 0.5 seconds
-                                    task.update_speed(len(chunk), chunk_elapsed)
+                                    task.update_speed(
+                                        len(chunk), chunk_elapsed)
                                     last_speed_update = current_time
                                     self._emit_progress(task_id, task.progress)
 
@@ -933,13 +1006,22 @@ class DownloadManager:
             task.save_progress()
 
         except Exception as e:
-            logger.error(
-                f"Task execution error for {task.name} (ID: {task_id}): {e}", exc_info=True)
-            task.status = TaskStatus.FAILED
-            # Assuming it was RUNNING
-            self._emit_status_changed(task_id, TaskStatus.RUNNING, task.status)
-            self._emit_completed(
-                task_id, False, f"Task execution error: {str(e)}")
+            # Handle error with enhanced error handling system
+            self._handle_task_error(task_id, e)
+
+            # Update task status
+            if task:
+                task.status = TaskStatus.FAILED
+                # Assuming it was RUNNING
+                self._emit_status_changed(task_id, TaskStatus.RUNNING, task.status)
+
+                # Create user-friendly error message
+                enhanced_exception = self.error_handler.handle_exception(
+                    e, error_context, f"task_{task_id}"
+                )
+                self._emit_completed(
+                    task_id, False, enhanced_exception.get_user_friendly_message()
+                )
         finally:
             with self.lock:
                 if task_id in self.active_tasks:

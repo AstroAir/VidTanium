@@ -27,13 +27,13 @@ class ScheduleToolbar(QToolBar):
         self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
         # 新建任务
-        self.new_task_action = QAction(FluentIcon.ADD.icon(), "新建计划", self)
+        self.new_task_action = QAction(FIF.ADD.icon(), "新建计划", self)
         self.new_task_action.setToolTip("创建新的计划任务")
         self.new_task_action.triggered.connect(self.new_task_clicked)
         self.addAction(self.new_task_action)
 
         # 刷新按钮
-        self.refresh_action = QAction(FluentIcon.SYNC.icon(), "刷新", self)
+        self.refresh_action = QAction(FIF.SYNC.icon(), "刷新", self)
         self.refresh_action.setToolTip("刷新任务列表")
         self.refresh_action.triggered.connect(self.refresh_clicked)
         self.addAction(self.refresh_action)
@@ -41,12 +41,12 @@ class ScheduleToolbar(QToolBar):
         self.addSeparator()
 
         # 批量操作按钮
-        self.enable_all_action = QAction(FluentIcon.PLAY.icon(), "全部启用", self)
+        self.enable_all_action = QAction(FIF.PLAY.icon(), "全部启用", self)
         self.enable_all_action.triggered.connect(self.enable_all_clicked)
         self.addAction(self.enable_all_action)
 
         self.disable_all_action = QAction(
-            FluentIcon.PAUSE.icon(), "全部禁用", self)
+            FIF.PAUSE.icon(), "全部禁用", self)
         self.disable_all_action.triggered.connect(self.disable_all_clicked)
         self.addAction(self.disable_all_action)
 
@@ -54,7 +54,7 @@ class ScheduleToolbar(QToolBar):
 
         # 任务详情按钮
         self.view_details_action = QAction(
-            FluentIcon.INFO.icon(), "查看详情", self)
+            FIF.INFO.icon(), "查看详情", self)
         self.view_details_action.setCheckable(True)
         self.view_details_action.triggered.connect(self.view_details_toggled)
         self.addAction(self.view_details_action)

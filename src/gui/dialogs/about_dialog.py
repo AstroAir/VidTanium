@@ -5,7 +5,7 @@ from PySide6.QtCore import Qt, QPropertyAnimation, QEasingCurve, QRect, QTimer
 from PySide6.QtGui import QFont, QIcon, QPalette, QLinearGradient, QBrush
 
 from qfluentwidgets import (
-    FluentIcon, PushButton, CardWidget, TextEdit,
+    FluentIcon as FIF, PushButton, CardWidget, TextEdit,
     IconWidget, ImageLabel, BodyLabel, TitleLabel,
     CaptionLabel, TabBar, SubtitleLabel, HyperlinkButton,
     InfoBar, InfoBarPosition, ProgressRing
@@ -25,10 +25,11 @@ class AboutDialog(QDialog):
         self.setMinimumSize(750, 600)
         self.setMaximumSize(900, 700)
         self.setWindowIcon(QIcon(":/images/logo.png"))
-        
+
         # Set window flags for better appearance
-        self.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.WindowCloseButtonHint)
-        
+        self.setWindowFlags(Qt.WindowType.Dialog |
+                            Qt.WindowType.WindowCloseButtonHint)
+
         # Apply custom styling
         self.setStyleSheet("""
             AboutDialog {
@@ -50,10 +51,10 @@ class AboutDialog(QDialog):
         """Create the beautiful UI"""
         # Header section with gradient background
         self._create_header()
-        
+
         # Content area with tabs
         self._create_content_area()
-        
+
         # Footer with buttons
         self._create_footer()
 
@@ -69,7 +70,7 @@ class AboutDialog(QDialog):
                 color: white;
             }
         """)
-        
+
         header_layout = QHBoxLayout(header_card)
         header_layout.setContentsMargins(30, 20, 30, 20)
         header_layout.setSpacing(20)
@@ -84,14 +85,16 @@ class AboutDialog(QDialog):
                 border: 2px solid rgba(255, 255, 255, 0.3);
             }
         """)
-        
+
         icon_layout = QVBoxLayout(icon_container)
         icon_layout.setContentsMargins(0, 0, 0, 0)
-        
-        self.icon_widget = IconWidget(FluentIcon.VIDEO)
+
+        self.icon_widget = IconWidget(FIF.VIDEO)
         self.icon_widget.setFixedSize(60, 60)
-        self.icon_widget.setStyleSheet("color: white; background: transparent; border: none;")
-        icon_layout.addWidget(self.icon_widget, 0, Qt.AlignmentFlag.AlignCenter)
+        self.icon_widget.setStyleSheet(
+            "color: white; background: transparent; border: none;")
+        icon_layout.addWidget(self.icon_widget, 0,
+                              Qt.AlignmentFlag.AlignCenter)
 
         header_layout.addWidget(icon_container)
 
@@ -100,26 +103,29 @@ class AboutDialog(QDialog):
         info_layout.setSpacing(8)
 
         self.title_label = TitleLabel(tr("about_dialog.app_name"))
-        self.title_label.setStyleSheet("color: white; font-weight: bold; font-size: 28px;")
+        self.title_label.setStyleSheet(
+            "color: white; font-weight: bold; font-size: 28px;")
         info_layout.addWidget(self.title_label)
 
         self.version_label = SubtitleLabel(tr("about_dialog.version"))
-        self.version_label.setStyleSheet("color: rgba(255, 255, 255, 0.9); font-size: 16px;")
+        self.version_label.setStyleSheet(
+            "color: rgba(255, 255, 255, 0.9); font-size: 16px;")
         info_layout.addWidget(self.version_label)
 
         self.tagline_label = BodyLabel(tr("about_dialog.tagline"))
-        self.tagline_label.setStyleSheet("color: rgba(255, 255, 255, 0.8); font-size: 14px;")
+        self.tagline_label.setStyleSheet(
+            "color: rgba(255, 255, 255, 0.8); font-size: 14px;")
         info_layout.addWidget(self.tagline_label)
 
         header_layout.addLayout(info_layout)
         header_layout.addStretch()
-        
+
         # Add download/star buttons
         buttons_layout = QVBoxLayout()
         buttons_layout.setSpacing(8)
-        
+
         self.github_btn = HyperlinkButton(
-            tr("about_dialog.github"), 
+            tr("about_dialog.github"),
             "https://github.com/yourusername/vidtanium"
         )
         self.github_btn.setStyleSheet("""
@@ -136,7 +142,7 @@ class AboutDialog(QDialog):
             }
         """)
         buttons_layout.addWidget(self.github_btn)
-        
+
         header_layout.addLayout(buttons_layout)
 
         self.main_layout.addWidget(header_card)
@@ -146,7 +152,7 @@ class AboutDialog(QDialog):
         # Create TabBar and QStackedWidget combination
         content_card = CardWidget()
         content_card.setMinimumHeight(350)
-        
+
         tab_layout = QVBoxLayout(content_card)
         tab_layout.setContentsMargins(10, 10, 10, 10)
         tab_layout.setSpacing(0)
@@ -175,13 +181,18 @@ class AboutDialog(QDialog):
         self._create_third_party_tab()
 
         # Add tabs to TabBar
-        self.tab_bar.addTab(FluentIcon.INFO.value, tr('about_dialog.tabs.about'))
-        self.tab_bar.addTab(FluentIcon.TAG.value, tr('about_dialog.tabs.features'))
-        self.tab_bar.addTab(FluentIcon.DOCUMENT.value, tr('about_dialog.tabs.license'))
-        self.tab_bar.addTab(FluentIcon.APPLICATION.value, tr('about_dialog.tabs.third_party'))
+        self.tab_bar.addTab(FIF.INFO.value,
+                            tr('about_dialog.tabs.about'))
+        self.tab_bar.addTab(FIF.TAG.value, tr(
+            'about_dialog.tabs.features'))
+        self.tab_bar.addTab(FIF.DOCUMENT.value,
+                            tr('about_dialog.tabs.license'))
+        self.tab_bar.addTab(FIF.APPLICATION.value,
+                            tr('about_dialog.tabs.third_party'))
 
         # Connect TabBar and StackedWidget
-        self.tab_bar.currentChanged.connect(self.stacked_widget.setCurrentIndex)
+        self.tab_bar.currentChanged.connect(
+            self.stacked_widget.setCurrentIndex)
 
         self.main_layout.addWidget(content_card)
 
@@ -189,17 +200,18 @@ class AboutDialog(QDialog):
         """Create footer with action buttons"""
         footer_layout = QHBoxLayout()
         footer_layout.setSpacing(10)
-        
+
         # Add some action buttons
         self.check_updates_btn = PushButton(tr("about_dialog.check_updates"))
-        self.check_updates_btn.setIcon(FluentIcon.UPDATE)
+        self.check_updates_btn.setIcon(FIF.UPDATE)
         self.check_updates_btn.clicked.connect(self._check_updates)
-        
+
         footer_layout.addWidget(self.check_updates_btn)
         footer_layout.addStretch()
 
         # Standard close button
-        self.button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        self.button_box = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Close)
         self.button_box.rejected.connect(self.reject)
         footer_layout.addWidget(self.button_box)
 
@@ -235,7 +247,7 @@ class AboutDialog(QDialog):
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
         scroll.setStyleSheet("QScrollArea { background-color: transparent; }")
-        
+
         scroll_content = QWidget()
         scroll_layout = QVBoxLayout(scroll_content)
         scroll_layout.setSpacing(15)
@@ -244,27 +256,27 @@ class AboutDialog(QDialog):
         desc_card = CardWidget()
         desc_layout = QVBoxLayout(desc_card)
         desc_layout.setContentsMargins(20, 20, 20, 20)
-        
+
         desc_title = SubtitleLabel(tr("about_dialog.description.title"))
         desc_title.setStyleSheet("font-weight: bold; color: #2c3e50;")
         desc_layout.addWidget(desc_title)
-        
+
         desc_text = BodyLabel(tr("about_dialog.description.content"))
         desc_text.setWordWrap(True)
         desc_text.setStyleSheet("color: #34495e; line-height: 1.6;")
         desc_layout.addWidget(desc_text)
-        
+
         scroll_layout.addWidget(desc_card)
 
         # Features card
         features_card = CardWidget()
         features_layout = QVBoxLayout(features_card)
         features_layout.setContentsMargins(20, 20, 20, 20)
-        
+
         features_title = SubtitleLabel(tr("about_dialog.key_features.title"))
         features_title.setStyleSheet("font-weight: bold; color: #2c3e50;")
         features_layout.addWidget(features_title)
-        
+
         # Feature list with icons
         features = [
             ("DOWNLOAD", tr("about_dialog.key_features.encrypted_download")),
@@ -273,29 +285,29 @@ class AboutDialog(QDialog):
             ("BRUSH", tr("about_dialog.key_features.modern_ui")),
             ("MENU", tr("about_dialog.key_features.batch_support"))
         ]
-        
+
         for icon_name, feature_text in features:
             feature_layout = QHBoxLayout()
             feature_layout.setSpacing(10)
-            
+
             icon = IconWidget(getattr(FluentIcon, icon_name))
             icon.setFixedSize(20, 20)
             icon.setStyleSheet("color: #3498db;")
             feature_layout.addWidget(icon)
-            
+
             label = BodyLabel(feature_text)
             label.setStyleSheet("color: #34495e;")
             feature_layout.addWidget(label)
             feature_layout.addStretch()
-            
+
             features_layout.addLayout(feature_layout)
-        
+
         scroll_layout.addWidget(features_card)
         scroll_layout.addStretch()
-        
+
         scroll.setWidget(scroll_content)
         layout.addWidget(scroll)
-        
+
         self.stacked_widget.addWidget(self.about_tab)
 
     def _create_features_tab(self):
@@ -308,7 +320,7 @@ class AboutDialog(QDialog):
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
         scroll.setStyleSheet("QScrollArea { background-color: transparent; }")
-        
+
         scroll_content = QWidget()
         scroll_layout = QVBoxLayout(scroll_content)
         scroll_layout.setSpacing(20)
@@ -356,34 +368,34 @@ class AboutDialog(QDialog):
             # Category header
             header_layout = QHBoxLayout()
             header_layout.setSpacing(10)
-            
+
             icon = IconWidget(getattr(FluentIcon, category["icon"]))
             icon.setFixedSize(24, 24)
             icon.setStyleSheet("color: #3498db;")
             header_layout.addWidget(icon)
-            
+
             title = SubtitleLabel(category["title"])
             title.setStyleSheet("font-weight: bold; color: #2c3e50;")
             header_layout.addWidget(title)
             header_layout.addStretch()
-            
+
             card_layout.addLayout(header_layout)
 
             # Feature items
             for item in category["items"]:
                 item_layout = QHBoxLayout()
                 item_layout.setSpacing(8)
-                
+
                 bullet = BodyLabel("•")
                 bullet.setStyleSheet("color: #3498db; font-weight: bold;")
                 bullet.setFixedWidth(15)
                 item_layout.addWidget(bullet)
-                
+
                 item_label = BodyLabel(item)
                 item_label.setWordWrap(True)
                 item_label.setStyleSheet("color: #34495e;")
                 item_layout.addWidget(item_label)
-                
+
                 card_layout.addLayout(item_layout)
 
             scroll_layout.addWidget(card)
@@ -391,7 +403,7 @@ class AboutDialog(QDialog):
         scroll_layout.addStretch()
         scroll.setWidget(scroll_content)
         layout.addWidget(scroll)
-        
+
         self.stacked_widget.addWidget(self.features_tab)
 
     def _create_license_tab(self):
@@ -408,16 +420,16 @@ class AboutDialog(QDialog):
 
         # License header
         header_layout = QHBoxLayout()
-        license_icon = IconWidget(FluentIcon.DOCUMENT)
+        license_icon = IconWidget(FIF.DOCUMENT)
         license_icon.setFixedSize(24, 24)
         license_icon.setStyleSheet("color: #27ae60;")
         header_layout.addWidget(license_icon)
-        
+
         license_title = SubtitleLabel(tr("about_dialog.license.title"))
         license_title.setStyleSheet("font-weight: bold; color: #2c3e50;")
         header_layout.addWidget(license_title)
         header_layout.addStretch()
-        
+
         license_layout.addLayout(header_layout)
 
         # License content
@@ -440,7 +452,7 @@ class AboutDialog(QDialog):
 
         layout.addWidget(license_card)
         layout.addStretch()
-        
+
         self.stacked_widget.addWidget(self.license_tab)
 
     def _create_third_party_tab(self):
@@ -453,7 +465,7 @@ class AboutDialog(QDialog):
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
         scroll.setStyleSheet("QScrollArea { background-color: transparent; }")
-        
+
         scroll_content = QWidget()
         scroll_layout = QVBoxLayout(scroll_content)
         scroll_layout.setSpacing(15)
@@ -462,24 +474,24 @@ class AboutDialog(QDialog):
         title_card = CardWidget()
         title_layout = QVBoxLayout(title_card)
         title_layout.setContentsMargins(20, 15, 20, 15)
-        
+
         title_header = QHBoxLayout()
-        libs_icon = IconWidget(FluentIcon.APPLICATION)
+        libs_icon = IconWidget(FIF.APPLICATION)
         libs_icon.setFixedSize(24, 24)
         libs_icon.setStyleSheet("color: #e74c3c;")
         title_header.addWidget(libs_icon)
-        
+
         libs_title = SubtitleLabel(tr("about_dialog.third_party.title"))
         libs_title.setStyleSheet("font-weight: bold; color: #2c3e50;")
         title_header.addWidget(libs_title)
         title_header.addStretch()
-        
+
         title_layout.addLayout(title_header)
-        
+
         desc_label = BodyLabel(tr("about_dialog.third_party.description"))
         desc_label.setStyleSheet("color: #7f8c8d;")
         title_layout.addWidget(desc_label)
-        
+
         scroll_layout.addWidget(title_card)
 
         # Libraries list
@@ -525,18 +537,19 @@ class AboutDialog(QDialog):
             # Library header
             lib_header = QHBoxLayout()
             lib_header.setSpacing(10)
-            
+
             lib_icon = IconWidget(getattr(FluentIcon, lib["icon"]))
             lib_icon.setFixedSize(20, 20)
             lib_icon.setStyleSheet("color: #9b59b6;")
             lib_header.addWidget(lib_icon)
-            
+
             lib_name = SubtitleLabel(lib["name"])
-            lib_name.setStyleSheet("font-weight: bold; color: #2c3e50; font-size: 16px;")
+            lib_name.setStyleSheet(
+                "font-weight: bold; color: #2c3e50; font-size: 16px;")
             lib_header.addWidget(lib_name)
-            
+
             lib_header.addStretch()
-            
+
             license_label = CaptionLabel(lib["license"])
             license_label.setStyleSheet("""
                 background-color: #ecf0f1;
@@ -546,7 +559,7 @@ class AboutDialog(QDialog):
                 font-weight: bold;
             """)
             lib_header.addWidget(license_label)
-            
+
             lib_layout.addLayout(lib_header)
 
             # Library description
@@ -560,5 +573,5 @@ class AboutDialog(QDialog):
         scroll_layout.addStretch()
         scroll.setWidget(scroll_content)
         layout.addWidget(scroll)
-        
+
         self.stacked_widget.addWidget(self.third_party_tab)

@@ -22,7 +22,7 @@ class SettingsDialog(QDialog):
         self.setWindowTitle("VidTanium 设置")
         self.resize(900, 700)
         self.setMinimumSize(800, 600)
-        self.setWindowIcon(FluentIcon.SETTING.icon())
+        self.setWindowIcon(FIF.SETTING.icon())
         
         self._create_ui()
     

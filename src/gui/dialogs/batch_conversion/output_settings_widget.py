@@ -3,8 +3,8 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Signal
 from typing import Optional
-from qfluentwidgets import (  # type: ignore
-    PushButton, ComboBox, LineEdit, CheckBox, FluentIcon
+from qfluentwidgets import (
+    PushButton, ComboBox, LineEdit, CheckBox, FluentIcon as FIF
 )
 
 
@@ -43,7 +43,7 @@ class OutputSettingsWidget(QWidget):
         output_layout.addWidget(self.output_dir_input, 1)
 
         self.browse_output_button = PushButton("浏览...")
-        self.browse_output_button.setIcon(FluentIcon.FOLDER)
+        self.browse_output_button.setIcon(FIF.FOLDER)
         self.browse_output_button.clicked.connect(self._browse_output_dir)
         output_layout.addWidget(self.browse_output_button)
 
@@ -78,16 +78,16 @@ class OutputSettingsWidget(QWidget):
 
     def get_output_format(self) -> str:
         """获取输出格式"""
-        return self.format_combo.currentText().lower()
+        return str(self.format_combo.currentText()).lower()
 
     def get_output_directory(self) -> str:
         """获取输出目录"""
-        return self.output_dir_input.text()
+        return str(self.output_dir_input.text())
 
     def get_resolution(self) -> str:
         """获取分辨率设置"""
-        return self.resolution_combo.currentText()
+        return str(self.resolution_combo.currentText())
 
     def get_keep_original(self) -> bool:
         """获取是否保留原始文件设置"""
-        return self.keep_original_check.isChecked()
+        return bool(self.keep_original_check.isChecked())

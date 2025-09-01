@@ -78,7 +78,7 @@ When you first launch VidTanium:
 
 VidTanium features a modern, intuitive interface with four main sections:
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │ File  Edit  View  Tools  Help                 [_][□][X] │
 ├─────────────────────────────────────────────────────────┤
@@ -106,47 +106,127 @@ Displays the content for the selected navigation item with context-sensitive too
 
 The Dashboard provides an at-a-glance view of your download activity:
 
-#### Statistics Cards
+#### Enhanced Statistics Cards
 
-- **Total Tasks**: Number of download tasks created
-- **Active Downloads**: Currently running downloads
-- **Completed**: Successfully finished downloads
-- **Average Speed**: Average download speed across all tasks
+- **Total Tasks**: Number of download tasks created with success rate
+- **Active Downloads**: Currently running downloads with real-time speed
+- **Completed**: Successfully finished downloads with total data transferred
+- **Average Speed**: Average download speed with bandwidth utilization
+- **Network Health**: Real-time network performance and connection status
+- **ETA Accuracy**: Prediction accuracy metrics and algorithm performance
+
+#### Advanced Analytics Dashboard
+
+- **Bandwidth Monitor**: Real-time network performance graphs and trends
+- **Download History**: Comprehensive analytics of completed downloads
+- **Performance Metrics**: CPU, memory, and disk usage during downloads
+- **Error Analytics**: Error frequency, categories, and resolution success rates
+- **Queue Statistics**: Task prioritization effectiveness and queue optimization
 
 #### Quick Actions
 
-- **New Download**: Start a new download task
-- **Batch Import**: Import multiple URLs from a file
-- **Clear Cache**: Clean up temporary files
-- **Settings**: Quick access to configuration
+- **New Download**: Start a new download task with advanced options
+- **Batch Import**: Import multiple URLs from files with bulk processing
+- **Bulk Operations**: Manage multiple tasks simultaneously
+- **Analytics View**: Access detailed performance analytics
+- **Error Diagnostics**: View system health and error reports
+- **Clear Cache**: Clean up temporary files with selective options
+- **Settings**: Quick access to configuration with advanced options
 
 #### Recent Activity
 
-- List of recent download tasks with status
-- Quick action buttons for each task
-- Progress indicators for active downloads
+- List of recent download tasks with detailed status and analytics
+- Quick action buttons for each task with bulk selection
+- Real-time progress indicators with ETA and speed information
+- Error status indicators with one-click diagnostics
+- Task prioritization controls with smart recommendations
 
 ### Download Manager
 
-The Download Manager is where you control all your download tasks:
+The Download Manager provides comprehensive control over all your download tasks with advanced features:
 
-#### Task List
+#### Enhanced Task List
 
-- **Sortable columns**: Name, Status, Progress, Speed, Size
-- **Filter options**: All, Running, Paused, Completed, Failed
-- **Search functionality**: Find tasks by name or URL
-- **Bulk actions**: Start/pause/cancel multiple tasks
+- **Sortable columns**: Name, Status, Progress, Speed, Size, Priority, ETA
+- **Advanced filtering**: All, Running, Paused, Completed, Failed, Error states
+- **Smart search**: Find tasks by name, URL, file type, or date range
+- **Bulk operations**: Start/pause/cancel/prioritize multiple tasks simultaneously
+- **Task prioritization**: Drag-and-drop reordering with smart recommendations
+- **Selection tools**: Multi-select with keyboard shortcuts and selection helpers
 
-#### Task Details Panel
+#### Advanced Task Details Panel
 
-- **Task Information**: Name, URL, file size, duration
-- **Progress Visualization**: Progress bar with percentage
-- **Speed Metrics**: Current and average download speeds
-- **Real-time Logs**: Live log output for the selected task
+- **Comprehensive Information**: Name, URL, file size, duration, priority, retry count
+- **Enhanced Progress Visualization**: Multi-segment progress with ETA algorithms
+- **Detailed Speed Metrics**: Current, average, and peak download speeds with trends
+- **Real-time Analytics**: Bandwidth utilization, connection health, error rates
+- **Live Logs**: Filtered log output with error highlighting and context
+- **Error Diagnostics**: Detailed error information with suggested solutions
+
+#### Bulk Operations Manager
+
+- **Multi-task Selection**: Advanced selection tools with filters and criteria
+- **Batch Actions**: Apply operations to multiple tasks with confirmation dialogs
+- **Progress Aggregation**: Combined progress tracking for selected tasks
+- **Bulk Configuration**: Apply settings changes to multiple tasks at once
+- **Export/Import**: Save and load task configurations for batch processing
+
+#### Analytics Dashboard
+
+- **Performance Metrics**: Real-time bandwidth, speed, and efficiency charts
+- **Download Statistics**: Success rates, error analysis, and trend visualization
+- **Network Health**: Connection quality, latency, and optimization recommendations
+- **Resource Usage**: CPU, memory, and disk utilization during downloads
+- **Historical Data**: Long-term performance trends and comparative analysis
+
+### Advanced Error Handling & Diagnostics
+
+VidTanium includes an intelligent error handling system that provides detailed diagnostics and automated recovery:
+
+#### Error Dialog System
+
+- **Categorized Errors**: Errors are automatically categorized (Network, Filesystem, Encryption, etc.)
+- **Severity Levels**: Clear indication of error severity (Low, Medium, High, Critical)
+- **Suggested Actions**: Context-specific recommendations for resolving issues
+- **One-Click Solutions**: Automated fixes for common problems
+- **Error Context**: Detailed information about when and where errors occurred
+
+#### Intelligent Recovery
+
+- **Automatic Retry**: Smart retry logic with exponential backoff and circuit breaker protection
+- **Context-Aware Decisions**: Retry strategies adapt based on error type and history
+- **Recovery Suggestions**: User-friendly recommendations for manual intervention
+- **Progress Preservation**: Task state is preserved during error recovery
+- **Fallback Options**: Alternative approaches when primary methods fail
+
+#### Error Analytics
+
+- **Error Trends**: Track error frequency and patterns over time
+- **Success Rate Monitoring**: Monitor download success rates and identify issues
+- **Performance Impact**: Understand how errors affect overall system performance
+- **Resolution Tracking**: Track which solutions are most effective
+
+### Responsive Design & Accessibility
+
+VidTanium features a responsive interface that adapts to different screen sizes and user preferences:
+
+#### Adaptive Layout
+
+- **Screen Size Detection**: Automatically adjusts layout for different screen sizes
+- **Dynamic Scaling**: UI elements scale appropriately for optimal usability
+- **Flexible Navigation**: Navigation adapts between sidebar and compact modes
+- **Content Prioritization**: Important information remains visible on smaller screens
+
+#### Theme System
+
+- **Enhanced Theming**: Advanced theme management with system integration
+- **Automatic Detection**: Follows system theme preferences (Light/Dark/Auto)
+- **Custom Themes**: Support for custom color schemes and styling
+- **Accessibility**: High contrast options and accessibility-friendly color schemes
 
 ### Activity Logs
 
-Comprehensive logging interface for monitoring application activity:
+Enhanced logging interface for comprehensive application monitoring:
 
 #### Log Display
 
@@ -186,21 +266,21 @@ VidTanium supports various video URL formats:
 
 #### Direct M3U8 Links
 
-```
+```text
 https://example.com/video/playlist.m3u8
 https://stream.example.com/live/index.m3u8?token=abc123
 ```
 
 #### Web Pages with Embedded Videos
 
-```
+```text
 https://video-site.com/watch?v=abc123
 https://streaming-platform.com/video/episode-1
 ```
 
 #### API Endpoints
 
-```
+```text
 https://api.example.com/video/stream?id=123
 https://cdn.example.com/manifest/video.json
 ```

@@ -5,7 +5,7 @@ from PySide6.QtCore import Qt, Signal
 import os
 
 from qfluentwidgets import (
-    PushButton, CheckBox, FluentIcon
+    PushButton, CheckBox, FluentIcon as FIF
 )
 
 
@@ -59,7 +59,7 @@ class AdvancedTab(QWidget):
         ffmpeg_layout.addWidget(self.ffmpeg_path_input)
 
         self.browse_ffmpeg_button = PushButton("Browse...")
-        self.browse_ffmpeg_button.setIcon(FluentIcon.SEARCH)
+        self.browse_ffmpeg_button.setIcon(FIF.SEARCH)
         self.browse_ffmpeg_button.clicked.connect(self._browse_ffmpeg)
         ffmpeg_layout.addWidget(self.browse_ffmpeg_button)
 

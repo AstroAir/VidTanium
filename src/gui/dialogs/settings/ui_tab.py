@@ -24,7 +24,8 @@ class UITab(QWidget):
         # UI settings
         form_layout = QFormLayout()
         form_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
-        form_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        form_layout.setFieldGrowthPolicy(
+            QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         form_layout.setSpacing(12)
 
         # Show detailed progress

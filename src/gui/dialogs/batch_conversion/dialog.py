@@ -7,8 +7,8 @@ from PySide6.QtGui import QIcon
 import os
 from typing import Any, List, Dict, Optional, Union
 
-from qfluentwidgets import (  # type: ignore
-    FluentIcon, InfoBar, InfoBarPosition, MessageBox, PushButton
+from qfluentwidgets import (
+    FluentIcon as FIF, InfoBar, InfoBarPosition, MessageBox, PushButton
 )
 
 from .file_list_widget import FileListWidget
@@ -59,7 +59,8 @@ class BatchConversionDialog(QDialog):
         settings_container_layout.setContentsMargins(0, 0, 0, 0)
 
         # 转换设置组
-        settings_group = QGroupBox(tr("batch_conversion_dialog.sections.conversion_settings"))
+        settings_group = QGroupBox(
+            tr("batch_conversion_dialog.sections.conversion_settings"))
         settings_layout = QHBoxLayout(settings_group)
         settings_layout.setContentsMargins(15, 20, 15, 15)
         settings_layout.setSpacing(20)
@@ -76,24 +77,25 @@ class BatchConversionDialog(QDialog):
         self.splitter.addWidget(settings_container)
 
         # 设置分割器的初始大小比例
-        self.splitter.setSizes([300, 250])  # type: ignore
+        self.splitter.setSizes([300, 250])
 
         # 状态标签 - 在底部显示当前状态
         self.status_layout = QHBoxLayout()
         self.status_layout.setContentsMargins(5, 5, 5, 5)
 
-        self.file_count_label = QLabel(tr("batch_conversion_dialog.status.ready"))
+        self.file_count_label = QLabel(
+            tr("batch_conversion_dialog.status.ready"))
         self.status_layout.addWidget(self.file_count_label)
         self.status_layout.addStretch()
 
         # 添加标准按钮
         self.button_box = QDialogButtonBox()
-        self.close_button =        self.button_box.addButton(
+        self.close_button = self.button_box.addButton(
             tr("batch_conversion_dialog.buttons.close"), QDialogButtonBox.ButtonRole.RejectRole)
 
         # 使用 PushButton 替代 QPushButton
         self.convert_button = PushButton("开始转换")
-        self.convert_button.setIcon(FluentIcon.PLAY)  # type: ignore
+        self.convert_button.setIcon(FIF.PLAY)
         self.button_box.addButton(
             self.convert_button, QDialogButtonBox.ButtonRole.AcceptRole)
         self.convert_button.setEnabled(False)  # 初始时禁用，直到有文件
@@ -136,7 +138,7 @@ class BatchConversionDialog(QDialog):
         input_files: List[str] = self.file_list_widget.get_input_files()
 
         if not input_files:
-            InfoBar.warning(  # type: ignore
+            InfoBar.warning(
                 title="无文件",
                 content="请添加要转换的文件",
                 orient=Qt.Orientation.Horizontal,
@@ -228,7 +230,7 @@ class BatchConversionDialog(QDialog):
 
         # 显示结果
         if successful > 0:
-            InfoBar.success(  # type: ignore
+            InfoBar.success(
                 title="转换完成",
                 content=f"成功转换 {successful} 个文件，失败: {failed}",
                 orient=Qt.Orientation.Horizontal,
@@ -247,7 +249,7 @@ class BatchConversionDialog(QDialog):
             if error_messages:
                 error_summary += f"部分错误: {', '.join(error_messages[:3])}"
 
-            InfoBar.error(  # type: ignore
+            InfoBar.error(
                 title="转换失败",
                 content=error_summary,
                 orient=Qt.Orientation.Horizontal,

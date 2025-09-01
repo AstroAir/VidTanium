@@ -9,7 +9,7 @@ from PySide6.QtCore import Qt, QSize
 
 from qfluentwidgets import (
     TextEdit, CardWidget, StrongBodyLabel,
-    ToolButton, FluentIcon
+    ToolButton, FluentIcon as FIF
 )
 
 
@@ -31,7 +31,7 @@ class LogDetailPanel(CardWidget):
         header_layout.addWidget(self.detail_title)
 
         # Close button
-        self.close_detail_btn = ToolButton(FluentIcon.CLOSE, self)
+        self.close_detail_btn = ToolButton(FIF.CLOSE, self)
         self.close_detail_btn.setIconSize(QSize(12, 12))
         self.close_detail_btn.setToolTip("Close detail panel")
         self.close_detail_btn.clicked.connect(lambda: self.setVisible(False))

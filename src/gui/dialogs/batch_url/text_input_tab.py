@@ -5,9 +5,9 @@ from PySide6.QtCore import Qt, Signal
 # from PySide6.QtGui import QIcon
 from typing import Optional, List  # Added List for type hinting
 
-from qfluentwidgets import (  # type: ignore
+from qfluentwidgets import (
     PushButton, LineEdit, CardWidget, BodyLabel,
-    TextEdit, FluentIcon, InfoBarPosition, InfoBar,
+    TextEdit, FluentIcon as FIF, InfoBarPosition, InfoBar,
     StrongBodyLabel
 )
 
@@ -32,11 +32,11 @@ class TextInputTab(QWidget):
         layout.setSpacing(10)
 
         # 说明文本
-        hint_label = BodyLabel("请输入要导入的URL，每行一个:")  # type: ignore
+        hint_label = BodyLabel("请输入要导入的URL，每行一个:")
         layout.addWidget(hint_label)
 
         # 文本输入区域
-        self.text_input = TextEdit()  # type: ignore
+        self.text_input = TextEdit()
         self.text_input.setPlaceholderText("在此粘贴URL...")
         self.text_input.textChanged.connect(self._process_text_input)
         layout.addWidget(self.text_input)
@@ -45,29 +45,29 @@ class TextInputTab(QWidget):
         buttons_layout = QHBoxLayout()
         buttons_layout.setContentsMargins(0, 5, 0, 5)
 
-        self.paste_button = PushButton("从剪贴板粘贴")  # type: ignore
-        self.paste_button.setIcon(FluentIcon.COPY)  # type: ignore
+        self.paste_button = PushButton("从剪贴板粘贴")
+        self.paste_button.setIcon(FIF.COPY)
         self.paste_button.clicked.connect(self._paste_from_clipboard)
         buttons_layout.addWidget(self.paste_button)
 
-        self.clear_button = PushButton("清空")  # type: ignore
-        self.clear_button.setIcon(FluentIcon.DELETE)  # type: ignore
+        self.clear_button = PushButton("清空")
+        self.clear_button.setIcon(FIF.DELETE)
         self.clear_button.clicked.connect(self._clear_text)
         buttons_layout.addWidget(self.clear_button)
 
         layout.addLayout(buttons_layout)
 
         # 选项
-        options_card = CardWidget(self)  # type: ignore
+        options_card = CardWidget(self)
         options_layout = QFormLayout(options_card)
         options_layout.setContentsMargins(15, 10, 15, 10)
         options_layout.setSpacing(10)
 
         # 正则表达式过滤
-        options_title = StrongBodyLabel("过滤选项")  # type: ignore
+        options_title = StrongBodyLabel("过滤选项")
         options_layout.addRow(options_title)
 
-        self.regex_input = LineEdit()  # type: ignore
+        self.regex_input = LineEdit()
         self.regex_input.setPlaceholderText("例如: .*\\.mp4|.*\\.m3u8")
         self.regex_input.textChanged.connect(self._process_text_input)
         options_layout.addRow("正则表达式过滤:", self.regex_input)
@@ -80,22 +80,22 @@ class TextInputTab(QWidget):
         text = clipboard.text()
         if text:
             self.text_input.setText(text)
-            InfoBar.success(  # type: ignore
+            InfoBar.success(
                 title="粘贴成功",
                 content="已从剪贴板粘贴文本",
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
-                position=InfoBarPosition.TOP,  # type: ignore
+                position=InfoBarPosition.TOP,
                 duration=2000,
                 parent=self
             )
         else:
-            InfoBar.warning(  # type: ignore
+            InfoBar.warning(
                 title="粘贴失败",
                 content="剪贴板中没有文本内容",
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
-                position=InfoBarPosition.TOP,  # type: ignore
+                position=InfoBarPosition.TOP,
                 duration=2000,
                 parent=self
             )
@@ -105,12 +105,12 @@ class TextInputTab(QWidget):
         self.text_input.clear()
         self._process_text_input()
 
-        InfoBar.success(  # type: ignore
+        InfoBar.success(
             title="已清空",
             content="文本框内容已清空",
             orient=Qt.Orientation.Horizontal,
             isClosable=True,
-            position=InfoBarPosition.TOP,  # type: ignore
+            position=InfoBarPosition.TOP,
             duration=2000,
             parent=self
         )

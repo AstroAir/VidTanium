@@ -115,8 +115,6 @@ class SchedulerTask:
 
                 return None
 
-            return None
-
         else:
             # Not first calculation
             if self.task_type == TaskType.ONE_TIME:
@@ -158,8 +156,6 @@ class SchedulerTask:
                     days_ahead += 1
 
                 return None
-
-            return None
 
     def mark_executed(self) -> None:
         """Mark task as executed"""

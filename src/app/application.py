@@ -1,25 +1,51 @@
+from src.gui.utils.i18n import init_i18n, set_locale
+from src.core.scheduler import TaskScheduler
+from src.gui.main_window import MainWindow
+from src.core.downloader import DownloadManager
+from .settings import Settings
 import sys
 import os
 from .logging_config import ensure_logging_configured
 from loguru import logger
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import QObject, QTranslator, QLocale
+from PySide6.QtCore import QObject, QTranslator, QLocale, QMutex
+from typing import Optional
 
 # Ensure logging is configured first
 ensure_logging_configured()
 
-from .settings import Settings
-from src.core.downloader import DownloadManager
-from src.gui.main_window import MainWindow
-from src.core.scheduler import TaskScheduler
-from src.gui.utils.i18n import init_i18n, set_locale
-
 
 class Application(QApplication):
-    """Application class"""
+    """Singleton Application class with enhanced interface management"""
+    _instance: Optional['Application'] = None
+    _mutex = QMutex()
+
+    def __new__(cls, config_dir=None):
+        """Ensure singleton pattern"""
+        cls._mutex.lock()
+        try:
+            if cls._instance is None:
+                logger.debug("Creating new Application instance")
+                cls._instance = super().__new__(cls)
+                cls._instance._initialized = False
+            else:
+                logger.debug("Returning existing Application instance")
+            return cls._instance
+        finally:
+            cls._mutex.unlock()
+
+    @classmethod
+    def instance(cls) -> Optional['Application']:
+        """Get the singleton instance"""
+        return cls._instance
 
     def __init__(self, config_dir=None):
+        if hasattr(self, '_initialized') and self._initialized:
+            logger.debug("Application already initialized, skipping")
+            return
+            
         super().__init__(sys.argv)
+        self._initialized = True
 
         # Initialize settings
         self.settings = Settings(config_dir)
@@ -42,8 +68,8 @@ class Application(QApplication):
             set_locale(self._pending_locale)
 
         # Initialize theme manager
-        from src.gui.theme_manager import ThemeManager
-        self.theme_manager = ThemeManager(self.settings, self)
+        from src.gui.theme_manager import EnhancedThemeManager
+        self.theme_manager = EnhancedThemeManager(self.settings, self)
 
         # Initialize download manager
         self.download_manager = DownloadManager(self.settings)
@@ -57,7 +83,7 @@ class Application(QApplication):
         self.task_scheduler.register_handler(
             "download", self._handle_download_task)        # Create main window
         self.main_window = MainWindow(
-            self, self.download_manager, self.settings, self.theme_manager)  # type: ignore
+            self, self.download_manager, self.settings, self.theme_manager)
 
         # Check initial settings
         self._check_initial_settings()
@@ -116,7 +142,7 @@ class Application(QApplication):
     def _apply_theme(self):
         """Apply theme settings using QFluentWidgets"""
         from qfluentwidgets import setTheme, Theme, qconfig
-        
+
         theme = self.settings.get("general", "theme", "system")
         logger.debug(f"Applying theme: {theme}")
 
@@ -133,17 +159,18 @@ class Application(QApplication):
                 # Follow system theme
                 setTheme(Theme.AUTO)
                 logger.debug("Applied system theme")
-                
+
             # Save theme configuration
             qconfig.save()
-            
+
         except Exception as e:
             logger.error(f"Error applying theme: {e}", exc_info=True)
 
     def _apply_language(self):
         """Apply language settings"""
         language = self.settings.get("general", "language", "auto")
-        logger.debug(f"Setting application language: {language}")        # Determine locale
+        # Determine locale
+        logger.debug(f"Setting application language: {language}")
         if language == "auto":
             # Use system language
             system_locale = QLocale.system().name()

@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QVBoxLayout, QDialog, QDialogButtonBox, QWidget
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QIcon
 
-from qfluentwidgets import TabWidget, FluentIcon, SubtitleLabel  # type: ignore
+from qfluentwidgets import TabWidget, FluentIcon as FIF, SubtitleLabel
 
 from .text_input_tab import TextInputTab
 from .file_input_tab import FileInputTab
@@ -43,29 +43,29 @@ class BatchURLDialog(QDialog):
         main_layout.setContentsMargins(15, 15, 15, 15)
 
         # 标题
-        self.title_label = SubtitleLabel("批量导入URL")  # type: ignore
+        self.title_label = SubtitleLabel("批量导入URL")
         main_layout.addWidget(self.title_label)
 
         # 创建选项卡
-        self.tabs = TabWidget()  # type: ignore
+        self.tabs = TabWidget()
 
         # 文本输入选项卡
         self.text_tab = TextInputTab(self)
-        self.tabs.addTab(self.text_tab, "文本输入")  # type: ignore
+        self.tabs.addTab(self.text_tab, "文本输入")
 
         # 文件选项卡
         self.file_tab = FileInputTab(self)
-        self.tabs.addTab(self.file_tab, "从文件导入")  # type: ignore
+        self.tabs.addTab(self.file_tab, "从文件导入")
 
         # 网页抓取选项卡
         self.web_tab = WebScrapingTab(self.settings, self)
-        self.tabs.addTab(self.web_tab, "从网页抓取")  # type: ignore
+        self.tabs.addTab(self.web_tab, "从网页抓取")
 
-        main_layout.addWidget(self.tabs)  # type: ignore
+        main_layout.addWidget(self.tabs)
 
         # URL列表预览
-        self.url_preview_widget = URLPreviewWidget(self)  # type: ignore
-        main_layout.addWidget(self.url_preview_widget)  # type: ignore
+        self.url_preview_widget = URLPreviewWidget(self)
+        main_layout.addWidget(self.url_preview_widget)
 
         # 添加标准按钮
         self.button_box = QDialogButtonBox(
@@ -78,7 +78,7 @@ class BatchURLDialog(QDialog):
 
         if ok_button:
             ok_button.setText("导入")
-            ok_button.setIcon(QIcon(FluentIcon.DOWNLOAD))  # type: ignore
+            ok_button.setIcon(QIcon(FIF.DOWNLOAD))
             ok_button.setEnabled(False)
 
         if cancel_button:
@@ -98,7 +98,7 @@ class BatchURLDialog(QDialog):
 
     def _update_url_preview(self, urls: List[str]) -> None:
         """更新URL预览"""
-        has_urls = self.url_preview_widget.update_urls(urls)  # type: ignore
+        has_urls = self.url_preview_widget.update_urls(urls)
         self.urls = urls
 
         # 启用/禁用导入按钮

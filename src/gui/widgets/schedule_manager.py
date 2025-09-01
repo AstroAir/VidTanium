@@ -1,5 +1,6 @@
-"""计划任务管理器主界面 - 已重构使用拆分组件"""
+"""Enhanced Schedule Manager with responsive design and modern theming"""
 
+from typing import Optional
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSplitter
 )
@@ -11,128 +12,354 @@ import logging
 from qfluentwidgets import (
     InfoBar, InfoBarPosition, MessageBox, Action, RoundMenu,
     SearchLineEdit, ComboBox, SubtitleLabel, ToggleButton,
-    CardWidget, FluentIcon
+    CardWidget, FluentIcon as FIF, ElevatedCardWidget, HeaderCardWidget,
+    StrongBodyLabel, BodyLabel, CaptionLabel
 )
 
-# 导入拆分后的组件
+# Import split components
 from .schedule.task_details_widget import TaskDetailsWidget
 from .schedule.task_table import TaskTable
 from .schedule.schedule_toolbar import ScheduleToolbar
 
-# 导入国际化支持
+# Import responsive design and theming
 from ..utils.i18n import tr
+from ..utils.responsive import ResponsiveWidget, ResponsiveManager, ResponsiveContainer
+from ..utils.theme import VidTaniumTheme
+from ..theme_manager import EnhancedThemeManager
+from loguru import logger
 
-logger = logging.getLogger(__name__)
 
-
-class ScheduleManager(QWidget):
-    """计划任务管理器界面
+class EnhancedScheduleManager(ResponsiveWidget):
+    """Enhanced schedule manager with responsive design and modern theming
     
-    已完全集成国际化(i18n)系统：
-    - 所有用户可见文本都通过翻译函数 tr() 获取
-    - 支持动态语言切换，调用 update_locale() 方法
-    - 翻译键值存储在 locales/zh_CN.json 和 locales/en.json 中的 schedule_manager 节点下
-    - 子组件也需要实现 update_locale() 方法以支持完整的语言切换
+    Features:
+    - Full responsive design with breakpoint adaptation
+    - Enhanced theming integration with EnhancedThemeManager
+    - Modern card-based layout with improved visual hierarchy
+    - Adaptive layouts for different screen sizes
+    - Performance optimizations and smooth animations
     """
 
-    # 可配置的自动刷新间隔（毫秒）
-    AUTO_REFRESH_INTERVAL_MS = 30 * 1000  # 默认30秒
+    # Configurable auto-refresh interval (milliseconds)
+    AUTO_REFRESH_INTERVAL_MS = 30 * 1000  # Default 30 seconds
 
-    # 信号定义
+    # Signal definitions
     task_action_requested = Signal(str, str)  # task_id, action
 
-    def __init__(self, scheduler, parent=None):
+    def __init__(self, scheduler, theme_manager=None, parent=None):
         super().__init__(parent)
 
         self.scheduler = scheduler
-        self.current_filter = "all"  # 当前过滤器
+        self.theme_manager = theme_manager
+        self.responsive_manager = ResponsiveManager.instance()
+        self.current_filter = "all"
         self.refresh_timer = None
 
-        self._create_ui()
+        self._create_enhanced_ui()
         self._connect_signals()
+        self._apply_enhanced_theming()
         self._populate_tasks()
         self._setup_auto_refresh()
 
-    def _create_ui(self):
-        """创建界面"""
+    def _create_enhanced_ui(self):
+        """Create enhanced responsive UI"""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(10)
+        
+        current_bp = self.responsive_manager.get_current_breakpoint()
+        if current_bp.value in ['xs', 'sm']:
+            layout.setSpacing(12)
+        else:
+            layout.setSpacing(16)
 
-        # 顶部标题
-        title_layout = QHBoxLayout()
-        title_layout.setContentsMargins(0, 0, 0, 0)
+        # Enhanced header with responsive design
+        self._create_enhanced_header(layout)
+
+        # Enhanced toolbar
+        self._create_enhanced_toolbar(layout)
+
+        # Responsive main content area
+        self._create_responsive_content(layout)
+
+    def _create_enhanced_header(self, parent_layout):
+        """Create enhanced header with gradient and responsive design"""
+        current_bp = self.responsive_manager.get_current_breakpoint()
+        
+        header_card = HeaderCardWidget()
+        if current_bp.value in ['xs', 'sm']:
+            header_card.setFixedHeight(60)
+        else:
+            header_card.setFixedHeight(80)
+
+        header_layout = QHBoxLayout(header_card)
+        if current_bp.value in ['xs', 'sm']:
+            header_layout.setContentsMargins(16, 12, 16, 12)
+            header_layout.setSpacing(12)
+        else:
+            header_layout.setContentsMargins(24, 16, 24, 16)
+            header_layout.setSpacing(16)
+
+        # Title section with responsive typography
+        title_layout = QVBoxLayout()
+        title_layout.setSpacing(4)
 
         self.title_label = SubtitleLabel(tr("schedule_manager.title"))
+        if current_bp.value in ['xs', 'sm']:
+            self.title_label.setStyleSheet(f"""
+                font-size: {VidTaniumTheme.FONT_SIZE_SUBHEADING};
+                font-weight: {VidTaniumTheme.FONT_WEIGHT_SEMIBOLD};
+                color: {VidTaniumTheme.TEXT_PRIMARY};
+                margin: 0;
+            """)
+        else:
+            self.title_label.setStyleSheet(f"""
+                font-size: {VidTaniumTheme.FONT_SIZE_HEADING};
+                font-weight: {VidTaniumTheme.FONT_WEIGHT_BOLD};
+                color: {VidTaniumTheme.TEXT_PRIMARY};
+                margin: 0;
+            """)
         title_layout.addWidget(self.title_label)
 
-        title_layout.addStretch()
+        if current_bp.value not in ['xs', 'sm']:
+            subtitle_label = CaptionLabel(tr("schedule_manager.subtitle"))
+            subtitle_label.setStyleSheet(f"""
+                color: {VidTaniumTheme.TEXT_SECONDARY};
+                font-size: {VidTaniumTheme.FONT_SIZE_CAPTION};
+                margin: 0;
+            """)
+            title_layout.addWidget(subtitle_label)
 
-        # 自动刷新开关
+        header_layout.addLayout(title_layout)
+        header_layout.addStretch()
+
+        # Auto-refresh toggle with enhanced styling
         self.auto_refresh = ToggleButton(tr("schedule_manager.auto_refresh"))
         self.auto_refresh.setChecked(True)
-        title_layout.addWidget(self.auto_refresh)
+        if current_bp.value in ['xs', 'sm']:
+            self.auto_refresh.setFixedSize(80, 32)
+        else:
+            self.auto_refresh.setFixedSize(120, 36)
+        header_layout.addWidget(self.auto_refresh)
 
-        layout.addLayout(title_layout)
+        parent_layout.addWidget(header_card)
 
-        # 工具栏
+    def _create_enhanced_toolbar(self, parent_layout):
+        """Create enhanced responsive toolbar"""
+        toolbar_card = ElevatedCardWidget()
+        toolbar_layout = QVBoxLayout(toolbar_card)
+        
+        current_bp = self.responsive_manager.get_current_breakpoint()
+        if current_bp.value in ['xs', 'sm']:
+            toolbar_layout.setContentsMargins(12, 12, 12, 12)
+            toolbar_layout.setSpacing(12)
+        else:
+            toolbar_layout.setContentsMargins(16, 16, 16, 16)
+            toolbar_layout.setSpacing(16)
+
+        # Toolbar with responsive behavior
         self.toolbar = ScheduleToolbar(self)
-        layout.addWidget(self.toolbar)
+        toolbar_layout.addWidget(self.toolbar)
 
-        # 主分割器: 表格 + 详情面板
-        self.splitter = QSplitter(Qt.Orientation.Horizontal)
-        self.splitter.setChildrenCollapsible(False)
+        # Search and filter section with responsive layout
+        filter_section = QWidget()
+        if current_bp.value in ['xs', 'sm']:
+            # Vertical layout for small screens
+            filter_layout = QVBoxLayout(filter_section)
+            filter_layout.setSpacing(8)
+        else:
+            # Horizontal layout for larger screens
+            filter_layout = QHBoxLayout(filter_section)
+            filter_layout.setSpacing(12)
+        
+        filter_layout.setContentsMargins(0, 0, 0, 0)
 
-        # 左侧表格
-        table_card = CardWidget()
-        table_layout = QVBoxLayout(table_card)
-        table_layout.setContentsMargins(10, 10, 10, 10)
-        table_layout.setSpacing(10)
-
-        # 搜索和过滤行
-        filter_layout = QHBoxLayout()
-
+        # Enhanced search input
         self.search_input = SearchLineEdit()
         self.search_input.setPlaceholderText(tr("schedule_manager.search.placeholder"))
+        if current_bp.value in ['xs', 'sm']:
+            self.search_input.setMinimumHeight(36)
+        else:
+            self.search_input.setMinimumHeight(40)
         filter_layout.addWidget(self.search_input, 2)
 
+        # Enhanced filter combo
         self.filter_combo = ComboBox()
         self.filter_combo.addItems([
             tr("schedule_manager.filters.all"),
-            tr("schedule_manager.filters.enabled"), 
+            tr("schedule_manager.filters.enabled"),
             tr("schedule_manager.filters.disabled"),
             tr("schedule_manager.filters.one_time"),
             tr("schedule_manager.filters.recurring")
         ])
+        if current_bp.value in ['xs', 'sm']:
+            self.filter_combo.setMinimumHeight(36)
+        else:
+            self.filter_combo.setMinimumHeight(40)
         filter_layout.addWidget(self.filter_combo, 1)
 
-        table_layout.addLayout(filter_layout)
+        toolbar_layout.addWidget(filter_section)
+        parent_layout.addWidget(toolbar_card)
 
-        # 任务表格
+    def _create_responsive_content(self, parent_layout):
+        """Create responsive main content area"""
+        current_bp = self.responsive_manager.get_current_breakpoint()
+        
+        # Responsive splitter configuration
+        if current_bp.value in ['xs', 'sm']:
+            # Vertical layout for small screens
+            self.splitter = QSplitter(Qt.Orientation.Vertical)
+        else:
+            # Horizontal layout for larger screens
+            self.splitter = QSplitter(Qt.Orientation.Horizontal)
+        
+        self.splitter.setChildrenCollapsible(False)
+
+        # Enhanced table card
+        self._create_enhanced_table_card()
+
+        # Enhanced details panel
+        self._create_enhanced_details_panel()
+
+        # Responsive splitter sizing
+        if current_bp.value in ['xs', 'sm']:
+            self.splitter.setStretchFactor(0, 3)
+            self.splitter.setStretchFactor(1, 1)
+        else:
+            self.splitter.setStretchFactor(0, 2)
+            self.splitter.setStretchFactor(1, 1)
+
+        parent_layout.addWidget(self.splitter)
+
+    def _create_enhanced_table_card(self):
+        """Create enhanced table card with modern styling"""
+        table_card = ElevatedCardWidget()
+        table_layout = QVBoxLayout(table_card)
+        
+        current_bp = self.responsive_manager.get_current_breakpoint()
+        if current_bp.value in ['xs', 'sm']:
+            table_layout.setContentsMargins(12, 12, 12, 12)
+            table_layout.setSpacing(12)
+        else:
+            table_layout.setContentsMargins(16, 16, 16, 16)
+            table_layout.setSpacing(16)
+
+        # Enhanced table header
+        table_header = StrongBodyLabel(tr("schedule_manager.table.title"))
+        table_header.setStyleSheet(f"""
+            font-size: {VidTaniumTheme.FONT_SIZE_SUBHEADING};
+            font-weight: {VidTaniumTheme.FONT_WEIGHT_SEMIBOLD};
+            color: {VidTaniumTheme.TEXT_PRIMARY};
+            margin-bottom: 8px;
+        """)
+        table_layout.addWidget(table_header)
+
+        # Enhanced task table
         self.task_table = TaskTable()
         table_layout.addWidget(self.task_table)
 
-        # 状态栏
-        status_layout = QHBoxLayout()
-        self.status_label = QLabel(tr("schedule_manager.loading"))
+        # Enhanced status bar
+        self._create_enhanced_status_bar(table_layout)
+
+        self.splitter.addWidget(table_card)
+
+    def _create_enhanced_status_bar(self, parent_layout):
+        """Create enhanced status bar with modern styling"""
+        status_container = ResponsiveContainer()
+        status_layout = QHBoxLayout(status_container)
+        
+        current_bp = self.responsive_manager.get_current_breakpoint()
+        if current_bp.value in ['xs', 'sm']:
+            status_layout.setContentsMargins(8, 8, 8, 8)
+            status_layout.setSpacing(8)
+        else:
+            status_layout.setContentsMargins(12, 12, 12, 12)
+            status_layout.setSpacing(12)
+
+        # Enhanced status label
+        self.status_label = BodyLabel(tr("schedule_manager.loading"))
+        self.status_label.setStyleSheet(f"""
+            color: {VidTaniumTheme.TEXT_SECONDARY};
+            font-size: {VidTaniumTheme.FONT_SIZE_CAPTION};
+        """)
         status_layout.addWidget(self.status_label)
 
         status_layout.addStretch()
 
-        self.next_update_label = QLabel()
+        # Enhanced refresh countdown
+        self.next_update_label = CaptionLabel()
+        self.next_update_label.setStyleSheet(f"""
+            color: {VidTaniumTheme.TEXT_TERTIARY};
+            font-size: {VidTaniumTheme.FONT_SIZE_MICRO};
+        """)
         status_layout.addWidget(self.next_update_label)
 
-        table_layout.addLayout(status_layout)
+        parent_layout.addWidget(status_container)
 
-        self.splitter.addWidget(table_card)
-
-        # 右侧详情面板
+    def _create_enhanced_details_panel(self):
+        """Create enhanced details panel"""
+        # Enhanced task details widget
         self.task_details = TaskDetailsWidget()
         self.splitter.addWidget(self.task_details)
-        self.splitter.setStretchFactor(0, 2)
-        self.splitter.setStretchFactor(1, 1)
+        # Initially hidden
+        self.task_details.setVisible(False)
 
-        layout.addWidget(self.splitter)
+    def _apply_enhanced_theming(self):
+        """Apply enhanced theming to the schedule manager"""
+        if self.theme_manager:
+            colors = self.theme_manager.get_theme_colors()
+            accent_color = self.theme_manager.ACCENT_COLORS.get(
+                self.theme_manager.get_current_accent(), '#0078D4'
+            )
+            
+            # Apply enhanced styling
+            self.setStyleSheet(f"""
+                ScheduleManager {{
+                    background-color: {colors.get('background', VidTaniumTheme.BG_PRIMARY)};
+                }}
+                ElevatedCardWidget {{
+                    background-color: {colors.get('surface', VidTaniumTheme.BG_SURFACE)};
+                    border: 1px solid {colors.get('border', VidTaniumTheme.BORDER_LIGHT)};
+                    border-radius: 8px;
+                    box-shadow: 0 2px 8px {colors.get('shadow', 'rgba(0, 0, 0, 0.1)')};
+                }}
+                HeaderCardWidget {{
+                    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                        stop:0 {accent_color}, stop:1 rgba(255, 255, 255, 0.1));
+                    border: none;
+                    border-radius: 8px;
+                }}
+                SearchLineEdit, ComboBox {{
+                    background-color: {colors.get('surface', VidTaniumTheme.BG_SURFACE)};
+                    border: 2px solid {colors.get('border', VidTaniumTheme.BORDER_LIGHT)};
+                    border-radius: 6px;
+                    padding: 8px 12px;
+                }}
+                SearchLineEdit:focus, ComboBox:focus {{
+                    border-color: {accent_color};
+                }}
+                QSplitter::handle {{
+                    background-color: {colors.get('border', VidTaniumTheme.BORDER_LIGHT)};
+                }}
+                QSplitter::handle:horizontal {{
+                    width: 2px;
+                }}
+                QSplitter::handle:vertical {{
+                    height: 2px;
+                }}
+            """)
+
+    def on_breakpoint_changed(self, breakpoint: str):
+        """Handle responsive breakpoint changes"""
+        logger.debug(f"Schedule manager adapting to breakpoint: {breakpoint}")
+        # Recreate UI with new breakpoint
+        self._create_enhanced_ui()
+        self._apply_enhanced_theming()
+
+    def update_theme(self, theme_manager: Optional[EnhancedThemeManager] = None):
+        """Update theme styling"""
+        if theme_manager:
+            self.theme_manager = theme_manager
+        self._apply_enhanced_theming()
 
     def _connect_signals(self):
         """连接信号与槽"""
@@ -168,7 +395,8 @@ class ScheduleManager(QWidget):
         self.toolbar.refresh_clicked.connect(self._populate_tasks)
         self.toolbar.enable_all_clicked.connect(self._on_enable_all)
         self.toolbar.disable_all_clicked.connect(self._on_disable_all)
-        self.toolbar.view_details_toggled.connect(self.task_details.setVisible)        # 初始隐藏详情面板
+        self.toolbar.view_details_toggled.connect(
+            self.task_details.setVisible)        # 初始隐藏详情面板
         self.task_details.setVisible(False)
 
     def _setup_auto_refresh(self):
@@ -182,12 +410,14 @@ class ScheduleManager(QWidget):
         """更新刷新倒计时"""
         if self.refresh_timer and self.refresh_timer.isActive():
             seconds = self.refresh_timer.remainingTime() // 1000
-            self.next_update_label.setText(tr("schedule_manager.status_bar.refresh_in", seconds=seconds))
+            self.next_update_label.setText(
+                tr("schedule_manager.status_bar.refresh_in", seconds=seconds))
 
             # 每秒更新倒计时
             QTimer.singleShot(1000, self._update_refresh_countdown)
         else:
-            self.next_update_label.setText(tr("schedule_manager.auto_refresh_off"))
+            self.next_update_label.setText(
+                tr("schedule_manager.auto_refresh_off"))
 
     def _toggle_auto_refresh(self, enabled):
         """切换自动刷新"""
@@ -196,7 +426,8 @@ class ScheduleManager(QWidget):
             self._update_refresh_countdown()
         elif self.refresh_timer:
             self.refresh_timer.stop()
-            self.next_update_label.setText(tr("schedule_manager.auto_refresh_off"))
+            self.next_update_label.setText(
+                tr("schedule_manager.auto_refresh_off"))
 
     def _auto_refresh(self):
         """自动刷新"""
@@ -217,7 +448,8 @@ class ScheduleManager(QWidget):
         # 更新状态栏信息
         visible_rows = self.task_table.get_visible_rows_count()
         total_rows = self.task_table.get_total_rows_count()
-        self.status_label.setText(tr("schedule_manager.status_bar.showing", visible=visible_rows, total=total_rows))
+        self.status_label.setText(
+            tr("schedule_manager.status_bar.showing", visible=visible_rows, total=total_rows))
 
     def _populate_tasks(self):
         """填充任务列表"""
@@ -276,28 +508,33 @@ class ScheduleManager(QWidget):
             return
 
         # 创建上下文菜单
-        menu = RoundMenu(tr("schedule_manager.context_menu.task_actions"), self)
+        menu = RoundMenu(
+            tr("schedule_manager.context_menu.task_actions"), self)
 
         # 添加不同操作基于任务状态
         if task.enabled:
-            disable_action = Action(FluentIcon.PAUSE, tr("schedule_manager.actions.disable"))
+            disable_action = Action(FIF.PAUSE, tr(
+                "schedule_manager.actions.disable"))
             disable_action.triggered.connect(
                 lambda: self.task_action_requested.emit(task_id, "disable"))
             menu.addAction(disable_action)
         else:
-            enable_action = Action(FluentIcon.PLAY, tr("schedule_manager.actions.enable"))
+            enable_action = Action(FIF.PLAY, tr(
+                "schedule_manager.actions.enable"))
             enable_action.triggered.connect(
                 lambda: self.task_action_requested.emit(task_id, "enable"))
             menu.addAction(enable_action)
 
         # 立即执行
-        run_now_action = Action(FluentIcon.PLAY_SOLID, tr("schedule_manager.actions.run_now"))
+        run_now_action = Action(FIF.PLAY_SOLID, tr(
+            "schedule_manager.actions.run_now"))
         run_now_action.triggered.connect(
             lambda: self.task_action_requested.emit(task_id, "run_now"))
         menu.addAction(run_now_action)
 
         # 查看详情
-        view_details_action = Action(FluentIcon.INFO, tr("schedule_manager.actions.view_details"))
+        view_details_action = Action(FIF.INFO, tr(
+            "schedule_manager.actions.view_details"))
         view_details_action.triggered.connect(
             lambda: self._show_task_details(task_id))
         menu.addAction(view_details_action)
@@ -305,7 +542,8 @@ class ScheduleManager(QWidget):
         menu.addSeparator()
 
         # 删除操作
-        remove_action = Action(FluentIcon.DELETE, tr("schedule_manager.actions.delete"))
+        remove_action = Action(FIF.DELETE, tr(
+            "schedule_manager.actions.delete"))
         remove_action.triggered.connect(
             lambda: self.task_action_requested.emit(task_id, "remove"))
         menu.addAction(remove_action)
@@ -315,8 +553,8 @@ class ScheduleManager(QWidget):
 
     def _on_enable_all(self):
         """启用所有任务"""
-        result = MessageBox(tr("schedule_manager.batch_operations.title"), 
-                           tr("schedule_manager.messages.confirm_enable_all"), self).exec()
+        result = MessageBox(tr("schedule_manager.batch_operations.title"),
+                            tr("schedule_manager.messages.confirm_enable_all"), self).exec()
         if not result:
             return
 
@@ -329,16 +567,16 @@ class ScheduleManager(QWidget):
                 enabled_count += 1
 
         if enabled_count > 0:
-            self.show_message(tr("schedule_manager.batch_operations.title"), 
-                            tr("schedule_manager.messages.batch_enabled", count=enabled_count))
+            self.show_message(tr("schedule_manager.batch_operations.title"),
+                              tr("schedule_manager.messages.batch_enabled", count=enabled_count))
         else:
-            self.show_message(tr("schedule_manager.batch_operations.title"), 
-                            tr("schedule_manager.messages.no_tasks_to_enable"), type_="info")
+            self.show_message(tr("schedule_manager.batch_operations.title"),
+                              tr("schedule_manager.messages.no_tasks_to_enable"), type_="info")
 
     def _on_disable_all(self):
         """禁用所有任务"""
-        result = MessageBox(tr("schedule_manager.batch_operations.title"), 
-                           tr("schedule_manager.messages.confirm_disable_all"), self).exec()
+        result = MessageBox(tr("schedule_manager.batch_operations.title"),
+                            tr("schedule_manager.messages.confirm_disable_all"), self).exec()
         if not result:
             return
 
@@ -351,11 +589,11 @@ class ScheduleManager(QWidget):
                 disabled_count += 1
 
         if disabled_count > 0:
-            self.show_message(tr("schedule_manager.batch_operations.title"), 
-                            tr("schedule_manager.messages.batch_disabled", count=disabled_count))
+            self.show_message(tr("schedule_manager.batch_operations.title"),
+                              tr("schedule_manager.messages.batch_disabled", count=disabled_count))
         else:
-            self.show_message(tr("schedule_manager.batch_operations.title"), 
-                            tr("schedule_manager.messages.no_tasks_to_disable"), type_="info")
+            self.show_message(tr("schedule_manager.batch_operations.title"),
+                              tr("schedule_manager.messages.no_tasks_to_disable"), type_="info")
 
     def show_message(self, title, content, type_="success"):
         """显示消息通知"""
@@ -390,29 +628,35 @@ class ScheduleManager(QWidget):
         # 更新标题和按钮文本
         self.title_label.setText(tr("schedule_manager.title"))
         self.auto_refresh.setText(tr("schedule_manager.auto_refresh"))
-        
+
         # 更新搜索框占位符
-        self.search_input.setPlaceholderText(tr("schedule_manager.search.placeholder"))
-        
+        self.search_input.setPlaceholderText(
+            tr("schedule_manager.search.placeholder"))
+
         # 更新过滤器选项
         self.filter_combo.clear()
         self.filter_combo.addItems([
             tr("schedule_manager.filters.all"),
-            tr("schedule_manager.filters.enabled"), 
+            tr("schedule_manager.filters.enabled"),
             tr("schedule_manager.filters.disabled"),
             tr("schedule_manager.filters.one_time"),
             tr("schedule_manager.filters.recurring")
         ])
-        
+
         # 更新状态标签
         if hasattr(self, 'task_table'):
             visible_rows = self.task_table.get_visible_rows_count()
             total_rows = self.task_table.get_total_rows_count()
-            self.status_label.setText(tr("schedule_manager.status_bar.showing", visible=visible_rows, total=total_rows))
-        
+            self.status_label.setText(
+                tr("schedule_manager.status_bar.showing", visible=visible_rows, total=total_rows))
+
         # 更新刷新状态文本
         if self.refresh_timer and self.refresh_timer.isActive():
             self._update_refresh_countdown()
         else:
-            self.next_update_label.setText(tr("schedule_manager.auto_refresh_off"))
-        
+            self.next_update_label.setText(
+                tr("schedule_manager.auto_refresh_off"))
+
+
+# Backward compatibility alias
+ScheduleManager = EnhancedScheduleManager
