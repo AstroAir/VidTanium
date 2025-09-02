@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch, Mock
 import os
-from decryptor import decrypt_data
+from src.core.decryptor import decrypt_data
 from Crypto.Cipher import AES
 
 

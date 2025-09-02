@@ -11,7 +11,7 @@ from qfluentwidgets import (
     SpinBox, CheckBox, ComboBox, SwitchButton,
     LineEdit as FluentLineEdit,
     # Cards and Layout
-    ElevatedCardWidget,
+    ElevatedCardWidget, CardWidget,
     # Labels and Text
     StrongBodyLabel, BodyLabel,
     # Icons

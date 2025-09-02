@@ -3,7 +3,7 @@ from unittest.mock import patch, Mock
 from typing import Dict, Any
 
 # 导入要测试的模块
-from analyzer import MediaAnalyzer
+from src.core.analyzer import MediaAnalyzer
 
 
 class TestMediaAnalyzer:
@@ -36,8 +36,8 @@ class TestMediaAnalyzer:
     # 移除对受保护方法的直接测试，改为测试公开方法
     def test_analyze_url_with_direct_m3u8(self):
         """测试使用直接 M3U8 URL 的 analyze_url 方法。"""
-        with patch('analyzer.MediaAnalyzer._is_direct_m3u8') as mock_is_direct_m3u8:
-            with patch('analyzer.MediaAnalyzer.analyze_m3u8') as mock_analyze_m3u8:
+        with patch('src.core.analyzer.MediaAnalyzer._is_direct_m3u8') as mock_is_direct_m3u8:
+            with patch('src.core.analyzer.MediaAnalyzer.analyze_m3u8') as mock_analyze_m3u8:
                 # 模拟内部方法行为
                 mock_is_direct_m3u8.return_value = True
                 mock_analyze_m3u8.return_value = {

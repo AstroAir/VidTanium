@@ -5,7 +5,8 @@ Provides intelligent error handling, retry strategies, and user-friendly error r
 
 import time
 import random
-from typing import Optional, Callable, Any, Dict, List, Tuple
+import re
+from typing import Optional, Callable, Any, Dict, List, Tuple, Pattern
 from dataclasses import dataclass
 from enum import Enum
 from loguru import logger
@@ -17,6 +18,205 @@ from .exceptions import (
     ResourceException, SystemException, ErrorContext, UserAction,
     PermissionException, InsufficientSpaceException, DecryptionKeyException, MemoryException
 )
+
+
+@dataclass
+class ExceptionPattern:
+    """Pattern for matching and converting exceptions"""
+    patterns: List[str]
+    exception_class: type
+    priority: int = 0  # Higher priority patterns are checked first
+
+    def __post_init__(self):
+        # Compile regex patterns for better performance
+        self.compiled_patterns = [re.compile(pattern, re.IGNORECASE) for pattern in self.patterns]
+
+
+class ExceptionConverter:
+    """Optimized exception converter using lookup tables and compiled regex"""
+
+    def __init__(self):
+        self._initialize_conversion_tables()
+
+    def _initialize_conversion_tables(self):
+        """Initialize optimized conversion lookup tables"""
+        # Network-related patterns (highest priority)
+        self.network_patterns = [
+            ExceptionPattern(
+                patterns=[r'\btimeout\b', r'\btimed out\b'],
+                exception_class=ConnectionTimeoutException,
+                priority=10
+            ),
+            ExceptionPattern(
+                patterns=[r'\bhttp\b.*\b(404|403|500|502|503)\b'],
+                exception_class=HTTPException,
+                priority=9
+            ),
+            ExceptionPattern(
+                patterns=[r'\bconnection\b', r'\bnetwork\b', r'\bdns\b', r'\bresolve\b'],
+                exception_class=NetworkException,
+                priority=8
+            )
+        ]
+
+        # Filesystem patterns
+        self.filesystem_patterns = [
+            ExceptionPattern(
+                patterns=[r'\bpermission\b', r'\baccess denied\b', r'\bforbidden\b'],
+                exception_class=PermissionException,
+                priority=7
+            ),
+            ExceptionPattern(
+                patterns=[r'\bno space\b', r'\bdisk full\b', r'\binsufficient space\b'],
+                exception_class=InsufficientSpaceException,
+                priority=7
+            ),
+            ExceptionPattern(
+                patterns=[r'\bfile not found\b', r'\bdirectory not found\b', r'\bpath\b'],
+                exception_class=FilesystemException,
+                priority=6
+            )
+        ]
+
+        # Encryption patterns
+        self.encryption_patterns = [
+            ExceptionPattern(
+                patterns=[r'\bdecrypt\b', r'\bkey\b', r'\bcipher\b', r'\bencryption\b'],
+                exception_class=DecryptionKeyException,
+                priority=6
+            )
+        ]
+
+        # Memory patterns
+        self.memory_patterns = [
+            ExceptionPattern(
+                patterns=[r'\bmemory\b', r'\bout of memory\b', r'\bmalloc\b'],
+                exception_class=MemoryException,
+                priority=5
+            )
+        ]
+
+        # Combine all patterns and sort by priority
+        self.all_patterns = (
+            self.network_patterns +
+            self.filesystem_patterns +
+            self.encryption_patterns +
+            self.memory_patterns
+        )
+        self.all_patterns.sort(key=lambda x: x.priority, reverse=True)
+
+        # HTTP status code extraction pattern
+        self.http_status_pattern = re.compile(r'\b(404|403|500|502|503)\b')
+
+    def convert_exception(
+        self,
+        exception: Exception,
+        context: Optional[ErrorContext],
+        operation_name: str
+    ) -> VidTaniumException:
+        """Convert exception using optimized lookup tables"""
+        exception_message = str(exception).lower()
+
+        # Check each pattern in priority order
+        for pattern_group in self.all_patterns:
+            for compiled_pattern in pattern_group.compiled_patterns:
+                if compiled_pattern.search(exception_message):
+                    return self._create_exception(
+                        pattern_group.exception_class,
+                        exception,
+                        context,
+                        operation_name,
+                        exception_message
+                    )
+
+        # Default fallback
+        return SystemException(
+            message=f"Unhandled error during {operation_name}: {str(exception)}",
+            context=context,
+            original_exception=exception
+        )
+
+    def _create_exception(
+        self,
+        exception_class: type,
+        original_exception: Exception,
+        context: Optional[ErrorContext],
+        operation_name: str,
+        exception_message: str
+    ) -> VidTaniumException:
+        """Create specific exception instance with appropriate parameters"""
+
+        if exception_class == ConnectionTimeoutException:
+            return ConnectionTimeoutException(
+                url=context.url if context and context.url else "unknown",
+                timeout_seconds=30,
+                context=context,
+                original_exception=original_exception
+            )
+
+        elif exception_class == HTTPException:
+            # Extract status code efficiently
+            status_match = self.http_status_pattern.search(exception_message)
+            status_code = int(status_match.group(1)) if status_match else 500
+
+            return HTTPException(
+                status_code=status_code,
+                url=context.url if context and context.url else "unknown",
+                context=context,
+                original_exception=original_exception
+            )
+
+        elif exception_class == DecryptionKeyException:
+            return DecryptionKeyException(
+                key_url=context.url if context else None,
+                context=context,
+                original_exception=original_exception
+            )
+
+        elif exception_class == MemoryException:
+            return MemoryException(
+                operation=operation_name,
+                context=context,
+                original_exception=original_exception
+            )
+
+        elif exception_class == PermissionException:
+            return PermissionException(
+                path=context.file_path if context and context.file_path else "unknown",
+                operation=operation_name,
+                context=context,
+                original_exception=original_exception
+            )
+
+        elif exception_class == InsufficientSpaceException:
+            return InsufficientSpaceException(
+                required_space=0,  # Default values since we don't have actual space info
+                available_space=0,
+                path=context.file_path if context and context.file_path else "unknown",
+                context=context,
+                original_exception=original_exception
+            )
+
+        else:
+            # Generic creation for other exception types
+            try:
+                result = exception_class(
+                    message=f"{exception_class.__name__} during {operation_name}: {str(original_exception)}",
+                    context=context,
+                    original_exception=original_exception
+                )
+                # Ensure we return a VidTaniumException
+                if isinstance(result, VidTaniumException):
+                    return result
+                else:
+                    raise TypeError(f"Exception class {exception_class} did not return VidTaniumException")
+            except Exception:
+                # Fallback to SystemException if the specific exception class fails
+                return SystemException(
+                    message=f"{exception_class.__name__} during {operation_name}: {str(original_exception)}",
+                    context=context,
+                    original_exception=original_exception
+                )
 
 
 class RetryStrategy(Enum):
@@ -55,11 +255,14 @@ class ErrorReport:
 
 class EnhancedErrorHandler:
     """Enhanced error handler with intelligent retry strategies"""
-    
+
     def __init__(self):
         self.retry_configs: Dict[ErrorCategory, RetryConfig] = self._get_default_retry_configs()
         self.error_history: List[Tuple[str, VidTaniumException, float]] = []
-        self.max_history_size = 1000
+        self.max_history_size = 100
+
+        # Initialize exception converter
+        self.exception_converter = ExceptionConverter()
         
     def _get_default_retry_configs(self) -> Dict[ErrorCategory, RetryConfig]:
         """Get default retry configurations for different error categories"""
@@ -139,96 +342,11 @@ class EnhancedErrorHandler:
         context: Optional[ErrorContext],
         operation_name: str
     ) -> VidTaniumException:
-        """Convert generic exception to appropriate VidTaniumException"""
-        
-        exception_type = type(exception).__name__
-        exception_message = str(exception)
-        
-        # Network-related exceptions
-        if "timeout" in exception_message.lower() or "timed out" in exception_message.lower():
-            return ConnectionTimeoutException(
-                url=context.url if context and context.url else "unknown",
-                timeout_seconds=30,  # Default timeout
-                context=context,
-                original_exception=exception
-            )
-        
-        if "http" in exception_message.lower() and any(code in exception_message for code in ["404", "403", "500", "502", "503"]):
-            # Extract status code
-            status_code = 500  # Default
-            for code in [404, 403, 500, 502, 503]:
-                if str(code) in exception_message:
-                    status_code = code
-                    break
-            
-            return HTTPException(
-                status_code=status_code,
-                url=context.url if context and context.url else "unknown",
-                context=context,
-                original_exception=exception
-            )
-        
-        if any(keyword in exception_message.lower() for keyword in ["connection", "network", "dns", "resolve"]):
-            return NetworkException(
-                message=f"Network error during {operation_name}: {exception_message}",
-                context=context,
-                original_exception=exception
-            )
-        
-        # Filesystem-related exceptions
-        if any(keyword in exception_message.lower() for keyword in ["permission", "access denied", "forbidden"]):
-            return PermissionException(
-                path=context.file_path if context and context.file_path else "unknown",
-                operation=operation_name,
-                context=context,
-                original_exception=exception
-            )
-        
-        if any(keyword in exception_message.lower() for keyword in ["no space", "disk full", "insufficient space"]):
-            return InsufficientSpaceException(
-                required_space=0,  # Unknown
-                available_space=0,  # Unknown
-                path=context.file_path if context and context.file_path else "unknown",
-                context=context,
-                original_exception=exception
-            )
-        
-        if any(keyword in exception_message.lower() for keyword in ["file not found", "directory not found", "path"]):
-            return FilesystemException(
-                message=f"File system error during {operation_name}: {exception_message}",
-                context=context,
-                original_exception=exception
-            )
-        
-        # Encryption-related exceptions
-        if any(keyword in exception_message.lower() for keyword in ["decrypt", "key", "cipher", "encryption"]):
-            return DecryptionKeyException(
-                key_url=context.url if context else None,
-                context=context,
-                original_exception=exception
-            )
-        
-        # Memory-related exceptions
-        if any(keyword in exception_message.lower() for keyword in ["memory", "out of memory", "malloc"]):
-            return MemoryException(
-                operation=operation_name,
-                context=context,
-                original_exception=exception
-            )
-        
-        # Default: Generic VidTaniumException
-        return VidTaniumException(
-            message=f"Unexpected error during {operation_name}: {exception_message}",
-            category=ErrorCategory.SYSTEM,
-            severity=ErrorSeverity.HIGH,
-            context=context,
-            suggested_actions=[
-                UserAction("retry", "Retry the operation", is_automatic=True, priority=1),
-                UserAction("report", "Report this issue", priority=2)
-            ],
-            is_retryable=True,
-            original_exception=exception
-        )
+        """Convert generic exception to appropriate VidTaniumException using exception converter"""
+
+        # Use the exception converter
+        return self.exception_converter.convert_exception(exception, context, operation_name)
+
     
     def should_retry(self, exception: VidTaniumException, current_retry: int) -> bool:
         """Determine if operation should be retried"""

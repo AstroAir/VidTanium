@@ -117,8 +117,8 @@ VidTanium/
    # Using uv (recommended)
    uv sync
 
-   # Or using pip
-   pip install -r requirements.txt
+   # Or using pip with pyproject.toml
+   pip install -e .
    ```
 
 3. **Run the application**

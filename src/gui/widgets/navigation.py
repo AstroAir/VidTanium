@@ -4,7 +4,7 @@ Modern navigation patterns with smooth animations and improved UX
 """
 
 from typing import Dict, List, Optional, Callable
-from PySide6.QtCore import Qt, Signal, QPropertyAnimation, QEasingCurve, QTimer
+from PySide6.QtCore import Qt, Signal, QPropertyAnimation, QEasingCurve, QTimer, QByteArray
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFrame
 from PySide6.QtGui import QFont, QPainter, QPainterPath, QColor
 
@@ -80,7 +80,7 @@ class NavigationItem(AnimatedCard):
     
     def _setup_animations(self):
         """Setup smooth animations"""
-        self.slide_animation = QPropertyAnimation(self, b"geometry")
+        self.slide_animation = QPropertyAnimation(self, QByteArray(b"geometry"))
         self.slide_animation.setDuration(250)
         self.slide_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
     
@@ -271,15 +271,15 @@ class ModernBreadcrumb(QWidget):
     
     def _setup_ui(self):
         """Setup breadcrumb UI"""
-        self.layout = QHBoxLayout(self)
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.setSpacing(8)
+        self._layout = QHBoxLayout(self)
+        self._layout.setContentsMargins(0, 0, 0, 0)
+        self._layout.setSpacing(8)
     
     def set_breadcrumb(self, items: List[str]):
         """Set breadcrumb items"""
         # Clear existing items
-        while self.layout.count():
-            child = self.layout.takeAt(0)
+        while self._layout.count():
+            child = self._layout.takeAt(0)
             if child.widget():
                 child.widget().deleteLater()
         
@@ -299,7 +299,7 @@ class ModernBreadcrumb(QWidget):
                 """)
                 label.setCursor(Qt.CursorShape.PointingHandCursor)
 
-            self.layout.addWidget(label)
+            self._layout.addWidget(label)
 
             # Add separator (except for last item)
             if i < len(items) - 1:
@@ -307,6 +307,6 @@ class ModernBreadcrumb(QWidget):
                 separator.setStyleSheet(f"""
                     color: {DesignSystem.get_color('text_secondary_adaptive')};
                 """)
-                self.layout.addWidget(separator)
-        
-        self.layout.addStretch()
+                self._layout.addWidget(separator)
+
+        self._layout.addStretch()

@@ -11,7 +11,7 @@ import re
 import json
 import sys
 import threading
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 from urllib.parse import urlparse
 
 from qfluentwidgets import (
@@ -651,7 +651,7 @@ class EnhancedTaskDialog(ResponsiveWidget, QDialog):
         options_widget = QWidget()
         if current_bp.value in ['xs', 'sm']:
             # Vertical layout for small screens
-            options_layout = QVBoxLayout(options_widget)
+            options_layout: Union[QVBoxLayout, QHBoxLayout] = QVBoxLayout(options_widget)
             options_layout.setSpacing(8)
         else:
             # Horizontal layout for larger screens
@@ -684,7 +684,7 @@ class EnhancedTaskDialog(ResponsiveWidget, QDialog):
         # Button layout with responsive behavior
         if current_bp.value in ['xs', 'sm']:
             # Vertical button layout for small screens
-            button_layout = QVBoxLayout()
+            button_layout: Union[QVBoxLayout, QHBoxLayout] = QVBoxLayout()
             button_layout.setSpacing(12)
             button_size = (120, 36)
         else:

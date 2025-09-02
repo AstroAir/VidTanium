@@ -15,6 +15,9 @@ from .widgets.bulk_operations_manager import BulkOperationsManager, SelectionWid
 from .utils.error_notification_manager import ErrorNotificationManager, ErrorActionHandler
 from .utils.contextual_help_manager import ContextualHelpManager, contextual_help_manager
 
+# Global instances
+error_notification_manager = None
+
 __all__ = [
     # Error handling widgets
     'ErrorDialog',
@@ -48,7 +51,7 @@ __all__ = [
 
 def initialize_gui_systems(parent_widget, error_handler):
     """Initialize all GUI systems with proper dependencies"""
-    from .utils.error_notification_manager import error_notification_manager
+    from .utils.error_notification_manager import ErrorNotificationManager
 
     # Initialize error notification manager with parent widget
     global error_notification_manager

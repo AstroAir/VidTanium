@@ -25,8 +25,8 @@ class AdvancedTab(QWidget):
         # Network settings
         network_group = QGroupBox("Network Settings")
         network_layout = QFormLayout()
-        network_layout.setLabelAlignment(Qt.AlignRight)
-        network_layout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        network_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+        network_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         network_layout.setSpacing(12)
 
         # Proxy
@@ -49,8 +49,8 @@ class AdvancedTab(QWidget):
         # External tools settings
         tools_group = QGroupBox("External Tools")
         tools_layout = QFormLayout()
-        tools_layout.setLabelAlignment(Qt.AlignRight)
-        tools_layout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        tools_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+        tools_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         tools_layout.setSpacing(12)
 
         # FFmpeg path
@@ -71,8 +71,8 @@ class AdvancedTab(QWidget):
         # Debug options
         debug_group = QGroupBox("Debug Options")
         debug_layout = QFormLayout()
-        debug_layout.setLabelAlignment(Qt.AlignRight)
-        debug_layout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        debug_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+        debug_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         debug_layout.setSpacing(12)
 
         # Keep temp files

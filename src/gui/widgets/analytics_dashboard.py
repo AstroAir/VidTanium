@@ -9,13 +9,13 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel,
     QProgressBar, QFrame, QScrollArea
 )
-from PySide6.QtCore import Qt, Signal, QTimer, QPropertyAnimation, QEasingCurve
+from PySide6.QtCore import Qt, Signal, QTimer, QPropertyAnimation, QEasingCurve, QByteArray
 from PySide6.QtGui import QPainter, QPainterPath, QColor, QLinearGradient, QFont
 
 from qfluentwidgets import (
     FluentIcon as FIF, ProgressRing, ProgressBar,
     TitleLabel, SubtitleLabel, BodyLabel, CaptionLabel, StrongBodyLabel,
-    ElevatedCardWidget, ScrollArea, VBoxLayout, HBoxLayout,
+    ElevatedCardWidget, ScrollArea,
     TransparentToolButton, PushButton
 )
 
@@ -43,12 +43,12 @@ class MetricCard(ElevatedCardWidget):
     
     def _setup_ui(self):
         """Setup the UI components"""
-        layout = VBoxLayout(self)
+        layout = QVBoxLayout(self)
         layout.setSpacing(8)
         layout.setContentsMargins(16, 12, 16, 12)
-        
+
         # Header with icon and title
-        header_layout = HBoxLayout()
+        header_layout = QHBoxLayout()
         header_layout.setSpacing(8)
         
         # Icon
@@ -84,7 +84,7 @@ class MetricCard(ElevatedCardWidget):
     
     def _setup_animations(self):
         """Setup value change animations"""
-        self.value_animation = QPropertyAnimation(self.value_label, b"geometry")
+        self.value_animation = QPropertyAnimation(self.value_label, QByteArray(b"geometry"))
         self.value_animation.setDuration(300)
         self.value_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
     
@@ -130,12 +130,12 @@ class ETADisplayWidget(ElevatedCardWidget):
     
     def _setup_ui(self):
         """Setup the UI components"""
-        layout = VBoxLayout(self)
+        layout = QVBoxLayout(self)
         layout.setSpacing(12)
         layout.setContentsMargins(16, 12, 16, 12)
-        
+
         # Header
-        header_layout = HBoxLayout()
+        header_layout = QHBoxLayout()
         header_layout.setSpacing(8)
         
         icon_label = QLabel()
@@ -161,11 +161,11 @@ class ETADisplayWidget(ElevatedCardWidget):
         layout.addWidget(self.eta_label)
         
         # Confidence and algorithm info
-        info_layout = HBoxLayout()
+        info_layout = QHBoxLayout()
         info_layout.setSpacing(16)
-        
+
         # Confidence indicator
-        confidence_layout = VBoxLayout()
+        confidence_layout = QVBoxLayout()
         confidence_layout.setSpacing(4)
         
         confidence_title = CaptionLabel(tr("analytics.confidence"))
@@ -180,7 +180,7 @@ class ETADisplayWidget(ElevatedCardWidget):
         info_layout.addLayout(confidence_layout)
         
         # Algorithm info
-        algorithm_layout = VBoxLayout()
+        algorithm_layout = QVBoxLayout()
         algorithm_layout.setSpacing(4)
         
         algorithm_title = CaptionLabel(tr("analytics.algorithm"))
@@ -194,7 +194,7 @@ class ETADisplayWidget(ElevatedCardWidget):
         info_layout.addLayout(algorithm_layout)
         
         # Speed trend
-        trend_layout = VBoxLayout()
+        trend_layout = QVBoxLayout()
         trend_layout.setSpacing(4)
         
         trend_title = CaptionLabel(tr("analytics.speed_trend"))
@@ -284,12 +284,12 @@ class BandwidthAnalyticsWidget(ElevatedCardWidget):
     
     def _setup_ui(self):
         """Setup the UI components"""
-        layout = VBoxLayout(self)
+        layout = QVBoxLayout(self)
         layout.setSpacing(12)
         layout.setContentsMargins(16, 12, 16, 12)
-        
+
         # Header
-        header_layout = HBoxLayout()
+        header_layout = QHBoxLayout()
         header_layout.setSpacing(8)
         
         icon_label = QLabel()
@@ -327,7 +327,7 @@ class BandwidthAnalyticsWidget(ElevatedCardWidget):
         
         # Optimization suggestions
         self.suggestions_widget = QWidget()
-        suggestions_layout = VBoxLayout(self.suggestions_widget)
+        suggestions_layout = QVBoxLayout(self.suggestions_widget)
         suggestions_layout.setSpacing(8)
         suggestions_layout.setContentsMargins(0, 8, 0, 0)
         
@@ -336,7 +336,7 @@ class BandwidthAnalyticsWidget(ElevatedCardWidget):
         suggestions_layout.addWidget(suggestions_title)
         
         self.suggestions_container = QWidget()
-        self.suggestions_container_layout = VBoxLayout(self.suggestions_container)
+        self.suggestions_container_layout = QVBoxLayout(self.suggestions_container)
         self.suggestions_container_layout.setSpacing(4)
         self.suggestions_container_layout.setContentsMargins(0, 0, 0, 0)
         suggestions_layout.addWidget(self.suggestions_container)
@@ -394,7 +394,7 @@ class BandwidthAnalyticsWidget(ElevatedCardWidget):
             }}
         """)
         
-        layout = HBoxLayout(widget)
+        layout = QHBoxLayout(widget)
         layout.setSpacing(8)
         layout.setContentsMargins(8, 6, 8, 6)
         
@@ -450,7 +450,7 @@ class AnalyticsDashboard(ScrollArea):
         main_widget = QWidget()
         self.setWidget(main_widget)
         
-        layout = VBoxLayout(main_widget)
+        layout = QVBoxLayout(main_widget)
         layout.setSpacing(16)
         layout.setContentsMargins(16, 16, 16, 16)
         
@@ -470,7 +470,7 @@ class AnalyticsDashboard(ScrollArea):
         
         # History statistics (placeholder for now)
         self.history_stats_widget = ElevatedCardWidget()
-        history_layout = VBoxLayout(self.history_stats_widget)
+        history_layout = QVBoxLayout(self.history_stats_widget)
         history_layout.setContentsMargins(16, 12, 16, 12)
         
         history_title = BodyLabel(tr("analytics.history_stats_title"))

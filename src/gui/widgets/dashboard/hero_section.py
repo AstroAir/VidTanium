@@ -66,20 +66,22 @@ class EnhancedDashboardHeroSection(ResponsiveWidget):
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
         # Responsive layout based on screen size
+        # Create layout based on screen size
+        layout: Union[QVBoxLayout, QHBoxLayout]
         if current_bp.value in ['xs', 'sm']:
             # Vertical layout for small screens
             layout = QVBoxLayout(self.hero_card)
             layout.setContentsMargins(16, 16, 16, 16)
             layout.setSpacing(16)
-            
+
             # Welcome content
             content_layout = self._create_responsive_welcome_content()
             layout.addLayout(content_layout)
-            
+
             # Action buttons - horizontal on small screens to save space
             buttons_layout = self._create_responsive_action_buttons()
             layout.addLayout(buttons_layout)
-            
+
         else:
             # Horizontal layout for larger screens
             layout = QHBoxLayout(self.hero_card)

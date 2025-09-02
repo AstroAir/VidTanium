@@ -58,21 +58,26 @@ Business logic and data processing components.
 ```text
 src/core/
 ├── __init__.py                      # Package initialization and exports
-├── downloader.py                    # Download management and orchestration
-├── url_extractor.py                 # URL extraction and validation
-├── media_processor.py               # Video processing and conversion
-├── scheduler.py                     # Task scheduling and automation
-├── thread_pool.py                   # Thread pool management
-├── exceptions.py                    # Custom exception hierarchy
-├── error_handler.py                 # Enhanced error handling system
-├── retry_manager.py                 # Intelligent retry management
-├── task_state_manager.py            # Task state persistence
+├── analyzer.py                      # Media analysis and metadata extraction
 ├── bandwidth_monitor.py             # Network performance monitoring
-├── eta_calculator.py                # ETA calculation algorithms
-├── download_history_manager.py      # Download history tracking
 ├── batch_progress_aggregator.py     # Multi-task progress aggregation
+├── decryptor.py                     # Encryption and decryption handling
+├── download_history_manager.py      # Download history tracking
+├── downloader.py                    # Download management and orchestration
+├── error_handler.py                 # Enhanced error handling system
+├── eta_calculator.py                # ETA calculation algorithms
+├── exceptions.py                    # Custom exception hierarchy
+├── m3u8_parser.py                   # M3U8 playlist parsing and processing
+├── media_processor.py               # Video processing and conversion
+├── merger.py                        # File merging and concatenation
 ├── queue_manager.py                 # Advanced queue management
+├── resource_manager.py              # System resource management
+├── retry_manager.py                 # Intelligent retry management
+├── scheduler.py                     # Task scheduling and automation
 ├── smart_prioritization_engine.py   # Task prioritization system
+├── task_state_manager.py            # Task state persistence
+├── thread_pool.py                   # Thread pool management
+├── url_extractor.py                 # URL extraction and validation
 ├── utils/                           # Core utilities
 │   ├── version_checker.py           # Version checking
 │   └── __pycache__/                # Python cache files

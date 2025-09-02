@@ -4,7 +4,7 @@ Modern progress indicators with smooth animations and better visual feedback
 """
 
 from typing import Optional, Union, Dict, Any
-from PySide6.QtCore import Qt, QTimer, QPropertyAnimation, QEasingCurve, Signal, QRect
+from PySide6.QtCore import Qt, QTimer, QPropertyAnimation, QEasingCurve, Signal, QRect, QByteArray
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QProgressBar
 from PySide6.QtGui import QPainter, QPainterPath, QColor, QFont, QLinearGradient
 
@@ -114,7 +114,7 @@ class ProgressCard(AnimatedCard):
     def _setup_animations(self):
         """Setup progress animations"""
         if hasattr(self, 'progress_bar'):
-            self.progress_animation = QPropertyAnimation(self.progress_bar, b"value")
+            self.progress_animation = QPropertyAnimation(self.progress_bar, QByteArray(b"value"))
             self.progress_animation.setDuration(500)
             self.progress_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
     

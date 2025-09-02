@@ -80,6 +80,25 @@ class DownloadHistoryEntry:
         
         return max(0, efficiency - retry_penalty)
 
+    def is_successful(self) -> bool:
+        """Check if the download was successful"""
+        return self.status == HistoryEntryStatus.COMPLETED
+
+    def format_file_size(self) -> str:
+        """Format file size in human readable format"""
+        if self.file_size == 0:
+            return "0 B"
+
+        size_names = ["B", "KB", "MB", "GB", "TB"]
+        size = float(self.file_size)
+        i = 0
+
+        while size >= 1024.0 and i < len(size_names) - 1:
+            size /= 1024.0
+            i += 1
+
+        return f"{size:.1f} {size_names[i]}"
+
 
 @dataclass
 class HistoryFilter:
@@ -205,7 +224,41 @@ class DownloadHistoryManager:
         except Exception as e:
             logger.error(f"Failed to add history entry: {e}")
             return False
-    
+
+    def update_entry(self, entry: DownloadHistoryEntry) -> bool:
+        """Update an existing history entry"""
+        try:
+            with self.lock:
+                with sqlite3.connect(self.db_path) as conn:
+                    cursor = conn.execute("""
+                        UPDATE download_history SET
+                            task_name = ?, original_url = ?, output_file = ?, file_size = ?,
+                            status = ?, start_time = ?, end_time = ?, duration = ?,
+                            average_speed = ?, peak_speed = ?, segments_total = ?,
+                            segments_completed = ?, retry_count = ?, error_message = ?
+                        WHERE entry_id = ?
+                    """, (
+                        entry.task_name, entry.original_url, entry.output_file, str(entry.file_size),
+                        entry.status.value, str(entry.start_time), str(entry.end_time), str(entry.duration),
+                        str(entry.average_speed), str(entry.peak_speed), str(entry.segments_total),
+                        str(entry.segments_completed), str(entry.retry_count), entry.error_message,
+                        entry.entry_id
+                    ))
+
+                    conn.commit()
+
+                    if cursor.rowcount > 0:
+                        self._trigger_callbacks(entry)
+                        logger.debug(f"Updated history entry: {entry.task_name}")
+                        return True
+                    else:
+                        logger.warning(f"No entry found with ID: {entry.entry_id}")
+                        return False
+
+        except Exception as e:
+            logger.error(f"Failed to update history entry: {e}")
+            return False
+
     def get_entries(
         self,
         filter_criteria: Optional[HistoryFilter] = None,
@@ -506,9 +559,17 @@ class DownloadHistoryManager:
     def export_data(self, format_type: str = "json") -> str:
         """Export history data"""
         entries = self.get_entries()
-        
+
         if format_type.lower() == "json":
-            return json.dumps([asdict(entry) for entry in entries], indent=2)
+            # Convert entries to dict and handle enum serialization
+            serializable_entries = []
+            for entry in entries:
+                entry_dict = asdict(entry)
+                # Convert enum to string value
+                entry_dict['status'] = entry.status.value
+                serializable_entries.append(entry_dict)
+
+            return json.dumps(serializable_entries, indent=2)
         else:
             raise ValueError(f"Unsupported export format: {format_type}")
     

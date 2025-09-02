@@ -3,7 +3,7 @@ from unittest.mock import patch, Mock, MagicMock, mock_open
 import requests
 
 # 使用相对导入来解决导入路径问题
-from url_extractor import URLExtractor
+from src.core.url_extractor import URLExtractor
 
 
 class TestURLExtractor:

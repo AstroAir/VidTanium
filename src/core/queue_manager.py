@@ -234,7 +234,8 @@ class QueueManager:
         priority: TaskPriority = TaskPriority.NORMAL,
         estimated_duration: float = 0,
         dependencies: Optional[List[str]] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
+        max_attempts: int = 3
     ) -> bool:
         """Add task to queue"""
         with self.lock:
@@ -254,7 +255,8 @@ class QueueManager:
                 priority=priority,
                 estimated_duration=estimated_duration,
                 dependencies=dependencies or [],
-                metadata=metadata or {}
+                metadata=metadata or {},
+                max_attempts=max_attempts
             )
             
             # Insert in priority order
@@ -558,6 +560,71 @@ class QueueManager:
                 callback()
             except Exception as e:
                 logger.error(f"Error in queue changed callback: {e}")
+
+    def get_task(self, task_id: str) -> Optional[QueuedTask]:
+        """Get task by ID from any queue"""
+        with self.lock:
+            # Check pending tasks
+            for task in self.pending_queue:
+                if task.task_id == task_id:
+                    return task
+
+            # Check running tasks
+            if task_id in self.running_tasks:
+                return self.running_tasks[task_id]
+
+            # Check completed tasks
+            if task_id in self.completed_tasks:
+                return self.completed_tasks[task_id]
+
+            # Check failed tasks
+            if task_id in self.failed_tasks:
+                return self.failed_tasks[task_id]
+
+            return None
+
+    def update_task_priority(self, task_id: str, new_priority: TaskPriority) -> bool:
+        """Update task priority"""
+        with self.lock:
+            # Find task in pending queue
+            for i, task in enumerate(self.pending_queue):
+                if task.task_id == task_id:
+                    # Remove from current position
+                    self.pending_queue.pop(i)
+                    # Update priority
+                    task.priority = new_priority
+                    # Re-insert with new priority
+                    self._insert_task_by_priority(task)
+                    logger.info(f"Updated task {task_id} priority to {new_priority.name}")
+                    self._trigger_queue_changed_callbacks()
+                    return True
+
+            return False
+
+    def reorder_tasks(self, new_order: List[str]) -> bool:
+        """Reorder pending tasks"""
+        with self.lock:
+            # Validate that all task IDs exist in pending queue
+            pending_ids = {task.task_id for task in self.pending_queue}
+            if set(new_order) != pending_ids:
+                return False
+
+            # Create new ordered list
+            task_map = {task.task_id: task for task in self.pending_queue}
+            self.pending_queue = [task_map[task_id] for task_id in new_order]
+
+            logger.info(f"Reordered {len(new_order)} pending tasks")
+            self._trigger_queue_changed_callbacks()
+            return True
+
+    def clear_completed_tasks(self) -> int:
+        """Clear all completed tasks"""
+        with self.lock:
+            count = len(self.completed_tasks)
+            self.completed_tasks.clear()
+            logger.info(f"Cleared {count} completed tasks")
+            self._trigger_queue_changed_callbacks()
+            return count
 
 
 # Backward compatibility alias

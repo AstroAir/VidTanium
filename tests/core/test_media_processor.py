@@ -2,7 +2,7 @@ import pytest
 import subprocess
 from unittest.mock import patch, MagicMock
 from typing import Dict, Any
-from media_processor import MediaProcessor
+from src.core.media_processor import MediaProcessor
 
 
 class TestMediaProcessor:
@@ -256,7 +256,7 @@ class TestMediaProcessor:
 
     @patch('os.path.exists')
     @patch.object(MediaProcessor, '_run_command')
-    @patch('media_processor.MediaProcessor.get_video_info')
+    @patch('src.core.media_processor.MediaProcessor.get_video_info')
     def test_compress_video_with_target_size(self, mock_get_video_info: MagicMock,
                                              mock_run_command: MagicMock,
                                              mock_exists: MagicMock) -> None:
@@ -363,7 +363,7 @@ class TestMediaProcessor:
         assert result["success"] is False
         assert "Failed to parse video information" in result["error"]
 
-    @patch('media_processor.MediaProcessor.get_video_info')
+    @patch('src.core.media_processor.MediaProcessor.get_video_info')
     def test_video_processor_methods(self, mock_get_video_info: MagicMock) -> None:
         """测试 MediaProcessor 中可供公开访问的方法，避免直接访问受保护的方法"""
         # 测试有 duration 的情况

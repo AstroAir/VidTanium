@@ -228,10 +228,10 @@ class EnhancedSettingsDialog(ResponsiveWidget, QDialog):
 
         # UI tab
         self.ui_tab = UITab()
-        if hasattr(self.ui_tab, '__init__'):
-            # Re-initialize with theme manager if possible
+        # Set theme manager if the tab supports it
+        if hasattr(self.ui_tab, 'set_theme_manager'):
             try:
-                self.ui_tab = UITab(theme_manager=self.theme_manager)
+                self.ui_tab.set_theme_manager(self.theme_manager)
             except:
                 pass
         self.stack_widget.addWidget(self.ui_tab)

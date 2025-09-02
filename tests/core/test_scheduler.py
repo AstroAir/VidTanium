@@ -5,7 +5,7 @@ from unittest.mock import patch, MagicMock, mock_open, ANY
 # Removed List, Optional, Callable, cast as per linter feedback
 from typing import Dict, Any, List
 
-from scheduler import TaskScheduler, SchedulerTask, TaskType
+from src.core.scheduler import TaskScheduler, SchedulerTask, TaskType
 
 
 class TestSchedulerTask:

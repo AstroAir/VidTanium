@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QFrame, QScrollArea, QApplication
 )
-from PySide6.QtCore import Qt, Signal, QTimer, QPoint, QPropertyAnimation, QEasingCurve
+from PySide6.QtCore import Qt, Signal, QTimer, QPoint, QPropertyAnimation, QEasingCurve, QByteArray
 from PySide6.QtGui import QFont, QPainter, QPainterPath, QColor, QPixmap
 
 from qfluentwidgets import (
@@ -42,7 +42,7 @@ class Tooltip(QWidget):
         self.description = description
         self.detailed_info = detailed_info
         self.learn_more_url = learn_more_url
-        self.actions = actions or []
+        self._actions = actions or []
         
         self.setWindowFlags(
             Qt.WindowType.ToolTip | 
@@ -127,7 +127,7 @@ class Tooltip(QWidget):
             self._add_detailed_info(container_layout)
         
         # Actions
-        if self.actions:
+        if self._actions:
             self._add_actions(container_layout)
         
         # Learn more link
@@ -192,7 +192,7 @@ class Tooltip(QWidget):
         actions_layout = QHBoxLayout()
         actions_layout.setSpacing(8)
         
-        for action in self.actions:
+        for action in self._actions:
             action_button = PushButton(action.get("title", "Action"))
             
             # Set icon if provided
@@ -243,11 +243,11 @@ class Tooltip(QWidget):
     
     def _setup_animations(self):
         """Setup show/hide animations"""
-        self.fade_animation = QPropertyAnimation(self, b"windowOpacity")
+        self.fade_animation = QPropertyAnimation(self, QByteArray(b"windowOpacity"))
         self.fade_animation.setDuration(200)
         self.fade_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
-        
-        self.scale_animation = QPropertyAnimation(self, b"geometry")
+
+        self.scale_animation = QPropertyAnimation(self, QByteArray(b"geometry"))
         self.scale_animation.setDuration(200)
         self.scale_animation.setEasingCurve(QEasingCurve.Type.OutBack)
     
@@ -369,19 +369,23 @@ class SmartTooltipMixin:
                 self, self.help_context, self.help_key
             )
         
-        if hasattr(super(), 'enterEvent'):
-            super().enterEvent(event)
+        # Call parent implementation if available
+        pass
     
     def leaveEvent(self, event):
         """Hide contextual help on mouse leave"""
         if self.tooltip_manager:
             self.tooltip_manager.hide_contextual_help(self)
         
-        if hasattr(super(), 'leaveEvent'):
-            super().leaveEvent(event)
+        # Call parent implementation if available
+        pass
 
 
 # Factory function for creating quick tooltips
+# Backward compatibility alias
+EnhancedTooltip = Tooltip
+
+
 def create_quick_tooltip(
     title: str,
     description: str,
@@ -396,7 +400,3 @@ def create_quick_tooltip(
     )
     tooltip.show_at_position(position)
     return tooltip
-
-
-# Backward compatibility alias
-EnhancedTooltip = Tooltip

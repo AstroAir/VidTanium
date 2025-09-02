@@ -162,8 +162,9 @@ class MediaProcessingDialog(QDialog):
         def set_progress_format(format_string):
             self.progress_card.setStatus(format_string)
 
-        self.progress_bar.setVisible = set_progress_visible
-        self.progress_bar.setFormat = set_progress_format
+        # Store methods for later use instead of assigning to attributes
+        self._set_progress_visible = set_progress_visible
+        self._set_progress_format = set_progress_format
 
         main_layout.addWidget(self.progress_card)        # 按钮
         self.button_box = QDialogButtonBox(
@@ -686,10 +687,11 @@ class MediaProcessingDialog(QDialog):
         self._disable_ui()
 
         # 显示进度条
-        self.progress_bar.setVisible(True)
-        self.progress_bar.setValue(0)
-        self.progress_bar.setRange(0, 0)  # 不确定进度
-        self.progress_bar.setFormat("处理中...")        # 获取当前选项卡
+        if self.progress_bar:
+            self.progress_bar.setVisible(True)
+            self.progress_bar.setValue(0)
+            self.progress_bar.setRange(0, 0)  # 不确定进度
+            self.progress_bar.setFormat("处理中...")        # 获取当前选项卡
         current_tab = self.stacked_widget.currentIndex()
 
         # 根据选项卡执行相应操作
@@ -849,12 +851,14 @@ class MediaProcessingDialog(QDialog):
             result = func(*args, **kwargs)
 
             # 更新UI
-            self.progress_bar.setRange(0, 100)
+            if self.progress_bar:
+                self.progress_bar.setRange(0, 100)
 
             if result["success"]:
                 # 处理成功
-                self.progress_bar.setValue(100)
-                self.progress_bar.setFormat("处理完成 (100%)")
+                if self.progress_bar:
+                    self.progress_bar.setValue(100)
+                    self.progress_bar.setFormat("处理完成 (100%)")
 
                 # 发出成功信号
                 output_file = args[1] if len(args) > 1 else ""
@@ -875,8 +879,9 @@ class MediaProcessingDialog(QDialog):
                 QTimer.singleShot(1500, self.accept)
             else:
                 # 处理失败
-                self.progress_bar.setValue(0)
-                self.progress_bar.setFormat("处理失败")
+                if self.progress_bar:
+                    self.progress_bar.setValue(0)
+                    self.progress_bar.setFormat("处理失败")
 
                 # 显示错误
                 InfoBar.error(
@@ -935,7 +940,8 @@ class MediaProcessingDialog(QDialog):
         self.pivot.setEnabled(True)
         self.process_button.setEnabled(True)
         self.cancel_button.setText("取消")
-        self.progress_bar.setVisible(False)
+        if self.progress_bar:
+            self.progress_bar.setVisible(False)
 
     def _format_time_for_ffmpeg(self, time):
         """将QTime格式化为FFmpeg可用的时间格式"""

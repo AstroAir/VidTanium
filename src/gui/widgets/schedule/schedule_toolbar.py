@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QToolBar
 from PySide6.QtGui import QAction
 from PySide6.QtCore import Qt, Signal, QSize
 
-from qfluentwidgets import FluentIcon
+from qfluentwidgets import FluentIcon as FIF
 
 
 class ScheduleToolbar(QToolBar):

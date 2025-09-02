@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QToolBar, QFileDialog
 from PySide6.QtCore import Signal, Qt, QSize
 from PySide6.QtGui import QAction
 
-from qfluentwidgets import FluentIcon
+from qfluentwidgets import FluentIcon as FIF
 
 import os
 from datetime import datetime

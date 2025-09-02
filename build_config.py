@@ -15,7 +15,7 @@ from typing import List, Dict, Any
 # Build configuration
 BUILD_CONFIG = {
     "app_name": "VidTanium",
-    "app_version": "1.0.0",
+    "app_version": "0.1.0",
     "description": "Video Download Tool",
     "author": "VidTanium Team",
     "main_script": "main.py",

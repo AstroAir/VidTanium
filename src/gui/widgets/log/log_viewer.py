@@ -433,7 +433,8 @@ class EnhancedLogViewer(ResponsiveWidget):
         text_color = colors.get('text_primary', VidTaniumTheme.TEXT_PRIMARY)
         border = colors.get('border', VidTaniumTheme.BORDER_LIGHT)
         
-        self.log_display.setStyleSheet(f"""
+        if self.log_display:
+            self.log_display.setStyleSheet(f"""
             PlainTextEdit {{
                 background-color: {background};
                 color: {text_color};
@@ -454,7 +455,7 @@ class EnhancedLogViewer(ResponsiveWidget):
                 border-radius: 4px;
                 min-height: 20px;
             }}
-        """)
+            """)
 
     def _setup_responsive_behavior(self):
         """Setup responsive behavior"""
@@ -717,7 +718,7 @@ class LogExportWorker:
                 f.write(
                     f"[{entry.timestamp.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}] ")
                 f.write(f"{entry.level.upper()}: {entry.message}\n")
-                if hasattr(entry, 'source') and getattr(entry, 'source', ''):
+                if hasattr(entry, 'source') and getattr(entry, 'source', None):
                     f.write(f"  来源: {getattr(entry, 'source', '')}\n")
                 f.write("\n")
 
@@ -767,7 +768,7 @@ class LogExportWorker:
         <span class="level {level_class}">{entry.level.upper()}</span>
         <div class="message">{entry.message}</div>""")
 
-                if hasattr(entry, 'source') and getattr(entry, 'source', ''):
+                if hasattr(entry, 'source') and getattr(entry, 'source', None):
                     f.write(
                         f'        <div class="source">来源: {getattr(entry, "source", "")}</div>')
 
@@ -779,7 +780,8 @@ class LogExportWorker:
 
     def _export_as_json(self):
         """Export logs as JSON file"""
-        data = {
+        from typing import List, Dict, Any
+        data: Dict[str, Any] = {
             "export_info": {
                 "export_time": datetime.now().isoformat(),
                 "total_entries": len(self.log_entries),
@@ -794,7 +796,7 @@ class LogExportWorker:
                 "level": entry.level,
                 "message": entry.message
             }
-            if hasattr(entry, 'source') and getattr(entry, 'source', ''):
+            if hasattr(entry, 'source') and getattr(entry, 'source', None):
                 log_data["source"] = getattr(entry, 'source', '')
 
             data["logs"].append(log_data)

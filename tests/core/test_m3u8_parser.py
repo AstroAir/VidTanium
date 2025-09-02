@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch, MagicMock
 
-from m3u8_parser import (
+from src.core.m3u8_parser import (
     M3U8Parser,
     M3U8Stream,
     M3U8Segment,
@@ -54,7 +54,7 @@ class TestM3U8Parser:
         self.test_url = "https://example.com/playlist.m3u8"
         self.base_url = "https://example.com/"
 
-    @patch('m3u8_parser.M3U8Parser.parse_url')
+    @patch('src.core.m3u8_parser.M3U8Parser.parse_url')
     def test_parse_url_master_playlist(self, mock_parse_url: MagicMock) -> None:
         """Test parsing a master playlist."""
         # 创建测试流
@@ -121,7 +121,7 @@ class TestM3U8Parser:
         assert streams[1].duration == 19.0
         assert streams[1].segment_count == 2
 
-    @patch('m3u8_parser.M3U8Parser.parse_url')
+    @patch('src.core.m3u8_parser.M3U8Parser.parse_url')
     def test_parse_url_media_playlist(self, mock_parse_url: MagicMock) -> None:
         """Test parsing a media playlist (no master)."""
         # 创建测试流
@@ -157,7 +157,7 @@ class TestM3U8Parser:
         assert streams[0].segment_count == 3
         assert streams[0].encryption == EncryptionMethod.NONE
 
-    @patch('m3u8_parser.M3U8Parser.parse_url')
+    @patch('src.core.m3u8_parser.M3U8Parser.parse_url')
     def test_parse_url_encrypted_playlist(self, mock_parse_url: MagicMock) -> None:
         """Test parsing an encrypted media playlist."""
         # 创建加密测试流
@@ -187,7 +187,7 @@ class TestM3U8Parser:
         assert streams[0].segments[0].encryption == EncryptionMethod.AES_128
         assert streams[0].segments[0].key_url == "https://example.com/key.bin"
 
-    @patch('m3u8_parser.M3U8Parser.parse_url')
+    @patch('src.core.m3u8_parser.M3U8Parser.parse_url')
     def test_parse_url_empty_playlist(self, mock_parse_url: MagicMock) -> None:
         """Test parsing an empty playlist."""
         # 设置模拟解析的返回值
@@ -199,7 +199,7 @@ class TestM3U8Parser:
         # 验证空结果
         assert len(streams) == 0
 
-    @patch('m3u8_parser.M3U8Parser.parse_url')
+    @patch('src.core.m3u8_parser.M3U8Parser.parse_url')
     def test_parse_url_download_error(self, mock_parse_url: MagicMock) -> None:
         """Test parsing with download error."""
         # 模拟下载错误
@@ -228,7 +228,7 @@ class TestM3U8Parser:
             """Public wrapper for _parse_attributes."""
             return self._parse_attributes(attribute_string)
 
-    @patch('m3u8_parser.requests.get')
+    @patch('src.core.m3u8_parser.requests.get')
     def test_download_playlist_success(self, mock_get: MagicMock) -> None:
         """Test successful playlist download."""
         # 创建可测试解析器
@@ -247,7 +247,7 @@ class TestM3U8Parser:
         assert content == "Playlist content"
         mock_get.assert_called_once_with(self.test_url, headers={}, timeout=30)
 
-    @patch('m3u8_parser.requests.get')
+    @patch('src.core.m3u8_parser.requests.get')
     def test_download_playlist_http_error(self, mock_get: MagicMock) -> None:
         """Test playlist download with HTTP error."""
         # 创建可测试解析器
@@ -264,7 +264,7 @@ class TestM3U8Parser:
         # 验证空内容
         assert content == ""
 
-    @patch('m3u8_parser.requests.get')
+    @patch('src.core.m3u8_parser.requests.get')
     def test_download_playlist_exception(self, mock_get: MagicMock) -> None:
         """Test playlist download with exception."""
         # 创建可测试解析器
@@ -421,7 +421,7 @@ class TestURLPatternUtils:
     def test_extract_url_pattern_exception(self) -> None:
         """Test extracting pattern with exception."""
         # 使用 patch 替换 re.search 函数
-        with patch('m3u8_parser.re.search', side_effect=Exception("Regex error")):
+        with patch('src.core.m3u8_parser.re.search', side_effect=Exception("Regex error")):
             pattern_info = extract_url_pattern(
                 "https://example.com/segment1.ts")
             assert pattern_info is None
@@ -430,7 +430,7 @@ class TestURLPatternUtils:
 class TestExtractors:
     """Test suite for extractor functions."""
 
-    @patch('m3u8_parser.requests.get')
+    @patch('src.core.m3u8_parser.requests.get')
     def test_extract_m3u8_url_from_page_simple(self, mock_get: MagicMock) -> None:
         """Test extracting M3U8 URL from page with simple pattern."""
         # Mock page content with M3U8 URL
@@ -447,7 +447,7 @@ class TestExtractors:
 
         assert url == "https://example.com/playlist.m3u8"
 
-    @patch('m3u8_parser.requests.get')
+    @patch('src.core.m3u8_parser.requests.get')
     def test_extract_m3u8_url_from_page_quoted(self, mock_get: MagicMock) -> None:
         """Test extracting M3U8 URL from page with quotes."""
         # Mock page content with quoted M3U8 URL
@@ -464,7 +464,7 @@ class TestExtractors:
 
         assert url == "https://example.com/playlist.m3u8?token=123"
 
-    @patch('m3u8_parser.requests.get')
+    @patch('src.core.m3u8_parser.requests.get')
     def test_extract_m3u8_url_from_page_none(self, mock_get: MagicMock) -> None:
         """Test extracting M3U8 URL from page with no URL."""
         # Mock page content without M3U8 URL
@@ -477,7 +477,7 @@ class TestExtractors:
 
         assert url == ""
 
-    @patch('m3u8_parser.requests.get')
+    @patch('src.core.m3u8_parser.requests.get')
     def test_extract_m3u8_url_from_page_exception(self, mock_get: MagicMock) -> None:
         """Test extracting M3U8 URL with exception."""
         # Mock request exception
@@ -488,8 +488,8 @@ class TestExtractors:
 
         assert url == ""
 
-    @patch('m3u8_parser.extract_m3u8_url_from_page')
-    @patch('m3u8_parser.M3U8Parser.parse_url')
+    @patch('src.core.m3u8_parser.extract_m3u8_url_from_page')
+    @patch('src.core.m3u8_parser.M3U8Parser.parse_url')
     def test_extract_m3u8_info_from_page(self, mock_parse_url: MagicMock, mock_extract: MagicMock) -> None:
         """Test extracting M3U8 info from a webpage (not direct M3U8 link)."""
         # Setup mocks
@@ -529,7 +529,7 @@ class TestExtractors:
         assert "base_url" in result
         assert "pattern" in result
 
-    @patch('m3u8_parser.M3U8Parser.parse_url')
+    @patch('src.core.m3u8_parser.M3U8Parser.parse_url')
     def test_extract_m3u8_info_direct_link(self, mock_parse_url: MagicMock) -> None:
         """Test extracting M3U8 info from direct M3U8 link."""
         # Create mock stream
@@ -568,7 +568,7 @@ class TestExtractors:
         assert result["key_url"] == "https://example.com/key.bin"
         assert result["encryption"] == "AES-128"
 
-    @patch('m3u8_parser.M3U8Parser.parse_url')
+    @patch('src.core.m3u8_parser.M3U8Parser.parse_url')
     def test_extract_m3u8_info_no_streams(self, mock_parse_url: MagicMock) -> None:
         """Test extracting M3U8 info with no streams."""
         # Mock empty streams list
@@ -581,7 +581,7 @@ class TestExtractors:
         assert result["success"] is False
         assert result["message"] == "Unable to parse M3U8 playlist"
 
-    @patch('m3u8_parser.extract_m3u8_url_from_page')
+    @patch('src.core.m3u8_parser.extract_m3u8_url_from_page')
     def test_extract_m3u8_info_no_url(self, mock_extract: MagicMock) -> None:
         """Test extracting M3U8 info with no URL found."""
         # Mock URL extraction failure
@@ -594,7 +594,7 @@ class TestExtractors:
         assert result["success"] is False
         assert result["message"] == "Unable to extract M3U8 link from page"
 
-    @patch('m3u8_parser.M3U8Parser.parse_url')
+    @patch('src.core.m3u8_parser.M3U8Parser.parse_url')
     def test_extract_m3u8_info_exception(self, mock_parse_url: MagicMock) -> None:
         """Test extracting M3U8 info with exception."""
         # Mock exception

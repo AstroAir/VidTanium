@@ -1,6 +1,6 @@
 """Enhanced Schedule Manager with responsive design and modern theming"""
 
-from typing import Optional
+from typing import Optional, Union
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSplitter
 )
@@ -164,7 +164,7 @@ class EnhancedScheduleManager(ResponsiveWidget):
         filter_section = QWidget()
         if current_bp.value in ['xs', 'sm']:
             # Vertical layout for small screens
-            filter_layout = QVBoxLayout(filter_section)
+            filter_layout: Union[QVBoxLayout, QHBoxLayout] = QVBoxLayout(filter_section)
             filter_layout.setSpacing(8)
         else:
             # Horizontal layout for larger screens

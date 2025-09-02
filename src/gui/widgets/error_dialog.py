@@ -180,7 +180,7 @@ class SuggestedActionsWidget(QWidget):
     
     def __init__(self, actions: List[UserAction], parent=None):
         super().__init__(parent)
-        self.actions = sorted(actions, key=lambda x: x.priority)  # Sort by priority
+        self._actions = sorted(actions, key=lambda x: x.priority)  # Sort by priority
         self._setup_ui()
     
     def _setup_ui(self):
@@ -195,7 +195,7 @@ class SuggestedActionsWidget(QWidget):
         layout.addWidget(title_label)
         
         # Actions
-        for action in self.actions:
+        for action in self._actions:
             action_button = ActionButton(action)
             action_button.action_triggered.connect(self.action_requested.emit)
             layout.addWidget(action_button)

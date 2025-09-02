@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QProgressBar,
     QFrame, QGridLayout
 )
-from PySide6.QtCore import Qt, Signal, QTimer, QPropertyAnimation, QEasingCurve
+from PySide6.QtCore import Qt, Signal, QTimer, QPropertyAnimation, QEasingCurve, QByteArray
 from PySide6.QtGui import QFont, QPainter, QPainterPath, QColor, QLinearGradient
 
 from qfluentwidgets import (
@@ -55,7 +55,7 @@ class StatusBadge(QWidget):
         self.setMinimumWidth(80)
         
         # Animation for pulsing effect
-        self.animation = QPropertyAnimation(self, b"geometry")
+        self.animation = QPropertyAnimation(self, QByteArray(b"geometry"))
         self.animation.setDuration(1000)
         self.animation.setEasingCurve(QEasingCurve.Type.InOutSine)
         

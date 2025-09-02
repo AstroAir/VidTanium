@@ -2,7 +2,7 @@ import pytest
 import subprocess
 from unittest.mock import patch, MagicMock, mock_open, ANY
 
-from merger import is_ffmpeg_available, merge_files_ffmpeg, merge_files_binary, convert_ts_to_mp4, merge_files
+from src.core.merger import is_ffmpeg_available, merge_files_ffmpeg, merge_files_binary, convert_ts_to_mp4, merge_files
 
 
 class TestMerger:
@@ -240,8 +240,8 @@ class TestMerger:
 
     def test_merge_files_ffmpeg_direct_success(self) -> None:
         """Test merge_files when FFmpeg is available and direct merge succeeds."""
-        with patch('merger.is_ffmpeg_available', return_value=True) as mock_is_ffmpeg_available, \
-                patch('merger.merge_files_ffmpeg', return_value={"success": True}) as mock_merge_ffmpeg:
+        with patch('src.core.merger.is_ffmpeg_available', return_value=True) as mock_is_ffmpeg_available, \
+                patch('src.core.merger.merge_files_ffmpeg', return_value={"success": True}) as mock_merge_ffmpeg:
 
             result = merge_files(
                 self.test_files, self.output_file, self.settings)
@@ -260,10 +260,10 @@ class TestMerger:
 
     def test_merge_files_ffmpeg_direct_failure_binary_success(self) -> None:
         """Test merge_files when FFmpeg direct merge fails but binary merge succeeds."""
-        with patch('merger.is_ffmpeg_available', return_value=True) as mock_is_ffmpeg_available, \
-                patch('merger.merge_files_ffmpeg', return_value={"success": False}) as mock_merge_ffmpeg, \
-                patch('merger.merge_files_binary', return_value={"success": True}) as mock_merge_binary, \
-                patch('merger.convert_ts_to_mp4', return_value={"success": True}) as mock_convert, \
+        with patch('src.core.merger.is_ffmpeg_available', return_value=True) as mock_is_ffmpeg_available, \
+                patch('src.core.merger.merge_files_ffmpeg', return_value={"success": False}) as mock_merge_ffmpeg, \
+                patch('src.core.merger.merge_files_binary', return_value={"success": True}) as mock_merge_binary, \
+                patch('src.core.merger.convert_ts_to_mp4', return_value={"success": True}) as mock_convert, \
                 patch('os.path.exists', return_value=True), \
                 patch('os.remove') as mock_remove:
 
@@ -285,8 +285,8 @@ class TestMerger:
 
     def test_merge_files_no_ffmpeg(self) -> None:
         """Test merge_files when FFmpeg is not available."""
-        with patch('merger.is_ffmpeg_available', return_value=False) as mock_is_ffmpeg_available, \
-                patch('merger.merge_files_binary', return_value={"success": True}) as mock_merge_binary, \
+        with patch('src.core.merger.is_ffmpeg_available', return_value=False) as mock_is_ffmpeg_available, \
+                patch('src.core.merger.merge_files_binary', return_value={"success": True}) as mock_merge_binary, \
                 patch('shutil.move') as mock_move:
 
             # Use a non-mp4 output file to bypass conversion
@@ -306,8 +306,8 @@ class TestMerger:
 
     def test_merge_files_binary_failure(self) -> None:
         """Test merge_files when binary merge fails."""
-        with patch('merger.is_ffmpeg_available', return_value=False) as mock_is_ffmpeg_available, \
-                patch('merger.merge_files_binary', return_value={"success": False, "error": "Binary merge failed"}) as mock_merge_binary:
+        with patch('src.core.merger.is_ffmpeg_available', return_value=False) as mock_is_ffmpeg_available, \
+                patch('src.core.merger.merge_files_binary', return_value={"success": False, "error": "Binary merge failed"}) as mock_merge_binary:
 
             result = merge_files(
                 self.test_files, self.output_file, self.settings)
@@ -323,10 +323,10 @@ class TestMerger:
 
     def test_merge_files_conversion_failure(self) -> None:
         """Test merge_files when TS to MP4 conversion fails."""
-        with patch('merger.is_ffmpeg_available', return_value=True) as mock_is_ffmpeg_available, \
-                patch('merger.merge_files_ffmpeg', return_value={"success": False}) as mock_merge_ffmpeg, \
-                patch('merger.merge_files_binary', return_value={"success": True}) as mock_merge_binary, \
-                patch('merger.convert_ts_to_mp4', return_value={"success": False, "error": "Conversion failed"}) as mock_convert, \
+        with patch('src.core.merger.is_ffmpeg_available', return_value=True) as mock_is_ffmpeg_available, \
+                patch('src.core.merger.merge_files_ffmpeg', return_value={"success": False}) as mock_merge_ffmpeg, \
+                patch('src.core.merger.merge_files_binary', return_value={"success": True}) as mock_merge_binary, \
+                patch('src.core.merger.convert_ts_to_mp4', return_value={"success": False, "error": "Conversion failed"}) as mock_convert, \
                 patch('os.path.exists', return_value=True):
 
             result = merge_files(
@@ -345,8 +345,8 @@ class TestMerger:
 
     def test_merge_files_rename_failure(self) -> None:
         """Test merge_files when file renaming fails."""
-        with patch('merger.is_ffmpeg_available', return_value=False) as mock_is_ffmpeg_available, \
-                patch('merger.merge_files_binary', return_value={"success": True}) as mock_merge_binary, \
+        with patch('src.core.merger.is_ffmpeg_available', return_value=False) as mock_is_ffmpeg_available, \
+                patch('src.core.merger.merge_files_binary', return_value={"success": True}) as mock_merge_binary, \
                 patch('shutil.move', side_effect=Exception("Rename failed")):
 
             # Use a non-mp4 output file to force renaming
@@ -368,8 +368,8 @@ class TestMerger:
         test_files = ["segment_2.ts", "segment_1.ts", "segment_10.ts"]
         expected_sort = ["segment_1.ts", "segment_2.ts", "segment_10.ts"]
 
-        with patch('merger.is_ffmpeg_available', return_value=True), \
-                patch('merger.merge_files_ffmpeg') as mock_merge_ffmpeg:
+        with patch('src.core.merger.is_ffmpeg_available', return_value=True), \
+                patch('src.core.merger.merge_files_ffmpeg') as mock_merge_ffmpeg:
 
             # Set up the mock to capture the sorted_files argument
             mock_merge_ffmpeg.return_value = {"success": True}
@@ -386,8 +386,8 @@ class TestMerger:
         """Test merge_files with sort fallback for unusually named files."""
         test_files = ["file-a.ts", "file-b.ts", "file-c.ts"]
 
-        with patch('merger.is_ffmpeg_available', return_value=True), \
-                patch('merger.merge_files_ffmpeg') as mock_merge_ffmpeg:
+        with patch('src.core.merger.is_ffmpeg_available', return_value=True), \
+                patch('src.core.merger.merge_files_ffmpeg') as mock_merge_ffmpeg:
 
             # Set up the mock to capture the sorted_files argument
             mock_merge_ffmpeg.return_value = {"success": True}
@@ -402,8 +402,8 @@ class TestMerger:
 
     def test_merge_files_no_settings(self) -> None:
         """Test merge_files with no settings provided."""
-        with patch('merger.is_ffmpeg_available', return_value=True) as mock_is_ffmpeg_available, \
-                patch('merger.merge_files_ffmpeg', return_value={"success": True}) as mock_merge_ffmpeg:
+        with patch('src.core.merger.is_ffmpeg_available', return_value=True) as mock_is_ffmpeg_available, \
+                patch('src.core.merger.merge_files_ffmpeg', return_value={"success": True}) as mock_merge_ffmpeg:
 
             result = merge_files(self.test_files, self.output_file, None)
 
@@ -421,10 +421,10 @@ class TestMerger:
 
     def test_merge_files_remove_temp_file_exception(self) -> None:
         """Test merge_files handles exception when removing temporary TS file."""
-        with patch('merger.is_ffmpeg_available', return_value=True), \
-                patch('merger.merge_files_ffmpeg', return_value={"success": False}), \
-                patch('merger.merge_files_binary', return_value={"success": True}), \
-                patch('merger.convert_ts_to_mp4', return_value={"success": True}), \
+        with patch('src.core.merger.is_ffmpeg_available', return_value=True), \
+                patch('src.core.merger.merge_files_ffmpeg', return_value={"success": False}), \
+                patch('src.core.merger.merge_files_binary', return_value={"success": True}), \
+                patch('src.core.merger.convert_ts_to_mp4', return_value={"success": True}), \
                 patch('os.path.exists', return_value=True), \
                 patch('os.remove', side_effect=Exception("Remove failed")), \
                 patch('loguru.logger.warning') as mock_logger_warning:

@@ -9,10 +9,10 @@ from enum import Enum
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel,
     QCheckBox, QComboBox, QLineEdit, QPushButton, QFrame,
-    QScrollArea, QButtonGroup, QMenu, QActionGroup
+    QScrollArea, QButtonGroup, QMenu
 )
 from PySide6.QtCore import Qt, Signal, QTimer
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QActionGroup
 
 from qfluentwidgets import (
     FluentIcon as FIF, CheckBox, ComboBox, LineEdit, SearchLineEdit,

@@ -54,6 +54,7 @@ class BatchProgress:
     start_time: float = field(default_factory=time.time)
     last_updated: float = field(default_factory=time.time)
     task_progresses: Dict[str, TaskProgress] = field(default_factory=dict)
+    assigned_tasks: Set[str] = field(default_factory=set)  # Track all assigned tasks
 
 
 class BatchProgressAggregator:
@@ -102,7 +103,8 @@ class BatchProgressAggregator:
                 paused_tasks=0,
                 total_bytes=0,
                 downloaded_bytes=0,
-                combined_speed=0.0
+                combined_speed=0.0,
+                assigned_tasks=set(task_ids)
             )
             
             self.batches[batch_id] = batch
@@ -153,26 +155,34 @@ class BatchProgressAggregator:
             # Trigger callbacks
             self._trigger_progress_callbacks(batch_id, batch)
     
-    def remove_task_from_batch(self, task_id: str):
+    def remove_task_from_batch(self, task_id: str) -> int:
         """Remove a task from its batch"""
         with self.lock:
             batch_id = self.task_to_batch.get(task_id)
             if not batch_id or batch_id not in self.batches:
-                return
-            
+                return 0
+
             batch = self.batches[batch_id]
-            
+
             # Remove task
+            removed_count = 0
+            if task_id in batch.assigned_tasks:
+                batch.assigned_tasks.remove(task_id)
+                removed_count = 1
+
             if task_id in batch.task_progresses:
                 del batch.task_progresses[task_id]
-            
-            del self.task_to_batch[task_id]
-            batch.total_tasks = len(batch.task_progresses)
-            
+
+            if task_id in self.task_to_batch:
+                del self.task_to_batch[task_id]
+
+            batch.total_tasks = len(batch.assigned_tasks)
+
             # Recalculate progress
             self._recalculate_batch_progress(batch_id)
-            
+
             logger.debug(f"Removed task {task_id} from batch {batch_id}")
+            return removed_count
     
     def _recalculate_batch_progress(self, batch_id: str):
         """Recalculate aggregated progress for a batch"""

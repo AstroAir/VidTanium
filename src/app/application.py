@@ -9,16 +9,114 @@ from .logging_config import ensure_logging_configured
 from loguru import logger
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QObject, QTranslator, QLocale, QMutex
-from typing import Optional
+from typing import Optional, Dict, Any, Callable, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.gui.widgets.system_tray import EnhancedSystemTrayIcon
+from dataclasses import dataclass
+from enum import Enum
 
 # Ensure logging is configured first
 ensure_logging_configured()
+
+
+@dataclass
+class InitializationStep:
+    """Represents a single initialization step"""
+    name: str
+    function: Callable
+    dependencies: Optional[list] = None
+    critical: bool = True  # If False, failure won't stop initialization
+
+    def __post_init__(self):
+        if self.dependencies is None:
+            self.dependencies = []
+
+
+class InitializationPhase(Enum):
+    """Initialization phases in order"""
+    CORE_SYSTEMS = "core_systems"
+    MANAGERS = "managers"
+    UI_COMPONENTS = "ui_components"
+    FINALIZATION = "finalization"
+
+
+class CentralizedInitializer:
+    """Centralized initialization system for the application"""
+
+    def __init__(self, app_instance):
+        self.app = app_instance
+        self.completed_steps = set()
+        self.failed_steps = set()
+        self.initialization_data = {}
+        self._steps: Dict[InitializationPhase, list[InitializationStep]] = {
+            phase: [] for phase in InitializationPhase
+        }
+
+    def register_step(self, phase: InitializationPhase, step: InitializationStep):
+        """Register an initialization step"""
+        self._steps[phase].append(step)
+
+    def initialize_all(self) -> bool:
+        """Execute all initialization phases"""
+        try:
+            for phase in InitializationPhase:
+                if not self._execute_phase(phase):
+                    logger.error(f"Initialization failed at phase: {phase.value}")
+                    return False
+            logger.info("Application initialization completed successfully")
+            return True
+        except Exception as e:
+            logger.error(f"Critical error during initialization: {e}", exc_info=True)
+            return False
+
+    def _execute_phase(self, phase: InitializationPhase) -> bool:
+        """Execute a single initialization phase"""
+        if phase not in self._steps:
+            return True
+
+        logger.debug(f"Executing initialization phase: {phase.value}")
+
+        for step in self._steps[phase]:
+            if not self._execute_step(step):
+                if step.critical:
+                    logger.error(f"Critical step failed: {step.name}")
+                    return False
+                else:
+                    logger.warning(f"Non-critical step failed: {step.name}")
+
+        return True
+
+    def _execute_step(self, step: InitializationStep) -> bool:
+        """Execute a single initialization step"""
+        # Check dependencies
+        if step.dependencies:
+            for dep in step.dependencies:
+                if dep not in self.completed_steps:
+                    logger.error(f"Step '{step.name}' dependency '{dep}' not completed")
+                    return False
+
+        try:
+            logger.debug(f"Executing initialization step: {step.name}")
+            result = step.function()
+            if result is not None:
+                self.initialization_data[step.name] = result
+            self.completed_steps.add(step.name)
+            return True
+        except Exception as e:
+            logger.error(f"Step '{step.name}' failed: {e}", exc_info=True)
+            self.failed_steps.add(step.name)
+            return False
 
 
 class Application(QApplication):
     """Singleton Application class with enhanced interface management"""
     _instance: Optional['Application'] = None
     _mutex = QMutex()
+    _initialized: bool
+
+    # Instance variables
+    tray_icon: Optional['EnhancedSystemTrayIcon'] = None
 
     def __new__(cls, config_dir=None):
         """Ensure singleton pattern"""
@@ -43,30 +141,124 @@ class Application(QApplication):
         if hasattr(self, '_initialized') and self._initialized:
             logger.debug("Application already initialized, skipping")
             return
-            
+
         super().__init__(sys.argv)
         self._initialized = True
+        self._config_dir = config_dir
 
-        # Initialize settings
-        self.settings = Settings(config_dir)
+        # Use centralized initialization system
+        self._initializer = CentralizedInitializer(self)
+        self._register_initialization_steps()
 
-        # Set application properties
-        self.setApplicationName("Video Downloader")
-        self.setApplicationVersion("1.0.0")
-        self.setOrganizationName("Development Team")
-        self.setOrganizationDomain("example.com")
+        if not self._initializer.initialize_all():
+            logger.error("Application initialization failed")
+            raise RuntimeError("Failed to initialize application")
 
-        # Initialize i18n system first
+    def _register_initialization_steps(self):
+        """Register all initialization steps with the centralizer"""
+        # Core systems phase
+        self._initializer.register_step(
+            InitializationPhase.CORE_SYSTEMS,
+            InitializationStep("app_properties", self._set_app_properties)
+        )
+        self._initializer.register_step(
+            InitializationPhase.CORE_SYSTEMS,
+            InitializationStep("settings", self._init_settings, ["app_properties"])
+        )
+        self._initializer.register_step(
+            InitializationPhase.CORE_SYSTEMS,
+            InitializationStep("i18n", self._init_i18n_system, ["settings"])
+        )
+
+        # Managers phase
+        self._initializer.register_step(
+            InitializationPhase.MANAGERS,
+            InitializationStep("theme_manager", self._init_theme_manager, ["settings", "i18n"])
+        )
+        self._initializer.register_step(
+            InitializationPhase.MANAGERS,
+            InitializationStep("download_manager", self._init_download_manager, ["settings"])
+        )
+        self._initializer.register_step(
+            InitializationPhase.MANAGERS,
+            InitializationStep("task_scheduler", self._init_task_scheduler, ["settings"])
+        )
+
+        # UI components phase
+        self._initializer.register_step(
+            InitializationPhase.UI_COMPONENTS,
+            InitializationStep("system_tray", self._init_system_tray, ["theme_manager"])
+        )
+        self._initializer.register_step(
+            InitializationPhase.UI_COMPONENTS,
+            InitializationStep("main_window", self._init_main_window,
+                             ["theme_manager", "download_manager", "task_scheduler"])
+        )
+
+        # Finalization phase
+        self._initializer.register_step(
+            InitializationPhase.FINALIZATION,
+            InitializationStep("cleanup", self._finalize_initialization, ["main_window"])
+        )
+
+    def _set_app_properties(self):
+        """Set application properties"""
+        self.setApplicationName("VidTanium")
+        self.setApplicationVersion("0.1.0")
+        self.setOrganizationName("VidTanium Team")
+        self.setOrganizationDomain("vidtanium.com")
+
+    def _init_settings(self):
+        """Initialize settings and validate them"""
+        self.settings = Settings(self._config_dir)
+        self._validate_and_fix_settings()
+
+    def _init_i18n_system(self):
+        """Initialize internationalization system"""
         init_i18n()
         self._i18n_initialized = True
-
-        # Apply language
         self._apply_language()
 
-        # Apply pending locale if any
-        if hasattr(self, '_pending_locale'):
-            set_locale(self._pending_locale)
+    def _init_theme_manager(self):
+        """Initialize theme manager"""
+        from src.gui.theme_manager import EnhancedThemeManager
+        self.theme_manager = EnhancedThemeManager(self.settings, self)
 
+    def _init_download_manager(self):
+        """Initialize download manager"""
+        self.download_manager = DownloadManager(self.settings)
+
+    def _init_task_scheduler(self):
+        """Initialize task scheduler"""
+        self.task_scheduler = TaskScheduler(self._config_dir)
+        self.task_scheduler.register_handler("download", self._handle_download_task)
+
+    def _init_main_window(self):
+        """Initialize main window"""
+        from typing import cast
+        from src.gui.main_window import SettingsType, AppType
+        self.main_window = MainWindow(
+            cast(AppType, self), self.download_manager, cast(SettingsType, self.settings), self.theme_manager)
+
+    def _init_core_systems(self):
+        """Initialize core application systems"""
+        # Set application properties (only once)
+        self.setApplicationName("VidTanium")
+        self.setApplicationVersion("0.1.0")
+        self.setOrganizationName("VidTanium Team")
+        self.setOrganizationDomain("vidtanium.com")
+
+        # Initialize settings and validate/fix them immediately
+        self.settings = Settings(self._config_dir)
+        self._validate_and_fix_settings()
+
+        # Initialize i18n system and apply language in one step
+        init_i18n()
+        self._i18n_initialized = True
+        self._apply_language()
+
+    def _init_managers(self):
+        """Initialize application managers"""
         # Initialize theme manager
         from src.gui.theme_manager import EnhancedThemeManager
         self.theme_manager = EnhancedThemeManager(self.settings, self)
@@ -74,19 +266,32 @@ class Application(QApplication):
         # Initialize download manager
         self.download_manager = DownloadManager(self.settings)
 
-        # Initialize task scheduler
-        self.task_scheduler = TaskScheduler(config_dir)
+        # Initialize task scheduler and register handlers immediately
+        self.task_scheduler = TaskScheduler(self._config_dir)
+        self.task_scheduler.register_handler("download", self._handle_download_task)
 
+    def _init_ui_components(self):
+        """Initialize UI components"""
         self._init_system_tray()
 
-        # Register task handler
-        self.task_scheduler.register_handler(
-            "download", self._handle_download_task)        # Create main window
+        # Create main window with all dependencies ready
+        from typing import cast
+        from src.gui.main_window import SettingsType, AppType
         self.main_window = MainWindow(
-            self, self.download_manager, self.settings, self.theme_manager)
+            cast(AppType, self), self.download_manager, cast(SettingsType, self.settings), self.theme_manager)
 
-        # Check initial settings
-        self._check_initial_settings()
+    def _finalize_initialization(self):
+        """Finalize initialization process"""
+        # Apply any pending locale settings
+        if hasattr(self, '_pending_locale'):
+            set_locale(self._pending_locale)
+            delattr(self, '_pending_locale')  # Clean up temporary attribute
+
+        # Start the resource manager for automatic cleanup
+        from src.core.resource_manager import resource_manager
+        resource_manager.start()
+
+        logger.info("Application initialization completed successfully")
 
     def run(self):
         """Run the application"""
@@ -125,7 +330,7 @@ class Application(QApplication):
         # Check if system tray is available
         if hasattr(self, "tray_icon") and self.tray_icon:
             logger.debug(f"Sending notification: {title} - {message}")
-            self.tray_icon.show_notification(title, message, icon, duration)
+            self.tray_icon.show_enhanced_notification(title, message, "info", duration)
         else:
             logger.debug("System tray not available, notification not shown")
 
@@ -167,72 +372,68 @@ class Application(QApplication):
             logger.error(f"Error applying theme: {e}", exc_info=True)
 
     def _apply_language(self):
-        """Apply language settings"""
+        """Apply language settings with optimized locale detection"""
         language = self.settings.get("general", "language", "auto")
-        # Determine locale
-        logger.debug(f"Setting application language: {language}")
+
+        # Determine locale efficiently
         if language == "auto":
-            # Use system language
             system_locale = QLocale.system().name()
-            logger.debug(f"Using system locale: {system_locale}")
-            # Map system locale to our supported locales
-            if system_locale.startswith("zh"):
-                locale = "zh_CN"
-            else:
-                locale = "en"
+            locale = "zh_CN" if system_locale.startswith("zh") else "en"
+            logger.debug(f"Auto-detected locale: {locale} (from {system_locale})")
         else:
-            locale = language if language else "zh_CN"
-            logger.debug(f"Using specified locale: {locale}")
+            locale = language or "zh_CN"
+            logger.debug(f"Using configured locale: {locale}")
 
-        # Set i18n locale
-        if hasattr(self, '_i18n_initialized'):
-            set_locale(locale)
-        else:
-            # Store for later initialization
-            self._pending_locale = locale
+        # Apply locale immediately since i18n is already initialized
+        set_locale(locale)
 
-        # Create Qt translator (for Qt built-in strings)
-        translator = QTranslator()
-        # Load translation file (requires .qm files in actual application)
-        # translator.load(f":/translations/{locale}.qm")
-        # Install translator
-        # self.installTranslator(translator)
+        # TODO: Implement Qt translator when translation files are available
+        # self._setup_qt_translator(locale)
 
-    def _check_initial_settings(self):
-        """Check initial settings"""
-        # Check FFmpeg path
+    def _validate_and_fix_settings(self):
+        """Validate and fix settings during initialization"""
+        settings_changed = False
+
+        # Validate FFmpeg path
+        settings_changed |= self._validate_ffmpeg_path()
+
+        # Validate output directory
+        settings_changed |= self._validate_output_directory()
+
+        # Save settings only once if any changes were made
+        if settings_changed:
+            self.settings.save_settings()
+            logger.debug("Settings validated and saved")
+
+    def _validate_ffmpeg_path(self) -> bool:
+        """Validate FFmpeg path and fix if invalid"""
         from src.core.merger import is_ffmpeg_available
 
         ffmpeg_path = self.settings.get("advanced", "ffmpeg_path", "")
-        if ffmpeg_path:
-            logger.debug(f"Verifying FFmpeg path: {ffmpeg_path}")
-            if not is_ffmpeg_available(ffmpeg_path):
-                logger.warning(
-                    f"Specified FFmpeg path is invalid: {ffmpeg_path}")
-                self.settings.set("advanced", "ffmpeg_path", "")
-                self.settings.save_settings()
-                logger.debug("FFmpeg path has been reset")
+        if ffmpeg_path and not is_ffmpeg_available(ffmpeg_path):
+            logger.warning(f"Invalid FFmpeg path '{ffmpeg_path}', resetting")
+            self.settings.set("advanced", "ffmpeg_path", "")
+            return True
+        return False
 
-        # Check output directory
+    def _validate_output_directory(self) -> bool:
+        """Validate output directory and create/fix if needed"""
         output_dir = self.settings.get("general", "output_directory", "")
-        if output_dir:
-            logger.debug(f"Checking output directory: {output_dir}")
-            if not os.path.exists(output_dir):
-                try:
-                    logger.info(
-                        f"Output directory does not exist, creating: {output_dir}")
-                    os.makedirs(output_dir, exist_ok=True)
-                    logger.success(
-                        f"Successfully created output directory: {output_dir}")
-                except Exception as e:
-                    logger.warning(
-                        f"Cannot create output directory: {output_dir}, error: {e}", exc_info=True)
-                    default_dir = str(os.path.expanduser("~"))
-                    logger.debug(
-                        f"Setting output directory to user home: {default_dir}")
-                    self.settings.set(
-                        "general", "output_directory", default_dir)
-                    self.settings.save_settings()
+        if not output_dir:
+            return False
+
+        if not os.path.exists(output_dir):
+            try:
+                os.makedirs(output_dir, exist_ok=True)
+                logger.info(f"Created output directory: {output_dir}")
+                return False  # Directory created, no settings change needed
+            except Exception as e:
+                logger.warning(f"Cannot create output directory '{output_dir}': {e}")
+                default_dir = str(os.path.expanduser("~"))
+                self.settings.set("general", "output_directory", default_dir)
+                logger.debug(f"Reset output directory to: {default_dir}")
+                return True
+        return False
 
     def _check_updates(self):
         """Check for updates"""

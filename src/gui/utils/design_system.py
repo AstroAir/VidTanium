@@ -4,7 +4,7 @@ Modern design patterns and components using QFluentWidgets 1.8.7
 """
 
 from typing import Dict, Any, Optional, Union
-from PySide6.QtCore import Qt, QPropertyAnimation, QEasingCurve, QRect, QTimer
+from PySide6.QtCore import Qt, QPropertyAnimation, QEasingCurve, QRect, QTimer, QByteArray
 from PySide6.QtWidgets import QWidget, QGraphicsOpacityEffect, QGraphicsDropShadowEffect
 from PySide6.QtGui import QColor, QPainter, QPainterPath, QLinearGradient
 
@@ -147,7 +147,7 @@ class AnimatedCard(ElevatedCardWidget):
         self.opacity_effect = QGraphicsOpacityEffect()
         self.setGraphicsEffect(self.opacity_effect)
         
-        self.hover_animation = QPropertyAnimation(self.opacity_effect, b"opacity")
+        self.hover_animation = QPropertyAnimation(self.opacity_effect, QByteArray(b"opacity"))
         self.hover_animation.setDuration(200)
         self.hover_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
         

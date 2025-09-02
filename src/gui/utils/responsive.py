@@ -32,6 +32,7 @@ class ResponsiveManager(QObject):
     orientation_changed = Signal(Qt.Orientation)
     
     _instance: Optional['ResponsiveManager'] = None
+    _initialized: bool
     
     # Breakpoint thresholds
     BREAKPOINTS = {

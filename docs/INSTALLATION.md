@@ -68,7 +68,7 @@ Complete installation guide for VidTanium video download tool.
    ```bash
    git clone https://github.com/yourusername/VidTanium.git
    cd VidTanium
-   pip install -r requirements.txt
+   pip install -e .
    ```
 
 3. **Run the application**
@@ -336,7 +336,7 @@ python -m pip install --upgrade pip
 python -m venv fresh_env
 source fresh_env/bin/activate  # Linux/macOS
 fresh_env\Scripts\activate     # Windows
-pip install -r requirements.txt
+pip install -e .
 ```
 
 #### Network Issues
@@ -347,7 +347,7 @@ export HTTP_PROXY=http://proxy.company.com:8080
 export HTTPS_PROXY=http://proxy.company.com:8080
 
 # Or use pip proxy
-pip install --proxy http://proxy.company.com:8080 -r requirements.txt
+pip install --proxy http://proxy.company.com:8080 -e .
 ```
 
 ### Verification Steps

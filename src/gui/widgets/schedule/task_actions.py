@@ -1,7 +1,7 @@
 """任务操作按钮组件"""
 
 from PySide6.QtWidgets import QWidget, QHBoxLayout
-from qfluentwidgets import ToolButton, FluentIcon
+from qfluentwidgets import ToolButton, FluentIcon as FIF
 
 
 class TaskActionButtons(QWidget):

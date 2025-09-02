@@ -5,7 +5,7 @@ Settings Dialog wrapper for the unified settings interface
 from PySide6.QtWidgets import QDialog, QVBoxLayout
 from PySide6.QtCore import Qt, Signal
 
-from qfluentwidgets import FluentIcon
+from qfluentwidgets import FluentIcon as FIF
 
 from .settings_interface import SettingsInterface
 

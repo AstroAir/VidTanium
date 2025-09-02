@@ -290,7 +290,7 @@ class AboutDialog(QDialog):
             feature_layout = QHBoxLayout()
             feature_layout.setSpacing(10)
 
-            icon = IconWidget(getattr(FluentIcon, icon_name))
+            icon = IconWidget(getattr(FIF, icon_name))
             icon.setFixedSize(20, 20)
             icon.setStyleSheet("color: #3498db;")
             feature_layout.addWidget(icon)
@@ -369,7 +369,7 @@ class AboutDialog(QDialog):
             header_layout = QHBoxLayout()
             header_layout.setSpacing(10)
 
-            icon = IconWidget(getattr(FluentIcon, category["icon"]))
+            icon = IconWidget(getattr(FIF, str(category["icon"])))
             icon.setFixedSize(24, 24)
             icon.setStyleSheet("color: #3498db;")
             header_layout.addWidget(icon)
@@ -538,7 +538,7 @@ class AboutDialog(QDialog):
             lib_header = QHBoxLayout()
             lib_header.setSpacing(10)
 
-            lib_icon = IconWidget(getattr(FluentIcon, lib["icon"]))
+            lib_icon = IconWidget(getattr(FIF, lib["icon"]))
             lib_icon.setFixedSize(20, 20)
             lib_icon.setStyleSheet("color: #9b59b6;")
             lib_header.addWidget(lib_icon)

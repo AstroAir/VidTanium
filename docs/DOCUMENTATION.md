@@ -316,7 +316,7 @@ dependencies = [
     "psutil>=7.0.0",              # System monitoring
     "pycryptodome>=3.22.0",       # Encryption support
     "pyside6>=6.9.0",             # Qt6 framework
-    "pyside6-fluent-widgets[full]>=1.7.7",  # Fluent Design widgets
+    "pyside6-fluent-widgets[full]>=1.8.7",  # Fluent Design widgets
     "pytest>=8.3.5",             # Testing framework
     "requests>=2.32.3",           # HTTP client
 ]

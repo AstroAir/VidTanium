@@ -25,7 +25,7 @@ python main.py --config "/path/to/config"
 uv sync
 
 # Install dependencies with pip
-pip install -r requirements.txt
+pip install -e .
 
 # Install development dependencies
 uv sync --dev

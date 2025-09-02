@@ -4,6 +4,7 @@ import threading
 import os
 import json
 import uuid
+from pathlib import Path
 from queue import PriorityQueue, Queue, Empty
 from enum import Enum
 from datetime import datetime
@@ -23,6 +24,16 @@ from .exceptions import (
 )
 from .error_handler import EnhancedErrorHandler, error_handler
 from .retry_manager import IntelligentRetryManager, retry_manager
+from .resource_manager import resource_manager, ResourceType, register_for_cleanup
+from .connection_pool import connection_pool_manager, HostPoolConfig
+from .adaptive_timeout import adaptive_timeout_manager
+from .memory_optimizer import memory_optimizer
+# Enhanced resource manager is now merged into resource_manager
+from .adaptive_retry import adaptive_retry_manager, RetryReason
+from .circuit_breaker import circuit_breaker_manager
+from .progressive_recovery import progressive_recovery_manager
+from .segment_validator import segment_validator, ValidationResult
+from .integrity_verifier import content_integrity_verifier, IntegrityLevel
 
 
 class TaskStatus(Enum):
@@ -138,7 +149,8 @@ class DownloadTask:
         self.worker_thread = None
         self.paused_event = threading.Event()
         self.canceled_event = threading.Event()
-        self.paused_event.set()  # Not paused by default
+        # paused_event.is_set() == True means paused, False means not paused
+        # Initialize as not paused (clear)
 
         # Progress tracking
         self.progress_file = f"{output_file}.progress" if output_file else None
@@ -146,7 +158,7 @@ class DownloadTask:
 
     def get_progress_percentage(self) -> float:
         """Get progress percentage"""
-        if self.progress["total"] == 0:
+        if self.progress["total"] == 0 or self.segments == 0:
             return 0.0
         return round((self.progress["completed"] / self.progress["total"]) * 100, 2)
 
@@ -158,7 +170,7 @@ class DownloadTask:
         self.status = TaskStatus.RUNNING
         self.progress["start_time"] = self.progress.get(
             "start_time") or time.time()
-        self.paused_event.set()  # Cancel pause state
+        self.paused_event.clear()  # Clear pause state (not paused)
         self.canceled_event.clear()  # Clear cancel flag
 
         # Create worker thread
@@ -171,19 +183,19 @@ class DownloadTask:
 
     def pause(self) -> None:
         """Pause task"""
-        if self.status != TaskStatus.RUNNING:
+        if self.status in [TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELED]:
             return
 
         self.status = TaskStatus.PAUSED
-        self.paused_event.clear()  # Set pause event
+        self.paused_event.set()  # Set pause event
 
     def resume(self) -> None:
         """Resume task"""
         if self.status != TaskStatus.PAUSED:
             return
 
-        self.status = TaskStatus.RUNNING
-        self.paused_event.set()  # Clear pause event
+        self.status = TaskStatus.PENDING
+        self.paused_event.clear()  # Clear pause event
 
     def cancel(self) -> None:
         """Cancel task"""
@@ -363,6 +375,128 @@ class DownloadManager:
         self.error_handler = EnhancedErrorHandler()
         self.retry_manager = IntelligentRetryManager(self.error_handler)
 
+        # Enhanced connection pooling
+        self.connection_pool = connection_pool_manager
+        self._configure_connection_pools()
+
+        # Adaptive timeout management
+        self.timeout_manager = adaptive_timeout_manager
+
+        # Memory optimization
+        self.memory_optimizer = memory_optimizer
+
+        # Enhanced resource management (now integrated into resource_manager)
+        resource_manager.start_monitoring()
+
+        # Adaptive retry management
+        self.adaptive_retry_manager = adaptive_retry_manager
+
+        # Circuit breaker management
+        self.circuit_breaker_manager = circuit_breaker_manager
+        self.circuit_breaker_manager.start_health_monitoring()
+
+        # Progressive recovery management
+        self.recovery_manager = progressive_recovery_manager
+
+        # Segment validation
+        self.segment_validator = segment_validator
+
+        # Content integrity verification
+        self.integrity_verifier = content_integrity_verifier
+
+        # Callback lists
+        self.progress_callbacks: List[Callable[[str, ProgressDict], None]] = []
+        self.status_callbacks: List[Callable[[str, Optional[TaskStatus], TaskStatus], None]] = []
+
+        # Event queue for old callback system
+        self.event_queue = Queue()
+
+        # Resource management integration
+        self._register_for_resource_management()
+
+        # Memory optimization settings
+        self._max_concurrent_downloads = self._get_max_concurrent_downloads()
+        self._memory_threshold = self._get_memory_threshold()
+        self._last_memory_log: float = time.time()
+
+    def _configure_connection_pools(self):
+        """Configure connection pools for optimal performance"""
+        # Start connection pool monitoring
+        self.connection_pool.start_monitoring()
+
+        # Configure default pool settings
+        default_config = HostPoolConfig(
+            max_connections=20,
+            max_connections_per_host=8,
+            connection_timeout=30.0,
+            read_timeout=120.0,
+            max_retries=3,
+            backoff_factor=0.5,
+            keep_alive_timeout=300.0,
+            health_check_interval=60.0
+        )
+
+        # Apply settings from configuration if available
+        if self.settings:
+            max_conn = int(self.settings.get("download", "max_connections", 20))
+            max_conn_per_host = int(self.settings.get("download", "max_connections_per_host", 8))
+            conn_timeout = float(self.settings.get("download", "connection_timeout", 30.0))
+            read_timeout = float(self.settings.get("download", "read_timeout", 120.0))
+
+            default_config.max_connections = max_conn
+            default_config.max_connections_per_host = max_conn_per_host
+            default_config.connection_timeout = conn_timeout
+            default_config.read_timeout = read_timeout
+
+        # Store default config for new hosts
+        self.default_pool_config = default_config
+
+        logger.info(f"Connection pools configured: max_connections={default_config.max_connections}, "
+                   f"max_per_host={default_config.max_connections_per_host}")
+
+    def _register_for_resource_management(self):
+        """Register this download manager for automatic resource management"""
+        register_for_cleanup(
+            self,
+            ResourceType.DOWNLOAD_TASK,
+            cleanup_callback=self._cleanup_resources,
+            metadata={"component": "DownloadManager"}
+        )
+
+    def _get_max_concurrent_downloads(self) -> int:
+        """Get maximum concurrent downloads based on system resources"""
+        if self.settings:
+            return int(self.settings.get("download", "max_concurrent_tasks", 3))
+        return 3
+
+    def _get_memory_threshold(self) -> int:
+        """Get memory threshold in MB for triggering cleanup"""
+        if self.settings:
+            return int(self.settings.get("advanced", "memory_threshold_mb", 512))
+        return 512
+
+    def _cleanup_resources(self):
+        """Cleanup resources when called by resource manager"""
+        try:
+            # Clean up completed tasks
+            completed_tasks = [
+                task_id for task_id, task in self.tasks.items()
+                if task.status in [TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELED]
+            ]
+
+            for task_id in completed_tasks:
+                self._cleanup_task_resources(task_id)
+
+            # Force garbage collection if many tasks were cleaned
+            if len(completed_tasks) > 5:
+                import gc
+                gc.collect()
+
+            logger.debug(f"Cleaned up {len(completed_tasks)} completed tasks")
+
+        except Exception as e:
+            logger.error(f"Error during resource cleanup: {e}", exc_info=True)
+
     def _handle_task_error(self, task_id: str, exception: Exception, retry_count: int = 0) -> None:
         """Handle task error with enhanced error reporting"""
         task = self.tasks.get(task_id)
@@ -446,21 +580,182 @@ class DownloadManager:
         for task in self.tasks.values():
             task.save_progress()
 
+        # Stop all enhanced components
+        try:
+            # Stop circuit breaker health monitoring
+            self.circuit_breaker_manager.stop_health_monitoring()
+
+            # Stop resource manager monitoring
+            resource_manager.stop_monitoring()
+
+            # Stop connection pool monitoring
+            self.connection_pool.stop_monitoring()
+
+            # Clean up memory optimizer
+            self.memory_optimizer.cleanup()
+
+            # Clean up recovery manager
+            # Note: Progressive recovery sessions are kept for resume capability
+
+            logger.info("All enhanced components stopped successfully")
+        except Exception as e:
+            logger.error(f"Error stopping enhanced components: {e}")
+
         logger.info("Download manager stopped")
 
     def add_task(self, task: DownloadTask) -> str:
-        """Add download task"""
+        """Add download task with memory optimization"""
         with self.lock:
+            # Check memory usage before adding new task
+            self._check_memory_usage()
+
             self.tasks[task.task_id] = task
             # Add task to priority queue
             self.tasks_queue.put(
                 (-task.priority.value, time.time(), task.task_id))
+
+            # Register task for resource management
+            register_for_cleanup(
+                task,
+                ResourceType.DOWNLOAD_TASK,
+                cleanup_callback=lambda: self._cleanup_task_resources(task.task_id),
+                metadata={"task_name": task.name, "task_id": task.task_id}
+            )
+
+            # Register with enhanced resource manager (now integrated)
+            resource_manager.register_resource(
+                task,
+                ResourceType.DOWNLOAD_TASK,
+                resource_id=task.task_id,
+                cleanup_callback=lambda: self._enhanced_cleanup_task(task.task_id),
+                metadata={"task_name": task.name, "priority": task.priority.value}
+            )
+
             logger.info(f"Task added: {task.name} (ID: {task.task_id})")
 
-        # Notify status change
-        self._emit_status_changed(task.task_id, None, task.status)
+        # Don't emit status change for initial status setting
+        # Only emit when status actually changes from one state to another
 
         return task.task_id
+
+    def _check_memory_usage(self):
+        """Check memory usage and trigger cleanup if needed with enhanced optimization"""
+        # Use the memory optimizer for comprehensive memory management
+        memory_status = self.memory_optimizer.check_memory_pressure()
+
+        if memory_status["action"] == "reduce_usage":
+            logger.warning(f"High memory usage detected: {memory_status['memory_percent']:.1f}%")
+            self._cleanup_resources()
+
+        elif memory_status["action"] == "garbage_collect":
+            logger.debug("Triggered garbage collection due to memory increase")
+
+        # Log memory statistics periodically
+        if hasattr(self, '_last_memory_log'):
+            if time.time() - self._last_memory_log > 300:  # Every 5 minutes
+                stats = self.memory_optimizer.get_memory_stats()
+                logger.info(f"Memory stats - Used: {stats['system_memory']['used_mb']:.1f}MB, "
+                           f"Available: {stats['system_memory']['available_mb']:.1f}MB, "
+                           f"Active buffers: {stats['optimizer_stats']['active_buffers']}")
+                self._last_memory_log = time.time()
+        else:
+            self._last_memory_log = time.time()
+
+    def _cleanup_task_resources(self, task_id: str):
+        """Clean up resources for a specific task"""
+        try:
+            task = self.tasks.get(task_id)
+            if not task:
+                return
+
+            # Clean up temporary files
+            if hasattr(task, 'temp_files'):
+                for temp_file in getattr(task, 'temp_files', []):
+                    try:
+                        if Path(temp_file).exists():
+                            Path(temp_file).unlink()
+                            logger.debug(f"Cleaned up temp file: {temp_file}")
+                    except Exception as e:
+                        logger.warning(f"Failed to clean up temp file {temp_file}: {e}")
+
+            # Clear large data structures
+            if hasattr(task, 'segments_data'):
+                task.segments_data = None
+
+        except Exception as e:
+            logger.error(f"Error cleaning up task resources for {task_id}: {e}")
+
+    def _enhanced_cleanup_task(self, task_id: str):
+        """Enhanced cleanup for tasks using the enhanced resource manager"""
+        try:
+            task = self.tasks.get(task_id)
+            if not task:
+                return
+
+            # Perform standard cleanup
+            self._cleanup_task_resources(task_id)
+
+            # Additional enhanced cleanup
+            if hasattr(task, 'worker_thread') and task.worker_thread:
+                if task.worker_thread.is_alive():
+                    task.cancel()
+                    task.worker_thread.join(timeout=5.0)
+
+            # Clean up any streaming buffers
+            buffer_context = f"segment_{task_id}_*"
+            # Note: In a real implementation, you'd track active buffers per task
+
+            # Remove from tasks dictionary if completed/failed/cancelled
+            if task.status in [TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELED]:
+                with self.lock:
+                    if task_id in self.tasks:
+                        del self.tasks[task_id]
+                        logger.debug(f"Removed task {task_id} from tasks dictionary")
+
+        except Exception as e:
+            logger.error(f"Error in enhanced cleanup for task {task_id}: {e}")
+
+    def _classify_error_for_retry(self, exception: Exception) -> RetryReason:
+        """Classify exception for adaptive retry strategy"""
+        error_message = str(exception).lower()
+        exception_type = type(exception).__name__.lower()
+
+        # Network timeout errors
+        if ('timeout' in error_message or 'timeout' in exception_type or
+            'timed out' in error_message):
+            return RetryReason.NETWORK_TIMEOUT
+
+        # Connection errors
+        if ('connection' in error_message or 'connection' in exception_type or
+            'connect' in error_message or 'unreachable' in error_message):
+            return RetryReason.CONNECTION_ERROR
+
+        # HTTP errors
+        if hasattr(exception, 'response') and hasattr(exception.response, 'status_code'):
+            status_code = exception.response.status_code
+            if status_code == 429:
+                return RetryReason.RATE_LIMITED
+            elif 500 <= status_code < 600:
+                return RetryReason.SERVER_ERROR
+            elif 400 <= status_code < 500:
+                return RetryReason.HTTP_ERROR
+
+        # Rate limiting
+        if ('rate limit' in error_message or 'too many requests' in error_message or
+            '429' in error_message):
+            return RetryReason.RATE_LIMITED
+
+        # Server errors
+        if ('server error' in error_message or '500' in error_message or
+            'internal server' in error_message or 'service unavailable' in error_message):
+            return RetryReason.SERVER_ERROR
+
+        # Temporary failures
+        if ('temporary' in error_message or 'retry' in error_message or
+            'unavailable' in error_message):
+            return RetryReason.TEMPORARY_FAILURE
+
+        return RetryReason.UNKNOWN_ERROR
 
     def get_task(self, task_id: str) -> Optional[DownloadTask]:
         """Get specified task"""
@@ -486,6 +781,15 @@ class DownloadManager:
             # Try to load progress
             task.load_progress()
 
+            # Check for existing recovery session
+            recovery_info = self.recovery_manager.get_resume_info(task_id)
+            if recovery_info and recovery_info["can_resume"]:
+                logger.info(f"Found existing recovery session for task {task_id}: "
+                           f"{recovery_info['completion_percentage']:.1f}% complete")
+                # Update task progress from recovery info
+                task.progress["completed"] = len(recovery_info["completed_segments"])
+                task.progress["downloaded_bytes"] = recovery_info["downloaded_size"]
+
             # Start task
             old_status: Optional[TaskStatus] = task.status
             task.start(self._task_worker)
@@ -506,7 +810,7 @@ class DownloadManager:
                 logger.warning(f"Task not found: {task_id}")
                 return False
 
-            if task.status != TaskStatus.RUNNING:
+            if task.status in [TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELED, TaskStatus.PAUSED]:
                 return False
 
             old_status: TaskStatus = task.status
@@ -591,16 +895,32 @@ class DownloadManager:
 
     def _emit_status_changed(self, task_id: str, old_status: Optional[TaskStatus], new_status: TaskStatus) -> None:
         """Emit task status change event"""
+        # Call old callback system
         if self.on_task_status_changed:
             event: EventTuple = ("status_changed", task_id,
                                  old_status, new_status)
             self.event_queue.put(event)
 
+        # Call new callback system
+        for callback in self.status_callbacks:
+            try:
+                callback(task_id, old_status, new_status)
+            except Exception as e:
+                logger.error(f"Error in status callback: {e}")
+
     def _emit_progress(self, task_id: str, progress: ProgressDict) -> None:
         """Emit task progress event"""
+        # Call old callback system
         if self.on_task_progress:
             event: EventTuple = ("progress", task_id, progress)
             self.event_queue.put(event)
+
+        # Call new callback system
+        for callback in self.progress_callbacks:
+            try:
+                callback(task_id, progress)
+            except Exception as e:
+                logger.error(f"Error in progress callback: {e}")
 
     def _emit_completed(self, task_id: str, success: bool, message: str) -> None:
         """Emit task completion event"""
@@ -770,6 +1090,23 @@ class DownloadManager:
                 for attempt in range(max_retries_val):
                     if task.canceled_event.is_set():
                         break
+
+                    # Check if we should retry using adaptive retry manager
+                    if attempt > 0:
+                        retry_reason = RetryReason.UNKNOWN_ERROR  # Will be updated based on actual error
+                        if not self.adaptive_retry_manager.should_retry(
+                            task.key_url, attempt, retry_reason
+                        ):
+                            logger.warning(f"Adaptive retry manager suggests stopping retries for {task.key_url}")
+                            break
+
+                        # Get adaptive retry delay
+                        retry_delay = self.adaptive_retry_manager.get_retry_delay(
+                            task.key_url, attempt, retry_reason
+                        )
+                        logger.debug(f"Adaptive retry delay: {retry_delay:.2f}s for attempt {attempt}")
+                        time.sleep(retry_delay)
+
                     try:
                         response = session.get(
                             task.key_url, timeout=timeout_val)
@@ -788,10 +1125,18 @@ class DownloadManager:
                             f"Key download error: {e}, retry ({attempt+1}/{max_retries_val})")
                     time.sleep(retry_delay_val * (attempt + 1))
                 if not task.key_data:
-                    raise Exception("Failed to download encryption key")
+                    raise DecryptionKeyException(
+                        key_url=task.key_url or "unknown",
+                        key_error="Failed to download encryption key after retries",
+                        context=ErrorContext(task_id=task_id)
+                    )
 
             if not task.output_file:
-                raise Exception("Output file not specified for task.")
+                raise ConfigurationException(
+                    setting="output_file",
+                    value=None,
+                    context=ErrorContext(task_id=task_id)
+                )
 
             output_dir: str = os.path.dirname(task.output_file)
             if output_dir and not os.path.exists(output_dir):
@@ -809,6 +1154,11 @@ class DownloadManager:
 
             logger.info(
                 f"Downloading {task.segments} segments for task: {task.name}")
+
+            # Create recovery session for this task
+            recovery_session = self.recovery_manager.create_recovery_session(
+                task_id, task.name, task.base_url or "", task.output_file, task.segments
+            )
 
             for i in range(task.segments):
                 if task.canceled_event.is_set():
@@ -828,8 +1178,11 @@ class DownloadManager:
                     continue
 
                 if not task.base_url:
-                    raise Exception(
-                        "Base URL not specified for task segments.")
+                    raise InvalidURLException(
+                        url="",
+                        reason="Base URL not specified for task segments",
+                        context=ErrorContext(task_id=task_id)
+                    )
                 segment_url = f"{task.base_url}/index{i}.ts"
                 temp_filename = f"{ts_filename}.temp"
                 task.progress["current_file"] = f"Segment {i+1}/{task.segments}"
@@ -842,8 +1195,26 @@ class DownloadManager:
                     try:
                         logger.debug(
                             f"Downloading segment {i+1}/{task.segments} from {segment_url}")
-                        response = session.get(
-                            segment_url, stream=True, timeout=timeout_val)
+
+                        # Check circuit breaker before attempting download
+                        if not self.circuit_breaker_manager.can_execute(segment_url):
+                            logger.warning(f"Circuit breaker is OPEN for {segment_url}, skipping attempt")
+                            time.sleep(retry_delay_val * (attempt + 1))
+                            continue
+
+                        # Use enhanced connection pooling
+                        pooled_session = self.connection_pool.get_session(
+                            segment_url,
+                            error_context
+                        )
+
+                        # Get adaptive timeouts based on network conditions
+                        conn_timeout, read_timeout = self.timeout_manager.get_timeouts(segment_url)
+                        adaptive_timeout = (conn_timeout, read_timeout)
+
+                        segment_start_time = time.time()
+                        response = pooled_session.get(
+                            segment_url, stream=True, timeout=adaptive_timeout)
                         if response.status_code != 200:
                             logger.warning(
                                 f"Segment download failed (HTTP {response.status_code}), retry ({attempt+1}/{max_retries_val})")
@@ -855,6 +1226,14 @@ class DownloadManager:
                         downloaded_this_segment = 0
                         chunk_start_time = time.time()
                         last_speed_update = chunk_start_time
+
+                        # Create optimized streaming buffer for this segment
+                        buffer_context = f"segment_{task_id}_{i}"
+                        streaming_buffer = self.memory_optimizer.create_streaming_buffer(buffer_context)
+
+                        # Get optimal chunk size based on memory conditions
+                        optimal_chunk_size = self.memory_optimizer.get_optimal_buffer_size(buffer_context)
+                        chunk_size_val = min(chunk_size_val, optimal_chunk_size)
 
                         with open(temp_filename, 'wb') as f:
                             for chunk in response.iter_content(chunk_size=chunk_size_val):
@@ -870,13 +1249,19 @@ class DownloadManager:
                                     continue
 
                                 chunk_process_start = time.time()
+
+                                # Process chunk (decrypt if needed)
+                                processed_chunk = chunk
                                 if task.key_data:  # Ensure key_data is present
-                                    decrypted_chunk = decrypt_data(chunk, task.key_data, iv, last_block=(
+                                    processed_chunk = decrypt_data(chunk, task.key_data, iv, last_block=(
                                         downloaded_this_segment + len(chunk) >= total_size and total_size > 0))
-                                    f.write(decrypted_chunk)
-                                else:  # Should not happen if key download is successful
-                                    # Write raw if no key (fallback, might be wrong for encrypted content)
-                                    f.write(chunk)
+
+                                # Use streaming buffer for efficient memory usage
+                                bytes_written = streaming_buffer.write(processed_chunk)
+                                if bytes_written < len(processed_chunk):
+                                    # Buffer full, flush to file
+                                    streaming_buffer.flush_to_file(f)
+                                    streaming_buffer.write(processed_chunk[bytes_written:])
 
                                 downloaded_this_segment += len(chunk)
                                 task.progress["current_file_progress"] = downloaded_this_segment / \
@@ -895,15 +1280,129 @@ class DownloadManager:
                         if task.canceled_event.is_set():
                             break  # Check after writing loop
 
+                        # Flush any remaining data in buffer
+                        streaming_buffer.flush_to_file(f)
+
+                        # Record buffer performance for optimization
+                        buffer_duration = time.time() - chunk_start_time
+                        self.memory_optimizer.record_buffer_performance(
+                            buffer_context, downloaded_this_segment, buffer_duration
+                        )
+
+                        # Release streaming buffer
+                        self.memory_optimizer.release_streaming_buffer(buffer_context)
+
                         os.rename(temp_filename, ts_filename)
                         successful_files.append(ts_filename)
                         task.segments_info[segment_key] = {"status": "completed", "size": os.path.getsize(
                             ts_filename), "timestamp": time.time()}
                         segment_success = True
+
+                        # Release session back to pool with success metrics
+                        segment_end_time = time.time()
+                        response_time = segment_end_time - segment_start_time
+                        bytes_transferred = os.path.getsize(ts_filename)
+
+                        # Record performance for adaptive timeout learning
+                        self.timeout_manager.record_request(
+                            segment_url,
+                            response_time,
+                            success=True
+                        )
+
+                        # Record successful attempt for adaptive retry learning
+                        self.adaptive_retry_manager.record_attempt(
+                            segment_url,
+                            attempt + 1,
+                            RetryReason.UNKNOWN_ERROR,  # Success case
+                            success=True,
+                            response_time=response_time
+                        )
+
+                        # Record success for circuit breaker
+                        self.circuit_breaker_manager.record_success(segment_url, response_time)
+
+                        # Validate downloaded segment
+                        validation_report = self.segment_validator.validate_segment(
+                            i, ts_filename, expected_size=downloaded_this_segment
+                        )
+
+                        if not validation_report.is_valid():
+                            logger.warning(f"Segment {i} validation failed: {validation_report.error_message}")
+                            # Remove invalid segment and retry
+                            if os.path.exists(ts_filename):
+                                os.remove(ts_filename)
+                            continue
+
+                        # Additional integrity verification for critical segments
+                        if validation_report.has_warnings():
+                            integrity_result = self.integrity_verifier.verify_file_integrity(
+                                ts_filename, expected_hash=""
+                            )
+                            if not integrity_result.is_valid:
+                                logger.warning(f"Segment {i} integrity check failed: {integrity_result.error_message}")
+                                if os.path.exists(ts_filename):
+                                    os.remove(ts_filename)
+                                continue
+
+                        # Update recovery session with completed segment
+                        self.recovery_manager.mark_segment_complete(
+                            task_id, i, ts_filename, os.path.getsize(ts_filename)
+                        )
+
+                        self.connection_pool.release_session(
+                            pooled_session,
+                            segment_url,
+                            success=True,
+                            bytes_transferred=bytes_transferred,
+                            response_time=response_time
+                        )
+
                         logger.debug(
                             f"Successfully downloaded segment {i+1}/{task.segments}")
                         break
                     except Exception as e:
+                        # Clean up streaming buffer on error
+                        if 'buffer_context' in locals():
+                            self.memory_optimizer.release_streaming_buffer(buffer_context)
+
+                        # Determine retry reason based on exception type
+                        retry_reason = self._classify_error_for_retry(e)
+
+                        # Record failure for adaptive timeout learning
+                        if 'segment_start_time' in locals():
+                            failure_time = time.time() - segment_start_time
+                            error_type = type(e).__name__
+                            self.timeout_manager.record_request(
+                                segment_url,
+                                failure_time,
+                                success=False,
+                                error_type=error_type
+                            )
+
+                            # Record failed attempt for adaptive retry learning
+                            self.adaptive_retry_manager.record_attempt(
+                                segment_url,
+                                attempt + 1,
+                                retry_reason,
+                                success=False,
+                                response_time=failure_time,
+                                error_message=str(e)
+                            )
+
+                            # Record failure for circuit breaker
+                            self.circuit_breaker_manager.record_failure(segment_url, str(e))
+
+                        # Release session back to pool with failure metrics
+                        if 'pooled_session' in locals():
+                            self.connection_pool.release_session(
+                                pooled_session,
+                                segment_url,
+                                success=False,
+                                bytes_transferred=0,
+                                response_time=failure_time if 'failure_time' in locals() else 0.0
+                            )
+
                         logger.error(
                             f"Failed to download segment {i}: {e}", exc_info=True)
                         if os.path.exists(temp_filename):
@@ -1026,3 +1525,109 @@ class DownloadManager:
             with self.lock:
                 if task_id in self.active_tasks:
                     self.active_tasks.remove(task_id)
+
+    def get_all_tasks(self) -> List[str]:
+        """Get all task IDs"""
+        with self.lock:
+            return list(self.tasks.keys())
+
+    def get_tasks_by_status(self, status: TaskStatus) -> List[str]:
+        """Get task IDs by status"""
+        with self.lock:
+            return [task_id for task_id, task in self.tasks.items() if task.status == status]
+
+    def set_progress_callback(self, callback: Callable[[str, ProgressDict], None]) -> None:
+        """Set progress callback"""
+        self.progress_callbacks.append(callback)
+        self.on_task_progress = callback  # Also set old-style callback for compatibility
+
+    def set_status_changed_callback(self, callback: Callable[[str, Optional[TaskStatus], TaskStatus], None]) -> None:
+        """Set status changed callback"""
+        self.status_callbacks.append(callback)
+        self.on_task_status_changed = callback  # Also set old-style callback for compatibility
+
+    def set_bandwidth_limit(self, limit: Optional[int]) -> None:
+        """Set bandwidth limit in bytes per second"""
+        self.bandwidth_limit = limit or 0
+        logger.info(f"Bandwidth limit set to: {limit} bytes/sec" if limit else "Bandwidth limit removed")
+
+    def set_task_completed_callback(self, callback: Callable[[str, str], None]) -> None:
+        """Set task completed callback"""
+        self.on_task_completed = callback
+
+    def set_task_failed_callback(self, callback: Callable[[str, str], None]) -> None:
+        """Set task failed callback"""
+        self.on_task_failed = callback
+
+    def get_comprehensive_stats(self) -> Dict[str, Any]:
+        """Get comprehensive statistics from all enhanced components"""
+        stats = {
+            "download_manager": {
+                "total_tasks": len(self.tasks),
+                "active_tasks": len(self.get_tasks_by_status(TaskStatus.RUNNING)),
+                "completed_tasks": len(self.get_tasks_by_status(TaskStatus.COMPLETED)),
+                "failed_tasks": len(self.get_tasks_by_status(TaskStatus.FAILED)),
+            },
+            "connection_pool": self.connection_pool.get_stats(),
+            "adaptive_timeout": self.timeout_manager.get_global_stats(),
+            "memory_optimizer": self.memory_optimizer.get_memory_stats(),
+            "resource_manager": resource_manager.get_enhanced_stats(),
+            "adaptive_retry": self.adaptive_retry_manager.get_global_stats(),
+            "circuit_breakers": self.circuit_breaker_manager.get_all_stats(),
+            "segment_validator": self.segment_validator.get_validation_stats(),
+            "integrity_verifier": self.integrity_verifier.get_verification_stats(),
+        }
+        return stats
+
+    def get_performance_metrics(self) -> Dict[str, Any]:
+        """Get performance metrics from all components"""
+        return {
+            "network_quality": self.timeout_manager.get_global_stats().get("global_network_quality", 1.0),
+            "memory_usage": self.memory_optimizer.get_memory_stats(),
+            "connection_health": self.connection_pool.get_stats(),
+            "retry_success_rate": self.adaptive_retry_manager.get_global_stats(),
+            "circuit_breaker_status": self.circuit_breaker_manager.get_all_stats()["state_summary"],
+            "validation_success_rate": self.segment_validator.get_validation_stats().get("success_rate", 1.0),
+        }
+
+    def get_system_health(self) -> Dict[str, Any]:
+        """Get overall system health status"""
+        stats = self.get_comprehensive_stats()
+
+        # Calculate health scores
+        network_health = stats["adaptive_timeout"].get("global_network_quality", 1.0)
+        memory_health = 1.0 - (stats["memory_optimizer"]["system_memory"]["percent"] / 100.0)
+        circuit_health = 1.0 - (stats["circuit_breakers"]["state_summary"]["open"] /
+                               max(stats["circuit_breakers"]["total_circuit_breakers"], 1))
+
+        overall_health = (network_health + memory_health + circuit_health) / 3.0
+
+        return {
+            "overall_health": overall_health,
+            "network_health": network_health,
+            "memory_health": memory_health,
+            "circuit_health": circuit_health,
+            "status": "healthy" if overall_health > 0.7 else "degraded" if overall_health > 0.4 else "critical",
+            "recommendations": self._get_health_recommendations(stats)
+        }
+
+    def _get_health_recommendations(self, stats: Dict[str, Any]) -> List[str]:
+        """Get health improvement recommendations"""
+        recommendations = []
+
+        # Memory recommendations
+        memory_percent = stats["memory_optimizer"]["system_memory"]["percent"]
+        if memory_percent > 80:
+            recommendations.append("High memory usage detected - consider reducing concurrent downloads")
+
+        # Circuit breaker recommendations
+        open_circuits = stats["circuit_breakers"]["state_summary"]["open"]
+        if open_circuits > 0:
+            recommendations.append(f"{open_circuits} circuit breakers are open - check network connectivity")
+
+        # Network quality recommendations
+        network_quality = stats["adaptive_timeout"].get("global_network_quality", 1.0)
+        if network_quality < 0.5:
+            recommendations.append("Poor network quality detected - consider reducing concurrency or checking connection")
+
+        return recommendations

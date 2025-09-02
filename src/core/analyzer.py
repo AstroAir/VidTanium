@@ -253,7 +253,7 @@ class MediaAnalyzer:
         """
         logger.info("Parsing master playlist")
         variants: List[StreamInfo] = []
-        lines = content.splitlines()
+        lines = [line.strip() for line in content.splitlines() if line.strip()]
 
         for i, line in enumerate(lines):
             if line.startswith('#EXT-X-STREAM-INF:'):
@@ -313,7 +313,7 @@ class MediaAnalyzer:
         iv = None
         encryption_details: Dict[str, Any] = {}
 
-        lines = content.splitlines()
+        lines = [line.strip() for line in content.splitlines() if line.strip()]
 
         for i, line in enumerate(lines):
             if line.startswith('#EXTINF:'):
@@ -333,7 +333,7 @@ class MediaAnalyzer:
 
             elif line.startswith('#EXT-X-KEY:'):
                 # Parse encryption information
-                method_match = re.search(r'METHOD=(\w+)', line)
+                method_match = re.search(r'METHOD=([A-Z0-9-]+)', line)
                 if method_match:
                     method = method_match.group(1)
                     if method == "AES-128":

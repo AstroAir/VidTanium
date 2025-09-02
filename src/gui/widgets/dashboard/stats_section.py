@@ -1,7 +1,7 @@
 """
 Enhanced Dashboard Statistics Section Component with responsive design and modern theming
 """
-from typing import TYPE_CHECKING, Optional, List
+from typing import TYPE_CHECKING, Optional, List, Dict
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout
 from PySide6.QtCore import Qt, Slot
 from qfluentwidgets import (
@@ -45,7 +45,7 @@ class EnhancedDashboardStatsSection(ResponsiveWidget):
 
         # Performance optimization flags
         self._last_task_count = 0
-        self._last_stats = None
+        self._last_stats: Optional[Dict[str, int]] = None
         self._has_active_tasks = False
         self._skip_update_count = 0
 
