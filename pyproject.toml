@@ -9,6 +9,7 @@ dependencies = [
     "aiosqlite>=0.21.0",
     "bs4>=0.0.2",
     "loguru>=0.7.3",
+    "markdown>=3.7.0",
     "playwright>=1.52.0",
     "psutil>=7.0.0",
     "pycryptodome>=3.22.0",

@@ -11,21 +11,21 @@ VidTanium follows a modular, layered architecture with clear separation of conce
 ```text
 VidTanium/
 ├── src/                        # Source code
-│   ├── app/                    # Application layer
-│   ├── core/                   # Core business logic
-│   ├── gui/                    # User interface
-│   └── locales/                # Internationalization
+�?  ├── app/                    # Application layer
+�?  ├── core/                   # Core business logic
+�?  ├── gui/                    # User interface
+�?  └── locales/                # Internationalization
 ├── config/                     # Configuration files
 ├── tests/                      # Test suites
 ├── docs/                       # Documentation
 ├── main.py                     # Application entry point
 ├── pyproject.toml             # Project configuration
 ├── README.md                  # Project overview
-├── DOCUMENTATION.md           # Comprehensive documentation
-├── API_REFERENCE.md           # API documentation
-├── DEVELOPER_GUIDE.md         # Development guide
-├── USER_MANUAL.md             # User instructions
-├── INSTALLATION.md            # Installation guide
+├── documentation.md           # Comprehensive documentation
+├── api-reference.md           # API documentation
+├── developer-guide.md         # Development guide
+├── user-manual.md             # User instructions
+├── installation.md            # Installation guide
 ├── CONTRIBUTING.md            # Contribution guidelines
 ├── CHANGELOG.md               # Version history
 └── LICENSE                    # MIT License
@@ -79,8 +79,8 @@ src/core/
 ├── thread_pool.py                   # Thread pool management
 ├── url_extractor.py                 # URL extraction and validation
 ├── utils/                           # Core utilities
-│   ├── version_checker.py           # Version checking
-│   └── __pycache__/                # Python cache files
+�?  ├── version_checker.py           # Version checking
+�?  └── __pycache__/                # Python cache files
 └── __pycache__/                    # Python cache files
 ```
 
@@ -130,45 +130,45 @@ src/gui/
 ├── main_window.py                   # Primary application window with responsive design
 ├── theme_manager.py                 # Enhanced theme management system
 ├── dialogs/                         # Dialog windows
-│   ├── __init__.py
-│   ├── about_dialog.py              # About application dialog
-│   ├── batch_url_dialog.py          # Batch URL input dialog
-│   ├── task_dialog.py               # Task management dialog
-│   ├── confirmation_dialog.py       # Smart confirmation dialogs
-│   ├── media_processing_dialog.py   # Media processing options
-│   ├── schedule_dialog.py           # Task scheduling dialog
-│   ├── settings_config.py           # Settings configuration
-│   ├── batch_conversion/            # Batch conversion dialogs
-│   ├── batch_url/                   # Batch URL dialogs
-│   ├── schedule/                    # Scheduling dialogs
-│   └── settings/                    # Settings dialogs
+�?  ├── __init__.py
+�?  ├── about_dialog.py              # About application dialog
+�?  ├── batch_url_dialog.py          # Batch URL input dialog
+�?  ├── task_dialog.py               # Task management dialog
+�?  ├── confirmation_dialog.py       # Smart confirmation dialogs
+�?  ├── media_processing_dialog.py   # Media processing options
+�?  ├── schedule_dialog.py           # Task scheduling dialog
+�?  ├── settings_config.py           # Settings configuration
+�?  ├── batch_conversion/            # Batch conversion dialogs
+�?  ├── batch_url/                   # Batch URL dialogs
+�?  ├── schedule/                    # Scheduling dialogs
+�?  └── settings/                    # Settings dialogs
 ├── utils/                           # GUI utilities
-│   ├── design_system.py             # Design system and styling
-│   ├── formatters.py                # Data formatting utilities
-│   ├── i18n.py                      # Internationalization support
-│   ├── responsive.py                # Responsive design system
-│   ├── theme.py                     # Theme definitions
-│   └── __pycache__/                # Python cache files
+�?  ├── design_system.py             # Design system and styling
+�?  ├── formatters.py                # Data formatting utilities
+�?  ├── i18n.py                      # Internationalization support
+�?  ├── responsive.py                # Responsive design system
+�?  ├── theme.py                     # Theme definitions
+�?  └── __pycache__/                # Python cache files
 ├── widgets/                         # Custom UI widgets
-│   ├── __init__.py
-│   ├── task_manager.py              # Advanced task management widget
-│   ├── error_dialog.py              # Enhanced error presentation
-│   ├── status_widget.py             # Real-time status monitoring
-│   ├── tooltip.py                   # Smart tooltip system
-│   ├── analytics_dashboard.py       # Performance analytics dashboard
-│   ├── bulk_operations_manager.py   # Bulk operations interface
-│   ├── navigation.py                # Navigation components
-│   ├── progress.py                  # Advanced progress widgets
-│   ├── dashboard/                   # Dashboard components
-│   │   ├── dashboard_interface.py   # Main dashboard interface
-│   │   └── metric_cards.py          # Performance metric cards
-│   ├── log/                         # Log-related widgets
-│   │   ├── log_viewer.py            # Enhanced log display
-│   │   └── log_filters.py           # Log filtering system
-│   ├── schedule/                    # Schedule widgets
-│   └── settings/                    # Settings widgets
-│       ├── settings_interface.py    # Main settings interface
-│       └── advanced_settings.py    # Advanced configuration options
+�?  ├── __init__.py
+�?  ├── task_manager.py              # Advanced task management widget
+�?  ├── error_dialog.py              # Enhanced error presentation
+�?  ├── status_widget.py             # Real-time status monitoring
+�?  ├── tooltip.py                   # Smart tooltip system
+�?  ├── analytics_dashboard.py       # Performance analytics dashboard
+�?  ├── bulk_operations_manager.py   # Bulk operations interface
+�?  ├── navigation.py                # Navigation components
+�?  ├── progress.py                  # Advanced progress widgets
+�?  ├── dashboard/                   # Dashboard components
+�?  �?  ├── dashboard_interface.py   # Main dashboard interface
+�?  �?  └── metric_cards.py          # Performance metric cards
+�?  ├── log/                         # Log-related widgets
+�?  �?  ├── log_viewer.py            # Enhanced log display
+�?  �?  └── log_filters.py           # Log filtering system
+�?  ├── schedule/                    # Schedule widgets
+�?  └── settings/                    # Settings widgets
+�?      ├── settings_interface.py    # Main settings interface
+�?      └── advanced_settings.py    # Advanced configuration options
 └── __pycache__/                    # Python cache files
 ```
 
@@ -251,15 +251,15 @@ Comprehensive test suites for all components.
 ```text
 tests/
 ├── core/                   # Core module tests
-│   ├── test_analyzer.py    # Media analyzer tests
-│   ├── test_decryptor.py   # Decryption tests
-│   ├── test_m3u8_parser.py # Playlist parser tests
-│   ├── test_media_processor.py  # Media processing tests
-│   ├── test_merger.py      # File merger tests
-│   ├── test_scheduler.py   # Scheduler tests
-│   ├── test_url_extractor.py   # URL extractor tests
-│   └── utils/              # Core utility tests
-│       └── test_version_checker.py
+�?  ├── test_analyzer.py    # Media analyzer tests
+�?  ├── test_decryptor.py   # Decryption tests
+�?  ├── test_m3u8_parser.py # Playlist parser tests
+�?  ├── test_media_processor.py  # Media processing tests
+�?  ├── test_merger.py      # File merger tests
+�?  ├── test_scheduler.py   # Scheduler tests
+�?  ├── test_url_extractor.py   # URL extractor tests
+�?  └── utils/              # Core utility tests
+�?      └── test_version_checker.py
 └── test/                   # Additional test files
     ├── auto.py             # Automated testing scripts
     ├── test_url.py         # URL testing utilities
@@ -279,7 +279,7 @@ Project documentation and guides.
 
 ```text
 docs/
-├── PROJECT_STRUCTURE.md    # This file
+├── project-structure.md    # This file
 └── [Generated API docs]    # Auto-generated documentation
 ```
 
@@ -288,38 +288,38 @@ docs/
 ### 1. Layered Architecture
 
 ```text
-┌─────────────────┐
-│   GUI Layer     │  ← User Interface (PySide6)
-├─────────────────┤
-│ Application     │  ← Application Logic & Lifecycle
-├─────────────────┤
-│   Core Layer    │  ← Business Logic & Processing
-├─────────────────┤
-│ Configuration   │  ← Settings & Preferences
-└─────────────────┘
+┌─────────────────�?
+�?  GUI Layer     �? �?User Interface (PySide6)
+├─────────────────�?
+�?Application     �? �?Application Logic & Lifecycle
+├─────────────────�?
+�?  Core Layer    �? �?Business Logic & Processing
+├─────────────────�?
+�?Configuration   �? �?Settings & Preferences
+└─────────────────�?
 ```
 
 ### 2. Component Interaction
 
 ```text
-MainWindow ──→ DownloadManager ──→ ThreadPool
-    │               │                  │
-    ├─→ TaskManager ├─→ MediaAnalyzer ─┘
-    │               │
-    └─→ LogViewer   └─→ M3U8Parser
+MainWindow ──�?DownloadManager ──�?ThreadPool
+    �?              �?                 �?
+    ├─�?TaskManager ├─�?MediaAnalyzer ─�?
+    �?              �?
+    └─�?LogViewer   └─�?M3U8Parser
 ```
 
 ### 3. Data Flow
 
 ```text
-URL Input → Analysis → Task Creation → Download → Processing → Completion
-    │          │           │             │           │            │
-    │          │           │             │           │            └─→ UI Update
-    │          │           │             │           └─→ File Merger
-    │          │           │             └─→ Progress Tracking
-    │          │           └─→ Queue Management
-    │          └─→ Metadata Extraction
-    └─→ Validation
+URL Input �?Analysis �?Task Creation �?Download �?Processing �?Completion
+    �?         �?          �?            �?          �?           �?
+    �?         �?          �?            �?          �?           └─�?UI Update
+    �?         �?          �?            �?          └─�?File Merger
+    �?         �?          �?            └─�?Progress Tracking
+    �?         �?          └─�?Queue Management
+    �?         └─�?Metadata Extraction
+    └─�?Validation
 ```
 
 ## Development Guidelines
@@ -416,3 +416,4 @@ Add new languages by:
 ---
 
 This structure supports VidTanium's goals of maintainability, performance, and extensibility while providing clear boundaries between different aspects of the application.
+

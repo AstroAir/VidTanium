@@ -23,11 +23,11 @@
 
 ## Quick Navigation
 
-- **🚀 Getting Started**: [Installation Guide](INSTALLATION.md) → [User Manual](USER_MANUAL.md#getting-started)
-- **👨‍💻 Development**: [Developer Guide](DEVELOPER_GUIDE.md) → [Project Structure](PROJECT_STRUCTURE.md)
-- **📚 API Documentation**: [API Reference](API_REFERENCE.md) → [Error Handling API](API_REFERENCE.md#enhanced-error-handling-api)
-- **🔧 Configuration**: [Installation Guide](INSTALLATION.md#configuration) → [Advanced Settings](INSTALLATION.md#configuration-categories)
-- **🐛 Troubleshooting**: [User Manual](USER_MANUAL.md#troubleshooting) → [Error Diagnostics](USER_MANUAL.md#advanced-error-handling--diagnostics)
+- **🚀 Getting Started**: [Installation Guide](installation.md) �?[User Manual](user-manual.md#getting-started)
+- **👨‍�?Development**: [Developer Guide](developer-guide.md) �?[Project Structure](project-structure.md)
+- **📚 API Documentation**: [API Reference](api-reference.md) �?[Error Handling API](api-reference.md#enhanced-error-handling-api)
+- **🔧 Configuration**: [Installation Guide](installation.md#configuration) �?[Advanced Settings](installation.md#configuration-categories)
+- **🐛 Troubleshooting**: [User Manual](user-manual.md#troubleshooting) �?[Error Diagnostics](user-manual.md#advanced-error-handling--diagnostics)
 
 ## Project Overview
 
@@ -62,10 +62,10 @@ VidTanium follows a modular architecture with clear separation of concerns:
 ```text
 VidTanium/
 ├── src/
-│   ├── app/           # Application layer
-│   ├── core/          # Core business logic
-│   ├── gui/           # User interface components
-│   └── locales/       # Internationalization files
+�?  ├── app/           # Application layer
+�?  ├── core/          # Core business logic
+�?  ├── gui/           # User interface components
+�?  └── locales/       # Internationalization files
 ├── config/            # Configuration files
 ├── tests/             # Test suites
 └── docs/              # Documentation
@@ -80,13 +80,13 @@ VidTanium/
 
 ## Core Components
 
-For complete API reference, see [API Reference](API_REFERENCE.md).
+For complete API reference, see [API Reference](api-reference.md).
 
 ### 1. Download Manager (`src/core/downloader.py`)
 
 **Related Components**: [Error Handler](#enhanced-error-handling), [Queue Manager](#queue-management), [Bandwidth Monitor](#bandwidth-monitoring)
-**User Guide**: [Download Manager Interface](USER_MANUAL.md#download-manager)
-**Developer Guide**: [Download Manager Architecture](DEVELOPER_GUIDE.md#download-manager)
+**User Guide**: [Download Manager Interface](user-manual.md#download-manager)
+**Developer Guide**: [Download Manager Architecture](developer-guide.md#download-manager)
 
 The heart of VidTanium's download functionality, responsible for:
 
@@ -462,18 +462,18 @@ Application-wide settings including theme and UI preferences.
 ```
 src/
 ├── app/
-│   ├── application.py      # Main application class
-│   └── settings.py         # Settings management
+�?  ├── application.py      # Main application class
+�?  └── settings.py         # Settings management
 ├── core/
-│   ├── analyzer.py         # Media analysis
-│   ├── decryptor.py        # Encryption handling
-│   ├── downloader.py       # Download management
-│   ├── m3u8_parser.py      # M3U8 parsing
-│   ├── media_processor.py  # Media processing
-│   ├── merger.py           # File merging
-│   ├── scheduler.py        # Task scheduling
-│   ├── thread_pool.py      # Thread management
-│   └── url_extractor.py    # URL extraction
+�?  ├── analyzer.py         # Media analysis
+�?  ├── decryptor.py        # Encryption handling
+�?  ├── downloader.py       # Download management
+�?  ├── m3u8_parser.py      # M3U8 parsing
+�?  ├── media_processor.py  # Media processing
+�?  ├── merger.py           # File merging
+�?  ├── scheduler.py        # Task scheduling
+�?  ├── thread_pool.py      # Thread management
+�?  └── url_extractor.py    # URL extraction
 └── gui/
     ├── main_window.py      # Main interface
     ├── theme_manager.py    # Theme system
@@ -529,14 +529,14 @@ src/
 ```
 tests/
 ├── core/
-│   ├── test_analyzer.py
-│   ├── test_decryptor.py
-│   ├── test_downloader.py
-│   ├── test_m3u8_parser.py
-│   ├── test_media_processor.py
-│   ├── test_merger.py
-│   ├── test_scheduler.py
-│   └── test_url_extractor.py
+�?  ├── test_analyzer.py
+�?  ├── test_decryptor.py
+�?  ├── test_downloader.py
+�?  ├── test_m3u8_parser.py
+�?  ├── test_media_processor.py
+�?  ├── test_merger.py
+�?  ├── test_scheduler.py
+�?  └── test_url_extractor.py
 └── gui/
     └── test_components.py
 ```
@@ -841,3 +841,4 @@ For support and questions:
 ---
 
 *Last updated: January 2025*
+

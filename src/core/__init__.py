@@ -58,7 +58,7 @@ __all__ = [
 ]
 
 
-def initialize_systems():
+def initialize_systems() -> dict:
     """Initialize all systems with proper dependencies"""
     # Initialize error handler with retry manager
     retry_manager.error_handler = error_handler

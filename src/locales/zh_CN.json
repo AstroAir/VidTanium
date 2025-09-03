@@ -7,7 +7,8 @@
     "dashboard": "仪表板",
     "download": "下载管理",
     "logs": "活动日志",
-    "settings": "设置"
+    "settings": "设置",
+    "help": "帮助"
   },
   "dashboard": {
     "title": "VidTanium 仪表板",
@@ -774,6 +775,34 @@
       "completed": "已完成",
       "error": "错误",
       "cancelled": "已取消"
+    }
+  },
+  "help": {
+    "title": "帮助文档",
+    "refresh": "刷新内容",
+    "table_of_contents": "目录",
+    "content_refreshed": "内容刷新成功",
+    "navigation": {
+      "title": "帮助主题",
+      "subtitle": "浏览文档"
+    },
+    "pages": {
+      "index": "概览",
+      "index_desc": "介绍和快速导航",
+      "getting_started": "快速入门",
+      "getting_started_desc": "快速学习基础知识",
+      "user_guide": "用户指南",
+      "user_guide_desc": "完整功能文档",
+      "troubleshooting": "故障排除",
+      "troubleshooting_desc": "常见问题解决方案"
+    },
+    "error": {
+      "title": "错误",
+      "load_failed": "加载帮助内容失败",
+      "page_not_found": "未找到帮助页面 '{page}'"
+    },
+    "info": {
+      "title": "信息"
     }
   }
 }

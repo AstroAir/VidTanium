@@ -1,8 +1,22 @@
-# VidTanium API Reference
+---
+title: API Reference
+description: Comprehensive API reference for VidTanium's core components and interfaces
+---
+
+# API Reference
+
+!!! info "Looking for practical examples?"
+    Check out the [Complete Workflow Guide](workflow-guide.md) and [Examples Collection](examples.md) for real-world usage patterns.
 
 ## Core API Documentation
 
 This document provides comprehensive API reference for VidTanium's core components, including advanced error handling, monitoring, analytics, and user interface systems.
+
+## Quick Links
+
+- **📋 [Workflow Guide](workflow-guide.md)** - Complete usage guide with API examples
+- **💡 [Examples](examples.md)** - Practical API integration examples
+- **🔧 [Installation](installation.md)** - Setup and configuration
 
 ## Table of Contents
 

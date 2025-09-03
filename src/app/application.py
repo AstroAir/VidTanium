@@ -293,7 +293,7 @@ class Application(QApplication):
 
         logger.info("Application initialization completed successfully")
 
-    def run(self):
+    def run(self) -> int:
         """Run the application"""
         # Start download manager
         logger.info("Starting download manager")
@@ -312,7 +312,8 @@ class Application(QApplication):
 
         # Run application
         logger.info("Application started, entering main event loop")
-        return self.exec()
+        exit_code: int = self.exec()
+        return exit_code
 
     def send_notification(self, title: str, message: str, icon=None, duration=5000):
         """Send system notification

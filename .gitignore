@@ -1,9 +1,26 @@
+# =============================================================================
+# VidTanium .gitignore
+# Comprehensive exclusion patterns for Python GUI application
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Documentation (MkDocs)
+# -----------------------------------------------------------------------------
+site/
+.mkdocs_cache/
+
+# -----------------------------------------------------------------------------
+# Python
+# -----------------------------------------------------------------------------
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 
+# C extensions
 *.so
 
+# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -17,28 +34,52 @@ parts/
 sdist/
 var/
 wheels/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
+# PyInstaller
 *.manifest
 *.spec
+.pyinstaller/
 
+# Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
 
+# -----------------------------------------------------------------------------
+# Testing & Coverage
+# -----------------------------------------------------------------------------
+# Test directories
+test/
+tests/__pycache__/
+test/__pycache__/
+
+# pytest
+.pytest_cache/
+.cache
+
+# Coverage reports
 htmlcov/
-.tox/
 .coverage
 .coverage.*
-.cache
-nosetests.xml
 coverage.xml
 *.cover
+*.py,cover
 .hypothesis/
 
-.ipynb_checkpoints
+# Tox
+.tox/
+.nox/
 
+# Unit test / coverage reports
+nosetests.xml
+
+# -----------------------------------------------------------------------------
+# Virtual Environments
+# -----------------------------------------------------------------------------
 .env
 .venv
 env/
@@ -46,57 +87,155 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.Python
 
+# -----------------------------------------------------------------------------
+# Development Tools
+# -----------------------------------------------------------------------------
+# UV package manager
+.uv/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Ruff
+.ruff_cache/
+
+# Black
+.black/
+
+# Pre-commit
+.pre-commit-config.yaml
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# Spyder
 .spyderproject
 .spyproject
 
+# Rope
 .ropeproject
 
+# mkdocs documentation
 /site
 
-.mypy_cache/
+# -----------------------------------------------------------------------------
+# Qt/PySide6 GUI Framework
+# -----------------------------------------------------------------------------
+# Compiled Qt files
+*.qmlc
+*.jsc
+.qmake.stash
+*.pro.user*
+ui_*.py
+*_rc.py
 
+# -----------------------------------------------------------------------------
+# IDEs and Editors
+# -----------------------------------------------------------------------------
+# PyCharm
 .idea/
 *.iml
 *.iws
 .idea_modules/
 
+# Visual Studio Code
 .vscode/
 *.code-workspace
 
-*.csv
-*.dat
-*.log
-*.sqlite
-*.db
+# Visual Studio
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
 
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Eclipse
+.project
+.pydevproject
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# -----------------------------------------------------------------------------
+# Operating System Files
+# -----------------------------------------------------------------------------
+# macOS
 .DS_Store
 .DS_Store?
 ._*
 .Spotlight-V100
 .Trashes
+
+# Windows
 ehthumbs.db
 Thumbs.db
+Desktop.ini
 
-# Added by Task Master AI
-# Logs
-logs
+# Linux
+*~
+
+# -----------------------------------------------------------------------------
+# Application-Specific Files
+# -----------------------------------------------------------------------------
+# Log files
+*.log
+logs/
+dev-debug.log
+
+# Database files
+*.sqlite
+*.db
+download_history.db
+
+# Data files
+*.csv
+*.dat
+
+# Configuration backups
+config/*.bak
+config/*.backup
+
+# Task files
+tasks.json
+tasks/
+
+# -----------------------------------------------------------------------------
+# Temporary Files
+# -----------------------------------------------------------------------------
+*.tmp
+*.temp
+.cache/
+
+# -----------------------------------------------------------------------------
+# Node.js (if any frontend tools are used)
+# -----------------------------------------------------------------------------
+node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-dev-debug.log
-# Dependency directories
-node_modules/
-# Environment variables
-# Editor directories and files
-.idea
-.vscode
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-# OS specific
-# Task files
-tasks.json
-tasks/ 

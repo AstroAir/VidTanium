@@ -37,6 +37,7 @@ from .widgets.log.log_viewer import LogViewer
 from .widgets.dashboard.dashboard_interface import DashboardInterface
 # Settings interfaces
 from .widgets.settings import SettingsInterface, SettingsDialog
+from .widgets.help import HelpInterface
 from .theme_manager import ThemeManager
 from .utils.responsive import ResponsiveWidget, ResponsiveManager, ResponsiveContainer
 from .dialogs.task_dialog import TaskDialog
@@ -263,6 +264,11 @@ class MainWindow(FluentWindow):
         logger.debug(f"Main window orientation changed: {orientation}")
         # Additional orientation-specific adjustments can be added here
 
+    def _on_help_error(self, error_message: str):
+        """Handle help system errors"""
+        logger.warning(f"Help system error: {error_message}")
+        # Error is already displayed by the help interface, just log it
+
     def _adjust_content_layout(self, breakpoint: str):
         """Adjust content layout based on breakpoint"""
         if not hasattr(self, 'dashboard_component') or not self.dashboard_component:
@@ -314,6 +320,10 @@ class MainWindow(FluentWindow):
         self.settings_interface = self._create_settings_interface()
         self.settings_interface.setObjectName("settings_interface")
 
+        # Help interface
+        self.help_interface = self._create_help_interface()
+        self.help_interface.setObjectName("help_interface")
+
     def _init_navigation(self) -> None:
         """Initialize navigation menu with enhanced styling"""
         # Apply styling to navigation
@@ -346,6 +356,14 @@ class MainWindow(FluentWindow):
             FIF.HISTORY,
             tr('navigation.logs'),
             NavigationItemPosition.TOP
+        )
+
+        # Help
+        self.addSubInterface(
+            self.help_interface,
+            FIF.HELP,
+            tr('navigation.help'),
+            NavigationItemPosition.BOTTOM
         )
 
         # Settings
@@ -626,6 +644,31 @@ class MainWindow(FluentWindow):
 
         # Settings methods have been moved to the unified SettingsInterface component
         return settings_interface
+
+    def _create_help_interface(self) -> QWidget:
+        """Create help documentation interface"""
+        try:
+            help_interface = HelpInterface(self)
+
+            # Connect help interface signals if needed
+            help_interface.error_occurred.connect(self._on_help_error)
+
+            logger.debug("Help interface created successfully")
+            return help_interface
+
+        except Exception as e:
+            logger.error(f"Failed to create help interface: {e}")
+            # Return a fallback widget
+            fallback = QWidget()
+            layout = QVBoxLayout(fallback)
+            layout.setContentsMargins(24, 24, 24, 24)
+
+            error_label = BodyLabel(tr("help.error.load_failed"))
+            error_label.setStyleSheet(f"color: {DesignSystem.get_color('text_secondary_adaptive')};")
+            layout.addWidget(error_label)
+            layout.addStretch()
+
+            return fallback
     # in src/gui/widgets/settings/settings_interface.py
 
     def _browse_output_directory(self, line_edit: LineEdit):

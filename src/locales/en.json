@@ -7,7 +7,8 @@
     "dashboard": "Dashboard",
     "download": "Download Manager",
     "logs": "Activity Logs",
-    "settings": "Settings"
+    "settings": "Settings",
+    "help": "Help"
   },
   "dashboard": {
     "title": "VidTanium Dashboard",
@@ -770,6 +771,34 @@
       "completed": "Completed",
       "error": "Error",
       "cancelled": "Cancelled"
+    }
+  },
+  "help": {
+    "title": "Help Documentation",
+    "refresh": "Refresh Content",
+    "table_of_contents": "Table of Contents",
+    "content_refreshed": "Content refreshed successfully",
+    "navigation": {
+      "title": "Help Topics",
+      "subtitle": "Browse documentation"
+    },
+    "pages": {
+      "index": "Overview",
+      "index_desc": "Introduction and quick navigation",
+      "getting_started": "Getting Started",
+      "getting_started_desc": "Learn the basics quickly",
+      "user_guide": "User Guide",
+      "user_guide_desc": "Complete feature documentation",
+      "troubleshooting": "Troubleshooting",
+      "troubleshooting_desc": "Solutions to common issues"
+    },
+    "error": {
+      "title": "Error",
+      "load_failed": "Failed to load help content",
+      "page_not_found": "Help page '{page}' not found"
+    },
+    "info": {
+      "title": "Information"
     }
   }
 }

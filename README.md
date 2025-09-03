@@ -96,81 +96,107 @@ VidTanium/
 
 ## 🚀 Quick Start
 
+> **📋 For detailed step-by-step instructions, see the [Complete Workflow Guide](docs/workflow-guide.md)**
+
 ### Prerequisites
 
-- Python 3.11 or higher
-- Windows, macOS, or Linux
-- FFmpeg (for media processing features)
+- **Python 3.11+** - [Download here](https://python.org/downloads/)
+- **FFmpeg** - Required for media processing ([Installation guide](docs/workflow-guide.md#step-1-install-ffmpeg))
+- **4GB RAM minimum** (8GB recommended)
+- **Stable internet connection**
 
-### Installation
+### Installation (3 Steps)
 
-1. **Clone the repository**
+1. **Install FFmpeg** (see [detailed guide](docs/workflow-guide.md#step-1-install-ffmpeg))
 
    ```bash
-   git clone https://github.com/yourusername/VidTanium.git
-   cd VidTanium
+   # Windows: choco install ffmpeg
+   # macOS: brew install ffmpeg
+   # Linux: sudo apt install ffmpeg
    ```
 
-2. **Install dependencies**
+2. **Clone and install VidTanium**
 
    ```bash
+   git clone https://github.com/AstroAir/VidTanium.git
+   cd VidTanium
+
    # Using uv (recommended)
    uv sync
 
-   # Or using pip with pyproject.toml
+   # Or using pip
    pip install -e .
    ```
 
-3. **Run the application**
+3. **Launch and start downloading**
 
    ```bash
+   # Start GUI
    python main.py
+
+   # Or download directly
+   python main.py --url "https://example.com/video.m3u8"
    ```
 
-### Command Line Usage
+### Your First Download
+
+1. **Launch VidTanium**: `python main.py`
+2. **Paste M3U8 URL** in the input field
+3. **Click "Add Task"** to start downloading
+4. **Monitor progress** in real-time
+
+**Need help?** → [Complete Workflow Guide](docs/workflow-guide.md#your-first-download) | [Examples](docs/examples.md#basic-examples)
+
+### Command Line Options
 
 ```bash
 # Basic usage
 python main.py
 
-# With debug mode
+# With debug logging
 python main.py --debug
 
-# Download a specific URL
+# Direct URL download
 python main.py --url "https://example.com/video.m3u8"
 
-# Use custom config directory
+# Custom config directory
 python main.py --config "/path/to/config"
 ```
 
 ## 📖 Documentation
 
+### 🎯 **Start Here: Complete Workflow Guide**
+
+**[📋 Complete Workflow Guide](docs/workflow-guide.md)** - Your comprehensive guide from installation to advanced usage
+
 ### 📚 User Documentation
 
 | Document | Purpose | Best For |
 |----------|---------|----------|
-| [⚙️ Installation Guide](docs/INSTALLATION.md) | Setup and configuration | New users, system administrators |
-| [📋 User Manual](docs/USER_MANUAL.md) | Complete user guide with advanced features | End users, power users |
-| [🐛 Troubleshooting](docs/USER_MANUAL.md#troubleshooting) | Problem solving and diagnostics | Users experiencing issues |
+| [🚀 **Workflow Guide**](docs/workflow-guide.md) | **Complete end-to-end guide** | **All users - start here!** |
+| [⚙️ Installation Guide](docs/installation.md) | Setup and configuration | New users, system administrators |
+| [📋 User Manual](docs/user-manual.md) | Complete user guide with advanced features | End users, power users |
+| [💡 Examples](docs/examples.md) | Practical examples and use cases | Users wanting real-world scenarios |
+| [🐛 Troubleshooting](docs/user-manual.md#troubleshooting) | Problem solving and diagnostics | Users experiencing issues |
 
 ### 👨‍💻 Developer Documentation
 
 | Document | Purpose | Best For |
 |----------|---------|----------|
-| [🔧 Developer Guide](docs/DEVELOPER_GUIDE.md) | Development setup and architecture | Contributors, maintainers |
-| [📚 API Reference](docs/API_REFERENCE.md) | Comprehensive API documentation | Developers, integrators |
-| [🏗️ Project Structure](docs/PROJECT_STRUCTURE.md) | Project organization and components | New contributors, architects |
-| [📖 Technical Documentation](docs/DOCUMENTATION.md) | In-depth technical details | Advanced developers, researchers |
+| [🔧 Developer Guide](docs/developer-guide.md) | Development setup and architecture | Contributors, maintainers |
+| [📚 API Reference](docs/api-reference.md) | Comprehensive API documentation | Developers, integrators |
+| [🏗️ Project Structure](docs/project-structure.md) | Project organization and components | New contributors, architects |
+| [📖 Technical Documentation](docs/documentation.md) | In-depth technical details | Advanced developers, researchers |
 
 ### 🚀 Quick Start Paths
 
-**New Users** → [Installation](docs/INSTALLATION.md) → [First Steps](docs/USER_MANUAL.md#getting-started) → [Basic Usage](docs/USER_MANUAL.md#downloading-videos)
+**🆕 New Users** → [**Workflow Guide**](docs/workflow-guide.md) → [Installation](docs/installation.md) → [First Download](docs/workflow-guide.md#your-first-download)
 
-**Developers** → [Developer Setup](docs/DEVELOPER_GUIDE.md#development-environment-setup) → [Architecture](docs/PROJECT_STRUCTURE.md) → [API Reference](docs/API_REFERENCE.md)
+**👨‍💻 Developers** → [**Workflow Guide**](docs/workflow-guide.md) → [API Examples](docs/examples.md#integration-examples) → [API Reference](docs/api-reference.md)
 
-**Advanced Users** → [Advanced Features](docs/USER_MANUAL.md#advanced-error-handling--diagnostics) → [Analytics Dashboard](docs/USER_MANUAL.md#analytics-dashboard) → [Configuration](docs/INSTALLATION.md#configuration-categories)
+**⚡ Power Users** → [**Workflow Guide**](docs/workflow-guide.md) → [Advanced Examples](docs/examples.md#advanced-workflows) → [Performance Optimization](docs/examples.md#performance-optimization)
 
-**Troubleshooting** → [Built-in Diagnostics](docs/USER_MANUAL.md#intelligent-error-diagnosis) → [Common Issues](docs/USER_MANUAL.md#troubleshooting) → [Developer Support](docs/DEVELOPER_GUIDE.md)
+**🔧 Troubleshooting** → [**Workflow Guide Troubleshooting**](docs/workflow-guide.md#troubleshooting) → [Examples](docs/examples.md#error-handling-patterns) → [User Manual](docs/user-manual.md#troubleshooting)
 
 ## 🎯 Usage Examples
 
@@ -470,7 +496,7 @@ Access detailed error information through:
 - **Log Viewer**: Detailed technical logs with error context
 - **Status Widget**: Real-time system status and health monitoring
 
-For comprehensive troubleshooting, see the [User Manual](docs/USER_MANUAL.md#troubleshooting).
+For comprehensive troubleshooting, see the [User Manual](docs/user-manual.md#troubleshooting).
 
 ## 📄 License
 
@@ -494,6 +520,28 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 🐛 [Issue Tracker](https://github.com/yourusername/VidTanium/issues)
 - 💬 [Discussions](https://github.com/yourusername/VidTanium/discussions)
 - 📧 Email: [support@vidtanium.com](mailto:support@vidtanium.com)
+
+---
+
+## 🎯 Complete User Journey
+
+### For New Users
+1. **📋 [Start with Workflow Guide](docs/workflow-guide.md)** - Complete step-by-step guide
+2. **⚙️ [Follow Installation](docs/installation.md)** - Detailed setup instructions
+3. **🚀 [Try First Download](docs/workflow-guide.md#your-first-download)** - Get started immediately
+4. **💡 [Explore Examples](docs/examples.md)** - Learn from practical scenarios
+
+### For Developers
+1. **📋 [Review Workflow Guide](docs/workflow-guide.md)** - Understand the complete system
+2. **💡 [Study Integration Examples](docs/examples.md#integration-examples)** - See real implementations
+3. **📚 [Reference API Docs](docs/api-reference.md)** - Detailed technical documentation
+4. **🔧 [Setup Development](docs/developer-guide.md)** - Contribute to the project
+
+### For Advanced Users
+1. **⚡ [Performance Optimization](docs/examples.md#performance-optimization)** - Maximize efficiency
+2. **🔧 [Advanced Configuration](docs/installation.md#configuration-categories)** - Fine-tune settings
+3. **🤖 [Automation Scripts](docs/examples.md#automation-scripts)** - Automate workflows
+4. **🛠️ [Custom Integration](docs/examples.md#integration-examples)** - Build custom solutions
 
 ---
 

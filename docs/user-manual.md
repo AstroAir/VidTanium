@@ -1,4 +1,12 @@
-# VidTanium User Manual
+---
+title: User Manual
+description: Complete user guide for VidTanium with advanced features and detailed instructions
+---
+
+# User Manual
+
+!!! tip "New to VidTanium?"
+    Start with the [Complete Workflow Guide](workflow-guide.md) for step-by-step instructions from installation to advanced usage.
 
 ## Table of Contents
 
@@ -10,6 +18,13 @@
 6. [Settings & Configuration](#settings--configuration)
 7. [Troubleshooting](#troubleshooting)
 8. [Tips & Best Practices](#tips--best-practices)
+
+## Quick Navigation
+
+- **📋 [Complete Workflow Guide](workflow-guide.md)** - Comprehensive end-to-end guide
+- **💡 [Practical Examples](examples.md)** - Real-world usage scenarios
+- **🔧 [Installation Guide](installation.md)** - Detailed setup instructions
+- **📚 [API Reference](api-reference.md)** - Developer documentation
 
 ## Getting Started
 

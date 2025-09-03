@@ -5,11 +5,12 @@ import sys
 import logging
 import argparse
 from pathlib import Path
+from typing import Optional
 
 from src.app.application import Application
 
 
-def setup_logging(debug=False):
+def setup_logging(debug: bool = False) -> None:
     """设置日志系统"""
     level = logging.DEBUG if debug else logging.INFO
 
@@ -34,7 +35,7 @@ def setup_logging(debug=False):
     logging.getLogger("PySide6").setLevel(logging.WARNING)
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     """解析命令行参数"""
     parser = argparse.ArgumentParser(description="加密视频下载工具")
     parser.add_argument("--debug", action="store_true", help="启用调试模式")
@@ -43,7 +44,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def main():
+def main() -> int:
     """主函数"""
     # 解析命令行参数
     args = parse_args()

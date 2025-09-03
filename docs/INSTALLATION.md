@@ -1,3 +1,8 @@
+---
+title: Installation Guide
+description: Complete installation guide for VidTanium video download tool
+---
+
 # Installation Guide
 
 Complete installation guide for VidTanium video download tool.
@@ -480,7 +485,7 @@ pip install --proxy http://proxy.company.com:8080 -e .
 
 ### Getting Help
 
-- 📖 Check the [User Manual](USER_MANUAL.md)
+- 📖 Check the [User Manual](user-manual.md)
 - 🐛 Report issues on [GitHub](https://github.com/yourusername/VidTanium/issues)
 - 💬 Join discussions on [GitHub Discussions](https://github.com/yourusername/VidTanium/discussions)
 - 📧 Email: [support@vidtanium.com](mailto:support@vidtanium.com)
@@ -506,4 +511,5 @@ When reporting installation issues:
 
 ---
 
-**Success!** 🎉 You should now have VidTanium installed and ready to use. See the [User Manual](USER_MANUAL.md) for usage instructions.
+**Success!** 🎉 You should now have VidTanium installed and ready to use. See the [User Manual](user-manual.md) for usage instructions.
+
