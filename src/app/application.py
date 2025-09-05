@@ -124,7 +124,7 @@ class Application(QApplication):
     singleton_manager = None
     window_activator = None
 
-    def __new__(cls, config_dir=None):
+    def __new__(cls, config_dir=None, cli_args=None):
         """Ensure singleton pattern"""
         cls._mutex.lock()
         try:

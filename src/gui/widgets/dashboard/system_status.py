@@ -8,7 +8,7 @@ from qfluentwidgets import (
     BodyLabel, StrongBodyLabel, SubtitleLabel, PrimaryPushButton,
     IconWidget, FluentIcon as FIF, InfoBar, InfoBarPosition,
     ElevatedCardWidget, HeaderCardWidget, CaptionLabel,
-    VBoxLayout, setTheme, Theme, isDarkTheme
+    setTheme, Theme, isDarkTheme
 )
 
 from ...utils.i18n import tr
@@ -63,7 +63,7 @@ class EnhancedDashboardSystemStatus(ResponsiveWidget):
         from PySide6.QtWidgets import QSizePolicy
         card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
-        layout = VBoxLayout(card)
+        layout = QVBoxLayout(card)
         if current_bp.value in ['xs', 'sm']:
             layout.setContentsMargins(16, 16, 16, 16)
             layout.setSpacing(12)
@@ -84,8 +84,8 @@ class EnhancedDashboardSystemStatus(ResponsiveWidget):
         actions_layout = self._create_responsive_actions()
         layout.addLayout(actions_layout)
         
-        # Set up main layout using QFluentWidgets
-        main_layout = VBoxLayout(self)
+        # Set up main layout using Qt VBoxLayout
+        main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.addWidget(card)
 
@@ -93,7 +93,7 @@ class EnhancedDashboardSystemStatus(ResponsiveWidget):
         """Create enhanced header with gradient and responsive design"""
         current_bp = self.responsive_manager.get_current_breakpoint()
         
-        header_layout = VBoxLayout()
+        header_layout = QVBoxLayout()
         header_layout.setSpacing(8)
 
         # Header card with gradient background
@@ -156,7 +156,7 @@ class EnhancedDashboardSystemStatus(ResponsiveWidget):
 
         # Responsive container for items using QFluentWidgets
         items_container = ResponsiveContainer()
-        items_layout = VBoxLayout(items_container)
+        items_layout = QVBoxLayout(items_container)
         items_layout.setContentsMargins(0, 0, 0, 0)
         if current_bp.value in ['xs', 'sm']:
             items_layout.setSpacing(8)
@@ -208,7 +208,7 @@ class EnhancedDashboardSystemStatus(ResponsiveWidget):
         """Create responsive quick action buttons"""
         current_bp = self.responsive_manager.get_current_breakpoint()
         
-        actions_layout = VBoxLayout()
+        actions_layout = QVBoxLayout()
         if current_bp.value in ['xs', 'sm']:
             actions_layout.setSpacing(6)
         else:

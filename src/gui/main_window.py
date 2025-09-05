@@ -28,7 +28,7 @@ from qfluentwidgets import (
 # UI components
 from .widgets.navigation import NavigationPanel, ModernBreadcrumb
 from .widgets import dashboard
-Dashboard = dashboard.Dashboard  # type: ignore
+Dashboard = dashboard.DashboardInterface
 from .widgets.progress import ProgressCard, ProgressSummaryCard
 from .utils.design_system import DesignSystem
 
@@ -207,7 +207,7 @@ class MainWindow(FluentWindow):
         self.responsive_manager.add_orientation_callback(self._on_orientation_changed)
         
         # Setup UI and interfaces
-        self._setup_interfaces()
+        self._create_interfaces()
         
         # Apply theme enhancements
         if self.theme_manager:

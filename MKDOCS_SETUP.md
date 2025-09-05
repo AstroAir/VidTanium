@@ -65,6 +65,7 @@ docs/
 ### Local Development
 
 1. **Install dependencies**:
+
    ```bash
    pip install -r requirements-docs.txt
    ```
@@ -73,7 +74,6 @@ docs/
    ```bash
    mkdocs serve
    ```
-   
 3. **Open in browser**: http://127.0.0.1:8000
 
 ### Building for Production
@@ -143,16 +143,19 @@ The documentation automatically deploys to GitHub Pages when changes are pushed 
 ## 🎨 Design Features
 
 ### Color Scheme
+
 - **Primary**: Teal (#009688)
 - **Accent**: Cyan (#00bcd4)
 - **Gradient**: Teal to cyan for hero sections
 
 ### Typography
+
 - **Text**: Roboto
 - **Code**: Roboto Mono
 - **Headings**: Clean hierarchy with proper spacing
 
 ### Components
+
 - **Grid cards**: Modern card layout for navigation
 - **Admonitions**: Styled info boxes
 - **Code blocks**: Enhanced with copy buttons
@@ -170,6 +173,7 @@ The documentation automatically deploys to GitHub Pages when changes are pushed 
 ## 🔧 Configuration Highlights
 
 ### Theme Configuration
+
 ```yaml
 theme:
   name: material
@@ -185,6 +189,7 @@ theme:
 ```
 
 ### Extensions
+
 ```yaml
 markdown_extensions:
   - admonition
@@ -197,11 +202,13 @@ markdown_extensions:
 ## 🚀 Next Steps
 
 ### Immediate Actions
+
 1. **Install MkDocs**: `pip install -r requirements-docs.txt`
 2. **Test locally**: `mkdocs serve`
 3. **Validate setup**: `python scripts/test-docs.py`
 
 ### Optional Enhancements
+
 - Add more interactive examples
 - Implement version management with mike
 - Add more custom components
@@ -218,6 +225,7 @@ markdown_extensions:
 ## 🎉 Result
 
 The VidTanium documentation is now:
+
 - ✅ **Professional**: Modern Material Design interface
 - ✅ **Searchable**: Full-text search functionality
 - ✅ **Responsive**: Works on all devices

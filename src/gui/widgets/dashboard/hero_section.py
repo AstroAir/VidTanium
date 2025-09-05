@@ -103,8 +103,8 @@ class EnhancedDashboardHeroSection(ResponsiveWidget):
                 layout.addStretch()
                 layout.addWidget(icon_container)
 
-        # Set up main layout using QFluentWidgets VBoxLayout
-        main_layout = VBoxLayout(self)
+        # Set up main layout using Qt VBoxLayout
+        main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.addWidget(self.hero_card)
 

@@ -18,7 +18,7 @@ from qfluentwidgets import (
     FluentIcon as FIF, CheckBox, ComboBox, LineEdit, SearchLineEdit,
     PrimaryPushButton, PushButton, DropDownPushButton, TransparentToolButton,
     TitleLabel, SubtitleLabel, BodyLabel, CaptionLabel,
-    ElevatedCardWidget, ScrollArea, VBoxLayout, HBoxLayout,
+    ElevatedCardWidget, ScrollArea, VBoxLayout,
     InfoBar, InfoBarPosition
 )
 
@@ -89,7 +89,7 @@ class SelectionWidget(ElevatedCardWidget):
         layout.setContentsMargins(16, 12, 16, 12)
         
         # Header
-        header_layout = HBoxLayout()
+        header_layout = QHBoxLayout()
         header_layout.setSpacing(8)
         
         icon_label = QLabel()
@@ -110,7 +110,7 @@ class SelectionWidget(ElevatedCardWidget):
         layout.addLayout(header_layout)
         
         # Quick selection buttons
-        quick_layout = HBoxLayout()
+        quick_layout = QHBoxLayout()
         quick_layout.setSpacing(8)
         
         self.select_all_btn = PushButton(tr("bulk_ops.select_all"))
@@ -156,7 +156,7 @@ class SelectionWidget(ElevatedCardWidget):
         size_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_SECONDARY};")
         advanced_layout.addWidget(size_label, 1, 0)
         
-        size_layout = HBoxLayout()
+        size_layout = QHBoxLayout()
         size_layout.setSpacing(4)
         
         self.min_size_edit = LineEdit()
@@ -339,7 +339,7 @@ class BulkActionsWidget(ElevatedCardWidget):
         layout.setContentsMargins(16, 12, 16, 12)
         
         # Header
-        header_layout = HBoxLayout()
+        header_layout = QHBoxLayout()
         header_layout.setSpacing(8)
         
         icon_label = QLabel()
@@ -400,7 +400,7 @@ class BulkActionsWidget(ElevatedCardWidget):
         actions_layout.addWidget(self.delete_btn, 1, 2)
         
         # Queue management
-        queue_layout = HBoxLayout()
+        queue_layout = QHBoxLayout()
         queue_layout.setSpacing(8)
         
         self.move_top_btn = PushButton(tr("bulk_ops.move_to_top"))
@@ -439,7 +439,7 @@ class BulkActionsWidget(ElevatedCardWidget):
         actions_layout.addLayout(queue_layout, 2, 0, 1, 3)
         
         # Utility actions
-        utility_layout = HBoxLayout()
+        utility_layout = QHBoxLayout()
         utility_layout.setSpacing(8)
         
         self.export_urls_btn = PushButton(tr("bulk_ops.export_urls"))

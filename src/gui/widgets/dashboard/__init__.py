@@ -2,7 +2,7 @@
 Dashboard widgets package
 """
 
-from .dashboard_interface import DashboardInterface
+from .dashboard_interface import EnhancedDashboardInterface as DashboardInterface
 from .hero_section import DashboardHeroSection
 from .stats_section import DashboardStatsSection
 from .task_preview import DashboardTaskPreview

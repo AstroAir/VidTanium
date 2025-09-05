@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout
 from PySide6.QtCore import Qt, Slot
 from qfluentwidgets import (
     TitleLabel, BodyLabel, IconWidget, FluentIcon as FIF,
-    ElevatedCardWidget, HeaderCardWidget, VBoxLayout,
+    ElevatedCardWidget, HeaderCardWidget,
     setTheme, Theme, isDarkTheme, SimpleCardWidget
 )
 
@@ -56,10 +56,10 @@ class EnhancedDashboardStatsSection(ResponsiveWidget):
         """Setup enhanced responsive statistics section UI"""
         current_bp = self.responsive_manager.get_current_breakpoint()
         
-        # Responsive layout based on screen size using QFluentWidgets layouts
+        # Responsive layout based on screen size using Qt layouts
         if current_bp.value in ['xs', 'sm']:
             # Vertical grid layout for small screens (2x2)
-            main_layout = VBoxLayout(self)
+            main_layout = QVBoxLayout(self)
             main_layout.setContentsMargins(0, 0, 0, 0)
             main_layout.setSpacing(12)
             
@@ -145,7 +145,7 @@ class EnhancedDashboardStatsSection(ResponsiveWidget):
         from PySide6.QtWidgets import QSizePolicy
         card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
-        layout = VBoxLayout(card)
+        layout = QVBoxLayout(card)
         
         # Responsive margins and spacing
         if current_bp.value in ['xs', 'sm']:
