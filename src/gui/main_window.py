@@ -831,6 +831,14 @@ class MainWindow(FluentWindow):
             except Exception as ex:
                 logger.error(f"Error stopping tasks on exit: {ex}")
 
+        # Clean up singleton components
+        try:
+            if hasattr(self.app, 'cleanup_singleton_components'):
+                self.app.cleanup_singleton_components()
+                logger.debug("Singleton components cleaned up on exit")
+        except Exception as ex:
+            logger.error(f"Error cleaning up singleton components: {ex}")
+
         self.settings.save_settings()
         e.accept()
 

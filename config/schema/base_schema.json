@@ -1,0 +1,417 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "VidTanium Configuration Schema",
+  "description": "Base configuration schema for VidTanium application",
+  "type": "object",
+  "properties": {
+    "_version": {
+      "type": "string",
+      "description": "Configuration schema version",
+      "default": "2.0.0"
+    },
+    "general": {
+      "type": "object",
+      "description": "General application settings",
+      "properties": {
+        "output_directory": {
+          "type": "string",
+          "description": "Default download directory",
+          "format": "path"
+        },
+        "auto_cleanup": {
+          "type": "boolean",
+          "description": "Automatically clean up temporary files",
+          "default": true
+        },
+        "language": {
+          "type": "string",
+          "description": "Application language",
+          "enum": ["auto", "en_US", "zh_CN"],
+          "default": "auto"
+        },
+        "theme": {
+          "type": "string",
+          "description": "Application theme",
+          "enum": ["system", "light", "dark"],
+          "default": "system"
+        },
+        "check_updates": {
+          "type": "boolean",
+          "description": "Check for application updates on startup",
+          "default": true
+        },
+        "max_recent_files": {
+          "type": "integer",
+          "description": "Maximum number of recent files to remember",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 10
+        },
+        "temp_directory": {
+          "type": "string",
+          "description": "Temporary files directory (empty for system default)",
+          "format": "path",
+          "default": ""
+        },
+        "cache_directory": {
+          "type": "string",
+          "description": "Cache directory (empty for default)",
+          "format": "path",
+          "default": ""
+        },
+        "backup_directory": {
+          "type": "string",
+          "description": "Configuration backup directory",
+          "format": "path",
+          "default": ""
+        },
+        "config_auto_save": {
+          "type": "boolean",
+          "description": "Automatically save configuration changes",
+          "default": true
+        },
+        "config_backup_count": {
+          "type": "integer",
+          "description": "Number of configuration backups to keep",
+          "minimum": 0,
+          "maximum": 50,
+          "default": 5
+        }
+      },
+      "required": ["output_directory"]
+    },
+    "download": {
+      "type": "object",
+      "description": "Download behavior settings",
+      "properties": {
+        "max_concurrent_tasks": {
+          "type": "integer",
+          "description": "Maximum number of concurrent download tasks",
+          "minimum": 1,
+          "maximum": 20,
+          "default": 3
+        },
+        "max_workers_per_task": {
+          "type": "integer",
+          "description": "Maximum number of workers per download task",
+          "minimum": 1,
+          "maximum": 50,
+          "default": 10
+        },
+        "max_retries": {
+          "type": "integer",
+          "description": "Maximum number of retry attempts",
+          "minimum": 0,
+          "maximum": 20,
+          "default": 5
+        },
+        "retry_delay": {
+          "type": "number",
+          "description": "Base delay between retry attempts (seconds)",
+          "minimum": 0.1,
+          "maximum": 60.0,
+          "default": 2.0
+        },
+        "request_timeout": {
+          "type": "integer",
+          "description": "HTTP request timeout (seconds)",
+          "minimum": 5,
+          "maximum": 300,
+          "default": 60
+        },
+        "chunk_size": {
+          "type": "integer",
+          "description": "Download chunk size (bytes)",
+          "minimum": 1024,
+          "maximum": 1048576,
+          "default": 8192
+        },
+        "bandwidth_limit": {
+          "type": "integer",
+          "description": "Bandwidth limit in KB/s (0 for unlimited)",
+          "minimum": 0,
+          "default": 0
+        }
+      }
+    },
+    "network": {
+      "type": "object",
+      "description": "Network and connection settings",
+      "properties": {
+        "connection_pool_size": {
+          "type": "integer",
+          "description": "Maximum connections in pool",
+          "minimum": 5,
+          "maximum": 100,
+          "default": 20
+        },
+        "max_connections_per_host": {
+          "type": "integer",
+          "description": "Maximum connections per host",
+          "minimum": 1,
+          "maximum": 20,
+          "default": 8
+        },
+        "connection_timeout": {
+          "type": "number",
+          "description": "Connection timeout (seconds)",
+          "minimum": 1.0,
+          "maximum": 120.0,
+          "default": 30.0
+        },
+        "read_timeout": {
+          "type": "number",
+          "description": "Read timeout (seconds)",
+          "minimum": 5.0,
+          "maximum": 600.0,
+          "default": 120.0
+        },
+        "dns_cache_timeout": {
+          "type": "integer",
+          "description": "DNS cache timeout (seconds)",
+          "minimum": 0,
+          "maximum": 3600,
+          "default": 300
+        },
+        "keep_alive_timeout": {
+          "type": "number",
+          "description": "Keep-alive timeout (seconds)",
+          "minimum": 10.0,
+          "maximum": 1800.0,
+          "default": 300.0
+        },
+        "proxy": {
+          "type": "string",
+          "description": "Proxy server URL (empty for no proxy)",
+          "default": ""
+        },
+        "user_agent": {
+          "type": "string",
+          "description": "HTTP User-Agent string",
+          "default": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        },
+        "verify_ssl": {
+          "type": "boolean",
+          "description": "Verify SSL certificates",
+          "default": true
+        }
+      }
+    },
+    "performance": {
+      "type": "object",
+      "description": "Performance optimization settings",
+      "properties": {
+        "memory_limit_mb": {
+          "type": "integer",
+          "description": "Memory usage limit in MB (0 for unlimited)",
+          "minimum": 0,
+          "maximum": 16384,
+          "default": 1024
+        },
+        "cpu_usage_limit": {
+          "type": "integer",
+          "description": "CPU usage limit percentage",
+          "minimum": 10,
+          "maximum": 100,
+          "default": 80
+        },
+        "buffer_size_min": {
+          "type": "integer",
+          "description": "Minimum buffer size (bytes)",
+          "minimum": 1024,
+          "maximum": 65536,
+          "default": 8192
+        },
+        "buffer_size_max": {
+          "type": "integer",
+          "description": "Maximum buffer size (bytes)",
+          "minimum": 65536,
+          "maximum": 10485760,
+          "default": 1048576
+        },
+        "buffer_size_default": {
+          "type": "integer",
+          "description": "Default buffer size (bytes)",
+          "minimum": 8192,
+          "maximum": 1048576,
+          "default": 65536
+        },
+        "gc_threshold_mb": {
+          "type": "integer",
+          "description": "Garbage collection threshold (MB)",
+          "minimum": 10,
+          "maximum": 1000,
+          "default": 100
+        },
+        "optimization_level": {
+          "type": "string",
+          "description": "Performance optimization level",
+          "enum": ["low", "balanced", "high", "maximum"],
+          "default": "balanced"
+        }
+      }
+    },
+    "logging": {
+      "type": "object",
+      "description": "Logging and debug settings",
+      "properties": {
+        "log_level": {
+          "type": "string",
+          "description": "Global log level",
+          "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+          "default": "INFO"
+        },
+        "debug_logging": {
+          "type": "boolean",
+          "description": "Enable debug logging",
+          "default": false
+        },
+        "log_to_file": {
+          "type": "boolean",
+          "description": "Enable logging to file",
+          "default": true
+        },
+        "log_to_console": {
+          "type": "boolean",
+          "description": "Enable logging to console",
+          "default": true
+        },
+        "log_file_path": {
+          "type": "string",
+          "description": "Log file path (empty for default)",
+          "format": "path",
+          "default": ""
+        },
+        "log_rotation_size": {
+          "type": "string",
+          "description": "Log file rotation size",
+          "default": "10 MB"
+        },
+        "log_retention": {
+          "type": "string",
+          "description": "Log file retention period",
+          "default": "7 days"
+        },
+        "log_compression": {
+          "type": "string",
+          "description": "Log file compression format",
+          "enum": ["none", "zip", "gz"],
+          "default": "zip"
+        }
+      }
+    },
+    "features": {
+      "type": "object",
+      "description": "Feature flags and module settings",
+      "properties": {
+        "adaptive_retry": {
+          "type": "boolean",
+          "description": "Enable adaptive retry mechanism",
+          "default": true
+        },
+        "adaptive_timeout": {
+          "type": "boolean",
+          "description": "Enable adaptive timeout adjustment",
+          "default": true
+        },
+        "integrity_verification": {
+          "type": "boolean",
+          "description": "Enable file integrity verification",
+          "default": true
+        },
+        "memory_optimization": {
+          "type": "boolean",
+          "description": "Enable memory optimization",
+          "default": true
+        },
+        "connection_pooling": {
+          "type": "boolean",
+          "description": "Enable connection pooling",
+          "default": true
+        },
+        "enhanced_theme_system": {
+          "type": "boolean",
+          "description": "Enable enhanced theme system",
+          "default": true
+        },
+        "system_tray": {
+          "type": "boolean",
+          "description": "Enable system tray integration",
+          "default": true
+        },
+        "notifications": {
+          "type": "boolean",
+          "description": "Enable desktop notifications",
+          "default": true
+        },
+        "dark_mode": {
+          "type": "boolean",
+          "description": "Enable dark mode support",
+          "default": true
+        },
+        "parallel_downloads": {
+          "type": "boolean",
+          "description": "Enable parallel segment downloading",
+          "default": true
+        },
+        "bandwidth_limiting": {
+          "type": "boolean",
+          "description": "Enable bandwidth limiting",
+          "default": false
+        },
+        "resume_downloads": {
+          "type": "boolean",
+          "description": "Enable resume interrupted downloads",
+          "default": true
+        }
+      }
+    },
+    "ui": {
+      "type": "object",
+      "description": "User interface settings",
+      "properties": {
+        "show_detailed_progress": {
+          "type": "boolean",
+          "description": "Show detailed progress information",
+          "default": true
+        },
+        "minimize_to_tray": {
+          "type": "boolean",
+          "description": "Minimize to system tray",
+          "default": false
+        },
+        "show_notifications": {
+          "type": "boolean",
+          "description": "Show desktop notifications",
+          "default": true
+        },
+        "confirm_on_exit": {
+          "type": "boolean",
+          "description": "Confirm before exiting application",
+          "default": true
+        },
+        "window_geometry": {
+          "type": "string",
+          "description": "Window geometry settings",
+          "default": ""
+        },
+        "window_state": {
+          "type": "string",
+          "description": "Window state settings",
+          "default": ""
+        },
+        "accent_color": {
+          "type": "string",
+          "description": "UI accent color",
+          "default": "#0078d4"
+        },
+        "animations_enabled": {
+          "type": "boolean",
+          "description": "Enable UI animations",
+          "default": true
+        }
+      }
+    }
+  },
+  "required": ["general", "download"]
+}

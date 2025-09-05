@@ -172,15 +172,40 @@ pip install pyside6-tools
    python main.py
    ```
 
-2. **Configure settings**
-   - Set download directory
-   - Configure concurrent downloads
-   - Set up proxy if needed
-   - Configure FFmpeg path if not in PATH
+2. **Quick Configuration with Presets**
 
-3. **Test installation**
+   VidTanium 2.0 includes configuration presets for easy setup:
+
+   ```bash
+   # List available presets
+   python main.py --list-presets
+
+   # Apply a preset based on your needs
+   python main.py --preset production        # Stable, balanced settings
+   python main.py --preset high_performance # Maximum speed
+   python main.py --preset low_resource     # Minimal resource usage
+   python main.py --preset development      # Debug and development
+   ```
+
+3. **Manual Configuration**
+   - Set download directory: `--output-dir "/path/to/downloads"`
+   - Configure concurrent downloads: `--max-concurrent 5`
+   - Set up proxy: `--proxy "http://proxy.example.com:8080"`
+   - Configure theme: `--theme dark`
+
+4. **Environment Variables** (for deployment)
+
+   ```bash
+   export VIDTANIUM_OUTPUT_DIR="/downloads"
+   export VIDTANIUM_MAX_CONCURRENT="3"
+   export VIDTANIUM_THEME="system"
+   export VIDTANIUM_LOG_LEVEL="INFO"
+   ```
+
+5. **Test installation**
    - Try downloading a test M3U8 file
    - Verify all features work correctly
+   - Check configuration: `python main.py --validate-config`
 
 ### Configuration Files
 
@@ -190,36 +215,75 @@ VidTanium stores configuration in:
 - **macOS**: `~/Library/Application Support/VidTanium/`
 - **Linux**: `~/.config/VidTanium/`
 
-#### Main Configuration
+#### Enhanced Configuration System
 
-Edit `config/config.json` with comprehensive settings:
+VidTanium 2.0 features a comprehensive configuration system with multiple sections:
 
 ```json
 {
+    "_version": "2.0.0",
     "general": {
         "output_directory": "~/Downloads/VidTanium",
         "auto_cleanup": true,
         "language": "auto",
         "theme": "system",
         "check_updates": true,
-        "max_recent_files": 10
+        "max_recent_files": 10,
+        "temp_directory": "",
+        "cache_directory": "",
+        "config_auto_save": true,
+        "config_backup_count": 5
     },
     "download": {
         "max_concurrent_tasks": 3,
         "max_workers_per_task": 10,
         "max_retries": 5,
-        "retry_delay": 2,
+        "retry_delay": 2.0,
         "request_timeout": 60,
         "chunk_size": 8192,
         "bandwidth_limit": 0
     },
-    "advanced": {
+    "network": {
+        "connection_pool_size": 20,
+        "max_connections_per_host": 8,
+        "connection_timeout": 30.0,
+        "read_timeout": 120.0,
+        "dns_cache_timeout": 300,
+        "keep_alive_timeout": 300.0,
         "proxy": "",
         "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        "verify_ssl": true,
-        "ffmpeg_path": "",
-        "keep_temp_files": false,
-        "debug_logging": false
+        "verify_ssl": true
+    },
+    "performance": {
+        "memory_limit_mb": 1024,
+        "cpu_usage_limit": 80,
+        "buffer_size_min": 8192,
+        "buffer_size_max": 1048576,
+        "buffer_size_default": 65536,
+        "gc_threshold_mb": 100,
+        "optimization_level": "balanced"
+    },
+    "logging": {
+        "log_level": "INFO",
+        "debug_logging": false,
+        "log_to_file": true,
+        "log_to_console": true,
+        "log_file_path": "",
+        "log_rotation_size": "10 MB",
+        "log_retention": "7 days",
+        "log_compression": "zip"
+    },
+    "features": {
+        "adaptive_retry": true,
+        "adaptive_timeout": true,
+        "integrity_verification": true,
+        "memory_optimization": true,
+        "connection_pooling": true,
+        "enhanced_theme_system": true,
+        "system_tray": true,
+        "notifications": true,
+        "parallel_downloads": true,
+        "resume_downloads": true
     },
     "ui": {
         "show_detailed_progress": true,
@@ -227,8 +291,10 @@ Edit `config/config.json` with comprehensive settings:
         "show_notifications": true,
         "confirm_on_exit": true,
         "window_geometry": "",
-        "window_state": ""
-    },
+        "window_state": "",
+        "accent_color": "#0078d4",
+        "animations_enabled": true
+    }
     "monitoring": {
         "enable_bandwidth_monitoring": true,
         "bandwidth_sample_interval": 1.0,

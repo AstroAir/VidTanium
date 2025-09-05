@@ -1,0 +1,86 @@
+{
+  "name": "high_performance",
+  "description": "Optimized for maximum download speed and performance",
+  "preset_type": "system",
+  "author": "VidTanium Team",
+  "version": "1.0.0",
+  "tags": ["performance", "speed", "advanced"],
+  "config": {
+    "_version": "2.0.0",
+    "general": {
+      "output_directory": "~/Downloads",
+      "auto_cleanup": true,
+      "language": "auto",
+      "theme": "dark",
+      "check_updates": true,
+      "max_recent_files": 20,
+      "temp_directory": "",
+      "cache_directory": "",
+      "config_auto_save": true,
+      "config_backup_count": 3
+    },
+    "download": {
+      "max_concurrent_tasks": 8,
+      "max_workers_per_task": 20,
+      "max_retries": 3,
+      "retry_delay": 1.0,
+      "request_timeout": 30,
+      "chunk_size": 65536,
+      "bandwidth_limit": 0
+    },
+    "network": {
+      "connection_pool_size": 50,
+      "max_connections_per_host": 15,
+      "connection_timeout": 15.0,
+      "read_timeout": 60.0,
+      "dns_cache_timeout": 600,
+      "keep_alive_timeout": 600.0,
+      "proxy": "",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      "verify_ssl": true
+    },
+    "performance": {
+      "memory_limit_mb": 2048,
+      "cpu_usage_limit": 90,
+      "buffer_size_min": 16384,
+      "buffer_size_max": 2097152,
+      "buffer_size_default": 131072,
+      "gc_threshold_mb": 200,
+      "optimization_level": "maximum"
+    },
+    "logging": {
+      "log_level": "WARNING",
+      "debug_logging": false,
+      "log_to_file": true,
+      "log_to_console": false,
+      "log_file_path": "",
+      "log_rotation_size": "50 MB",
+      "log_retention": "3 days",
+      "log_compression": "zip"
+    },
+    "features": {
+      "adaptive_retry": true,
+      "adaptive_timeout": true,
+      "integrity_verification": true,
+      "memory_optimization": true,
+      "connection_pooling": true,
+      "enhanced_theme_system": true,
+      "system_tray": true,
+      "notifications": true,
+      "dark_mode": true,
+      "parallel_downloads": true,
+      "bandwidth_limiting": false,
+      "resume_downloads": true
+    },
+    "ui": {
+      "show_detailed_progress": true,
+      "minimize_to_tray": false,
+      "show_notifications": true,
+      "confirm_on_exit": true,
+      "window_geometry": "",
+      "window_state": "",
+      "accent_color": "#ff6b35",
+      "animations_enabled": true
+    }
+  }
+}

@@ -1,0 +1,20 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=VidTanium
+GenericName=Video Download Tool
+Comment=A video player with a built-in downloader and a simple video editor
+Exec=vidtanium %U
+Icon=vidtanium
+Terminal=false
+Categories=AudioVideo;Video;Network;Player;Recorder;
+Keywords=video;download;player;editor;m3u8;streaming;
+MimeType=application/x-mpegurl;application/vnd.apple.mpegurl;video/mp4;video/x-msvideo;video/quicktime;video/x-ms-wmv;video/x-flv;
+StartupNotify=true
+StartupWMClass=VidTanium
+Actions=Download;
+
+[Desktop Action Download]
+Name=Download Video
+Exec=vidtanium --url %U
+Icon=vidtanium

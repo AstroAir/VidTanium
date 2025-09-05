@@ -2,6 +2,9 @@ from src.gui.utils.i18n import init_i18n, set_locale
 from src.core.scheduler import TaskScheduler
 from src.gui.main_window import MainWindow
 from src.core.downloader import DownloadManager
+from src.core.singleton_manager import get_singleton_manager
+from src.core.ipc_server import IPCServer
+from src.core.window_activator import get_window_activator
 from .settings import Settings
 import sys
 import os
@@ -117,6 +120,9 @@ class Application(QApplication):
 
     # Instance variables
     tray_icon: Optional['EnhancedSystemTrayIcon'] = None
+    ipc_server: Optional[IPCServer] = None
+    singleton_manager = None
+    window_activator = None
 
     def __new__(cls, config_dir=None):
         """Ensure singleton pattern"""
@@ -137,7 +143,7 @@ class Application(QApplication):
         """Get the singleton instance"""
         return cls._instance
 
-    def __init__(self, config_dir=None):
+    def __init__(self, config_dir=None, cli_args=None):
         if hasattr(self, '_initialized') and self._initialized:
             logger.debug("Application already initialized, skipping")
             return
@@ -145,6 +151,10 @@ class Application(QApplication):
         super().__init__(sys.argv)
         self._initialized = True
         self._config_dir = config_dir
+        self._cli_args = cli_args
+
+        # Initialize singleton and IPC components
+        self._init_singleton_components()
 
         # Use centralized initialization system
         self._initializer = CentralizedInitializer(self)
@@ -201,6 +211,12 @@ class Application(QApplication):
             InitializationStep("cleanup", self._finalize_initialization, ["main_window"])
         )
 
+        # Singleton and IPC phase
+        self._initializer.register_step(
+            InitializationPhase.FINALIZATION,
+            InitializationStep("ipc_server", self._start_ipc_server, ["main_window"])
+        )
+
     def _set_app_properties(self):
         """Set application properties"""
         self.setApplicationName("VidTanium")
@@ -210,7 +226,7 @@ class Application(QApplication):
 
     def _init_settings(self):
         """Initialize settings and validate them"""
-        self.settings = Settings(self._config_dir)
+        self.settings = Settings(self._config_dir, cli_args=self._cli_args)
         self._validate_and_fix_settings()
 
     def _init_i18n_system(self):
@@ -249,7 +265,7 @@ class Application(QApplication):
         self.setOrganizationDomain("vidtanium.com")
 
         # Initialize settings and validate/fix them immediately
-        self.settings = Settings(self._config_dir)
+        self.settings = Settings(self._config_dir, cli_args=self._cli_args)
         self._validate_and_fix_settings()
 
         # Initialize i18n system and apply language in one step
@@ -292,6 +308,73 @@ class Application(QApplication):
         resource_manager.start()
 
         logger.info("Application initialization completed successfully")
+
+    def _init_singleton_components(self):
+        """Initialize singleton and IPC components"""
+        try:
+            # Get singleton manager and window activator
+            self.singleton_manager = get_singleton_manager()
+            self.window_activator = get_window_activator()
+
+            # Create IPC server
+            self.ipc_server = IPCServer()
+
+            logger.debug("Singleton components initialized")
+        except Exception as e:
+            logger.error(f"Failed to initialize singleton components: {e}")
+            # Don't fail the entire application if singleton features fail
+            self.singleton_manager = None
+            self.window_activator = None
+            self.ipc_server = None
+
+    def _start_ipc_server(self):
+        """Start the IPC server for inter-process communication"""
+        if not self.ipc_server:
+            logger.warning("IPC server not initialized, skipping startup")
+            return
+
+        try:
+            # Start the IPC server
+            if self.ipc_server.start():
+                # Register this instance with the singleton manager
+                if self.singleton_manager:
+                    port = self.ipc_server.get_port()
+                    if self.singleton_manager.register_instance(port):
+                        logger.info(f"Registered singleton instance with IPC port {port}")
+                    else:
+                        logger.warning("Failed to register singleton instance")
+
+                # Connect IPC signals to window activation
+                self.ipc_server.activation_requested.connect(self._handle_activation_request)
+                self.ipc_server.message_received.connect(self._handle_ipc_message)
+
+                logger.info("IPC server started successfully")
+            else:
+                logger.warning("Failed to start IPC server")
+        except Exception as e:
+            logger.error(f"Error starting IPC server: {e}")
+
+    def _handle_activation_request(self):
+        """Handle window activation request from another instance"""
+        logger.info("Received window activation request")
+
+        try:
+            if self.window_activator and hasattr(self, 'main_window'):
+                # Use a small delay to ensure Qt event processing
+                self.window_activator.activate_with_delay(self.main_window, 100)
+                logger.info("Window activation request processed")
+            else:
+                logger.warning("Cannot activate window: components not available")
+        except Exception as e:
+            logger.error(f"Error handling activation request: {e}")
+
+    def _handle_ipc_message(self, action: str, data: dict):
+        """Handle IPC messages from other instances"""
+        logger.debug(f"Received IPC message: {action} with data: {data}")
+
+        if action == "activate":
+            self._handle_activation_request()
+        # Add more message handlers as needed
 
     def run(self) -> int:
         """Run the application"""
@@ -546,3 +629,31 @@ class Application(QApplication):
         elif action == "exit":
             logger.info("Exiting application from tray menu")
             self.main_window.close()
+
+    def cleanup_singleton_components(self):
+        """Clean up singleton and IPC components"""
+        try:
+            # Stop IPC server
+            if self.ipc_server:
+                logger.debug("Stopping IPC server")
+                self.ipc_server.stop()
+                self.ipc_server = None
+
+            # Clean up singleton manager
+            if self.singleton_manager:
+                logger.debug("Cleaning up singleton manager")
+                self.singleton_manager.cleanup()
+                self.singleton_manager = None
+
+            self.window_activator = None
+            logger.debug("Singleton components cleaned up")
+
+        except Exception as e:
+            logger.error(f"Error cleaning up singleton components: {e}")
+
+    def __del__(self):
+        """Destructor to ensure cleanup"""
+        try:
+            self.cleanup_singleton_components()
+        except Exception:
+            pass  # Ignore errors during destruction

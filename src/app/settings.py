@@ -1,11 +1,26 @@
 import json
 import os
+import argparse
 from pathlib import Path
 import copy
 from loguru import logger
-from typing import Any, Dict, Optional, Union, List, Callable
+from typing import Any, Dict, Optional, Union, List, Callable, Tuple
+from datetime import datetime
 from dataclasses import dataclass
 from enum import Enum
+
+# Import new configuration system components
+try:
+    from .config import (
+        ConfigurationSchema, ConfigurationLoader, ConfigurationValidator,
+        PresetManager, FeatureFlagManager, ConfigurationMigrator, ConfigurationTools
+    )
+    from .config.schema import ValidationLevel
+    from .config.loader import LoadResult
+    NEW_CONFIG_SYSTEM_AVAILABLE = True
+except ImportError:
+    logger.warning("New configuration system not available, using legacy system")
+    NEW_CONFIG_SYSTEM_AVAILABLE = False
 
 
 class SettingType(Enum):
@@ -116,11 +131,26 @@ class ConfigurationUtilities:
 class Settings:
     """Application settings management class"""
 
-    def __init__(self, config_dir=None):
-        """Initialize settings manager"""
+    # Type annotations for configuration system components
+    schema: Optional['ConfigurationSchema']
+    loader: Optional['ConfigurationLoader']
+    preset_manager: Optional['PresetManager']
+    feature_manager: Optional['FeatureFlagManager']
+    migrator: Optional['ConfigurationMigrator']
+    tools: Optional['ConfigurationTools']
+    cli_args: Optional[argparse.Namespace]
+
+    def __init__(self, config_dir=None, cli_args=None, use_new_system=None):
+        """Initialize settings manager
+
+        Args:
+            config_dir: Configuration directory path
+            cli_args: Command-line arguments
+            use_new_system: Force use of new/old configuration system (None for auto-detect)
+        """
         # Determine configuration directory
         if config_dir is None:
-            self.config_dir = Path.home() / ".encrypted_video_downloader"
+            self.config_dir = Path.home() / ".vidtanium"  # Updated directory name
         else:
             self.config_dir = Path(config_dir)
 
@@ -128,9 +158,21 @@ class Settings:
         self.config_dir.mkdir(parents=True, exist_ok=True)
 
         # Configuration file paths
-        self.config_file = self.config_dir / "settings.json"
+        self.config_file = self.config_dir / "config.json"  # Updated filename
         self.presets_dir = self.config_dir / "presets"
         self.presets_dir.mkdir(exist_ok=True)
+
+        # Determine which configuration system to use
+        if use_new_system is None:
+            self.use_new_system = NEW_CONFIG_SYSTEM_AVAILABLE
+        else:
+            self.use_new_system = use_new_system and NEW_CONFIG_SYSTEM_AVAILABLE
+
+        # Initialize configuration system components
+        if self.use_new_system:
+            self._init_new_config_system(cli_args)
+        else:
+            self._init_legacy_config_system()
 
         # Default settings
         self.default_settings = {
@@ -173,8 +215,128 @@ class Settings:
         # Load settings
         self.settings = self.load_settings()
 
+        logger.info(f"Settings initialized with config directory: {self.config_dir}")
+        if self.use_new_system:
+            logger.info("Using enhanced configuration system")
+        else:
+            logger.info("Using legacy configuration system")
+
+    def _init_new_config_system(self, cli_args=None):
+        """Initialize the new enhanced configuration system"""
+        try:
+            # Create configuration schema
+            self.schema = ConfigurationSchema()
+
+            # Create configuration loader
+            self.loader = ConfigurationLoader(self.schema, config_dir=self.config_dir)
+
+            # Create preset manager
+            self.preset_manager = PresetManager(self.schema, user_presets_dir=self.presets_dir)
+
+            # Create feature flag manager
+            self.feature_manager = FeatureFlagManager()
+
+            # Create configuration migrator
+            self.migrator = ConfigurationMigrator()
+
+            # Create configuration tools
+            self.tools = ConfigurationTools(self.schema, self.preset_manager, self.feature_manager)
+
+            # Store CLI args for loading
+            self.cli_args = cli_args
+
+            logger.info("Enhanced configuration system initialized successfully")
+
+        except Exception as e:
+            logger.error(f"Failed to initialize enhanced configuration system: {e}")
+            logger.warning("Falling back to legacy configuration system")
+            self.use_new_system = False
+            self._init_legacy_config_system()
+
+    def _init_legacy_config_system(self):
+        """Initialize the legacy configuration system"""
+        # Set up legacy system attributes (reset to None for legacy mode)
+        if hasattr(self, 'schema'):
+            self.schema = None
+        if hasattr(self, 'loader'):
+            self.loader = None
+        if hasattr(self, 'preset_manager'):
+            self.preset_manager = None
+        if hasattr(self, 'feature_manager'):
+            self.feature_manager = None
+        if hasattr(self, 'migrator'):
+            self.migrator = None
+        if hasattr(self, 'tools'):
+            self.tools = None
+        if hasattr(self, 'cli_args'):
+            self.cli_args = None
+
+        logger.info("Legacy configuration system initialized")
+
     def load_settings(self):
-        """Load settings from configuration file"""
+        """Load settings from configuration file using appropriate system"""
+        if self.use_new_system and self.loader:
+            return self._load_settings_new_system()
+        else:
+            return self._load_settings_legacy()
+
+    def _load_settings_new_system(self):
+        """Load settings using the new configuration system"""
+        try:
+            # Load configuration from all sources
+            if self.loader is None:
+                logger.error("Configuration loader not initialized")
+                return {}
+
+            load_result = self.loader.load_configuration(cli_args=self.cli_args)
+
+            if not load_result.success:
+                logger.error(f"Configuration loading failed: {'; '.join(load_result.errors)}")
+                if load_result.warnings:
+                    logger.warning(f"Configuration warnings: {'; '.join(load_result.warnings)}")
+
+                # Fall back to default configuration
+                logger.warning("Using default configuration due to loading errors")
+                return self.loader._get_default_config()
+
+            # Check if migration is needed
+            if self.migrator and self.migrator.needs_migration(load_result.config):
+                logger.info("Configuration migration required")
+                migration_result = self.migrator.migrate_configuration(
+                    load_result.config,
+                    self.config_file if self.config_file.exists() else None
+                )
+
+                if migration_result.success:
+                    logger.info(f"Configuration migrated successfully from {migration_result.from_version} to {migration_result.to_version}")
+                    if migration_result.changes_made:
+                        logger.info(f"Migration changes: {'; '.join(migration_result.changes_made)}")
+
+                    # Save migrated configuration
+                    if migration_result.migrated_config:
+                        self.save_settings(migration_result.migrated_config)
+                        load_result.config = migration_result.migrated_config
+                else:
+                    logger.error(f"Configuration migration failed: {'; '.join(migration_result.errors)}")
+
+            # Update feature manager with loaded configuration
+            if self.feature_manager:
+                self.feature_manager.config = load_result.config
+                self.feature_manager._load_feature_states()
+
+            logger.info(f"Configuration loaded successfully from sources: {[s.value for s in load_result.sources_used]}")
+            if load_result.files_loaded:
+                logger.info(f"Configuration files loaded: {[str(f) for f in load_result.files_loaded]}")
+
+            return load_result.config
+
+        except Exception as e:
+            logger.error(f"Error in new configuration system: {e}", exc_info=True)
+            logger.warning("Falling back to legacy configuration loading")
+            return self._load_settings_legacy()
+
+    def _load_settings_legacy(self):
+        """Load settings using the legacy system"""
         if self.config_file.exists():
             try:
                 with open(self.config_file, 'r', encoding='utf-8') as f:
@@ -314,6 +476,102 @@ class Settings:
         path = f"{section}.{key}"
         ConfigurationUtilities.safe_set_nested(self.settings, path, value)
         logger.debug(f"Setting {section}.{key} = {value}")
+
+    # New enhanced configuration methods
+    def apply_preset(self, preset_name: str) -> bool:
+        """Apply a configuration preset"""
+        if not self.use_new_system or not self.preset_manager:
+            logger.warning("Presets are only available with the enhanced configuration system")
+            return False
+
+        try:
+            preset_config = self.preset_manager.apply_preset(preset_name, self.settings)
+            self.settings = preset_config
+            self.save_settings(self.settings)
+            logger.info(f"Applied preset: {preset_name}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to apply preset {preset_name}: {e}")
+            return False
+
+    def list_presets(self) -> List[str]:
+        """List available configuration presets"""
+        if not self.use_new_system or not self.preset_manager:
+            return []
+
+        presets = self.preset_manager.list_presets()
+        return [preset.name for preset in presets]
+
+    def is_feature_enabled(self, feature_name: str) -> bool:
+        """Check if a feature is enabled"""
+        if not self.use_new_system or not self.feature_manager:
+            # For legacy system, check some basic features
+            if feature_name == "debug_mode":
+                return bool(self.get("advanced", "debug_logging", False))
+            return True  # Assume features are enabled in legacy mode
+
+        return self.feature_manager.is_enabled(feature_name)
+
+    def enable_feature(self, feature_name: str) -> bool:
+        """Enable a feature"""
+        if not self.use_new_system or not self.feature_manager:
+            logger.warning("Feature flags are only available with the enhanced configuration system")
+            return False
+
+        return self.feature_manager.enable_feature(feature_name)
+
+    def disable_feature(self, feature_name: str) -> bool:
+        """Disable a feature"""
+        if not self.use_new_system or not self.feature_manager:
+            logger.warning("Feature flags are only available with the enhanced configuration system")
+            return False
+
+        return self.feature_manager.disable_feature(feature_name)
+
+    def validate_configuration(self) -> Tuple[bool, List[str], List[str]]:
+        """Validate current configuration"""
+        if not self.use_new_system or not self.tools:
+            # Basic validation for legacy system
+            return True, [], []
+
+        return self.tools.validate_configuration(self.settings)
+
+    def export_configuration(self, output_path: Path, format: str = "json") -> bool:
+        """Export configuration to file"""
+        if not self.use_new_system or not self.tools:
+            # Legacy export
+            try:
+                with open(output_path, 'w', encoding='utf-8') as f:
+                    json.dump(self.settings, f, indent=2, ensure_ascii=False)
+                return True
+            except Exception as e:
+                logger.error(f"Failed to export configuration: {e}")
+                return False
+
+        return self.tools.export_configuration(self.settings, output_path, format)
+
+    def create_backup(self, description: str = "") -> bool:
+        """Create a configuration backup"""
+        if not self.use_new_system or not self.tools:
+            # Legacy backup
+            try:
+                backup_dir = self.config_dir / "backups"
+                backup_dir.mkdir(exist_ok=True)
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                backup_path = backup_dir / f"settings_backup_{timestamp}.json"
+
+                with open(backup_path, 'w', encoding='utf-8') as f:
+                    json.dump(self.settings, f, indent=2, ensure_ascii=False)
+
+                logger.info(f"Configuration backup created: {backup_path}")
+                return True
+            except Exception as e:
+                logger.error(f"Failed to create backup: {e}")
+                return False
+
+        backup_dir = self.config_dir / "backups"
+        backup_info = self.tools.create_backup(self.settings, backup_dir, description)
+        return backup_info is not None
 
     def add_recent_task(self, task_info):
         """Add recent task

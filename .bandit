@@ -1,0 +1,38 @@
+[bandit]
+# Bandit configuration for VidTanium security scanning
+
+# Paths to exclude from scanning
+exclude_dirs = [
+    "tests",
+    "test",
+    ".venv",
+    "venv",
+    "__pycache__",
+    ".git",
+    "build",
+    "dist"
+]
+
+# Test IDs to skip
+skips = [
+    "B101",  # Skip assert_used test (asserts are OK in tests)
+    "B601",  # Skip paramiko_calls (if using paramiko legitimately)
+]
+
+# Test IDs to include (leave empty to include all)
+tests = []
+
+# Confidence levels: LOW, MEDIUM, HIGH
+confidence = "MEDIUM"
+
+# Severity levels: LOW, MEDIUM, HIGH  
+severity = "LOW"
+
+# Output format: csv, json, txt, xml, yaml
+format = "txt"
+
+# Include line numbers in output
+include_line_numbers = true
+
+# Aggregate output by vulnerability type
+aggregate = "vuln"

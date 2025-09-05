@@ -1,0 +1,86 @@
+{
+  "name": "low_resource",
+  "description": "Optimized for systems with limited resources",
+  "preset_type": "system",
+  "author": "VidTanium Team",
+  "version": "1.0.0",
+  "tags": ["resource-efficient", "minimal", "basic"],
+  "config": {
+    "_version": "2.0.0",
+    "general": {
+      "output_directory": "~/Downloads",
+      "auto_cleanup": true,
+      "language": "auto",
+      "theme": "light",
+      "check_updates": false,
+      "max_recent_files": 5,
+      "temp_directory": "",
+      "cache_directory": "",
+      "config_auto_save": true,
+      "config_backup_count": 2
+    },
+    "download": {
+      "max_concurrent_tasks": 1,
+      "max_workers_per_task": 3,
+      "max_retries": 5,
+      "retry_delay": 3.0,
+      "request_timeout": 120,
+      "chunk_size": 4096,
+      "bandwidth_limit": 0
+    },
+    "network": {
+      "connection_pool_size": 5,
+      "max_connections_per_host": 2,
+      "connection_timeout": 45.0,
+      "read_timeout": 180.0,
+      "dns_cache_timeout": 60,
+      "keep_alive_timeout": 120.0,
+      "proxy": "",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      "verify_ssl": true
+    },
+    "performance": {
+      "memory_limit_mb": 256,
+      "cpu_usage_limit": 50,
+      "buffer_size_min": 4096,
+      "buffer_size_max": 65536,
+      "buffer_size_default": 16384,
+      "gc_threshold_mb": 50,
+      "optimization_level": "low"
+    },
+    "logging": {
+      "log_level": "ERROR",
+      "debug_logging": false,
+      "log_to_file": true,
+      "log_to_console": false,
+      "log_file_path": "",
+      "log_rotation_size": "5 MB",
+      "log_retention": "1 day",
+      "log_compression": "zip"
+    },
+    "features": {
+      "adaptive_retry": false,
+      "adaptive_timeout": false,
+      "integrity_verification": true,
+      "memory_optimization": true,
+      "connection_pooling": false,
+      "enhanced_theme_system": false,
+      "system_tray": false,
+      "notifications": false,
+      "dark_mode": false,
+      "parallel_downloads": false,
+      "bandwidth_limiting": false,
+      "resume_downloads": true
+    },
+    "ui": {
+      "show_detailed_progress": false,
+      "minimize_to_tray": false,
+      "show_notifications": false,
+      "confirm_on_exit": false,
+      "window_geometry": "",
+      "window_state": "",
+      "accent_color": "#0078d4",
+      "animations_enabled": false
+    }
+  }
+}

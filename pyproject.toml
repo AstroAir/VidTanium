@@ -27,4 +27,9 @@ dev = [
     "mypy>=1.17.1",
     "types-psutil>=7.0.0.20250822",
     "types-requests>=2.32.4.20250809",
+    "ruff>=0.8.0",
+    "pytest-cov>=6.0.0",
+    "pytest-benchmark>=5.1.0",
+    "pytest-xvfb>=3.0.0",
+    "coverage>=7.6.0",
 ]

@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  # Production GUI version with X11 forwarding
+  vidtanium-gui:
+    build:
+      context: .
+      target: production-gui
+    container_name: vidtanium-gui
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+      - VIDTANIUM_OUTPUT_DIR=/app/downloads
+      - VIDTANIUM_CONFIG_DIR=/app/config
+      - VIDTANIUM_LOG_LEVEL=INFO
+    volumes:
+      - ./downloads:/app/downloads
+      - ./config:/app/config
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    network_mode: host
+    stdin_open: true
+    tty: true
+    command: ["python", "main.py"]
+    profiles:
+      - gui
+
+  # Production headless version
+  vidtanium-headless:
+    build:
+      context: .
+      target: production-headless
+    container_name: vidtanium-headless
+    environment:
+      - VIDTANIUM_OUTPUT_DIR=/app/downloads
+      - VIDTANIUM_CONFIG_DIR=/app/config
+      - VIDTANIUM_LOG_LEVEL=INFO
+      - VIDTANIUM_NO_GUI=true
+    volumes:
+      - ./downloads:/app/downloads
+      - ./config:/app/config
+    ports:
+      - "8080:8080"  # For potential web interface
+    restart: unless-stopped
+    command: ["python", "main.py", "--no-gui"]
+    profiles:
+      - headless
+      - production
+
+  # Development version
+  vidtanium-dev:
+    build:
+      context: .
+      target: development
+    container_name: vidtanium-dev
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+      - VIDTANIUM_OUTPUT_DIR=/app/downloads
+      - VIDTANIUM_CONFIG_DIR=/app/config
+      - VIDTANIUM_LOG_LEVEL=DEBUG
+    volumes:
+      - .:/app
+      - ./downloads:/app/downloads
+      - ./config:/app/config
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    network_mode: host
+    stdin_open: true
+    tty: true
+    working_dir: /app
+    command: ["bash"]
+    profiles:
+      - dev
+      - development
+
+  # Web interface (future enhancement)
+  vidtanium-web:
+    build:
+      context: .
+      target: production-headless
+    container_name: vidtanium-web
+    environment:
+      - VIDTANIUM_OUTPUT_DIR=/app/downloads
+      - VIDTANIUM_CONFIG_DIR=/app/config
+      - VIDTANIUM_LOG_LEVEL=INFO
+      - VIDTANIUM_WEB_MODE=true
+    volumes:
+      - ./downloads:/app/downloads
+      - ./config:/app/config
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    command: ["python", "main.py", "--web-interface"]
+    profiles:
+      - web
+
+volumes:
+  downloads:
+    driver: local
+  config:
+    driver: local
+
+networks:
+  default:
+    driver: bridge
