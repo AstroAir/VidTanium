@@ -803,6 +803,151 @@
     },
     "info": {
       "title": "信息"
+    },
+    "url_input": {
+      "title": "URL输入帮助",
+      "description": "输入有效的M3U8或视频URL进行下载",
+      "detailed": "支持的格式包括M3U8播放列表、直接视频URL和加密流。确保URL可访问且有效。"
+    },
+    "output_path": {
+      "title": "输出路径帮助",
+      "description": "选择下载视频的保存位置",
+      "detailed": "选择有足够磁盘空间的目录。文件名将自动生成，或者您可以指定自定义名称。"
+    },
+    "quality_selection": {
+      "title": "质量选择帮助",
+      "description": "选择下载的视频质量",
+      "detailed": "更高质量的视频下载时间更长，占用更多磁盘空间。选择最适合您需求的质量。"
+    },
+    "speed_optimization": {
+      "title": "速度优化帮助",
+      "description": "提高下载速度的技巧",
+      "detailed": "使用稳定的网络连接，关闭其他占用带宽的应用程序，考虑减少并发下载数量。"
+    },
+    "pause_resume": {
+      "title": "暂停和恢复帮助",
+      "description": "如何暂停和恢复下载",
+      "detailed": "您可以随时暂停下载并稍后恢复。进度会自动保存，下载将从中断处继续。"
+    },
+    "progress_tracking": {
+      "title": "进度跟踪帮助",
+      "description": "了解下载进度指示器",
+      "detailed": "进度条显示下载完成百分比。速度和预计时间实时显示。查看日志获取详细信息。"
+    },
+    "network_errors": {
+      "title": "网络错误帮助",
+      "description": "网络连接问题故障排除",
+      "detailed": "检查您的网络连接，验证URL可访问，确保防火墙没有阻止应用程序。"
+    },
+    "file_errors": {
+      "title": "文件错误帮助",
+      "description": "解决文件系统错误",
+      "detailed": "确保您对输出目录有写入权限和足够的磁盘空间。检查路径是否有效且可访问。"
+    },
+    "authentication_errors": {
+      "title": "身份验证错误帮助",
+      "description": "处理身份验证和访问问题",
+      "detailed": "某些流需要身份验证。验证您的凭据并确保您有权访问内容。"
+    },
+    "concurrent_downloads": {
+      "title": "并发下载帮助",
+      "description": "管理多个同时下载",
+      "detailed": "您可以同时运行多个下载。根据系统能力在设置中调整并发下载限制。"
+    },
+    "bandwidth_limiting": {
+      "title": "带宽限制帮助",
+      "description": "控制下载带宽使用",
+      "detailed": "设置带宽限制以防止下载消耗所有可用网络带宽。这有助于为其他活动维持网络性能。"
+    },
+    "auto_cleanup": {
+      "title": "自动清理帮助",
+      "description": "临时文件的自动清理",
+      "detailed": "启用自动清理以在成功下载后自动删除临时文件。这有助于节省磁盘空间并保持系统清洁。"
     }
+  },
+  "actions": {
+    "validate_url": {
+      "title": "验证URL",
+      "description": "检查输入的URL是否有效且可访问",
+      "help": "点击验证URL格式是否正确且资源可供下载。"
+    },
+    "choose_quality": {
+      "title": "选择质量",
+      "description": "选择下载的视频质量",
+      "help": "从可用质量选项中选择。更高质量意味着更好的视频但文件更大，下载时间更长。"
+    },
+    "set_output_path": {
+      "title": "设置输出路径",
+      "description": "选择下载视频的保存位置",
+      "help": "浏览并选择要保存视频文件的目录。确保您有写入权限和足够的磁盘空间。"
+    },
+    "optimize_speed": {
+      "title": "优化速度",
+      "description": "应用设置以提高下载速度",
+      "help": "根据您的连接和系统能力自动配置最佳设置以实现更快下载。"
+    },
+    "pause_other_tasks": {
+      "title": "暂停其他任务",
+      "description": "暂停其他下载以优先处理此任务",
+      "help": "暂时暂停其他活动下载，为当前任务分配更多带宽和资源。"
+    },
+    "retry_different_settings": {
+      "title": "使用不同设置重试",
+      "description": "使用修改的参数再次尝试下载",
+      "help": "如果下载失败，请尝试使用不同的质量设置、连接参数或重试机制。"
+    },
+    "check_network": {
+      "title": "检查网络",
+      "description": "验证网络连接和设置",
+      "help": "测试您的网络连接并验证网络设置对于下载是否正确。"
+    },
+    "free_disk_space": {
+      "title": "释放磁盘空间",
+      "description": "为下载清理磁盘空间",
+      "help": "删除不必要的文件或将输出目录更改为有更多可用磁盘空间的位置。"
+    }
+  },
+  "validation": {
+    "url_valid": "URL有效",
+    "url_valid_message": "输入的URL有效且可访问",
+    "url_invalid": "无效的URL格式或无法访问的资源",
+    "checking_url_accessibility": "正在检查URL可访问性...",
+    "url_accessible": "URL可访问，准备下载",
+    "url_redirected": "URL可访问（已重定向）",
+    "url_timeout": "URL验证超时 - 请检查您的连接",
+    "url_connection_error": "无法连接到URL - 请检查网络和URL",
+    "m3u8_valid": "检测到有效的M3U8播放列表",
+    "m3u8_invalid": "无效的M3U8格式 - 不是有效的播放列表文件",
+    "no_write_permission": "对所选目录没有写入权限",
+    "insufficient_disk_space": "磁盘空间不足，无法下载"
+  },
+  "suggestions": {
+    "enter_url": "请输入有效的视频URL以继续",
+    "choose_output_path": "选择输出目录以保存您的下载",
+    "slow_speed": "下载速度较慢。尝试暂停其他下载或检查您的连接",
+    "many_errors": "检测到多个错误。考虑检查URL或网络连接"
+  },
+  "shortcuts": {
+    "validate_url": "按Ctrl+Shift+V验证URL",
+    "browse_output": "按Ctrl+B浏览输出位置",
+    "create_task": "按Ctrl+Enter创建任务",
+    "extract_info": "按F5提取M3U8信息",
+    "save_draft": "按Ctrl+S保存草稿",
+    "show_help": "按F1获取帮助"
+  },
+  "recovery": {
+    "dialog_title": "错误恢复助手",
+    "error_information": "错误信息",
+    "available_actions": "可用恢复操作",
+    "fallback_actions": "备用选项",
+    "user_guidance": "用户指导",
+    "progress": "恢复进度",
+    "execute_action": "执行",
+    "auto_recover": "自动恢复",
+    "manual_action": "需要手动操作",
+    "success": "恢复成功",
+    "failed": "恢复失败",
+    "initializing": "正在初始化恢复...",
+    "no_specific_guidance": "此错误类型没有特定指导。"
   }
 }

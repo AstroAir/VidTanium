@@ -282,18 +282,23 @@ class CurrentFileWidget(QWidget):
             self.file_name.setToolTip("")
 
 
-class StatusWidget(ElevatedCardWidget, ResponsiveWidget):
+class StatusWidget(ElevatedCardWidget):
     """Status widget with comprehensive progress reporting"""
-    
+
     status_clicked = Signal(str)  # task_id
-    
+
     def __init__(self, task_id: str, parent=None):
-        ElevatedCardWidget.__init__(self, parent)
-        ResponsiveWidget.__init__(self)
-        
+        super().__init__(parent)
+
         self.task_id = task_id
         self.current_status = StatusInfo(status="pending", progress=0.0)
+
+        # Add responsive functionality manually
+        from ..utils.responsive import ResponsiveManager
         self.responsive_manager = ResponsiveManager.instance()
+        self.responsive_manager.register_widget(self)
+        self.responsive_manager.breakpoint_changed.connect(self._on_breakpoint_changed)
+        self.responsive_manager.orientation_changed.connect(self._on_orientation_changed)
         
         self._setup_ui()
         self._setup_responsive()
@@ -359,16 +364,28 @@ class StatusWidget(ElevatedCardWidget, ResponsiveWidget):
     
     def _setup_responsive(self):
         """Setup responsive behavior"""
-        self.responsive_manager.size_changed.connect(self._on_size_changed)
+        # ResponsiveManager doesn't have size_changed signal, we already connected the right signals in __init__
+        pass
     
-    def _on_size_changed(self, size_category: str):
-        """Handle responsive size changes"""
-        if size_category == "compact":
+    def _on_breakpoint_changed(self, breakpoint: str):
+        """Handle breakpoint changes"""
+        if breakpoint in ['xs', 'sm']:
+            # Compact layout for small screens
             self.metrics_widget.setVisible(False)
             self.current_file_widget.setVisible(False)
         else:
+            # Standard layout for larger screens
             self.metrics_widget.setVisible(True)
             self.current_file_widget.setVisible(True)
+
+    def _on_orientation_changed(self, orientation):
+        """Handle orientation changes"""
+        # Handle orientation changes if needed
+        pass
+
+    def _on_size_changed(self, size_category: str):
+        """Handle responsive size changes (legacy method)"""
+        self._on_breakpoint_changed(size_category)
     
     def update_status(self, status_info: StatusInfo):
         """Update status information"""

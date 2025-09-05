@@ -799,6 +799,151 @@
     },
     "info": {
       "title": "Information"
+    },
+    "url_input": {
+      "title": "URL Input Help",
+      "description": "Enter a valid M3U8 or video URL to download",
+      "detailed": "Supported formats include M3U8 playlists, direct video URLs, and encrypted streams. Make sure the URL is accessible and valid."
+    },
+    "output_path": {
+      "title": "Output Path Help",
+      "description": "Choose where to save your downloaded video",
+      "detailed": "Select a directory with sufficient disk space. The filename will be automatically generated or you can specify a custom name."
+    },
+    "quality_selection": {
+      "title": "Quality Selection Help",
+      "description": "Choose the video quality for download",
+      "detailed": "Higher quality videos will take longer to download and use more disk space. Select the quality that best fits your needs."
+    },
+    "speed_optimization": {
+      "title": "Speed Optimization Help",
+      "description": "Tips to improve download speed",
+      "detailed": "Use a stable internet connection, close other bandwidth-intensive applications, and consider using fewer concurrent downloads."
+    },
+    "pause_resume": {
+      "title": "Pause and Resume Help",
+      "description": "How to pause and resume downloads",
+      "detailed": "You can pause downloads at any time and resume them later. Progress is automatically saved and downloads will continue from where they left off."
+    },
+    "progress_tracking": {
+      "title": "Progress Tracking Help",
+      "description": "Understanding download progress indicators",
+      "detailed": "The progress bar shows download completion percentage. Speed and ETA are displayed in real-time. Check the logs for detailed information."
+    },
+    "network_errors": {
+      "title": "Network Error Help",
+      "description": "Troubleshooting network connection issues",
+      "detailed": "Check your internet connection, verify the URL is accessible, and ensure no firewall is blocking the application."
+    },
+    "file_errors": {
+      "title": "File Error Help",
+      "description": "Resolving file system errors",
+      "detailed": "Ensure you have write permissions to the output directory and sufficient disk space. Check that the path is valid and accessible."
+    },
+    "authentication_errors": {
+      "title": "Authentication Error Help",
+      "description": "Handling authentication and access issues",
+      "detailed": "Some streams require authentication. Verify your credentials and ensure you have permission to access the content."
+    },
+    "concurrent_downloads": {
+      "title": "Concurrent Downloads Help",
+      "description": "Managing multiple simultaneous downloads",
+      "detailed": "You can run multiple downloads simultaneously. Adjust the concurrent download limit in settings based on your system capabilities."
+    },
+    "bandwidth_limiting": {
+      "title": "Bandwidth Limiting Help",
+      "description": "Controlling download bandwidth usage",
+      "detailed": "Set bandwidth limits to prevent downloads from consuming all available internet bandwidth. This helps maintain network performance for other activities."
+    },
+    "auto_cleanup": {
+      "title": "Auto Cleanup Help",
+      "description": "Automatic cleanup of temporary files",
+      "detailed": "Enable auto cleanup to automatically remove temporary files after successful downloads. This helps save disk space and keep your system clean."
     }
+  },
+  "actions": {
+    "validate_url": {
+      "title": "Validate URL",
+      "description": "Check if the entered URL is valid and accessible",
+      "help": "Click to verify that the URL format is correct and the resource is available for download."
+    },
+    "choose_quality": {
+      "title": "Choose Quality",
+      "description": "Select the video quality for download",
+      "help": "Pick from available quality options. Higher quality means better video but larger file size and longer download time."
+    },
+    "set_output_path": {
+      "title": "Set Output Path",
+      "description": "Choose where to save the downloaded video",
+      "help": "Browse and select the directory where you want to save the video file. Make sure you have write permissions and enough disk space."
+    },
+    "optimize_speed": {
+      "title": "Optimize Speed",
+      "description": "Apply settings to improve download speed",
+      "help": "Automatically configure optimal settings for faster downloads based on your connection and system capabilities."
+    },
+    "pause_other_tasks": {
+      "title": "Pause Other Tasks",
+      "description": "Pause other downloads to prioritize this one",
+      "help": "Temporarily pause other active downloads to allocate more bandwidth and resources to the current task."
+    },
+    "retry_different_settings": {
+      "title": "Retry with Different Settings",
+      "description": "Attempt download again with modified parameters",
+      "help": "If the download failed, try again with different quality settings, connection parameters, or retry mechanisms."
+    },
+    "check_network": {
+      "title": "Check Network",
+      "description": "Verify network connectivity and settings",
+      "help": "Test your internet connection and verify that network settings are correct for downloading."
+    },
+    "free_disk_space": {
+      "title": "Free Disk Space",
+      "description": "Clean up disk space for downloads",
+      "help": "Remove unnecessary files or change the output directory to a location with more available disk space."
+    }
+  },
+  "validation": {
+    "url_valid": "URL Valid",
+    "url_valid_message": "The entered URL is valid and accessible",
+    "url_invalid": "Invalid URL format or inaccessible resource",
+    "checking_url_accessibility": "Checking URL accessibility...",
+    "url_accessible": "URL is accessible and ready for download",
+    "url_redirected": "URL is accessible (redirected)",
+    "url_timeout": "URL validation timed out - check your connection",
+    "url_connection_error": "Cannot connect to URL - check network and URL",
+    "m3u8_valid": "Valid M3U8 playlist detected",
+    "m3u8_invalid": "Invalid M3U8 format - not a valid playlist file",
+    "no_write_permission": "No write permission to the selected directory",
+    "insufficient_disk_space": "Insufficient disk space for download"
+  },
+  "suggestions": {
+    "enter_url": "Please enter a valid video URL to continue",
+    "choose_output_path": "Select an output directory to save your download",
+    "slow_speed": "Download speed is slow. Try pausing other downloads or checking your connection",
+    "many_errors": "Multiple errors detected. Consider checking the URL or network connection"
+  },
+  "shortcuts": {
+    "validate_url": "Press Ctrl+Shift+V to validate URL",
+    "browse_output": "Press Ctrl+B to browse for output location",
+    "create_task": "Press Ctrl+Enter to create task",
+    "extract_info": "Press F5 to extract M3U8 info",
+    "save_draft": "Press Ctrl+S to save draft",
+    "show_help": "Press F1 for help"
+  },
+  "recovery": {
+    "dialog_title": "Error Recovery Assistant",
+    "error_information": "Error Information",
+    "available_actions": "Available Recovery Actions",
+    "fallback_actions": "Fallback Options",
+    "user_guidance": "User Guidance",
+    "progress": "Recovery Progress",
+    "execute_action": "Execute",
+    "auto_recover": "Auto Recover",
+    "manual_action": "Manual Action Required",
+    "success": "Recovery Successful",
+    "failed": "Recovery Failed",
+    "initializing": "Initializing recovery...",
+    "no_specific_guidance": "No specific guidance available for this error type."
   }
 }

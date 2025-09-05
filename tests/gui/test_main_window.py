@@ -35,6 +35,124 @@ class MockQWidget:
     def show(self):
         self.visible = True
 
+    def hide(self):
+        self.visible = False
+
+    def setVisible(self, visible):
+        self.visible = visible
+
+    def setMinimumWidth(self, width):
+        self.minimum_size = (width, self.minimum_size[1])
+
+    def setMinimumHeight(self, height):
+        self.minimum_size = (self.minimum_size[0], height)
+
+    def setMaximumWidth(self, width):
+        self.maximum_width = width
+
+    def setMaximumHeight(self, height):
+        self.maximum_height = height
+
+    def setLayout(self, layout):
+        self.layout_obj = layout
+
+    def layout(self):
+        return getattr(self, 'layout_obj', None)
+
+    def addWidget(self, widget):
+        if not hasattr(self, 'children'):
+            self.children = []
+        self.children.append(widget)
+
+    def setSizePolicy(self, *args):
+        if len(args) == 1:
+            self.size_policy = args[0]
+        elif len(args) == 2:
+            # Two arguments: horizontal and vertical policies
+            self.size_policy = MockQSizePolicy(args[0], args[1])
+        else:
+            self.size_policy = MockQSizePolicy()
+
+    def sizePolicy(self):
+        return getattr(self, 'size_policy', None)
+
+    def setStyleSheet(self, stylesheet):
+        self.stylesheet = stylesheet
+
+    def styleSheet(self):
+        return getattr(self, 'stylesheet', '')
+
+    def setWindowFlags(self, flags):
+        self.window_flags = flags
+
+    def windowFlags(self):
+        return getattr(self, 'window_flags', 0)
+
+    def setFocusPolicy(self, policy):
+        self.focus_policy = policy
+
+    def focusPolicy(self):
+        return getattr(self, 'focus_policy', None)
+
+    def setEnabled(self, enabled):
+        self.enabled = enabled
+
+    def isEnabled(self):
+        return getattr(self, 'enabled', True)
+
+    def setToolTip(self, tooltip):
+        self.tooltip = tooltip
+
+    def toolTip(self):
+        return getattr(self, 'tooltip', '')
+
+    def setWhatsThis(self, whatsthis):
+        self.whatsthis = whatsthis
+
+    def whatsThis(self):
+        return getattr(self, 'whatsthis', '')
+
+    def update(self):
+        pass
+
+    def repaint(self):
+        pass
+
+    def setFocus(self):
+        pass
+
+    def clearFocus(self):
+        pass
+
+    def hasFocus(self):
+        return False
+
+class MockQSizePolicy:
+    class Policy:
+        Fixed = 0
+        Minimum = 1
+        Maximum = 4
+        Preferred = 5
+        Expanding = 7
+        MinimumExpanding = 3
+        Ignored = 13
+
+    def __init__(self, horizontal=None, vertical=None):
+        self.horizontal_policy = horizontal or self.Policy.Preferred
+        self.vertical_policy = vertical or self.Policy.Preferred
+
+    def setHorizontalPolicy(self, policy):
+        self.horizontal_policy = policy
+
+    def setVerticalPolicy(self, policy):
+        self.vertical_policy = policy
+
+    def horizontalPolicy(self):
+        return self.horizontal_policy
+
+    def verticalPolicy(self):
+        return self.vertical_policy
+
 class MockQApplication:
     @staticmethod
     def primaryScreen():
@@ -46,18 +164,22 @@ class MockQApplication:
         return mock_screen
 
 class MockQTimer:
-    def __init__(self):
+    def __init__(self, parent=None):
         self.timeout = Mock()
         self.interval = 0
         self.running = False
-        
+        self.parent = parent
+
     def start(self, interval=None):
         if interval:
             self.interval = interval
         self.running = True
-        
+
     def stop(self):
         self.running = False
+
+    def setInterval(self, interval):
+        self.interval = interval
 
 class MockFluentWindow(MockQWidget):
     def __init__(self):
@@ -74,9 +196,85 @@ class MockFluentWindow(MockQWidget):
         })
         
     def setWindowIcon(self, icon):
-        pass
-        
+        self.window_icon = icon
+
+    def setWindowTitle(self, title):
+        self.window_title = title
+
+    def setMinimumSize(self, width, height):
+        self.minimum_width = width
+        self.minimum_height = height
+
+    def setGeometry(self, x, y, width, height):
+        self.geometry_x = x
+        self.geometry_y = y
+        self.geometry_width = width
+        self.geometry_height = height
+
+    def move(self, x, y):
+        self.x = x
+        self.y = y
+
+    def resize(self, width, height):
+        self.width = width
+        self.height = height
+
     def resizeEvent(self, event):
+        pass
+
+    def stackedWidget(self):
+        if not hasattr(self, '_stacked_widget'):
+            self._stacked_widget = MockQWidget()
+        return self._stacked_widget
+
+    def addWidget(self, widget):
+        if not hasattr(self, 'widgets'):
+            self.widgets = []
+        self.widgets.append(widget)
+
+    def setCurrentWidget(self, widget):
+        self.current_widget = widget
+
+    def currentWidget(self):
+        return getattr(self, 'current_widget', None)
+
+    def setWindowState(self, state):
+        self.window_state = state
+
+    def windowState(self):
+        return getattr(self, 'window_state', 0)
+
+    def isMaximized(self):
+        return False
+
+    def isMinimized(self):
+        return False
+
+    def isFullScreen(self):
+        return False
+
+    def closeEvent(self, event):
+        pass
+
+    def showEvent(self, event):
+        pass
+
+    def hideEvent(self, event):
+        pass
+
+    def paintEvent(self, event):
+        pass
+
+    def mousePressEvent(self, event):
+        pass
+
+    def mouseReleaseEvent(self, event):
+        pass
+
+    def keyPressEvent(self, event):
+        pass
+
+    def keyReleaseEvent(self, event):
         pass
 
 class MockDownloadManager:
@@ -118,6 +316,10 @@ class MockSettings:
     def get(self, section, key, default=None):
         return self.data.get(section, {}).get(key, default)
 
+    def save_settings(self):
+        """Mock save settings method"""
+        pass
+
 class MockApp:
     def __init__(self):
         self.tray_icon = Mock()
@@ -132,6 +334,7 @@ sys.modules['PySide6.QtCore'] = Mock()
 sys.modules['PySide6.QtGui'] = Mock()
 sys.modules['PySide6.QtWidgets'].QWidget = MockQWidget
 sys.modules['PySide6.QtWidgets'].QApplication = MockQApplication
+sys.modules['PySide6.QtWidgets'].QSizePolicy = MockQSizePolicy
 sys.modules['PySide6.QtCore'].QTimer = MockQTimer
 sys.modules['PySide6.QtCore'].Qt = Mock()
 sys.modules['PySide6.QtCore'].Slot = lambda: lambda f: f
@@ -159,8 +362,46 @@ sys.modules['src.gui.utils.design_system'] = Mock()
 sys.modules['src.gui.utils.formatters'] = Mock()
 sys.modules['src.gui.utils.i18n'] = Mock()
 
-# Mock core components
+# Mock core components with proper structure
+class MockThreadPoolManager:
+    def __init__(self):
+        pass
+
+    def submit(self, *args, **kwargs):
+        return Mock()
+
+    def shutdown(self):
+        pass
+
+mock_thread_pool = Mock()
+mock_thread_pool.ThreadPoolManager = MockThreadPoolManager
+sys.modules['src.core.thread_pool'] = mock_thread_pool
+
+# Mock other core components
 sys.modules['src.core.downloader'] = Mock()
+sys.modules['src.core.exceptions'] = Mock()
+
+# Mock design system
+class MockDesignSystem:
+    RADIUS = {
+        'sm': 4,
+        'md': 8,
+        'lg': 12,
+        'xl': 16
+    }
+
+    @staticmethod
+    def get_color(color_name):
+        color_map = {
+            'surface_adaptive': '#ffffff',
+            'text_primary_adaptive': '#000000',
+            'surface_secondary_adaptive': '#f0f0f0',
+            'primary': '#0078d4'
+        }
+        return color_map.get(color_name, '#ffffff')
+
+sys.modules['src.gui.utils.design_system'] = Mock()
+sys.modules['src.gui.utils.design_system'].DesignSystem = MockDesignSystem
 
 # Now import the actual module
 from src.gui.main_window import MainWindow

@@ -33,6 +33,7 @@ from .adaptive_retry import adaptive_retry_manager, RetryReason
 from .circuit_breaker import circuit_breaker_manager
 from .progressive_recovery import progressive_recovery_manager
 from .segment_validator import segment_validator, ValidationResult
+from .intelligent_recovery import intelligent_recovery_system
 from .integrity_verifier import content_integrity_verifier, IntegrityLevel
 
 
@@ -498,7 +499,7 @@ class DownloadManager:
             logger.error(f"Error during resource cleanup: {e}", exc_info=True)
 
     def _handle_task_error(self, task_id: str, exception: Exception, retry_count: int = 0) -> None:
-        """Handle task error with enhanced error reporting"""
+        """Handle task error with enhanced error reporting and intelligent recovery"""
         task = self.tasks.get(task_id)
 
         # Create error context
@@ -515,8 +516,40 @@ class DownloadManager:
             exception, error_context, f"task_{task_id}"
         )
 
-        # Emit error signal if callback is set
+        # Create intelligent recovery plan
+        recovery_context = {
+            "task_id": task_id,
+            "task": task,
+            "retry_count": retry_count,
+            "segment_based": True,  # M3U8 downloads are segment-based
+            "downloader": self
+        }
+
+        recovery_plan = intelligent_recovery_system.create_recovery_plan(
+            enhanced_exception, recovery_context
+        )
+
+        # Try automated recovery first
+        recovery_success, recovery_message = intelligent_recovery_system.execute_recovery_plan(
+            recovery_plan, recovery_context
+        )
+
+        if recovery_success:
+            logger.info(f"Automated recovery successful for task {task_id}: {recovery_message}")
+            # Optionally restart the task or continue with recovery
+        else:
+            logger.warning(f"Automated recovery failed for task {task_id}: {recovery_message}")
+            # Provide user guidance from the recovery plan
+            if recovery_plan.user_guidance:
+                logger.info("User guidance for recovery:")
+                for guidance in recovery_plan.user_guidance:
+                    logger.info(f"  - {guidance}")
+
+        # Emit error signal with recovery information
         if self.on_error_occurred:
+            # Enhance the exception with recovery information
+            enhanced_exception.recovery_plan = recovery_plan
+            enhanced_exception.recovery_attempted = recovery_success
             self.on_error_occurred(task_id, enhanced_exception)
 
         # Update task status if task exists
@@ -1213,11 +1246,68 @@ class DownloadManager:
                         adaptive_timeout = (conn_timeout, read_timeout)
 
                         segment_start_time = time.time()
-                        response = pooled_session.get(
-                            segment_url, stream=True, timeout=adaptive_timeout)
-                        if response.status_code != 200:
-                            logger.warning(
-                                f"Segment download failed (HTTP {response.status_code}), retry ({attempt+1}/{max_retries_val})")
+                        try:
+                            response = pooled_session.get(
+                                segment_url, stream=True, timeout=adaptive_timeout)
+
+                            if response.status_code != 200:
+                                # Enhanced error handling with specific status code handling
+                                error_msg = f"HTTP {response.status_code}: {response.reason}"
+
+                                if response.status_code == 404:
+                                    logger.error(f"Segment not found (404): {segment_url}")
+                                    # For 404, don't retry as the segment likely doesn't exist
+                                    if attempt >= max_retries_val - 1:
+                                        raise Exception(f"Segment not found: {error_msg}")
+                                elif response.status_code == 403:
+                                    logger.error(f"Access forbidden (403): {segment_url}")
+                                    # For 403, try with different headers or authentication
+                                    if attempt >= max_retries_val - 1:
+                                        raise Exception(f"Access denied: {error_msg}")
+                                elif response.status_code >= 500:
+                                    logger.warning(f"Server error ({response.status_code}): {segment_url}")
+                                    # Server errors are often temporary, retry with exponential backoff
+                                    retry_delay = retry_delay_val * (2 ** attempt)
+                                else:
+                                    logger.warning(f"Client error ({response.status_code}): {segment_url}")
+                                    retry_delay = retry_delay_val * (attempt + 1)
+
+                                logger.warning(
+                                    f"Segment download failed ({error_msg}), retry ({attempt+1}/{max_retries_val}) in {retry_delay:.1f}s")
+                                time.sleep(retry_delay)
+                                continue
+
+                        except requests.exceptions.Timeout as e:
+                            logger.warning(f"Segment download timeout: {segment_url} (attempt {attempt+1}/{max_retries_val})")
+                            # Record timeout for adaptive timeout adjustment
+                            self.timeout_manager.record_request(segment_url, 0, False, "timeout")
+
+                            if attempt >= max_retries_val - 1:
+                                raise Exception(f"Segment download timeout after {max_retries_val} attempts: {str(e)}")
+
+                            # Increase timeout for next attempt
+                            adaptive_timeout = (adaptive_timeout[0] * 1.5, adaptive_timeout[1] * 1.5)
+                            time.sleep(retry_delay_val * (attempt + 1))
+                            continue
+
+                        except requests.exceptions.ConnectionError as e:
+                            logger.warning(f"Connection error for segment: {segment_url} (attempt {attempt+1}/{max_retries_val})")
+                            # Record connection error
+                            self.timeout_manager.record_request(segment_url, 0, False, "connection")
+
+                            if attempt >= max_retries_val - 1:
+                                raise Exception(f"Connection failed after {max_retries_val} attempts: {str(e)}")
+
+                            # Wait longer for connection errors
+                            time.sleep(retry_delay_val * (attempt + 2))
+                            continue
+
+                        except requests.exceptions.RequestException as e:
+                            logger.warning(f"Request error for segment: {segment_url} (attempt {attempt+1}/{max_retries_val}): {str(e)}")
+
+                            if attempt >= max_retries_val - 1:
+                                raise Exception(f"Request failed after {max_retries_val} attempts: {str(e)}")
+
                             time.sleep(retry_delay_val * (attempt + 1))
                             continue
 

@@ -237,7 +237,7 @@ class URLAnalyzer:
         return properties
 
 
-class EnhancedTaskDialog(ResponsiveWidget, QDialog):
+class EnhancedTaskDialog(QDialog):
     """Enhanced Task Creation Dialog with responsive design, modern theming, and performance optimizations"""
 
     # Signals for better performance
@@ -245,8 +245,14 @@ class EnhancedTaskDialog(ResponsiveWidget, QDialog):
     validationChanged = Signal(bool)
 
     def __init__(self, settings, theme_manager=None, parent=None):
-        QDialog.__init__(self, parent)
-        ResponsiveWidget.__init__(self)
+        super().__init__(parent)
+
+        # Add responsive functionality manually
+        from ..utils.responsive import ResponsiveManager
+        self._responsive_manager = ResponsiveManager.instance()
+        self._responsive_manager.register_widget(self)
+        self._responsive_manager.breakpoint_changed.connect(self._on_breakpoint_changed)
+        self._responsive_manager.orientation_changed.connect(self._on_orientation_changed)
 
         self.settings = settings
         self.theme_manager = theme_manager
@@ -380,10 +386,23 @@ class EnhancedTaskDialog(ResponsiveWidget, QDialog):
             }}
         """)
 
-    def on_breakpoint_changed(self, breakpoint: str):
+    def _on_breakpoint_changed(self, breakpoint: str):
         """Handle responsive breakpoint changes"""
         logger.debug(f"Task dialog adapting to breakpoint: {breakpoint}")
         self._setup_responsive_window()
+        self.on_breakpoint_changed(breakpoint)
+
+    def _on_orientation_changed(self, orientation):
+        """Handle orientation changes"""
+        self.on_orientation_changed(orientation)
+
+    def on_breakpoint_changed(self, breakpoint: str):
+        """Override to handle breakpoint changes"""
+        pass
+
+    def on_orientation_changed(self, orientation):
+        """Override to handle orientation changes"""
+        pass
 
     def _create_enhanced_ui(self):
         """Create enhanced responsive user interface"""
@@ -569,6 +588,8 @@ class EnhancedTaskDialog(ResponsiveWidget, QDialog):
         self.base_url_input.setValidator(self.url_validator)
         self.base_url_input.textChanged.connect(self._on_input_changed)
         self.base_url_input.textChanged.connect(self._on_url_changed)
+        # Add helpful tooltip with keyboard shortcut
+        self.base_url_input.setToolTip(tr("help.url_input.detailed") + "\n" + tr("shortcuts.validate_url"))
         url_layout.addWidget(self.base_url_input, 1)
 
         # Responsive extract button
@@ -608,6 +629,8 @@ class EnhancedTaskDialog(ResponsiveWidget, QDialog):
         self.output_input.setPlaceholderText(tr("task_dialog.basic_info.output_placeholder"))
         self.output_input.setMinimumHeight(input_height)
         self.output_input.textChanged.connect(self._on_input_changed)
+        # Add helpful tooltip with keyboard shortcut
+        self.output_input.setToolTip(tr("help.output_path.detailed") + "\n" + tr("shortcuts.browse_output"))
         output_layout.addWidget(self.output_input, 1)
 
         self.browse_button = ToolButton(FIF.FOLDER)
@@ -772,6 +795,18 @@ class EnhancedTaskDialog(ResponsiveWidget, QDialog):
             parent=self
         )
 
+    def _show_info(self, message):
+        """显示信息消息"""
+        InfoBar.info(
+            title=tr("task_dialog.info"),
+            content=message,
+            orient=Qt.Orientation.Horizontal,
+            isClosable=True,
+            position=InfoBarPosition.TOP,
+            duration=3000,
+            parent=self
+        )
+
     def _extract_m3u8_info(self):
         """从M3U8 URL自动提取信息"""
         url = self.base_url_input.text().strip()
@@ -911,6 +946,24 @@ class EnhancedTaskDialog(ResponsiveWidget, QDialog):
         perf_shortcut.setShortcut(QKeySequence("Alt+P"))
         perf_shortcut.triggered.connect(self._show_performance_metrics)
         self.addAction(perf_shortcut)
+
+        # Ctrl+V to validate URL
+        validate_shortcut = QAction(self)
+        validate_shortcut.setShortcut(QKeySequence("Ctrl+Shift+V"))
+        validate_shortcut.triggered.connect(self._validate_current_url)
+        self.addAction(validate_shortcut)
+
+        # Ctrl+B to browse output folder
+        browse_shortcut = QAction(self)
+        browse_shortcut.setShortcut(QKeySequence("Ctrl+B"))
+        browse_shortcut.triggered.connect(self._browse_output_file)
+        self.addAction(browse_shortcut)
+
+        # F1 to show help
+        help_shortcut = QAction(self)
+        help_shortcut.setShortcut(QKeySequence("F1"))
+        help_shortcut.triggered.connect(self._show_help)
+        self.addAction(help_shortcut)
 
     def _setup_animations(self):
         """Setup smooth animations for better UX"""
@@ -1116,24 +1169,179 @@ class EnhancedTaskDialog(ResponsiveWidget, QDialog):
 
     @Slot()
     def _validate_current_url(self):
-        """Validate the current URL"""
+        """Validate the current URL with enhanced network checking"""
         url = self.base_url_input.text().strip()
         if not url:
             self._show_error(tr("task_dialog.errors.no_url"))
             return
-            
+
+        # First, validate URL format
         validator = URLValidator()
         state, _, _ = validator.validate(url, 0)
-        
-        if state == QValidator.State.Acceptable:
+
+        if state != QValidator.State.Acceptable:
+            self._show_error(tr("validation.url_invalid"))
+            return
+
+        # Show progress indicator for network validation
+        self._show_info(tr("validation.checking_url_accessibility"))
+
+        # Perform network validation in a separate thread
+        from PySide6.QtCore import QThread, QObject, Signal
+
+        class URLNetworkValidator(QObject):
+            validation_completed = Signal(bool, str)  # success, message
+
+            def __init__(self, url):
+                super().__init__()
+                self.url = url
+
+            def validate(self):
+                """Perform network validation"""
+                try:
+                    import requests
+                    from urllib.parse import urlparse
+
+                    # Set reasonable timeout values
+                    timeout = (5, 10)  # (connect_timeout, read_timeout)
+
+                    # Make a HEAD request first to check accessibility
+                    response = requests.head(
+                        self.url,
+                        timeout=timeout,
+                        allow_redirects=True,
+                        headers={'User-Agent': 'VidTanium/1.0'}
+                    )
+
+                    if response.status_code == 200:
+                        # For M3U8 URLs, try to validate content
+                        if self.url.lower().endswith('.m3u8') or 'm3u8' in self.url.lower():
+                            self._validate_m3u8_content()
+                        else:
+                            self.validation_completed.emit(True, tr("validation.url_accessible"))
+                    elif response.status_code in [301, 302, 303, 307, 308]:
+                        # Handle redirects
+                        self.validation_completed.emit(True, tr("validation.url_redirected"))
+                    elif response.status_code == 405:
+                        # HEAD not allowed, try GET with range
+                        try:
+                            response = requests.get(
+                                self.url,
+                                timeout=timeout,
+                                headers={
+                                    'User-Agent': 'VidTanium/1.0',
+                                    'Range': 'bytes=0-1023'  # Only get first 1KB
+                                },
+                                stream=True
+                            )
+                            if response.status_code in [200, 206]:
+                                # Check if it's M3U8 content
+                                if self.url.lower().endswith('.m3u8') or 'm3u8' in self.url.lower():
+                                    content = response.text[:1024]  # First 1KB
+                                    if self._is_valid_m3u8_content(content):
+                                        self.validation_completed.emit(True, tr("validation.m3u8_valid"))
+                                    else:
+                                        self.validation_completed.emit(False, tr("validation.m3u8_invalid"))
+                                else:
+                                    self.validation_completed.emit(True, tr("validation.url_accessible"))
+                            else:
+                                self.validation_completed.emit(False, f"HTTP {response.status_code}: {response.reason}")
+                        except Exception as e:
+                            self.validation_completed.emit(False, f"Network error: {str(e)}")
+                    else:
+                        self.validation_completed.emit(False, f"HTTP {response.status_code}: {response.reason}")
+
+                except requests.exceptions.Timeout:
+                    self.validation_completed.emit(False, tr("validation.url_timeout"))
+                except requests.exceptions.ConnectionError:
+                    self.validation_completed.emit(False, tr("validation.url_connection_error"))
+                except requests.exceptions.RequestException as e:
+                    self.validation_completed.emit(False, f"Request error: {str(e)}")
+                except Exception as e:
+                    self.validation_completed.emit(False, f"Validation error: {str(e)}")
+
+            def _validate_m3u8_content(self):
+                """Validate M3U8 content by fetching and parsing"""
+                try:
+                    import requests
+                    timeout = (5, 10)
+
+                    response = requests.get(
+                        self.url,
+                        timeout=timeout,
+                        headers={'User-Agent': 'VidTanium/1.0'}
+                    )
+
+                    if response.status_code == 200:
+                        content = response.text
+                        if self._is_valid_m3u8_content(content):
+                            # Count segments for additional validation
+                            segment_count = content.count('#EXTINF:')
+                            if segment_count > 0:
+                                self.validation_completed.emit(True, f"Valid M3U8 playlist with {segment_count} segments")
+                            else:
+                                self.validation_completed.emit(True, tr("validation.m3u8_valid"))
+                        else:
+                            self.validation_completed.emit(False, tr("validation.m3u8_invalid"))
+                    else:
+                        self.validation_completed.emit(False, f"HTTP {response.status_code}: {response.reason}")
+
+                except Exception as e:
+                    self.validation_completed.emit(False, f"M3U8 validation error: {str(e)}")
+
+            def _is_valid_m3u8_content(self, content: str) -> bool:
+                """Check if content is valid M3U8 format"""
+                if not content:
+                    return False
+
+                # M3U8 files must start with #EXTM3U
+                lines = content.strip().split('\n')
+                if not lines or not lines[0].strip().startswith('#EXTM3U'):
+                    return False
+
+                # Check for required M3U8 tags
+                has_version = any('#EXT-X-VERSION:' in line for line in lines)
+                has_target_duration = any('#EXT-X-TARGETDURATION:' in line for line in lines)
+                has_segments = any('#EXTINF:' in line for line in lines)
+
+                # For live streams, segments might not be present initially
+                # For VOD, we expect segments
+                is_live = any('#EXT-X-PLAYLIST-TYPE:' not in line or 'VOD' not in line for line in lines if '#EXT-X-PLAYLIST-TYPE:' in line)
+
+                # Basic validation: must have version and target duration
+                # Segments are optional for live streams
+                return has_version or has_target_duration or has_segments
+
+        # Create and run validator in thread
+        self.network_validator = URLNetworkValidator(url)
+        self.validator_thread = QThread()
+        self.network_validator.moveToThread(self.validator_thread)
+
+        # Connect signals
+        self.validator_thread.started.connect(self.network_validator.validate)
+        self.network_validator.validation_completed.connect(self._on_url_validation_completed)
+        self.network_validator.validation_completed.connect(self.validator_thread.quit)
+        self.validator_thread.finished.connect(self.validator_thread.deleteLater)
+
+        # Start validation
+        self.validator_thread.start()
+
+    def _on_url_validation_completed(self, success: bool, message: str):
+        """Handle URL validation completion"""
+        if success:
             InfoBar.success(
                 title=tr("validation.url_valid"),
-                content=tr("validation.url_valid_message"),
-                duration=2000,
+                content=message,
+                duration=3000,
                 parent=self
             )
         else:
-            self._show_error(tr("validation.url_invalid"))
+            InfoBar.error(
+                title=tr("validation.url_invalid"),
+                content=message,
+                duration=5000,
+                parent=self
+            )
 
     @Slot()
     def _open_output_folder(self):
@@ -1240,17 +1448,54 @@ class EnhancedTaskDialog(ResponsiveWidget, QDialog):
 
     @Slot()
     def _validate_form(self):
-        """Validate form and emit signal"""
+        """Validate form and emit signal with enhanced validation"""
         url = self.base_url_input.text().strip()
         output = self.output_input.text().strip()
-        
+
+        # Basic validation
         is_valid = bool(url and output)
-        
+
+        # Enhanced validation if basic validation passes
+        if is_valid:
+            # Validate URL format
+            validator = URLValidator()
+            state, _, _ = validator.validate(url, 0)
+            if state != QValidator.State.Acceptable:
+                is_valid = False
+
+            # Validate output path (non-blocking)
+            if is_valid and output:
+                is_valid = self._validate_output_path_quick(output)
+
         # Enable/disable create button based on validation
         if hasattr(self, 'create_button'):
             self.create_button.setEnabled(is_valid)
-        
+
         self.validationChanged.emit(is_valid)
+
+    def _validate_output_path_quick(self, output_path: str) -> bool:
+        """Quick validation of output path without showing errors"""
+        import os
+        from pathlib import Path
+
+        try:
+            path_obj = Path(output_path)
+            directory = path_obj.parent if path_obj.suffix else path_obj
+
+            # Check if directory exists or parent exists (can be created)
+            if not directory.exists():
+                if not directory.parent.exists():
+                    return False
+
+            # Check write permissions on existing directory or parent
+            check_dir = directory if directory.exists() else directory.parent
+            if not os.access(check_dir, os.W_OK):
+                return False
+
+            return True
+
+        except Exception:
+            return False
 
     def _on_input_changed(self):
         """Handle input changes with delayed validation"""

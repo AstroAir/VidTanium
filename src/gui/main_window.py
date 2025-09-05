@@ -208,10 +208,19 @@ class MainWindow(FluentWindow):
         
         # Setup UI and interfaces
         self._create_interfaces()
-        
+        self._init_navigation()
+        self._connect_signals()
+        self._setup_auto_save()
+        self._update_ui()
+
+        # Apply theme and add theme listener
+        self._setup_theme_system()
+
         # Apply theme enhancements
         if self.theme_manager:
             self.theme_manager.apply_widget_enhancement(self, "main-window")
+
+        logger.info("Main window initialized")
 
     def _setup_responsive_window(self):
         """Setup responsive window sizing and behavior"""
@@ -286,20 +295,6 @@ class MainWindow(FluentWindow):
         """Handle window resize events"""
         super().resizeEvent(event)
         self.responsive_manager.update_for_size(event.size())
-
-        self.setWindowIcon(FIF.VIDEO.icon())
-
-        # Initialize UI
-        self._create_interfaces()
-        self._init_navigation()
-        self._connect_signals()
-        self._setup_auto_save()
-        self._update_ui()
-
-        # Apply theme and add theme listener
-        self._setup_theme_system()
-
-        logger.info("Main window initialized")
 
     def _create_interfaces(self) -> None:
         """Create all application interfaces"""
