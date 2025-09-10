@@ -25,7 +25,7 @@ from loguru import logger
 def _try_fcntl_lock(fd: int, operation: str) -> bool:
     """Try to apply fcntl lock, return True if successful"""
     try:
-        import fcntl  # type: ignore
+        import fcntl
         if operation == "exclusive":
             fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)  # type: ignore
         elif operation == "unlock":
@@ -248,7 +248,7 @@ class UnixSingleton(SingletonBase):
             else:
                 logger.warning(f"Failed to activate existing instance: {result.get('error', 'Unknown error')}")
             
-            return success
+            return bool(success)
             
         except (socket.error, json.JSONDecodeError, KeyError) as e:
             logger.error(f"Failed to communicate with existing instance: {e}")
@@ -290,19 +290,23 @@ class WindowsSingleton(UnixSingleton):
     def cleanup(self) -> None:
         """Clean up Windows-specific resources"""
         if self.mutex_handle:
-            try:
-                import ctypes
-                kernel32 = ctypes.windll.kernel32
-                kernel32.ReleaseMutex(self.mutex_handle)
-                kernel32.CloseHandle(self.mutex_handle)
-            except ImportError:
-                pass
-            except Exception as e:
-                logger.warning(f"Error releasing Windows mutex: {e}")
-            finally:
-                self.mutex_handle = None
+            self._cleanup_mutex()
         
         super().cleanup()
+    
+    def _cleanup_mutex(self) -> None:
+        """Clean up Windows mutex handle"""
+        try:
+            import ctypes
+            kernel32 = ctypes.windll.kernel32
+            kernel32.ReleaseMutex(self.mutex_handle)
+            kernel32.CloseHandle(self.mutex_handle)
+        except ImportError:
+            logger.warning("Windows-specific APIs not available for cleanup")
+        except Exception as e:
+            logger.warning(f"Error releasing Windows mutex: {e}")
+        finally:
+            self.mutex_handle = None
 
 
 class SingletonManager:

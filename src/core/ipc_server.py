@@ -146,7 +146,10 @@ class IPCServer(QObject):
                 client_socket, address = self.server_socket.accept()
                 
                 if not self.running:
-                    client_socket.close()
+                    try:
+                        client_socket.close()
+                    except Exception:
+                        pass
                     break
                 
                 logger.debug(f"New IPC client connected from {address}")
@@ -215,7 +218,8 @@ class IPCServer(QObject):
             return {'success': False, 'error': f'Unknown action: {message.action}'}
         
         try:
-            return handler(message)
+            result: Dict[str, Any] = handler(message)
+            return result
         except Exception as e:
             logger.error(f"Error processing IPC message {message.action}: {e}")
             return {'success': False, 'error': str(e)}
@@ -271,7 +275,8 @@ class IPCClient:
             
             sock.close()
             
-            return json.loads(response_str)
+            result: Dict[str, Any] = json.loads(response_str)
+            return result
             
         except Exception as e:
             logger.error(f"Failed to send IPC message: {e}")

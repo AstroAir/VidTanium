@@ -86,6 +86,10 @@ class VidTaniumException(Exception):
         self.max_retries = max_retries
         self.original_exception = original_exception
         
+        # Additional attributes for recovery system
+        self.recovery_plan: Optional[Any] = None  # Will be set by error handler
+        self.recovery_attempted: bool = False
+        
     def get_user_friendly_message(self) -> str:
         """Get user-friendly error message"""
         base_message = self.message

@@ -307,15 +307,14 @@ class LinuxWindowActivator(WindowActivatorBase):
         """Try to activate window using wmctrl"""
         try:
             # Check if wmctrl is available
-            result = subprocess.run(['which', 'wmctrl'], capture_output=True)
-            if result.returncode != 0:
+            check_result = subprocess.run(['which', 'wmctrl'], capture_output=True)
+            if check_result.returncode != 0:
                 return False
             
             # Try to activate VidTanium window
-            result = subprocess.run(
+            result: subprocess.CompletedProcess[bytes] = subprocess.run(
                 ['wmctrl', '-a', 'VidTanium'],
                 capture_output=True,
-                text=True,
                 timeout=3
             )
             
@@ -332,15 +331,14 @@ class LinuxWindowActivator(WindowActivatorBase):
         """Try to activate window using xdotool"""
         try:
             # Check if xdotool is available
-            result = subprocess.run(['which', 'xdotool'], capture_output=True)
-            if result.returncode != 0:
+            check_result = subprocess.run(['which', 'xdotool'], capture_output=True)
+            if check_result.returncode != 0:
                 return False
             
             # Find and activate VidTanium window
-            result = subprocess.run(
+            result: subprocess.CompletedProcess[bytes] = subprocess.run(
                 ['xdotool', 'search', '--name', 'VidTanium', 'windowactivate'],
                 capture_output=True,
-                text=True,
                 timeout=3
             )
             

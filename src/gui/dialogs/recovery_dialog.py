@@ -16,6 +16,7 @@ from qfluentwidgets import (
     IconWidget, ProgressBar, IndeterminateProgressBar
 )
 
+from typing import Dict, Any
 from src.gui.utils.i18n import tr
 from src.core.intelligent_recovery import RecoveryPlan, RecoveryAction, RecoveryStrategy
 from src.core.exceptions import VidTaniumException, ErrorSeverity
@@ -151,7 +152,7 @@ class ErrorRecoveryDialog(QDialog):
         super().__init__(parent)
         self.exception = exception
         self.recovery_plan = recovery_plan
-        self.recovery_context = {}
+        self.recovery_context: Dict[str, Any] = {}
         self._setup_ui()
         self._setup_connections()
     
