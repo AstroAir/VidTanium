@@ -1,5 +1,5 @@
 """
-Enhanced Theme Management System for VidTanium
+Theme Management System for VidTanium
 Consolidates theme management logic to reduce duplication across components
 """
 
@@ -42,15 +42,15 @@ class ThemeableComponent:
         return {}
 
 
-class EnhancedThemeSystem(QObject):
-    """Enhanced theme system that consolidates all theme management logic"""
+class ThemeSystem(QObject):
+    """Theme system that consolidates all theme management logic"""
     
     # Signals
     theme_changed = Signal(str)  # theme_mode
     accent_changed = Signal(str)  # accent_color
     theme_applied = Signal(ThemeConfiguration)
     
-    def __init__(self, settings_provider: Any = None, parent: Optional[QObject] = None):
+    def __init__(self, settings_provider: Any = None, parent: Optional[QObject] = None) -> None:
         super().__init__(parent)
         self.settings = settings_provider
         self._current_config = ThemeConfiguration()
@@ -221,18 +221,18 @@ class EnhancedThemeSystem(QObject):
         # Basic theme application for QWidget
         pass
     
-    def _schedule_component_update(self):
+    def _schedule_component_update(self) -> None:
         """Schedule a batched component update"""
         if not self._update_timer.isActive():
             self._update_timer.start(50)  # 50ms delay for batching
     
-    def _apply_pending_updates(self):
+    def _apply_pending_updates(self) -> None:
         """Apply pending theme updates"""
         if self._pending_updates:
             self.apply_theme_to_all_components()
             self._pending_updates.clear()
     
-    def _cleanup_theme_listener(self):
+    def _cleanup_theme_listener(self) -> None:
         """Clean up the current theme listener"""
         if self._theme_listener:
             try:
@@ -243,7 +243,7 @@ class EnhancedThemeSystem(QObject):
             finally:
                 self._theme_listener = None
     
-    def _cleanup_dead_references(self):
+    def _cleanup_dead_references(self) -> None:
         """Clean up dead weak references"""
         dead_refs = set()
         for component_ref in self._registered_components:
@@ -252,11 +252,11 @@ class EnhancedThemeSystem(QObject):
         
         self._registered_components -= dead_refs
     
-    def _on_component_deleted(self, component_id: str):
+    def _on_component_deleted(self, component_id: str) -> None:
         """Handle component deletion"""
         self._component_callbacks.pop(component_id, None)
     
-    def cleanup(self):
+    def cleanup(self) -> None:
         """Clean up resources"""
         try:
             self._cleanup_theme_listener()
@@ -268,16 +268,16 @@ class EnhancedThemeSystem(QObject):
             logger.error(f"Error during theme system cleanup: {e}")
 
 
-# Global enhanced theme system instance
-_enhanced_theme_system: Optional[EnhancedThemeSystem] = None
+# Global theme system instance
+_theme_system: Optional[ThemeSystem] = None
 
 
-def get_theme_system() -> EnhancedThemeSystem:
-    """Get the global enhanced theme system instance"""
-    global _enhanced_theme_system
-    if _enhanced_theme_system is None:
-        _enhanced_theme_system = EnhancedThemeSystem()
-    return _enhanced_theme_system
+def get_theme_system() -> ThemeSystem:
+    """Get the global theme system instance"""
+    global _theme_system
+    if _theme_system is None:
+        _theme_system = ThemeSystem()
+    return _theme_system
 
 
 def register_for_theming(component: Any, component_id: Optional[str] = None) -> str:

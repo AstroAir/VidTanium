@@ -12,9 +12,8 @@ from qfluentwidgets import (
 )
 
 from ...utils.i18n import tr
-from ...utils.theme import VidTaniumTheme
 from ...utils.responsive import ResponsiveWidget, ResponsiveManager, ResponsiveContainer
-from ...theme_manager import EnhancedThemeManager
+from ...theme_manager import ThemeManager
 from src.core.thread_pool import submit_task
 from loguru import logger
 
@@ -22,8 +21,8 @@ if TYPE_CHECKING:
     from ...main_window import MainWindow
 
 
-class EnhancedDashboardSystemStatus(ResponsiveWidget):
-    """Enhanced system status component with responsive design and modern theming
+class DashboardSystemStatus(ResponsiveWidget):
+    """System status component with responsive design and modern theming
     
     Features:
     - Responsive design that adapts to different screen sizes
@@ -33,7 +32,7 @@ class EnhancedDashboardSystemStatus(ResponsiveWidget):
     - Performance optimizations and smooth animations
     """
     
-    def __init__(self, main_window: "MainWindow", theme_manager=None, parent=None):
+    def __init__(self, main_window: "MainWindow", theme_manager=None, parent=None) -> None:
         super().__init__(parent)
         self.main_window = main_window
         self.theme_manager = theme_manager
@@ -46,7 +45,7 @@ class EnhancedDashboardSystemStatus(ResponsiveWidget):
         self._connect_signals()
         self._apply_enhanced_theming()
     
-    def _setup_enhanced_ui(self):
+    def _setup_enhanced_ui(self) -> None:
         """Setup enhanced responsive UI"""
         current_bp = self.responsive_manager.get_current_breakpoint()
         
@@ -122,17 +121,17 @@ class EnhancedDashboardSystemStatus(ResponsiveWidget):
         # Responsive title
         title = SubtitleLabel(tr("dashboard.system_status.title"))
         if current_bp.value in ['xs', 'sm']:
-            title.setStyleSheet(f"""
-                font-weight: {VidTaniumTheme.FONT_WEIGHT_SEMIBOLD}; 
+            title.setStyleSheet("""
+                font-weight: 600; 
                 color: white;
-                font-size: {VidTaniumTheme.FONT_SIZE_BODY};
+                font-size: 13px;
                 margin: 0;
             """)
         else:
-            title.setStyleSheet(f"""
-                font-weight: {VidTaniumTheme.FONT_WEIGHT_BOLD}; 
+            title.setStyleSheet("""
+                font-weight: bold; 
                 color: white;
-                font-size: {VidTaniumTheme.FONT_SIZE_SUBHEADING};
+                font-size: 14px;
                 margin: 0;
             """)
 
@@ -143,7 +142,7 @@ class EnhancedDashboardSystemStatus(ResponsiveWidget):
         header_layout.addWidget(header_card)
         return header_layout
 
-    def _create_responsive_system_items(self, layout: QVBoxLayout):
+    def _create_responsive_system_items(self, layout: QVBoxLayout) -> None:
         """Create responsive system information items"""
         current_bp = self.responsive_manager.get_current_breakpoint()
         
@@ -232,7 +231,7 @@ class EnhancedDashboardSystemStatus(ResponsiveWidget):
 
         return actions_layout
 
-    def _apply_enhanced_theming(self):
+    def _apply_enhanced_theming(self) -> None:
         """Apply enhanced theming to the system status component"""
         if self.theme_manager:
             colors = self.theme_manager.get_theme_colors()
@@ -242,26 +241,17 @@ class EnhancedDashboardSystemStatus(ResponsiveWidget):
             
             # Apply enhanced styling
             self.setStyleSheet(f"""
-                ElevatedCardWidget {{
-                    background-color: {colors.get('surface', VidTaniumTheme.BG_SURFACE)};
-                    border: 1px solid {colors.get('border', VidTaniumTheme.BORDER_LIGHT)};
-                    border-radius: 12px;
-                    box-shadow: 0 4px 12px {colors.get('shadow', 'rgba(0, 0, 0, 0.1)')};
-                }}
                 HeaderCardWidget {{
                     background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                         stop:0 {accent_color}, stop:1 rgba(255, 255, 255, 0.1));
                     border: none;
                     border-radius: 8px;
                 }}
-                PrimaryPushButton {{
-                    background-color: {colors.get('surface', VidTaniumTheme.BG_SURFACE)};
-                    border: 2px solid {colors.get('border', VidTaniumTheme.BORDER_LIGHT)};
+                PrimaryPushButton {
                     border-radius: 6px;
-                    color: {colors.get('text_primary', VidTaniumTheme.TEXT_PRIMARY)};
-                    font-weight: {VidTaniumTheme.FONT_WEIGHT_MEDIUM};
+                    font-weight: 500;
                     padding: 8px 16px;
-                }}
+                }
                 PrimaryPushButton:hover {{
                     background-color: {accent_color}15;
                     border-color: {accent_color};
@@ -281,7 +271,7 @@ class EnhancedDashboardSystemStatus(ResponsiveWidget):
                         border: none;
                         border-radius: 6px;
                         color: white;
-                        font-weight: {VidTaniumTheme.FONT_WEIGHT_SEMIBOLD};
+                        font-weight: 600;
                         padding: 8px 16px;
                     }}
                     PrimaryPushButton:hover {{
@@ -294,20 +284,45 @@ class EnhancedDashboardSystemStatus(ResponsiveWidget):
                     }}
                 """)
 
-    def on_breakpoint_changed(self, breakpoint: str):
+    def on_breakpoint_changed(self, breakpoint: str) -> None:
         """Handle responsive breakpoint changes"""
         logger.debug(f"System status adapting to breakpoint: {breakpoint}")
+        # Clear existing layout before recreating
+        self._clear_layout()
         # Recreate UI with new breakpoint
         self._setup_enhanced_ui()
         self._apply_enhanced_theming()
 
-    def update_theme(self, theme_manager: Optional[EnhancedThemeManager] = None):
+    def _clear_layout(self) -> None:
+        """Clear existing layout to prevent QLayout warnings"""
+        current_layout = self.layout()
+        if current_layout:
+            # Remove all widgets from layout
+            while current_layout.count():
+                item = current_layout.takeAt(0)
+                if item.widget():
+                    item.widget().setParent(None)
+                elif item.layout():
+                    self._clear_sublayout(item.layout())
+            # Delete the layout
+            current_layout.deleteLater()
+
+    def _clear_sublayout(self, layout) -> None:
+        """Recursively clear sublayout"""
+        while layout.count():
+            item = layout.takeAt(0)
+            if item.widget():
+                item.widget().setParent(None)
+            elif item.layout():
+                self._clear_sublayout(item.layout())
+
+    def update_theme(self, theme_manager: Optional["ThemeManager"] = None) -> None:
         """Update theme styling"""
         if theme_manager:
             self.theme_manager = theme_manager
         self._apply_enhanced_theming()
 
-    def _connect_signals(self):
+    def _connect_signals(self) -> None:
         """Connect button signals"""
         if self.clear_cache_btn:
             self.clear_cache_btn.clicked.connect(self._handle_clear_cache_clicked)
@@ -315,7 +330,7 @@ class EnhancedDashboardSystemStatus(ResponsiveWidget):
             self.open_settings_btn.clicked.connect(self._handle_settings_clicked)
 
     @Slot()
-    def _handle_clear_cache_clicked(self):
+    def _handle_clear_cache_clicked(self) -> None:
         """Handle clear cache button click"""
         try:
             logger.info("Clear cache button clicked")
@@ -339,7 +354,7 @@ class EnhancedDashboardSystemStatus(ResponsiveWidget):
                 self.clear_cache_btn.setEnabled(True)
 
     @Slot()
-    def _handle_settings_clicked(self):
+    def _handle_settings_clicked(self) -> None:
         """Handle settings button click"""
         try:
             logger.info("Settings button clicked")
@@ -366,7 +381,7 @@ class EnhancedDashboardSystemStatus(ResponsiveWidget):
             if self.open_settings_btn:
                 QTimer.singleShot(1000, lambda: self.open_settings_btn.setEnabled(True) if self.open_settings_btn else None)
 
-    def _execute_clear_cache_action(self):
+    def _execute_clear_cache_action(self) -> None:
         """Execute clear cache action in thread pool"""
         try:
             logger.info("Executing clear cache action")
@@ -400,7 +415,7 @@ class EnhancedDashboardSystemStatus(ResponsiveWidget):
             raise
 
     @Slot()
-    def _on_clear_cache_success(self, result):
+    def _on_clear_cache_success(self, result) -> None:
         """Handle successful clear cache action"""
         try:
             self._show_success_notification(
@@ -417,7 +432,7 @@ class EnhancedDashboardSystemStatus(ResponsiveWidget):
                 self.clear_cache_btn.setEnabled(True)
 
     @Slot()
-    def _on_action_error(self, error_tuple):
+    def _on_action_error(self, error_tuple) -> None:
         """Handle action errors"""
         try:
             exctype, value, tb = error_tuple
@@ -435,7 +450,7 @@ class EnhancedDashboardSystemStatus(ResponsiveWidget):
             if self.clear_cache_btn:
                 self.clear_cache_btn.setEnabled(True)
 
-    def _show_success_notification(self, title: str, message: str):
+    def _show_success_notification(self, title: str, message: str) -> None:
         """Show success notification"""
         try:
             InfoBar.success(
@@ -450,7 +465,7 @@ class EnhancedDashboardSystemStatus(ResponsiveWidget):
         except Exception as e:
             logger.error(f"Error showing success notification: {e}")
 
-    def _show_error_notification(self, title: str, message: str):
+    def _show_error_notification(self, title: str, message: str) -> None:
         """Show error notification"""
         try:
             InfoBar.error(
@@ -465,7 +480,7 @@ class EnhancedDashboardSystemStatus(ResponsiveWidget):
         except Exception as e:
             logger.error(f"Error showing error notification: {e}")
 
-    def update_system_status(self):
+    def update_system_status(self) -> None:
         """Update system status information"""
         try:
             import psutil
@@ -520,4 +535,4 @@ class EnhancedDashboardSystemStatus(ResponsiveWidget):
 
 
 # Backward compatibility alias
-DashboardSystemStatus = EnhancedDashboardSystemStatus
+EnhancedDashboardSystemStatus = DashboardSystemStatus

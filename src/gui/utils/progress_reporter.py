@@ -24,7 +24,7 @@ class SmoothProgressReporter:
     Enhanced progress reporter with smooth updates and accurate calculations
     """
 
-    def __init__(self, update_interval: float = 0.1, smoothing_factor: float = 0.3):
+    def __init__(self, update_interval: float = 0.1, smoothing_factor: float = 0.3) -> None:
         """
         Args:
             update_interval: Minimum interval between progress updates (seconds)
@@ -44,15 +44,15 @@ class SmoothProgressReporter:
             ProgressMetrics], None]] = None
         self._completion_callback: Optional[Callable[[], None]] = None
 
-    def set_progress_callback(self, callback: Callable[[ProgressMetrics], None]):
+    def set_progress_callback(self, callback: Callable[[ProgressMetrics], None]) -> None:
         """Set the progress update callback"""
         self._progress_callback = callback
 
-    def set_completion_callback(self, callback: Callable[[], None]):
+    def set_completion_callback(self, callback: Callable[[], None]) -> None:
         """Set the completion callback"""
         self._completion_callback = callback
 
-    def start(self):
+    def start(self) -> None:
         """Start progress tracking"""
         with self._lock:
             self._start_time = time.time()
@@ -61,7 +61,7 @@ class SmoothProgressReporter:
             self._speed_samples.clear()
             self._smooth_speed = 0.0
 
-    def update(self, current: int, total: int, force_update: bool = False):
+    def update(self, current: int, total: int, force_update: bool = False) -> None:
         """
         Update progress
 
@@ -154,13 +154,13 @@ class SmoothProgressReporter:
 
         return max(0, self._smooth_speed)
 
-    def finish(self):
+    def finish(self) -> None:
         """Mark progress as finished"""
         with self._lock:
             if self._completion_callback:
                 self._completion_callback()
 
-    def reset(self):
+    def reset(self) -> None:
         """Reset progress state"""
         with self._lock:
             self._start_time = None
@@ -175,7 +175,7 @@ class BatchProgressReporter:
     Progress reporter for batch operations with multiple items
     """
 
-    def __init__(self, total_items: int, update_callback: Optional[Callable] = None):
+    def __init__(self, total_items: int, update_callback: Optional[Callable] = None) -> None:
         self.total_items = total_items
         self.update_callback = update_callback
 
@@ -183,7 +183,7 @@ class BatchProgressReporter:
         self._current_item_progress = 0.0
         self._lock = RLock()
 
-    def start_item(self, item_index: int, item_name: str = ""):
+    def start_item(self, item_index: int, item_name: str = "") -> None:
         """Start processing a new item"""
         with self._lock:
             self._current_item_progress = 0.0
@@ -195,13 +195,13 @@ class BatchProgressReporter:
                     'total_items': self.total_items
                 })
 
-    def update_item_progress(self, progress: float):
+    def update_item_progress(self, progress: float) -> None:
         """Update current item progress (0.0 to 1.0)"""
         with self._lock:
             self._current_item_progress = max(0.0, min(1.0, progress))
             self._notify_overall_progress()
 
-    def complete_item(self):
+    def complete_item(self) -> None:
         """Mark current item as completed"""
         with self._lock:
             self._completed_items += 1
@@ -215,7 +215,7 @@ class BatchProgressReporter:
                     'total_items': self.total_items
                 })
 
-    def _notify_overall_progress(self):
+    def _notify_overall_progress(self) -> None:
         """Calculate and notify overall progress"""
         if self.total_items == 0:
             overall_progress = 1.0

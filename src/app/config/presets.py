@@ -44,7 +44,7 @@ class PresetManager:
     def __init__(self, 
                  schema: ConfigurationSchema,
                  presets_dir: Optional[Path] = None,
-                 user_presets_dir: Optional[Path] = None):
+                 user_presets_dir: Optional[Path] = None) -> None:
         self.schema = schema
         self.validator = ConfigurationValidator(schema)
         

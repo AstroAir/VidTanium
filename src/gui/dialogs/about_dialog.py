@@ -18,7 +18,7 @@ from src.gui.utils.i18n import tr
 class AboutDialog(QDialog):
     """Modern and beautiful About Dialog"""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
 
         self.setWindowTitle(tr("about_dialog.title"))
@@ -33,8 +33,7 @@ class AboutDialog(QDialog):
         # Apply custom styling
         self.setStyleSheet("""
             AboutDialog {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #f8f9fa, stop:1 #e9ecef);
+                background-color: #f8f9fa;
                 border-radius: 12px;
             }
         """)
@@ -47,7 +46,7 @@ class AboutDialog(QDialog):
         self._create_ui()
         self._setup_animations()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """Create the beautiful UI"""
         # Header section with gradient background
         self._create_header()
@@ -58,14 +57,13 @@ class AboutDialog(QDialog):
         # Footer with buttons
         self._create_footer()
 
-    def _create_header(self):
+    def _create_header(self) -> None:
         """Create an attractive header with logo and app info"""
         header_card = CardWidget()
         header_card.setFixedHeight(120)
         header_card.setStyleSheet("""
             CardWidget {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #667eea, stop:1 #764ba2);
+                background-color: #667eea;
                 border-radius: 12px;
                 color: white;
             }
@@ -147,7 +145,7 @@ class AboutDialog(QDialog):
 
         self.main_layout.addWidget(header_card)
 
-    def _create_content_area(self):
+    def _create_content_area(self) -> None:
         """Create the main content area with tabs"""
         # Create TabBar and QStackedWidget combination
         content_card = CardWidget()
@@ -196,7 +194,7 @@ class AboutDialog(QDialog):
 
         self.main_layout.addWidget(content_card)
 
-    def _create_footer(self):
+    def _create_footer(self) -> None:
         """Create footer with action buttons"""
         footer_layout = QHBoxLayout()
         footer_layout.setSpacing(10)
@@ -217,13 +215,13 @@ class AboutDialog(QDialog):
 
         self.main_layout.addLayout(footer_layout)
 
-    def _setup_animations(self):
+    def _setup_animations(self) -> None:
         """Setup entrance animations"""
         # Simple fade-in animation would be added here
         # For now, we'll keep it simple
         pass
 
-    def _check_updates(self):
+    def _check_updates(self) -> None:
         """Handle check for updates"""
         InfoBar.success(
             title=tr("about_dialog.updates.checking"),
@@ -235,7 +233,7 @@ class AboutDialog(QDialog):
             parent=self
         )
 
-    def _create_about_tab(self):
+    def _create_about_tab(self) -> None:
         """Create modern about tab with cards"""
         self.about_tab = QWidget()
         layout = QVBoxLayout(self.about_tab)
@@ -310,7 +308,7 @@ class AboutDialog(QDialog):
 
         self.stacked_widget.addWidget(self.about_tab)
 
-    def _create_features_tab(self):
+    def _create_features_tab(self) -> None:
         """Create detailed features tab"""
         self.features_tab = QWidget()
         layout = QVBoxLayout(self.features_tab)
@@ -406,7 +404,7 @@ class AboutDialog(QDialog):
 
         self.stacked_widget.addWidget(self.features_tab)
 
-    def _create_license_tab(self):
+    def _create_license_tab(self) -> None:
         """Create beautiful license tab"""
         self.license_tab = QWidget()
         layout = QVBoxLayout(self.license_tab)
@@ -455,7 +453,7 @@ class AboutDialog(QDialog):
 
         self.stacked_widget.addWidget(self.license_tab)
 
-    def _create_third_party_tab(self):
+    def _create_third_party_tab(self) -> None:
         """Create modern third-party libraries tab"""
         self.third_party_tab = QWidget()
         layout = QVBoxLayout(self.third_party_tab)

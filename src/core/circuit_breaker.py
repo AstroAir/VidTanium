@@ -48,7 +48,7 @@ class RequestResult:
 class CircuitBreakerMetrics:
     """Metrics tracking for circuit breaker"""
     
-    def __init__(self, window_size: int = 20):
+    def __init__(self, window_size: int = 20) -> None:
         self.window_size = window_size
         self.requests: deque = deque(maxlen=window_size)
         self.total_requests = 0
@@ -60,7 +60,7 @@ class CircuitBreakerMetrics:
         self.last_success_time = 0.0
         self.avg_response_time = 0.0
         
-    def record_request(self, result: RequestResult):
+    def record_request(self, result: RequestResult) -> None:
         """Record a request result"""
         self.requests.append(result)
         self.total_requests += 1
@@ -111,7 +111,7 @@ class CircuitBreakerMetrics:
 class CircuitBreaker:
     """Circuit breaker implementation for a specific host"""
     
-    def __init__(self, host: str, config: Optional[CircuitBreakerConfig] = None):
+    def __init__(self, host: str, config: Optional[CircuitBreakerConfig] = None) -> None:
         self.host = host
         self.config = config or CircuitBreakerConfig()
         self.state = CircuitState.CLOSED
@@ -148,7 +148,7 @@ class CircuitBreaker:
                 # Allow limited requests in half-open state
                 return self.half_open_attempts < self.config.success_threshold
     
-    def record_success(self, response_time: float = 0.0):
+    def record_success(self, response_time: float = 0.0) -> None:
         """Record a successful request"""
         with self.lock:
             result = RequestResult(
@@ -169,7 +169,7 @@ class CircuitBreaker:
                 # Shouldn't happen, but handle gracefully
                 self._transition_to_half_open()
     
-    def record_failure(self, error_message: str = ""):
+    def record_failure(self, error_message: str = "") -> None:
         """Record a failed request"""
         with self.lock:
             result = RequestResult(
@@ -202,7 +202,7 @@ class CircuitBreaker:
         
         return False
     
-    def _transition_to_open(self):
+    def _transition_to_open(self) -> None:
         """Transition to OPEN state"""
         old_state = self.state
         self.state = CircuitState.OPEN
@@ -215,7 +215,7 @@ class CircuitBreaker:
         
         self._log_state_transition(old_state, self.state)
     
-    def _transition_to_half_open(self):
+    def _transition_to_half_open(self) -> None:
         """Transition to HALF_OPEN state"""
         old_state = self.state
         self.state = CircuitState.HALF_OPEN
@@ -225,7 +225,7 @@ class CircuitBreaker:
         logger.info(f"Circuit breaker HALF-OPEN for {self.host} - testing recovery")
         self._log_state_transition(old_state, self.state)
     
-    def _transition_to_closed(self):
+    def _transition_to_closed(self) -> None:
         """Transition to CLOSED state"""
         old_state = self.state
         self.state = CircuitState.CLOSED
@@ -235,28 +235,28 @@ class CircuitBreaker:
         logger.info(f"Circuit breaker CLOSED for {self.host} - service recovered")
         self._log_state_transition(old_state, self.state)
     
-    def _log_state_transition(self, old_state: CircuitState, new_state: CircuitState):
+    def _log_state_transition(self, old_state: CircuitState, new_state: CircuitState) -> None:
         """Log state transition with metrics"""
         logger.debug(f"Circuit breaker for {self.host}: {old_state.value} -> {new_state.value} "
                     f"(consecutive_failures: {self.metrics.consecutive_failures}, "
                     f"consecutive_successes: {self.metrics.consecutive_successes}, "
                     f"failure_rate: {self.metrics.get_failure_rate():.2f})")
     
-    def force_open(self):
+    def force_open(self) -> None:
         """Force circuit breaker to open state"""
         with self.lock:
             if self.state != CircuitState.OPEN:
                 self._transition_to_open()
                 logger.warning(f"Circuit breaker for {self.host} forced OPEN")
     
-    def force_close(self):
+    def force_close(self) -> None:
         """Force circuit breaker to closed state"""
         with self.lock:
             if self.state != CircuitState.CLOSED:
                 self._transition_to_closed()
                 logger.info(f"Circuit breaker for {self.host} forced CLOSED")
     
-    def reset(self):
+    def reset(self) -> None:
         """Reset circuit breaker to initial state"""
         with self.lock:
             self.state = CircuitState.CLOSED
@@ -312,7 +312,7 @@ class CircuitBreaker:
 class CircuitBreakerManager:
     """Manager for multiple circuit breakers"""
     
-    def __init__(self, default_config: Optional[CircuitBreakerConfig] = None):
+    def __init__(self, default_config: Optional[CircuitBreakerConfig] = None) -> None:
         self.default_config = default_config or CircuitBreakerConfig()
         self.circuit_breakers: Dict[str, CircuitBreaker] = {}
         self.host_configs: Dict[str, CircuitBreakerConfig] = {}
@@ -333,7 +333,7 @@ class CircuitBreakerManager:
             
             return self.circuit_breakers[host]
     
-    def configure_host(self, host: str, config: CircuitBreakerConfig):
+    def configure_host(self, host: str, config: CircuitBreakerConfig) -> None:
         """Configure circuit breaker for specific host"""
         with self.lock:
             self.host_configs[host] = config
@@ -349,17 +349,17 @@ class CircuitBreakerManager:
         circuit_breaker = self.get_circuit_breaker(host)
         return circuit_breaker.can_execute()
     
-    def record_success(self, host: str, response_time: float = 0.0):
+    def record_success(self, host: str, response_time: float = 0.0) -> None:
         """Record successful request for host"""
         circuit_breaker = self.get_circuit_breaker(host)
         circuit_breaker.record_success(response_time)
     
-    def record_failure(self, host: str, error_message: str = ""):
+    def record_failure(self, host: str, error_message: str = "") -> None:
         """Record failed request for host"""
         circuit_breaker = self.get_circuit_breaker(host)
         circuit_breaker.record_failure(error_message)
     
-    def start_health_monitoring(self):
+    def start_health_monitoring(self) -> None:
         """Start health monitoring for all circuit breakers"""
         if self.monitoring_active:
             return
@@ -372,14 +372,14 @@ class CircuitBreakerManager:
         self.health_monitor_thread.start()
         logger.info("Circuit breaker health monitoring started")
     
-    def stop_health_monitoring(self):
+    def stop_health_monitoring(self) -> None:
         """Stop health monitoring"""
         self.monitoring_active = False
         if self.health_monitor_thread:
             self.health_monitor_thread.join(timeout=5.0)
         logger.info("Circuit breaker health monitoring stopped")
     
-    def _health_monitor_loop(self):
+    def _health_monitor_loop(self) -> None:
         """Health monitoring loop"""
         while self.monitoring_active:
             try:
@@ -414,7 +414,7 @@ class CircuitBreakerManager:
             stats["state_summary"] = state_counts
             return stats
     
-    def reset_all(self):
+    def reset_all(self) -> None:
         """Reset all circuit breakers"""
         with self.lock:
             for circuit_breaker in self.circuit_breakers.values():

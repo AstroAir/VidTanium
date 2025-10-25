@@ -44,7 +44,7 @@ class ConfigurationTools:
     def __init__(self, 
                  schema: ConfigurationSchema,
                  preset_manager: Optional[PresetManager] = None,
-                 feature_manager: Optional[FeatureFlagManager] = None):
+                 feature_manager: Optional[FeatureFlagManager] = None) -> None:
         self.schema = schema
         self.validator = ConfigurationValidator(schema)
         self.preset_manager = preset_manager

@@ -14,7 +14,7 @@ from src.core.adaptive_timeout import (
 class TestNetworkMetrics:
     """Test NetworkMetrics dataclass"""
 
-    def test_default_metrics(self):
+    def test_default_metrics(self) -> None:
         """Test default NetworkMetrics values"""
         metrics = NetworkMetrics("example.com")
         assert metrics.host == "example.com"
@@ -26,7 +26,7 @@ class TestNetworkMetrics:
         assert metrics.timeout_failures == 0
         assert metrics.last_updated <= time.time()
     
-    def test_add_request_success(self):
+    def test_add_request_success(self) -> None:
         """Test adding successful request"""
         metrics = HostMetrics()
         response_time = 1.5
@@ -41,7 +41,7 @@ class TestNetworkMetrics:
         assert metrics.max_response_time == response_time
         assert metrics.timeout_count == 0
     
-    def test_add_request_failure(self):
+    def test_add_request_failure(self) -> None:
         """Test adding failed request"""
         metrics = HostMetrics()
         response_time = 2.0
@@ -56,7 +56,7 @@ class TestNetworkMetrics:
         assert metrics.max_response_time == response_time
         assert metrics.timeout_count == 1
     
-    def test_multiple_requests(self):
+    def test_multiple_requests(self) -> None:
         """Test multiple requests with different response times"""
         metrics = HostMetrics()
         
@@ -72,7 +72,7 @@ class TestNetworkMetrics:
         assert metrics.max_response_time == 3.0
         assert metrics.timeout_count == 1
     
-    def test_get_average_response_time(self):
+    def test_get_average_response_time(self) -> None:
         """Test average response time calculation"""
         metrics = HostMetrics()
         
@@ -85,7 +85,7 @@ class TestNetworkMetrics:
         
         assert metrics.get_average_response_time() == 3.0
     
-    def test_get_success_rate(self):
+    def test_get_success_rate(self) -> None:
         """Test success rate calculation"""
         metrics = HostMetrics()
         
@@ -99,7 +99,7 @@ class TestNetworkMetrics:
         
         assert metrics.get_success_rate() == 2.0 / 3.0
     
-    def test_get_timeout_rate(self):
+    def test_get_timeout_rate(self) -> None:
         """Test timeout rate calculation"""
         metrics = HostMetrics()
         
@@ -118,11 +118,11 @@ class TestAdaptiveTimeoutManager:
     """Test AdaptiveTimeoutManager class"""
     
     @pytest.fixture
-    def timeout_manager(self):
+    def timeout_manager(self) -> None:
         """Create a fresh AdaptiveTimeoutManager for testing"""
         return AdaptiveTimeoutManager()
     
-    def test_initialization(self, timeout_manager):
+    def test_initialization(self, timeout_manager) -> None:
         """Test AdaptiveTimeoutManager initialization"""
         assert timeout_manager.host_metrics == {}
         assert timeout_manager.base_connection_timeout == 30.0
@@ -132,7 +132,7 @@ class TestAdaptiveTimeoutManager:
         assert timeout_manager.timeout_multiplier == 2.0
         assert timeout_manager.learning_rate == 0.1
     
-    def test_get_timeouts_new_host(self, timeout_manager):
+    def test_get_timeouts_new_host(self, timeout_manager) -> None:
         """Test getting timeouts for new host"""
         url = "https://example.com/test"
         
@@ -145,7 +145,7 @@ class TestAdaptiveTimeoutManager:
         # Host should be added to metrics
         assert "example.com" in timeout_manager.host_metrics
     
-    def test_get_timeouts_existing_host_good_performance(self, timeout_manager):
+    def test_get_timeouts_existing_host_good_performance(self, timeout_manager) -> None:
         """Test getting timeouts for host with good performance"""
         url = "https://example.com/test"
         
@@ -160,7 +160,7 @@ class TestAdaptiveTimeoutManager:
         assert conn_timeout < timeout_manager.base_connection_timeout
         assert read_timeout < timeout_manager.base_read_timeout
     
-    def test_get_timeouts_existing_host_poor_performance(self, timeout_manager):
+    def test_get_timeouts_existing_host_poor_performance(self, timeout_manager) -> None:
         """Test getting timeouts for host with poor performance"""
         url = "https://example.com/test"
         
@@ -175,7 +175,7 @@ class TestAdaptiveTimeoutManager:
         assert conn_timeout > timeout_manager.base_connection_timeout
         assert read_timeout > timeout_manager.base_read_timeout
     
-    def test_record_request_new_host(self, timeout_manager):
+    def test_record_request_new_host(self, timeout_manager) -> None:
         """Test recording request for new host"""
         url = "https://example.com/test"
         response_time = 1.5
@@ -188,7 +188,7 @@ class TestAdaptiveTimeoutManager:
         assert metrics.success_count == 1
         assert metrics.total_response_time == response_time
     
-    def test_record_request_existing_host(self, timeout_manager):
+    def test_record_request_existing_host(self, timeout_manager) -> None:
         """Test recording request for existing host"""
         url = "https://example.com/test"
         
@@ -205,7 +205,7 @@ class TestAdaptiveTimeoutManager:
         assert metrics.timeout_count == 1
         assert metrics.total_response_time == 3.0
     
-    def test_get_host_from_url(self, timeout_manager):
+    def test_get_host_from_url(self, timeout_manager) -> None:
         """Test extracting host from URL"""
         test_cases = [
             ("https://example.com/path", "example.com"),
@@ -218,7 +218,7 @@ class TestAdaptiveTimeoutManager:
             host = timeout_manager._get_host_from_url(url)
             assert host == expected_host
     
-    def test_calculate_adaptive_timeout_fast_host(self, timeout_manager):
+    def test_calculate_adaptive_timeout_fast_host(self, timeout_manager) -> None:
         """Test adaptive timeout calculation for fast host"""
         metrics = HostMetrics()
         metrics.add_request(0.5, success=True)
@@ -232,7 +232,7 @@ class TestAdaptiveTimeoutManager:
         assert adaptive_timeout < base_timeout
         assert adaptive_timeout >= timeout_manager.min_timeout
     
-    def test_calculate_adaptive_timeout_slow_host(self, timeout_manager):
+    def test_calculate_adaptive_timeout_slow_host(self, timeout_manager) -> None:
         """Test adaptive timeout calculation for slow host"""
         metrics = HostMetrics()
         metrics.add_request(5.0, success=False, is_timeout=True)
@@ -246,7 +246,7 @@ class TestAdaptiveTimeoutManager:
         assert adaptive_timeout > base_timeout
         assert adaptive_timeout <= timeout_manager.max_timeout
     
-    def test_calculate_adaptive_timeout_no_data(self, timeout_manager):
+    def test_calculate_adaptive_timeout_no_data(self, timeout_manager) -> None:
         """Test adaptive timeout calculation with no data"""
         metrics = HostMetrics()
         base_timeout = 30.0
@@ -256,7 +256,7 @@ class TestAdaptiveTimeoutManager:
         # Should return base timeout
         assert adaptive_timeout == base_timeout
     
-    def test_get_global_stats(self, timeout_manager):
+    def test_get_global_stats(self, timeout_manager) -> None:
         """Test getting global statistics"""
         # Initially empty
         stats = timeout_manager.get_global_stats()
@@ -274,7 +274,7 @@ class TestAdaptiveTimeoutManager:
         assert "example.com" in stats["hosts"]
         assert "test.com" in stats["hosts"]
     
-    def test_cleanup_old_metrics(self, timeout_manager):
+    def test_cleanup_old_metrics(self, timeout_manager) -> None:
         """Test cleanup of old metrics"""
         url = "https://example.com/test"
         
@@ -296,12 +296,12 @@ class TestAdaptiveTimeoutManager:
 class TestGlobalAdaptiveTimeoutManager:
     """Test global adaptive timeout manager instance"""
     
-    def test_global_instance_exists(self):
+    def test_global_instance_exists(self) -> None:
         """Test that global instance exists and is properly initialized"""
         assert adaptive_timeout_manager is not None
         assert isinstance(adaptive_timeout_manager, AdaptiveTimeoutManager)
     
-    def test_global_instance_functionality(self):
+    def test_global_instance_functionality(self) -> None:
         """Test basic functionality of global instance"""
         url = "https://global-test.example.com/test"
         

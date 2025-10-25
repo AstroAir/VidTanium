@@ -45,7 +45,7 @@ class TestURLExtractor:
         # 而是在测试中捕获类型错误
         with pytest.raises(Exception):  # 使用通用 Exception 而非 TypeError
             # mypy 会静态检查出这个错误，但我们在运行时测试这个行为
-            URLExtractor.extract_urls_from_text("")  # type: ignore
+            URLExtractor.extract_urls_from_text("")  # 
 
     def test_extract_urls_from_text_default_pattern(self) -> None:
         """Test extracting URLs with default pattern."""

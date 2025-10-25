@@ -10,7 +10,7 @@ from qfluentwidgets import TabWidget, FluentIcon as FIF, SubtitleLabel
 from .text_input_tab import TextInputTab
 from .file_input_tab import FileInputTab
 from .web_scraping_tab import WebScrapingTab
-from .url_preview_widget import URLPreviewWidget  # type: ignore
+from .url_preview_widget import URLPreviewWidget  # 
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ class BatchURLDialog(QDialog):
     # 导入URL信号
     urls_imported = Signal(list)  # URL列表
 
-    def __init__(self, settings: Any, parent: Optional[QWidget] = None):
+    def __init__(self, settings: Any, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
 
         self.settings = settings

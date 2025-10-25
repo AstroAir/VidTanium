@@ -10,12 +10,12 @@ from qfluentwidgets import (
 class TaskOptionsWidget(QWidget):
     """任务选项组件"""
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
 
         self._create_ui()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """创建界面"""
         task_options_layout = QFormLayout(self)
         task_options_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)

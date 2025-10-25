@@ -8,17 +8,17 @@ from qfluentwidgets import (
 )
 import logging
 from ..utils.i18n import tr
-from ..theme_manager import EnhancedThemeManager
+from ..theme_manager import ThemeManager
 from loguru import logger
 
-class EnhancedSystemTrayIcon(QObject):
-    """Enhanced system tray icon manager with modern notifications and theming"""
+class SystemTrayIcon(QObject):
+    """System tray icon manager with modern notifications and theming"""
 
     # Signal definitions
     action_triggered = Signal(str)  # Action name
     notification_clicked = Signal(str)  # Notification data
 
-    def __init__(self, app, settings, theme_manager=None, parent=None):
+    def __init__(self, app, settings, theme_manager=None, parent=None) -> None:
         super().__init__(parent)
 
         self.app = app
@@ -30,7 +30,7 @@ class EnhancedSystemTrayIcon(QObject):
         self._is_blinking = False
         self._blink_timer = QTimer()
         self._blink_timer.timeout.connect(self._blink_animation)
-        self._notification_queue = []
+        self._notification_queue: list[dict[str, object]] = []
         self._current_icon_state = "normal"
 
         # Create enhanced tray icon
@@ -49,7 +49,7 @@ class EnhancedSystemTrayIcon(QObject):
         self.tray_icon.activated.connect(self._on_tray_activated)
         self.tray_icon.messageClicked.connect(self._on_notification_clicked)
 
-    def _setup_enhanced_icon(self):
+    def _setup_enhanced_icon(self) -> None:
         """Setup enhanced icon with dynamic states"""
         # Create base icon with theme awareness
         self._update_icon_for_theme()
@@ -57,7 +57,7 @@ class EnhancedSystemTrayIcon(QObject):
         # Set tooltip
         self.tray_icon.setToolTip(tr("system_tray.tooltip"))
 
-    def _update_icon_for_theme(self):
+    def _update_icon_for_theme(self) -> None:
         """Update icon based on current theme"""
         if self.theme_manager:
             # Use theme-aware colors
@@ -109,7 +109,7 @@ class EnhancedSystemTrayIcon(QObject):
         painter.end()
         return QIcon(pixmap)
 
-    def _create_enhanced_menu(self):
+    def _create_enhanced_menu(self) -> None:
         """Create enhanced context menu with modern design"""
         # Clear existing menu
         self.tray_menu.clear()
@@ -167,7 +167,7 @@ class EnhancedSystemTrayIcon(QObject):
         # Set context menu
         self.tray_icon.setContextMenu(self.tray_menu)
 
-    def _apply_enhanced_styling(self):
+    def _apply_enhanced_styling(self) -> None:
         """Apply enhanced styling to menu"""
         if self.theme_manager:
             colors = self.theme_manager.get_theme_colors()
@@ -201,7 +201,7 @@ class EnhancedSystemTrayIcon(QObject):
                 }}
             """)
 
-    def _on_tray_activated(self, reason):
+    def _on_tray_activated(self, reason) -> None:
         """Handle tray icon activation with enhanced behavior"""
         if reason == QSystemTrayIcon.ActivationReason.Trigger:
             # Single click - toggle window
@@ -219,7 +219,7 @@ class EnhancedSystemTrayIcon(QObject):
             # Middle click - quick action
             self.action_triggered.emit("new_task")
 
-    def _on_notification_clicked(self):
+    def _on_notification_clicked(self) -> None:
         """Handle notification click"""
         if self._notification_queue:
             notification_data = self._notification_queue.pop(0)
@@ -228,7 +228,7 @@ class EnhancedSystemTrayIcon(QObject):
     def show_enhanced_notification(self, title: str, message: str,
                                  notification_type: str = "info",
                                  duration: int = 5000,
-                                 action_data: Optional[str] = None):
+                                 action_data: Optional[str] = None) -> None:
         """Show enhanced notification with modern styling"""
         if not self.settings.get("ui", "show_notifications", True):
             return
@@ -258,19 +258,19 @@ class EnhancedSystemTrayIcon(QObject):
         if notification_type in ["warning", "error"]:
             self._start_blink_animation()
 
-    def _start_blink_animation(self):
+    def _start_blink_animation(self) -> None:
         """Start blinking animation for attention"""
         if not self._is_blinking:
             self._is_blinking = True
             self._blink_timer.start(500)  # Blink every 500ms
 
-    def _stop_blink_animation(self):
+    def _stop_blink_animation(self) -> None:
         """Stop blinking animation"""
         self._is_blinking = False
         self._blink_timer.stop()
         self._update_icon_for_theme()
 
-    def _blink_animation(self):
+    def _blink_animation(self) -> None:
         """Handle blink animation frame"""
         if self._current_icon_state == "normal":
             self._current_icon_state = "alert"
@@ -282,7 +282,7 @@ class EnhancedSystemTrayIcon(QObject):
             self._current_icon_state = "normal"
             self._update_icon_for_theme()
 
-    def update_menu_state(self, running_tasks: int = 0, paused_tasks: int = 0):
+    def update_menu_state(self, running_tasks: int = 0, paused_tasks: int = 0) -> None:
         """Update menu state based on task status"""
         has_running = running_tasks > 0
         has_paused = paused_tasks > 0
@@ -309,7 +309,7 @@ class EnhancedSystemTrayIcon(QObject):
         if not has_running and not has_paused:
             self._stop_blink_animation()
 
-    def update_theme(self, theme_manager: Optional[EnhancedThemeManager] = None):
+    def update_theme(self, theme_manager: Optional["ThemeManager"] = None) -> None:
         """Update theme styling"""
         if theme_manager:
             self.theme_manager = theme_manager
@@ -317,13 +317,13 @@ class EnhancedSystemTrayIcon(QObject):
         self._update_icon_for_theme()
         self._apply_enhanced_styling()
 
-    def show_progress_notification(self, title: str, progress: int, total: int):
+    def show_progress_notification(self, title: str, progress: int, total: int) -> None:
         """Show progress notification"""
         percentage = int((progress / total) * 100) if total > 0 else 0
         message = f"Progress: {progress}/{total} ({percentage}%)"
         self.show_enhanced_notification(title, message, "info", 3000)
 
-    def show_completion_notification(self, task_name: str, success: bool = True):
+    def show_completion_notification(self, task_name: str, success: bool = True) -> None:
         """Show task completion notification"""
         if success:
             title = tr("system_tray.notifications.task_completed")
@@ -334,25 +334,25 @@ class EnhancedSystemTrayIcon(QObject):
             message = tr("system_tray.notifications.task_error", task=task_name)
             self.show_enhanced_notification(title, message, "error", 6000, "show")
 
-    def show_system_notification(self, message: str, level: str = "info"):
+    def show_system_notification(self, message: str, level: str = "info") -> None:
         """Show system-level notification"""
         title = tr("system_tray.notifications.system_message")
         self.show_enhanced_notification(title, message, level, 5000)
 
-    def show(self):
+    def show(self) -> None:
         """Show tray icon"""
         self.tray_icon.show()
 
-    def hide(self):
+    def hide(self) -> None:
         """Hide tray icon"""
         self.tray_icon.hide()
         self._stop_blink_animation()
 
-    def is_supported(self):
+    def is_supported(self) -> bool:
         """Check if system tray is supported"""
         return QSystemTrayIcon.isSystemTrayAvailable()
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         """Clean up resources"""
         self._stop_blink_animation()
         if self.tray_icon:
@@ -360,4 +360,4 @@ class EnhancedSystemTrayIcon(QObject):
 
 
 # Backward compatibility alias
-SystemTrayIcon = EnhancedSystemTrayIcon
+EnhancedSystemTrayIcon = SystemTrayIcon

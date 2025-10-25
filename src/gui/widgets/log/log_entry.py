@@ -10,7 +10,7 @@ from datetime import datetime
 class LogEntry:
     """Data model for a single log entry."""
 
-    def __init__(self, message, level="info", details=None, timestamp=None, source=None):
+    def __init__(self, message: str, level: str = "info", details: str | None = None, timestamp: datetime | None = None, source: str | None = None) -> None:
         """
         Create a log entry.
 
@@ -29,7 +29,7 @@ class LogEntry:
         self.source = source or ""
         self.display_text = f"[{self.timestamp_str}] [{self.level}] {self.message}"
 
-    def matches_search(self, search_text):
+    def matches_search(self, search_text: str) -> bool:
         """
         Check if the log entry matches the search text.
 
@@ -48,7 +48,7 @@ class LogEntry:
                 search_text in self.details.lower() or
                 search_text in self.source.lower())
 
-    def matches_level_filter(self, level_filter):
+    def matches_level_filter(self, level_filter: int) -> bool:
         """
         Check if the log entry matches the level filter.
 
@@ -70,7 +70,7 @@ class LogEntry:
             return self.level != "ERROR"
         return True
 
-    def matches_date_filter(self, date_filter):
+    def matches_date_filter(self, date_filter: int) -> bool:
         """
         Check if the log entry matches the date filter.
 

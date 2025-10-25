@@ -12,11 +12,11 @@ from qfluentwidgets import (
 class AdvancedTab(QWidget):
     """Advanced settings tab"""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self._create_ui()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """Create user interface"""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(15, 15, 15, 15)
@@ -88,7 +88,7 @@ class AdvancedTab(QWidget):
 
         layout.addStretch()
 
-    def _browse_ffmpeg(self):
+    def _browse_ffmpeg(self) -> None:
         """Browse for FFmpeg executable"""
         from PySide6.QtWidgets import QFileDialog
         current_path = self.ffmpeg_path_input.text()
@@ -104,7 +104,7 @@ class AdvancedTab(QWidget):
         if ffmpeg_file:
             self.ffmpeg_path_input.setText(ffmpeg_file)
 
-    def load_settings(self, settings):
+    def load_settings(self, settings) -> None:
         """Load settings to UI"""
         # Advanced settings
         self.proxy_input.setText(settings.get("advanced", "proxy", ""))
@@ -119,7 +119,7 @@ class AdvancedTab(QWidget):
         self.debug_logging_check.setChecked(
             settings.get("advanced", "debug_logging", False))
 
-    def save_settings(self, settings):
+    def save_settings(self, settings) -> None:
         """Save settings"""
         # Advanced settings
         settings.set("advanced", "proxy", self.proxy_input.text())

@@ -23,7 +23,6 @@ from qfluentwidgets import (
 )
 
 from ..utils.i18n import tr
-from ..utils.theme import VidTaniumTheme
 from ..utils.formatters import format_size, format_duration
 from ...core.downloader import TaskStatus
 
@@ -73,7 +72,7 @@ class SelectionWidget(ElevatedCardWidget):
     
     selection_changed = Signal(list)  # List of selected task IDs
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.available_tasks: Dict[str, Dict] = {}
         self.selected_tasks: Set[str] = set()
@@ -82,7 +81,7 @@ class SelectionWidget(ElevatedCardWidget):
         self._setup_ui()
         self._setup_connections()
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup the UI components"""
         layout = VBoxLayout(self)
         layout.setSpacing(12)
@@ -97,14 +96,14 @@ class SelectionWidget(ElevatedCardWidget):
         header_layout.addWidget(icon_label)
         
         title_label = BodyLabel(tr("bulk_ops.selection_title"))
-        title_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_PRIMARY}; font-weight: bold;")
+        title_label.setStyleSheet("font-weight: bold;")
         header_layout.addWidget(title_label)
         
         header_layout.addStretch()
         
         # Selection count
         self.count_label = CaptionLabel("0 selected")
-        self.count_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_SECONDARY};")
+        # Let qfluentwidgets handle label styling
         header_layout.addWidget(self.count_label)
         
         layout.addLayout(header_layout)
@@ -137,7 +136,7 @@ class SelectionWidget(ElevatedCardWidget):
         
         # Status filter
         status_label = CaptionLabel(tr("bulk_ops.filter_by_status"))
-        status_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_SECONDARY};")
+        # Let qfluentwidgets handle label styling
         advanced_layout.addWidget(status_label, 0, 0)
         
         self.status_combo = ComboBox()
@@ -153,7 +152,7 @@ class SelectionWidget(ElevatedCardWidget):
         
         # Size filter
         size_label = CaptionLabel(tr("bulk_ops.filter_by_size"))
-        size_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_SECONDARY};")
+        # Let qfluentwidgets handle label styling
         advanced_layout.addWidget(size_label, 1, 0)
         
         size_layout = QHBoxLayout()
@@ -176,7 +175,7 @@ class SelectionWidget(ElevatedCardWidget):
         
         # Pattern filter
         pattern_label = CaptionLabel(tr("bulk_ops.filter_by_pattern"))
-        pattern_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_SECONDARY};")
+        # Let qfluentwidgets handle label styling
         advanced_layout.addWidget(pattern_label, 2, 0)
         
         self.pattern_edit = SearchLineEdit()
@@ -191,38 +190,38 @@ class SelectionWidget(ElevatedCardWidget):
         self.apply_filters_btn.clicked.connect(self._apply_filters)
         layout.addWidget(self.apply_filters_btn)
     
-    def _setup_connections(self):
+    def _setup_connections(self) -> None:
         """Setup signal connections"""
         self.status_combo.currentTextChanged.connect(self._on_filter_changed)
         self.min_size_edit.textChanged.connect(self._on_filter_changed)
         self.max_size_edit.textChanged.connect(self._on_filter_changed)
         self.pattern_edit.textChanged.connect(self._on_filter_changed)
     
-    def update_available_tasks(self, tasks: Dict[str, Dict]):
+    def update_available_tasks(self, tasks: Dict[str, Dict]) -> None:
         """Update available tasks for selection"""
         self.available_tasks = tasks
         self._update_selection_count()
     
-    def _select_all(self):
+    def _select_all(self) -> None:
         """Select all available tasks"""
         self.selected_tasks = set(self.available_tasks.keys())
         self._update_selection_count()
         self.selection_changed.emit(list(self.selected_tasks))
     
-    def _select_none(self):
+    def _select_none(self) -> None:
         """Clear selection"""
         self.selected_tasks.clear()
         self._update_selection_count()
         self.selection_changed.emit(list(self.selected_tasks))
     
-    def _invert_selection(self):
+    def _invert_selection(self) -> None:
         """Invert current selection"""
         all_tasks = set(self.available_tasks.keys())
         self.selected_tasks = all_tasks - self.selected_tasks
         self._update_selection_count()
         self.selection_changed.emit(list(self.selected_tasks))
     
-    def _apply_filters(self):
+    def _apply_filters(self) -> None:
         """Apply current filters to select tasks"""
         criteria = self._build_selection_criteria()
         selected = self._apply_selection_criteria(criteria)
@@ -300,12 +299,12 @@ class SelectionWidget(ElevatedCardWidget):
         
         return True
     
-    def _on_filter_changed(self):
+    def _on_filter_changed(self) -> None:
         """Handle filter change"""
         # Auto-apply filters if enabled
         pass
     
-    def _update_selection_count(self):
+    def _update_selection_count(self) -> None:
         """Update selection count display"""
         count = len(self.selected_tasks)
         total = len(self.available_tasks)
@@ -315,7 +314,7 @@ class SelectionWidget(ElevatedCardWidget):
         """Get currently selected task IDs"""
         return list(self.selected_tasks)
     
-    def set_selected_tasks(self, task_ids: List[str]):
+    def set_selected_tasks(self, task_ids: List[str]) -> None:
         """Set selected tasks"""
         self.selected_tasks = set(task_ids)
         self._update_selection_count()
@@ -327,12 +326,12 @@ class BulkActionsWidget(ElevatedCardWidget):
     
     action_requested = Signal(str, list, dict)  # action, task_ids, parameters
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.selected_tasks: List[str] = []
         self._setup_ui()
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup the UI components"""
         layout = VBoxLayout(self)
         layout.setSpacing(12)
@@ -347,7 +346,7 @@ class BulkActionsWidget(ElevatedCardWidget):
         header_layout.addWidget(icon_label)
         
         title_label = BodyLabel(tr("bulk_ops.actions_title"))
-        title_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_PRIMARY}; font-weight: bold;")
+        title_label.setStyleSheet("font-weight: bold;")
         header_layout.addWidget(title_label)
         
         header_layout.addStretch()
@@ -386,15 +385,12 @@ class BulkActionsWidget(ElevatedCardWidget):
         
         self.delete_btn = PushButton(tr("bulk_ops.delete_selected"))
         self.delete_btn.setIcon(FIF.DELETE)
-        self.delete_btn.setStyleSheet(f"""
-            QPushButton {{
-                background: {VidTaniumTheme.ERROR_RED};
+        self.delete_btn.setObjectName("danger-button")
+        self.delete_btn.setStyleSheet("""
+            QPushButton#danger-button {
                 border: none;
                 color: white;
-            }}
-            QPushButton:hover {{
-                background: {VidTaniumTheme.ERROR_RED}CC;
-            }}
+            }
         """)
         self.delete_btn.clicked.connect(lambda: self._execute_action(BulkAction.DELETE))
         actions_layout.addWidget(self.delete_btn, 1, 2)
@@ -460,12 +456,12 @@ class BulkActionsWidget(ElevatedCardWidget):
         # Initially disable all buttons
         self._update_button_states()
     
-    def update_selected_tasks(self, task_ids: List[str]):
+    def update_selected_tasks(self, task_ids: List[str]) -> None:
         """Update selected tasks and button states"""
         self.selected_tasks = task_ids
         self._update_button_states()
     
-    def _update_button_states(self):
+    def _update_button_states(self) -> None:
         """Update button enabled/disabled states based on selection"""
         has_selection = len(self.selected_tasks) > 0
         
@@ -478,7 +474,7 @@ class BulkActionsWidget(ElevatedCardWidget):
         ]:
             button.setEnabled(has_selection)
     
-    def _execute_action(self, action: BulkAction, parameters: Optional[Dict] = None):
+    def _execute_action(self, action: BulkAction, parameters: Optional[Dict] = None) -> None:
         """Execute bulk action on selected tasks"""
         if not self.selected_tasks:
             InfoBar.warning(
@@ -500,7 +496,7 @@ class BulkOperationsManager(ScrollArea):
     
     action_requested = Signal(str, list, dict)  # action, task_ids, parameters
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setWidgetResizable(True)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -515,7 +511,7 @@ class BulkOperationsManager(ScrollArea):
         
         # Title
         title_label = TitleLabel(tr("bulk_ops.manager_title"))
-        title_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_PRIMARY};")
+        # Let qfluentwidgets handle label styling
         layout.addWidget(title_label)
         
         # Selection widget
@@ -530,11 +526,11 @@ class BulkOperationsManager(ScrollArea):
         
         layout.addStretch()
     
-    def update_available_tasks(self, tasks: Dict[str, Dict]):
+    def update_available_tasks(self, tasks: Dict[str, Dict]) -> None:
         """Update available tasks for bulk operations"""
         self.selection_widget.update_available_tasks(tasks)
     
-    def _on_selection_changed(self, selected_task_ids: List[str]):
+    def _on_selection_changed(self, selected_task_ids: List[str]) -> None:
         """Handle selection change"""
         self.actions_widget.update_selected_tasks(selected_task_ids)
     
@@ -542,6 +538,6 @@ class BulkOperationsManager(ScrollArea):
         """Get currently selected task IDs"""
         return list(self.selection_widget.get_selected_tasks())
     
-    def clear_selection(self):
+    def clear_selection(self) -> None:
         """Clear current selection"""
         self.selection_widget._select_none()

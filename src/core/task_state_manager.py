@@ -33,7 +33,7 @@ class TaskState(Enum):
 class StateTransitionError(VidTaniumException):
     """Error for invalid state transitions"""
     
-    def __init__(self, from_state: TaskState, to_state: TaskState, reason: str = ""):
+    def __init__(self, from_state: TaskState, to_state: TaskState, reason: str = "") -> None:
         message = f"Invalid transition from {from_state.value} to {to_state.value}"
         if reason:
             message += f": {reason}"
@@ -74,7 +74,7 @@ class TaskStateInfo:
 class TaskStateManager:
     """Enhanced task state manager with robust transition handling"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.task_states: Dict[str, TaskStateInfo] = {}
         self.state_callbacks: Dict[TaskState, List[Callable]] = {}
         self.transition_callbacks: List[Callable[[str, TaskState, TaskState], None]] = []
@@ -299,17 +299,17 @@ class TaskStateManager:
         
         return timed_out_tasks
     
-    def register_state_callback(self, state: TaskState, callback: Callable):
+    def register_state_callback(self, state: TaskState, callback: Callable) -> None:
         """Register callback for when tasks enter a specific state"""
         if state not in self.state_callbacks:
             self.state_callbacks[state] = []
         self.state_callbacks[state].append(callback)
     
-    def register_transition_callback(self, callback: Callable[[str, TaskState, TaskState], None]):
+    def register_transition_callback(self, callback: Callable[[str, TaskState, TaskState], None]) -> None:
         """Register callback for state transitions"""
         self.transition_callbacks.append(callback)
     
-    def _trigger_callbacks(self, task_id: str, from_state: TaskState, to_state: TaskState):
+    def _trigger_callbacks(self, task_id: str, from_state: TaskState, to_state: TaskState) -> None:
         """Trigger registered callbacks"""
         # State-specific callbacks
         if to_state in self.state_callbacks:

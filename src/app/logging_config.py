@@ -62,7 +62,7 @@ def configure_logging(log_file: Optional[str] = None,
     logger.info(f"Logging configured with level: {log_level}")
 
 
-def get_logger(name: Optional[str] = None):
+def get_logger(name: Optional[str] = None) -> None:
     """
     Get a logger instance with the specified name.
     This ensures all modules use the same loguru configuration.
@@ -87,7 +87,7 @@ class InterceptHandler(logging.Handler):
     This ensures all logging (including third-party libraries) uses consistent format.
     """
 
-    def emit(self, record: logging.LogRecord):
+    def emit(self, record: logging.LogRecord) -> None:
         # Get corresponding Loguru level if it exists
         try:
             level: str = logger.level(record.levelname).name
@@ -108,7 +108,7 @@ class InterceptHandler(logging.Handler):
             level, record.getMessage())
 
 
-def setup_standard_logging_intercept():
+def setup_standard_logging_intercept() -> None:
     """Setup interception of standard library logging."""
 
     # Remove all existing handlers
@@ -127,7 +127,7 @@ def setup_standard_logging_intercept():
 _logging_configured = False
 
 
-def ensure_logging_configured():
+def ensure_logging_configured() -> None:
     """Ensure logging is configured exactly once."""
     global _logging_configured
     if not _logging_configured:

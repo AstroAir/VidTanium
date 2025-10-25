@@ -27,7 +27,7 @@ class WorkerSignals(QObject):
 class Worker(QRunnable):
     """Worker thread for running tasks in the thread pool."""
 
-    def __init__(self, fn: Callable, *args, **kwargs):
+    def __init__(self, fn: Callable, *args, **kwargs) -> None:
         super().__init__()
 
         # Store constructor arguments (re-used for processing)
@@ -45,7 +45,7 @@ class Worker(QRunnable):
         if 'progress_callback' in kwargs:
             del kwargs['progress_callback']
 
-    def run(self):
+    def run(self) -> None:
         """Execute the worker function with exception handling."""
         try:
             result = self.fn(*self.args, **self.kwargs)
@@ -64,7 +64,7 @@ class Worker(QRunnable):
 class ThreadPoolManager(QObject):
     """Enhanced centralized thread pool manager with resource optimization."""
 
-    def __init__(self, max_threads: Optional[int] = None):
+    def __init__(self, max_threads: Optional[int] = None) -> None:
         super().__init__()
         self.pool = QThreadPool()
 
@@ -92,7 +92,7 @@ class ThreadPoolManager(QObject):
         logger.info(
             f"Enhanced thread pool initialized with {self.pool.maxThreadCount()} threads")
 
-    def _setup_thread_limits(self, max_threads: Optional[int]):
+    def _setup_thread_limits(self, max_threads: Optional[int]) -> None:
         """Setup thread limits based on system resources"""
         if max_threads:
             self.pool.setMaxThreadCount(max_threads)
@@ -120,7 +120,7 @@ class ThreadPoolManager(QObject):
 
             self.pool.setMaxThreadCount(int(max_threads))
 
-    def _cleanup_completed_workers(self):
+    def _cleanup_completed_workers(self) -> None:
         """Clean up completed workers and their resources"""
         with self.lock:
             completed_workers = []
@@ -171,12 +171,12 @@ class ThreadPoolManager(QObject):
         worker.priority = priority
 
         # Enhanced callback wrapping for tracking
-        def wrapped_callback(result):
+        def wrapped_callback(result) -> None:
             self._on_task_completed(worker_id, True)
             if callback:
                 callback(result)
 
-        def wrapped_error_callback(error):
+        def wrapped_error_callback(error) -> None:
             self._on_task_completed(worker_id, False)
             if error_callback:
                 error_callback(error)
@@ -226,7 +226,7 @@ class ThreadPoolManager(QObject):
         except Exception:
             return False
 
-    def _on_task_completed(self, worker_id: str, success: bool):
+    def _on_task_completed(self, worker_id: str, success: bool) -> None:
         """Handle task completion tracking"""
         with self.lock:
             if success:
@@ -257,7 +257,7 @@ class ThreadPoolManager(QObject):
         """
         return bool(self.pool.waitForDone(timeout_ms))
 
-    def clear(self):
+    def clear(self) -> None:
         """Clear all pending tasks."""
         self.pool.clear()
         logger.info("Thread pool cleared")
@@ -270,7 +270,7 @@ class ThreadPoolManager(QObject):
         """Get the maximum thread count."""
         return int(self.pool.maxThreadCount())
 
-    def set_max_thread_count(self, count: int):
+    def set_max_thread_count(self, count: int) -> None:
         """Set the maximum thread count."""
         self.pool.setMaxThreadCount(count)
         logger.info(f"Thread pool max threads set to {count}")
@@ -317,7 +317,7 @@ def submit_task(function: Callable,
     )
 
 
-def shutdown_thread_pool():
+def shutdown_thread_pool() -> None:
     """Shutdown the global thread pool."""
     global _thread_pool_manager
     if _thread_pool_manager:

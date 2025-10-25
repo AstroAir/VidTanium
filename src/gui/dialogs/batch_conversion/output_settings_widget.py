@@ -14,11 +14,11 @@ class OutputSettingsWidget(QWidget):
     # 设置变更信号
     settings_changed = Signal()
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self._create_ui()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """创建输出设置界面"""
         # 输出设置布局
         layout = QFormLayout(self)
@@ -62,7 +62,7 @@ class OutputSettingsWidget(QWidget):
             lambda: self.settings_changed.emit())
         layout.addRow("", self.keep_original_check)
 
-    def _browse_output_dir(self):
+    def _browse_output_dir(self) -> None:
         """浏览输出目录"""
         output_dir = QFileDialog.getExistingDirectory(
             self, "选择输出目录"
@@ -72,7 +72,7 @@ class OutputSettingsWidget(QWidget):
             self.output_dir_input.setText(output_dir)
             self.settings_changed.emit()
 
-    def set_output_directory(self, directory: str):
+    def set_output_directory(self, directory: str) -> None:
         """设置输出目录"""
         self.output_dir_input.setText(directory)
 

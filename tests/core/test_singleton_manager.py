@@ -18,29 +18,29 @@ from src.core.ipc_server import IPCServer, IPCClient, IPCMessage
 class TestSingletonManager:
     """Test cases for SingletonManager"""
     
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test environment"""
         self.test_app_name = "TestVidTanium"
         self.singleton_manager = SingletonManager(self.test_app_name, user_specific=True)
     
-    def teardown_method(self):
+    def teardown_method(self) -> None:
         """Clean up test environment"""
         if self.singleton_manager:
             self.singleton_manager.cleanup()
     
-    def test_singleton_creation(self):
+    def test_singleton_creation(self) -> None:
         """Test singleton manager creation"""
         assert self.singleton_manager is not None
         assert self.singleton_manager.app_name == self.test_app_name
         assert self.singleton_manager.user_specific is True
     
-    def test_no_existing_instance(self):
+    def test_no_existing_instance(self) -> None:
         """Test when no existing instance is running"""
         is_running, instance_info = self.singleton_manager.is_another_instance_running()
         assert is_running is False
         assert instance_info is None
     
-    def test_register_instance(self):
+    def test_register_instance(self) -> None:
         """Test registering an instance"""
         success = self.singleton_manager.register_instance()
         assert success is True
@@ -50,7 +50,7 @@ class TestSingletonManager:
         # Should return False because it's the same process
         assert is_running is False
     
-    def test_cleanup(self):
+    def test_cleanup(self) -> None:
         """Test cleanup functionality"""
         # Register instance first
         success = self.singleton_manager.register_instance()
@@ -64,7 +64,7 @@ class TestSingletonManager:
         assert success is True
     
     @patch('src.core.singleton_manager.psutil.Process')
-    def test_stale_lock_file_cleanup(self, mock_process):
+    def test_stale_lock_file_cleanup(self, mock_process) -> None:
         """Test cleanup of stale lock files"""
         # Mock a non-existent process
         mock_process.side_effect = Exception("Process not found")
@@ -91,7 +91,7 @@ class TestSingletonManager:
         # Lock file should be removed
         assert not lock_file_path.exists()
     
-    def test_global_singleton_manager(self):
+    def test_global_singleton_manager(self) -> None:
         """Test global singleton manager function"""
         manager1 = get_singleton_manager("TestApp")
         manager2 = get_singleton_manager("TestApp")
@@ -106,22 +106,22 @@ class TestSingletonManager:
 class TestIPCServer:
     """Test cases for IPC Server"""
     
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test environment"""
         self.ipc_server = IPCServer()
     
-    def teardown_method(self):
+    def teardown_method(self) -> None:
         """Clean up test environment"""
         if self.ipc_server:
             self.ipc_server.stop()
     
-    def test_ipc_server_creation(self):
+    def test_ipc_server_creation(self) -> None:
         """Test IPC server creation"""
         assert self.ipc_server is not None
         assert self.ipc_server.host == '127.0.0.1'
         assert self.ipc_server.port > 0
     
-    def test_ipc_server_start_stop(self):
+    def test_ipc_server_start_stop(self) -> None:
         """Test starting and stopping IPC server"""
         # Start server
         success = self.ipc_server.start()
@@ -132,7 +132,7 @@ class TestIPCServer:
         self.ipc_server.stop()
         assert self.ipc_server.running is False
     
-    def test_ipc_ping_message(self):
+    def test_ipc_ping_message(self) -> None:
         """Test ping message handling"""
         # Start server
         success = self.ipc_server.start()
@@ -145,7 +145,7 @@ class TestIPCServer:
         success = IPCClient.ping_server('127.0.0.1', self.ipc_server.get_port())
         assert success is True
     
-    def test_ipc_activation_message(self):
+    def test_ipc_activation_message(self) -> None:
         """Test activation message handling"""
         # Start server
         success = self.ipc_server.start()
@@ -157,7 +157,7 @@ class TestIPCServer:
         # Track activation requests
         activation_received = threading.Event()
         
-        def on_activation():
+        def on_activation() -> None:
             activation_received.set()
         
         self.ipc_server.activation_requested.connect(on_activation)
@@ -169,10 +169,10 @@ class TestIPCServer:
         # Wait for activation signal
         assert activation_received.wait(timeout=2.0)
     
-    def test_ipc_custom_message_handler(self):
+    def test_ipc_custom_message_handler(self) -> None:
         """Test custom message handler"""
         # Add custom handler
-        def custom_handler(message):
+        def custom_handler(message) -> None:
             return {'success': True, 'custom_response': 'test_data'}
         
         self.ipc_server.add_message_handler('custom_action', custom_handler)
@@ -196,7 +196,7 @@ class TestIPCServer:
 class TestIntegration:
     """Integration tests for singleton functionality"""
     
-    def test_full_singleton_workflow(self):
+    def test_full_singleton_workflow(self) -> None:
         """Test complete singleton workflow"""
         app_name = "IntegrationTestApp"
         
@@ -224,7 +224,7 @@ class TestIntegration:
             # Try to activate existing instance
             activation_received = threading.Event()
             
-            def on_activation():
+            def on_activation() -> None:
                 activation_received.set()
             
             ipc_server1.activation_requested.connect(on_activation)
@@ -243,7 +243,7 @@ class TestIntegration:
             manager2.cleanup()
     
     @pytest.mark.skipif(sys.platform == "win32", reason="Unix-specific test")
-    def test_file_locking_mechanism(self):
+    def test_file_locking_mechanism(self) -> None:
         """Test file locking mechanism on Unix systems"""
         app_name = "FileLockTestApp"
         

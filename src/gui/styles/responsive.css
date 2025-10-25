@@ -1,0 +1,418 @@
+/* VidTanium Application Responsive Styles */
+
+/* Responsive breakpoints matching the Python ResponsiveManager */
+/* xs: < 576px, sm: >= 576px, md: >= 768px, lg: >= 992px, xl: >= 1200px, xxl: >= 1400px */
+
+/* Base responsive container styles */
+.ResponsiveContainer {
+    padding: 16px;
+    transition: padding 0.3s ease;
+}
+
+/* Extra small screens (< 576px) */
+@media (max-width: 575px) {
+    .ResponsiveContainer {
+        padding: 8px;
+    }
+    
+    /* Stack navigation vertically */
+    NavigationInterface {
+        max-width: 48px !important;
+        min-width: 48px !important;
+    }
+    
+    /* Stack cards vertically */
+    .dashboard-cards {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    /* Reduce font sizes */
+    TitleLabel {
+        font-size: 18px;
+    }
+    
+    StrongBodyLabel {
+        font-size: 14px;
+    }
+    
+    BodyLabel {
+        font-size: 12px;
+    }
+    
+    /* Compact buttons */
+    PrimaryPushButton {
+        padding: 6px 12px;
+        min-height: 32px;
+    }
+    
+    /* Hide less important elements */
+    .optional-info {
+        display: none;
+    }
+}
+
+/* Small screens (576px - 767px) */
+@media (min-width: 576px) and (max-width: 767px) {
+    .ResponsiveContainer {
+        padding: 12px;
+    }
+    
+    NavigationInterface {
+        max-width: 48px !important;
+    }
+    
+    .dashboard-cards {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    TitleLabel {
+        font-size: 20px;
+    }
+    
+    StrongBodyLabel {
+        font-size: 15px;
+    }
+}
+
+/* Medium screens (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+    .ResponsiveContainer {
+        padding: 16px;
+    }
+    
+    NavigationInterface {
+        max-width: 200px !important;
+    }
+    
+    .dashboard-cards {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+    
+    TitleLabel {
+        font-size: 22px;
+    }
+}
+
+/* Large screens (992px - 1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
+    .ResponsiveContainer {
+        padding: 24px;
+    }
+    
+    NavigationInterface {
+        max-width: 250px !important;
+    }
+    
+    .dashboard-cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+    }
+    
+    TitleLabel {
+        font-size: 24px;
+    }
+}
+
+/* Extra large screens (1200px - 1399px) */
+@media (min-width: 1200px) and (max-width: 1399px) {
+    .ResponsiveContainer {
+        padding: 32px;
+    }
+    
+    NavigationInterface {
+        max-width: 250px !important;
+    }
+    
+    .dashboard-cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+    }
+    
+    TitleLabel {
+        font-size: 26px;
+    }
+}
+
+/* Extra extra large screens (>= 1400px) */
+@media (min-width: 1400px) {
+    .ResponsiveContainer {
+        padding: 40px;
+    }
+    
+    NavigationInterface {
+        max-width: 280px !important;
+    }
+    
+    .dashboard-cards {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 32px;
+    }
+    
+    TitleLabel {
+        font-size: 28px;
+    }
+}
+
+/* Responsive utilities */
+.hide-xs {
+    @media (max-width: 575px) {
+        display: none !important;
+    }
+}
+
+.hide-sm {
+    @media (max-width: 767px) {
+        display: none !important;
+    }
+}
+
+.hide-md {
+    @media (max-width: 991px) {
+        display: none !important;
+    }
+}
+
+.show-xs-only {
+    display: none !important;
+    @media (max-width: 575px) {
+        display: block !important;
+    }
+}
+
+.show-sm-only {
+    display: none !important;
+    @media (min-width: 576px) and (max-width: 767px) {
+        display: block !important;
+    }
+}
+
+/* Responsive text alignment */
+.text-center-xs {
+    @media (max-width: 575px) {
+        text-align: center !important;
+    }
+}
+
+.text-center-sm {
+    @media (max-width: 767px) {
+        text-align: center !important;
+    }
+}
+
+/* Responsive spacing */
+.mt-xs-2 {
+    @media (max-width: 575px) {
+        margin-top: 8px !important;
+    }
+}
+
+.mt-sm-3 {
+    @media (max-width: 767px) {
+        margin-top: 12px !important;
+    }
+}
+
+.p-responsive {
+    padding: 8px;
+    
+    @media (min-width: 576px) {
+        padding: 12px;
+    }
+    
+    @media (min-width: 768px) {
+        padding: 16px;
+    }
+    
+    @media (min-width: 992px) {
+        padding: 24px;
+    }
+    
+    @media (min-width: 1200px) {
+        padding: 32px;
+    }
+}
+
+/* Responsive card layouts */
+ElevatedCardWidget {
+    transition: all 0.3s ease;
+}
+
+@media (max-width: 767px) {
+    ElevatedCardWidget {
+        margin: 8px 0;
+        border-radius: 8px;
+    }
+}
+
+@media (min-width: 768px) {
+    ElevatedCardWidget {
+        margin: 12px;
+        border-radius: 12px;
+    }
+}
+
+/* Responsive navigation */
+NavigationInterface {
+    transition: width 0.3s ease, max-width 0.3s ease;
+}
+
+NavigationInterface[collapsed="true"] {
+    max-width: 48px !important;
+    min-width: 48px !important;
+}
+
+NavigationInterface[collapsed="false"] {
+    max-width: 250px !important;
+    min-width: 250px !important;
+}
+
+/* Responsive task manager */
+.task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+@media (min-width: 1200px) {
+    .task-list {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+}
+
+/* Responsive dialogs */
+QDialog {
+    min-width: 300px;
+    max-width: 90vw;
+}
+
+@media (min-width: 768px) {
+    QDialog {
+        min-width: 500px;
+        max-width: 80vw;
+    }
+}
+
+@media (min-width: 1200px) {
+    QDialog {
+        min-width: 600px;
+        max-width: 70vw;
+    }
+}
+
+/* Responsive progress bars */
+ProgressCard {
+    min-height: 80px;
+}
+
+@media (max-width: 575px) {
+    ProgressCard {
+        min-height: 60px;
+    }
+    
+    ProgressCard .progress-text {
+        font-size: 11px;
+    }
+}
+
+/* Responsive tables */
+QTableWidget {
+    font-size: 12px;
+}
+
+@media (max-width: 767px) {
+    QTableWidget {
+        font-size: 10px;
+    }
+    
+    QTableWidget QHeaderView::section {
+        padding: 4px;
+    }
+}
+
+@media (min-width: 768px) {
+    QTableWidget {
+        font-size: 13px;
+    }
+    
+    QTableWidget QHeaderView::section {
+        padding: 8px;
+    }
+}
+
+/* Touch-friendly controls for mobile */
+@media (pointer: coarse) {
+    QPushButton {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    QLineEdit, QComboBox {
+        min-height: 44px;
+    }
+    
+    QCheckBox::indicator, QRadioButton::indicator {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+/* Smooth transitions */
+* {
+    transition-property: padding, margin, font-size;
+    transition-duration: 0.3s;
+    transition-timing-function: ease;
+}
+
+/* Prevent layout shifts */
+.prevent-shift {
+    min-height: 100px;
+    overflow: hidden;
+}
+
+/* Fluid typography */
+.fluid-text {
+    font-size: clamp(12px, 2vw, 16px);
+}
+
+.fluid-title {
+    font-size: clamp(18px, 4vw, 32px);
+}
+
+/* Responsive scrollbars */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+@media (max-width: 767px) {
+    ::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+    }
+}
+
+/* Print styles */
+@media print {
+    NavigationInterface {
+        display: none !important;
+    }
+    
+    .no-print {
+        display: none !important;
+    }
+    
+    .print-only {
+        display: block !important;
+    }
+}

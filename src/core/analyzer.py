@@ -38,7 +38,7 @@ class M3U8Info:
 class MediaAnalyzer:
     """Media Analyzer for intelligent media processing"""
 
-    def __init__(self, settings: Optional[Dict[str, Any]] = None):
+    def __init__(self, settings: Optional[Dict[str, Any]] = None) -> None:
         self.settings: Dict[str, Any] = settings or {}
         self.user_agent: str = self.settings.get("user_agent",
                                                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")

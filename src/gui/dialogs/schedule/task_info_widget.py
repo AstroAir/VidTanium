@@ -8,12 +8,12 @@ from qfluentwidgets import LineEdit, CardWidget, StrongBodyLabel
 class TaskInfoWidget(CardWidget):
     """任务信息组件"""
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
 
         self._create_ui()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """创建界面"""
         info_layout = QFormLayout()
         info_layout.setContentsMargins(15, 15, 15, 15)
@@ -35,6 +35,6 @@ class TaskInfoWidget(CardWidget):
         """获取任务名称"""
         return str(self.name_input.text())
 
-    def set_task_name(self, name: str):
+    def set_task_name(self, name: str) -> None:
         """设置任务名称"""
         self.name_input.setText(name)

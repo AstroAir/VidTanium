@@ -14,8 +14,8 @@ from qfluentwidgets import (
 from loguru import logger
 
 
-class EnhancedThemeManager(QObject):
-    """Enhanced theme manager with advanced visual features"""
+class ThemeManager(QObject):
+    """Theme manager with advanced visual features"""
 
     theme_changed = Signal(str)  # Emitted when theme changes
     accent_color_changed = Signal(QColor)  # Emitted when accent color changes
@@ -53,7 +53,7 @@ class EnhancedThemeManager(QObject):
         "shadow": "rgba(0, 0, 0, 0.3)"
     }
 
-    def __init__(self, settings, parent=None):
+    def __init__(self, settings, parent=None) -> None:
         super().__init__(parent)
         self.settings = settings
         self.theme_listener: Optional[SystemThemeListener] = None
@@ -69,17 +69,17 @@ class EnhancedThemeManager(QObject):
         self.apply_theme_from_settings()
         self.apply_accent_from_settings()
 
-    def apply_theme_from_settings(self):
+    def apply_theme_from_settings(self) -> None:
         """Apply theme based on current settings"""
         theme_mode = self.settings.get("general", "theme", "system")
         self.set_theme(theme_mode)
 
-    def apply_accent_from_settings(self):
+    def apply_accent_from_settings(self) -> None:
         """Apply accent color based on current settings"""
         accent_color = self.settings.get("ui", "accent_color", "blue")
         self.set_accent_color(accent_color)
 
-    def set_theme(self, theme_mode: str, animate: bool = True):
+    def set_theme(self, theme_mode: str, animate: bool = True) -> None:
         """Set application theme with optional animation
         
         Args:
@@ -105,7 +105,7 @@ class EnhancedThemeManager(QObject):
             logger.error(f"Error setting theme '{theme_mode}': {e}", exc_info=True)
             self._apply_fallback_theme()
 
-    def _apply_theme_immediately(self, theme_mode: str):
+    def _apply_theme_immediately(self, theme_mode: str) -> None:
         """Apply theme without animation"""
         if theme_mode == "system":
             setTheme(Theme.AUTO)
@@ -132,7 +132,7 @@ class EnhancedThemeManager(QObject):
         # Emit signal
         self.theme_changed.emit(theme_mode)
 
-    def _animate_theme_transition(self, old_theme: str, new_theme: str):
+    def _animate_theme_transition(self, old_theme: str, new_theme: str) -> None:
         """Animate theme transition"""
         if not self.parent():
             self._apply_theme_immediately(new_theme)
@@ -173,18 +173,18 @@ class EnhancedThemeManager(QObject):
         # Start fade out
         self.fade_out_animation.start()
 
-    def _clear_graphics_effect(self):
+    def _clear_graphics_effect(self) -> None:
         """Clear graphics effect from parent widget"""
         parent = self.parent()
         if parent and hasattr(parent, 'setGraphicsEffect'):
             parent.setGraphicsEffect(None)
 
-    def _on_fade_out_finished(self, new_theme: str):
+    def _on_fade_out_finished(self, new_theme: str) -> None:
         """Handle fade out completion"""
         self._apply_theme_immediately(new_theme)
         self.fade_in_animation.start()
 
-    def set_accent_color(self, color_name: str):
+    def set_accent_color(self, color_name: str) -> None:
         """Set accent color
         
         Args:
@@ -214,64 +214,21 @@ class EnhancedThemeManager(QObject):
         except Exception as e:
             logger.error(f"Error setting accent color '{color_name}': {e}")
 
-    def _apply_custom_styling(self):
-        """Apply custom styling enhancements"""
+    def _apply_custom_styling(self) -> None:
+        """Apply minimal custom styling enhancements
+        
+        Note: We avoid overriding qfluentwidgets styles.
+        Only apply styles that don't conflict with the theme system.
+        """
         try:
-            is_dark = self.is_dark_theme()
-            colors = self.DARK_THEME_COLORS if is_dark else self.LIGHT_THEME_COLORS
-            
-            # Custom stylesheet for enhanced appearance
-            custom_style = f"""
-            /* Enhanced card styling */
-            ElevatedCardWidget {{
-                background-color: {colors['card']};
-                border: 1px solid {colors['border']};
-                border-radius: 12px;
-                box-shadow: 0 4px 6px -1px {colors['shadow']};
-            }}
-            
-            /* Enhanced button styling */
-            PrimaryPushButton {{
-                border-radius: 8px;
-                font-weight: 600;
-                padding: 8px 16px;
-            }}
-            
-            /* Enhanced scroll area */
-            ScrollArea {{
-                background-color: {colors['background']};
-                border: none;
-            }}
-            
-            /* Enhanced navigation */
-            NavigationWidget {{
-                background-color: {colors['surface']};
-                border-right: 1px solid {colors['border']};
-            }}
-            
-            /* Enhanced status widgets */
-            .status-widget {{
-                background-color: {colors['surface']};
-                border: 1px solid {colors['border']};
-                border-radius: 8px;
-                padding: 12px;
-            }}
-            
-            /* Enhanced progress bars */
-            ProgressBar {{
-                border-radius: 4px;
-                background-color: {colors['border']};
-            }}
-            """
-            
-            # Apply to application
-            if self.parent():
-                self.parent().setStyleSheet(custom_style)
+            # qfluentwidgets handles most styling automatically
+            # We only apply non-conflicting enhancements here
+            logger.debug("Custom styling applied (minimal)")
                 
         except Exception as e:
             logger.error(f"Error applying custom styling: {e}")
 
-    def _apply_fallback_theme(self):
+    def _apply_fallback_theme(self) -> None:
         """Apply fallback theme in case of errors"""
         try:
             setTheme(Theme.AUTO)
@@ -295,7 +252,7 @@ class EnhancedThemeManager(QObject):
         """Get current theme color palette"""
         return self.DARK_THEME_COLORS if self.is_dark_theme() else self.LIGHT_THEME_COLORS
 
-    def enable_animations(self, enabled: bool = True):
+    def enable_animations(self, enabled: bool = True) -> None:
         """Enable or disable theme animations"""
         self._animations_enabled = enabled
         self.settings.set("ui", "animations_enabled", enabled)
@@ -306,26 +263,29 @@ class EnhancedThemeManager(QObject):
         """Check if animations are enabled"""
         return self._animations_enabled
 
-    def apply_widget_enhancement(self, widget, enhancement_type: str = "card"):
-        """Apply visual enhancements to a widget
+    def apply_widget_enhancement(self, widget, enhancement_type: str = "card") -> None:
+        """Apply minimal visual enhancements to a widget
         
         Args:
             widget: Widget to enhance
             enhancement_type: Type of enhancement ("card", "button", "status")
+        
+        Note: Most styling is handled by qfluentwidgets automatically.
+        This method is kept for backward compatibility.
         """
         try:
+            # Set object name for potential custom QSS files
             if enhancement_type == "card":
                 widget.setObjectName("enhanced-card")
             elif enhancement_type == "status":
                 widget.setObjectName("status-widget")
             
-            # Apply current styling
-            self._apply_custom_styling()
+            logger.debug(f"Widget enhancement applied: {enhancement_type}")
             
         except Exception as e:
             logger.error(f"Error applying widget enhancement: {e}")
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         """Clean up resources"""
         try:
             if self.theme_listener:
@@ -346,4 +306,4 @@ class EnhancedThemeManager(QObject):
 
 
 # Backward compatibility alias
-ThemeManager = EnhancedThemeManager
+EnhancedThemeManager = ThemeManager

@@ -20,7 +20,7 @@ from src.core.exceptions import (
 class MockSettings:
     """Mock settings provider for testing."""
     
-    def __init__(self, settings_dict: Optional[Dict] = None):
+    def __init__(self, settings_dict: Optional[Dict] = None) -> None:
         self.settings = settings_dict or {
             "download": {
                 "max_concurrent_tasks": 3,
@@ -44,7 +44,7 @@ class MockSettings:
 class TestTaskStatus:
     """Test suite for TaskStatus enum."""
 
-    def test_status_values(self):
+    def test_status_values(self) -> None:
         """Test enum values."""
         assert TaskStatus.PENDING.value == "pending"
         assert TaskStatus.RUNNING.value == "running"
@@ -57,7 +57,7 @@ class TestTaskStatus:
 class TestTaskPriority:
     """Test suite for TaskPriority enum."""
 
-    def test_priority_values(self):
+    def test_priority_values(self) -> None:
         """Test enum values."""
         assert TaskPriority.LOW.value == 0
         assert TaskPriority.NORMAL.value == 1
@@ -67,11 +67,11 @@ class TestTaskPriority:
 class TestDownloadTask:
     """Test suite for DownloadTask class."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.settings = MockSettings()
 
-    def test_task_creation_with_all_params(self):
+    def test_task_creation_with_all_params(self) -> None:
         """Test DownloadTask creation with all parameters."""
         task = DownloadTask(
             task_id="test_task",
@@ -94,7 +94,7 @@ class TestDownloadTask:
         assert task.priority == TaskPriority.HIGH
         assert task.status == TaskStatus.PENDING
 
-    def test_task_creation_with_defaults(self):
+    def test_task_creation_with_defaults(self) -> None:
         """Test DownloadTask creation with default values."""
         task = DownloadTask()
         
@@ -108,7 +108,7 @@ class TestDownloadTask:
         assert task.priority == TaskPriority.NORMAL
         assert task.status == TaskStatus.PENDING
 
-    def test_task_progress_initialization(self):
+    def test_task_progress_initialization(self) -> None:
         """Test task progress initialization."""
         task = DownloadTask(segments=50)
         
@@ -123,7 +123,7 @@ class TestDownloadTask:
         assert task.progress["estimated_time"] is None
         assert task.progress["downloaded_bytes"] == 0
 
-    def test_task_events_initialization(self):
+    def test_task_events_initialization(self) -> None:
         """Test task threading events initialization."""
         task = DownloadTask()
         
@@ -132,7 +132,7 @@ class TestDownloadTask:
         assert not task.paused_event.is_set()
         assert not task.canceled_event.is_set()
 
-    def test_task_pause(self):
+    def test_task_pause(self) -> None:
         """Test task pause functionality."""
         task = DownloadTask()
         
@@ -140,7 +140,7 @@ class TestDownloadTask:
         assert task.status == TaskStatus.PAUSED
         assert task.paused_event.is_set()
 
-    def test_task_resume(self):
+    def test_task_resume(self) -> None:
         """Test task resume functionality."""
         task = DownloadTask()
         task.pause()
@@ -149,7 +149,7 @@ class TestDownloadTask:
         assert task.status == TaskStatus.PENDING
         assert not task.paused_event.is_set()
 
-    def test_task_cancel(self):
+    def test_task_cancel(self) -> None:
         """Test task cancel functionality."""
         task = DownloadTask()
         
@@ -157,7 +157,7 @@ class TestDownloadTask:
         assert task.status == TaskStatus.CANCELED
         assert task.canceled_event.is_set()
 
-    def test_task_get_progress_percentage(self):
+    def test_task_get_progress_percentage(self) -> None:
         """Test progress percentage calculation."""
         task = DownloadTask(segments=100)
         
@@ -178,7 +178,7 @@ class TestDownloadTask:
 
     @patch('builtins.open', new_callable=mock_open)
     @patch('json.dump')
-    def test_save_progress(self, mock_json_dump, mock_file):
+    def test_save_progress(self, mock_json_dump, mock_file) -> None:
         """Test progress saving."""
         task = DownloadTask(
             task_id="test_task",
@@ -195,7 +195,7 @@ class TestDownloadTask:
     @patch('builtins.open', new_callable=mock_open, read_data='{"completed": 25, "total": 100}')
     @patch('json.load')
     @patch('os.path.exists')
-    def test_load_progress(self, mock_exists, mock_json_load, mock_file):
+    def test_load_progress(self, mock_exists, mock_json_load, mock_file) -> None:
         """Test progress loading."""
         mock_exists.return_value = True
         mock_json_load.return_value = {"completed": 25, "total": 100}
@@ -211,7 +211,7 @@ class TestDownloadTask:
         mock_json_load.assert_called_once()
 
     @patch('os.path.exists')
-    def test_load_progress_no_file(self, mock_exists):
+    def test_load_progress_no_file(self, mock_exists) -> None:
         """Test progress loading when file doesn't exist."""
         mock_exists.return_value = False
         
@@ -224,17 +224,17 @@ class TestDownloadTask:
 class TestDownloadManager:
     """Test suite for DownloadManager class."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.settings = MockSettings()
         self.manager = DownloadManager(settings=self.settings)
 
-    def teardown_method(self):
+    def teardown_method(self) -> None:
         """Clean up after tests."""
         if self.manager.running:
             self.manager.stop()
 
-    def test_manager_initialization(self):
+    def test_manager_initialization(self) -> None:
         """Test DownloadManager initialization."""
         assert self.manager.settings == self.settings
         assert isinstance(self.manager.tasks, dict)
@@ -244,7 +244,7 @@ class TestDownloadManager:
         assert self.manager.scheduler_thread is None
         assert self.manager.bandwidth_limit == 0
 
-    def test_manager_start(self):
+    def test_manager_start(self) -> None:
         """Test starting download manager."""
         self.manager.start()
         
@@ -252,7 +252,7 @@ class TestDownloadManager:
         assert self.manager.scheduler_thread is not None
         assert self.manager.scheduler_thread.is_alive()
 
-    def test_manager_start_already_running(self):
+    def test_manager_start_already_running(self) -> None:
         """Test starting manager when already running."""
         self.manager.start()
         original_thread = self.manager.scheduler_thread
@@ -262,14 +262,14 @@ class TestDownloadManager:
         # Should not create new thread
         assert self.manager.scheduler_thread == original_thread
 
-    def test_manager_stop(self):
+    def test_manager_stop(self) -> None:
         """Test stopping download manager."""
         self.manager.start()
         self.manager.stop()
         
         assert self.manager.running is False
 
-    def test_add_task(self):
+    def test_add_task(self) -> None:
         """Test adding download task."""
         task = DownloadTask(
             name="Test Task",
@@ -283,7 +283,7 @@ class TestDownloadManager:
         assert task_id in self.manager.tasks
         assert self.manager.tasks[task_id] == task
 
-    def test_get_task(self):
+    def test_get_task(self) -> None:
         """Test getting task by ID."""
         task = DownloadTask(name="Test Task")
         task_id = self.manager.add_task(task)
@@ -294,7 +294,7 @@ class TestDownloadManager:
         # Test nonexistent task
         assert self.manager.get_task("nonexistent") is None
 
-    def test_remove_task(self):
+    def test_remove_task(self) -> None:
         """Test removing task."""
         task = DownloadTask(name="Test Task")
         task_id = self.manager.add_task(task)
@@ -304,12 +304,12 @@ class TestDownloadManager:
         assert result is True
         assert task_id not in self.manager.tasks
 
-    def test_remove_nonexistent_task(self):
+    def test_remove_nonexistent_task(self) -> None:
         """Test removing nonexistent task."""
         result = self.manager.remove_task("nonexistent")
         assert result is False
 
-    def test_pause_task(self):
+    def test_pause_task(self) -> None:
         """Test pausing task."""
         task = DownloadTask(name="Test Task")
         task_id = self.manager.add_task(task)
@@ -319,7 +319,7 @@ class TestDownloadManager:
         assert result is True
         assert task.status == TaskStatus.PAUSED
 
-    def test_resume_task(self):
+    def test_resume_task(self) -> None:
         """Test resuming task."""
         task = DownloadTask(name="Test Task")
         task_id = self.manager.add_task(task)
@@ -330,7 +330,7 @@ class TestDownloadManager:
         assert result is True
         assert task.status == TaskStatus.PENDING
 
-    def test_cancel_task(self):
+    def test_cancel_task(self) -> None:
         """Test canceling task."""
         task = DownloadTask(name="Test Task")
         task_id = self.manager.add_task(task)
@@ -340,7 +340,7 @@ class TestDownloadManager:
         assert result is True
         assert task.status == TaskStatus.CANCELED
 
-    def test_get_all_tasks(self):
+    def test_get_all_tasks(self) -> None:
         """Test getting all tasks."""
         task1 = DownloadTask(name="Task 1")
         task2 = DownloadTask(name="Task 2")
@@ -354,7 +354,7 @@ class TestDownloadManager:
         assert task1.task_id in all_tasks
         assert task2.task_id in all_tasks
 
-    def test_get_tasks_by_status(self):
+    def test_get_tasks_by_status(self) -> None:
         """Test getting tasks by status."""
         task1 = DownloadTask(name="Task 1")
         task2 = DownloadTask(name="Task 2")
@@ -374,7 +374,7 @@ class TestDownloadManager:
         assert len(paused_tasks) == 1
         assert task2.task_id in paused_tasks
 
-    def test_callback_registration(self):
+    def test_callback_registration(self) -> None:
         """Test callback registration."""
         progress_callback = Mock()
         status_callback = Mock()
@@ -391,7 +391,7 @@ class TestDownloadManager:
         assert self.manager.on_task_completed == completed_callback
         assert self.manager.on_task_failed == failed_callback
 
-    def test_emit_progress(self):
+    def test_emit_progress(self) -> None:
         """Test progress emission."""
         callback = Mock()
         self.manager.set_progress_callback(callback)
@@ -404,7 +404,7 @@ class TestDownloadManager:
         
         callback.assert_called_once_with(task_id, progress)
 
-    def test_emit_status_changed(self):
+    def test_emit_status_changed(self) -> None:
         """Test status change emission."""
         callback = Mock()
         self.manager.set_status_changed_callback(callback)
@@ -416,13 +416,13 @@ class TestDownloadManager:
         
         callback.assert_called_once_with(task_id, TaskStatus.PENDING, TaskStatus.RUNNING)
 
-    def test_bandwidth_limit_setting(self):
+    def test_bandwidth_limit_setting(self) -> None:
         """Test bandwidth limit configuration."""
         self.manager.set_bandwidth_limit(1024)  # 1KB/s
         
         assert self.manager.bandwidth_limit == 1024
 
-    def test_error_handling(self):
+    def test_error_handling(self) -> None:
         """Test error handling in manager."""
         task = DownloadTask(name="Test Task")
         task_id = self.manager.add_task(task)
@@ -433,7 +433,7 @@ class TestDownloadManager:
         self.manager._handle_task_error(task_id, exception)
 
     @patch('src.core.downloader.requests.Session')
-    def test_download_segment_success(self, mock_session):
+    def test_download_segment_success(self, mock_session) -> None:
         """Test successful segment download."""
         # Mock response
         mock_response = Mock()
@@ -451,7 +451,7 @@ class TestDownloadManager:
         # Testing the concept rather than the full implementation
         assert mock_response.status_code == 200
 
-    def test_concurrent_task_limit(self):
+    def test_concurrent_task_limit(self) -> None:
         """Test concurrent task limit enforcement."""
         # Add multiple tasks
         tasks = []

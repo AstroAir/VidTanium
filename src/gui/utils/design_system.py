@@ -137,12 +137,12 @@ class DesignSystem:
 class AnimatedCard(ElevatedCardWidget):
     """Enhanced card with smooth animations"""
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self._setup_animations()
         self._setup_enhanced_styling()
     
-    def _setup_animations(self):
+    def _setup_animations(self) -> None:
         """Setup hover animations"""
         self.opacity_effect = QGraphicsOpacityEffect()
         self.setGraphicsEffect(self.opacity_effect)
@@ -155,7 +155,7 @@ class AnimatedCard(ElevatedCardWidget):
         self.scale_timer.setSingleShot(True)
         self.scale_timer.timeout.connect(self._apply_hover_scale)
     
-    def _setup_enhanced_styling(self):
+    def _setup_enhanced_styling(self) -> None:
         """Apply enhanced styling"""
         self.setStyleSheet(f"""
             AnimatedCard {{
@@ -174,7 +174,7 @@ class AnimatedCard(ElevatedCardWidget):
         shadow = DesignSystem.create_shadow_effect('md')
         self.setGraphicsEffect(shadow)
     
-    def enterEvent(self, event):
+    def enterEvent(self, event) -> None:
         """Enhanced hover enter effect"""
         super().enterEvent(event)
         self.hover_animation.setStartValue(1.0)
@@ -183,14 +183,14 @@ class AnimatedCard(ElevatedCardWidget):
         
         self.scale_timer.start(50)
     
-    def leaveEvent(self, event):
+    def leaveEvent(self, event) -> None:
         """Enhanced hover leave effect"""
         super().leaveEvent(event)
         self.hover_animation.setStartValue(0.95)
         self.hover_animation.setEndValue(1.0)
         self.hover_animation.start()
     
-    def _apply_hover_scale(self):
+    def _apply_hover_scale(self) -> None:
         """Apply subtle scale effect"""
         # This would be implemented with a custom scale animation
         pass
@@ -199,7 +199,7 @@ class AnimatedCard(ElevatedCardWidget):
 class GradientCard(ElevatedCardWidget):
     """Card with gradient background"""
     
-    def __init__(self, gradient_colors: Optional[list] = None, parent=None):
+    def __init__(self, gradient_colors: Optional[list] = None, parent=None) -> None:
         super().__init__(parent)
         self.gradient_colors = gradient_colors or [
             DesignSystem.get_color('primary'),
@@ -207,7 +207,7 @@ class GradientCard(ElevatedCardWidget):
         ]
         self._setup_gradient_styling()
 
-    def _setup_gradient_styling(self):
+    def _setup_gradient_styling(self) -> None:
         """Setup gradient background"""
         gradient_css = f"""
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
@@ -228,12 +228,12 @@ class GradientCard(ElevatedCardWidget):
 class ModernProgressCard(ElevatedCardWidget):
     """Modern progress card with enhanced visuals"""
     
-    def __init__(self, title: str = "", parent=None):
+    def __init__(self, title: str = "", parent=None) -> None:
         super().__init__(parent)
         self.title = title
         self._setup_modern_styling()
     
-    def _setup_modern_styling(self):
+    def _setup_modern_styling(self) -> None:
         """Setup modern progress card styling"""
         self.setStyleSheet(f"""
             ModernProgressCard {{
@@ -252,13 +252,13 @@ class ModernProgressCard(ElevatedCardWidget):
 class IconButton(ElevatedCardWidget):
     """Icon button with modern styling"""
 
-    def __init__(self, icon: FIF, tooltip: str = "", parent=None):
+    def __init__(self, icon: FIF, tooltip: str = "", parent=None) -> None:
         super().__init__(parent)
         self.icon = icon
         self.tooltip_text = tooltip
         self._setup_icon_button()
 
-    def _setup_icon_button(self):
+    def _setup_icon_button(self) -> None:
         """Setup enhanced icon button"""
         self.setFixedSize(48, 48)
         self.setToolTip(self.tooltip_text)

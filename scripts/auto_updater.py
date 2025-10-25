@@ -19,7 +19,7 @@ from urllib.error import URLError
 class VidTaniumUpdater:
     """Auto-updater for VidTanium application"""
     
-    def __init__(self, current_version: str = "0.1.0"):
+    def __init__(self, current_version: str = "0.1.0") -> None:
         self.current_version = current_version
         self.github_api_base = "https://api.github.com/repos/AstroAir/VidTanium"
         self.github_releases_url = f"{self.github_api_base}/releases"
@@ -67,7 +67,7 @@ class VidTaniumUpdater:
     
     def _is_newer_version(self, latest: str, current: str) -> bool:
         """Compare version strings"""
-        def version_tuple(v):
+        def version_tuple(v: str) -> tuple[int, ...]:
             return tuple(map(int, v.split('.')))
         
         try:
@@ -76,7 +76,7 @@ class VidTaniumUpdater:
             # Fallback to string comparison
             return latest > current
     
-    def find_suitable_asset(self, assets: list) -> Optional[Dict[str, Any]]:
+    def find_suitable_asset(self, assets: list[dict[str, Any]]) -> dict[str, Any] | None:
         """Find the most suitable asset for current platform"""
         if self.platform not in self.platform_patterns:
             print(f"❌ Unsupported platform: {self.platform}")
@@ -116,7 +116,7 @@ class VidTaniumUpdater:
             print(f"   Size: {asset['size'] / 1024 / 1024:.1f} MB")
             
             # Download with progress (simple version)
-            def progress_hook(block_num, block_size, total_size):
+            def progress_hook(block_num, block_size, total_size) -> None:
                 if total_size > 0:
                     percent = min(100, (block_num * block_size * 100) // total_size)
                     print(f"\r   Progress: {percent}%", end="", flush=True)
@@ -267,7 +267,7 @@ class VidTaniumUpdater:
                 print("❌ Update installation failed")
                 return False
 
-def main():
+def main() -> None:
     """Main updater function"""
     import argparse
     

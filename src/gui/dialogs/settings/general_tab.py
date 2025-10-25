@@ -22,11 +22,11 @@ from qfluentwidgets import (
 class GeneralTab(QWidget):
     """General settings tab with modern card-based design"""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self._create_ui()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """Create modern user interface with cards"""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 20, 20, 20)
@@ -207,7 +207,7 @@ class GeneralTab(QWidget):
 
         return card
 
-    def _browse_output_dir(self):
+    def _browse_output_dir(self) -> None:
         """Browse output directory"""
         from PySide6.QtWidgets import QFileDialog
         current_dir = self.output_dir_input.text()
@@ -221,7 +221,7 @@ class GeneralTab(QWidget):
         if directory:
             self.output_dir_input.setText(directory)
 
-    def _on_theme_changed(self):
+    def _on_theme_changed(self) -> None:
         """Handle theme change for immediate preview"""
         try:
             from qfluentwidgets import setTheme, Theme
@@ -237,7 +237,7 @@ class GeneralTab(QWidget):
             # Ignore errors during preview
             pass
 
-    def load_settings(self, settings):
+    def load_settings(self, settings) -> None:
         """Load settings to UI"""
         # General settings
         self.output_dir_input.setText(
@@ -260,7 +260,7 @@ class GeneralTab(QWidget):
         self.max_recent_files_spin.setValue(
             settings.get("general", "max_recent_files", 10))
 
-    def save_settings(self, settings):
+    def save_settings(self, settings) -> None:
         """Save settings"""
         # General settings
         settings.set("general", "output_directory",

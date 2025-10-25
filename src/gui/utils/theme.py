@@ -385,7 +385,7 @@ class ThemeManager:
     """Helper class for applying unified theme across components"""
 
     @staticmethod
-    def apply_theme_to_widget(widget, theme_method: str, **kwargs):
+    def apply_theme_to_widget(widget, theme_method: str, **kwargs) -> None:
         """Apply theme styling to a widget"""
         try:
             style_method = getattr(VidTaniumTheme, theme_method)
@@ -395,8 +395,8 @@ class ThemeManager:
             print(f"Error applying theme: {e}")
 
     @staticmethod
-    def get_shadow_effect(blur_radius: int = 20, offset_y: int = 4, color_alpha: int = 30):
-        """Create consistent shadow effects"""
+    def get_shadow_effect(blur_radius: int = 12, offset_y: int = 2, color_alpha: int = 50):
+        """Create shadow effects for elevation"""
         from PySide6.QtWidgets import QGraphicsDropShadowEffect
         from PySide6.QtGui import QColor
 

@@ -15,17 +15,17 @@ from qfluentwidgets import (
 )
 from ..utils.formatters import format_speed, format_bytes, format_time, format_percentage, format_eta
 from ..utils.i18n import tr
-from ..utils.theme import VidTaniumTheme, ThemeManager
 from ..utils.responsive import ResponsiveWidget, ResponsiveManager, ResponsiveContainer
 # Import optimized progress components
 from ..utils.fluent_progress import FluentProgressBar, ProgressCardWidget, CompactProgressBar
+from qfluentwidgets import isDarkTheme, qconfig
 from loguru import logger
 
 
-class ModernStatusBadge(QLabel):
-    """Enhanced animated status badge with responsive design"""
+class ModernStatusBadge(BodyLabel):
+    """Status badge using qfluentwidgets native components"""
 
-    def __init__(self, text="", status_type="default", parent=None):
+    def __init__(self, text="", status_type="default", parent=None) -> None:
         super().__init__(text, parent)
         self.status_type = status_type
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -33,37 +33,13 @@ class ModernStatusBadge(QLabel):
         self.setMinimumWidth(60)
         self._setup_style()
 
-        # Add responsive shadow effect
-        shadow = ThemeManager.get_shadow_effect(
-            blur_radius=8, offset_y=2, color_alpha=30)
-        self.setGraphicsEffect(shadow)
+    def _setup_style(self) -> None:
+        """Setup style using theme-aware colors"""
+        # Use qfluentwidgets theme colors
+        # Status colors will be handled by qconfig theme system
+        self.setObjectName(f"status-badge-{self.status_type}")
 
-    def _setup_style(self):
-        """Setup style based on status type with enhanced theming"""
-        # Get theme colors from enhanced theme manager
-        if hasattr(ThemeManager, 'get_status_badge_style'):
-            self.setStyleSheet(VidTaniumTheme.get_status_badge_style(self.status_type))
-        else:
-            # Fallback styling
-            colors = {
-                'running': f'background: {VidTaniumTheme.SUCCESS_GREEN}; color: white;',
-                'paused': f'background: {VidTaniumTheme.WARNING_ORANGE}; color: white;',
-                'completed': f'background: {VidTaniumTheme.ACCENT_CYAN}; color: white;',
-                'failed': f'background: {VidTaniumTheme.ERROR_RED}; color: white;',
-                'default': f'background: {VidTaniumTheme.BG_SURFACE}; color: {VidTaniumTheme.TEXT_PRIMARY};'
-            }
-            base_style = f"""
-                QLabel {{
-                    {colors.get(self.status_type, colors['default'])}
-                    border-radius: 12px;
-                    padding: 4px 8px;
-                    font-weight: 600;
-                    font-size: 11px;
-                }}
-            """
-            self.setStyleSheet(base_style)
-
-    def update_status(self, status_type: str, text: str):
+    def update_status(self, status_type: str, text: str) -> None:
         """Update badge status and text with smooth animation"""
         if self.status_type != status_type:
             # Add fade transition for status changes
@@ -78,7 +54,7 @@ class ModernStatusBadge(QLabel):
         else:
             self.setText(text)
 
-    def _complete_status_update(self, status_type: str, text: str):
+    def _complete_status_update(self, status_type: str, text: str) -> None:
         """Complete the status update animation"""
         self.status_type = status_type
         self.setText(text)
@@ -95,18 +71,18 @@ class ModernStatusBadge(QLabel):
 
 
 class CustomSeparator(QFrame):
-    """Enhanced separator widget with responsive styling"""
+    """Simple separator widget using qfluentwidgets theme"""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setFrameShape(QFrame.Shape.VLine)
         self.setFrameShadow(QFrame.Shadow.Sunken)
         self.setFixedWidth(1)
-        self.setStyleSheet(f"QFrame {{ color: {VidTaniumTheme.BORDER_MEDIUM}; }}")
+        # Let qfluentwidgets handle the color automatically
 
 
-class EnhancedTaskItem(ResponsiveContainer):
-    """Enhanced task item with responsive design and modern animations"""
+class TaskItem(ResponsiveContainer):
+    """Task item with responsive design and modern animations"""
 
     # Signals
     playClicked = Signal(str)  # task_id
@@ -114,7 +90,7 @@ class EnhancedTaskItem(ResponsiveContainer):
     stopClicked = Signal(str)
     deleteClicked = Signal(str)
 
-    def __init__(self, task_id: str, task_data: dict, parent=None):
+    def __init__(self, task_id: str, task_data: dict, parent=None) -> None:
         super().__init__(parent)
         self.task_id = task_id
         self.task_data = task_data
@@ -129,7 +105,7 @@ class EnhancedTaskItem(ResponsiveContainer):
         self._setup_style()
         self._setup_animations()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """Create the enhanced responsive task item UI"""
         # Main card container
         self.card = ElevatedCardWidget()
@@ -155,7 +131,7 @@ class EnhancedTaskItem(ResponsiveContainer):
         # Actions section with responsive buttons
         self._create_actions_section()
 
-    def _setup_responsive_margins(self):
+    def _setup_responsive_margins(self) -> None:
         """Setup margins that adapt to screen size"""
         current_bp = self.responsive_manager.get_current_breakpoint()
         
@@ -170,12 +146,12 @@ class EnhancedTaskItem(ResponsiveContainer):
         margin = margin_config.get(current_bp.value, 20)
         self.main_layout.setContentsMargins(margin, margin//2, margin, margin//2)
 
-    def on_breakpoint_changed(self, breakpoint: str):
+    def on_breakpoint_changed(self, breakpoint: str) -> None:
         """Handle responsive breakpoint changes"""
         self._setup_responsive_margins()
         self._adapt_layout_for_breakpoint(breakpoint)
 
-    def _adapt_layout_for_breakpoint(self, breakpoint: str):
+    def _adapt_layout_for_breakpoint(self, breakpoint: str) -> None:
         """Adapt layout based on current breakpoint"""
         if breakpoint in ['xs', 'sm']:
             # Compact layout for small screens
@@ -184,7 +160,7 @@ class EnhancedTaskItem(ResponsiveContainer):
             # Full layout for larger screens
             self._set_compact_mode(False)
 
-    def _set_compact_mode(self, compact: bool):
+    def _set_compact_mode(self, compact: bool) -> None:
         """Switch between compact and full layout modes"""
         if compact:
             # Hide less important elements on small screens
@@ -200,7 +176,7 @@ class EnhancedTaskItem(ResponsiveContainer):
             if hasattr(self, 'details_section') and self.is_expanded:
                 self.details_section.setVisible(True)
 
-    def _create_header(self):
+    def _create_header(self) -> None:
         """Create responsive header with adaptive layout"""
         header_layout = QHBoxLayout()
         header_layout.setSpacing(12)
@@ -218,18 +194,19 @@ class EnhancedTaskItem(ResponsiveContainer):
 
         self.main_layout.addLayout(header_layout)
 
-    def _create_task_icon(self, header_layout: QHBoxLayout):
+    def _create_task_icon(self, header_layout: QHBoxLayout) -> None:
         """Create responsive task icon"""
         current_bp = self.responsive_manager.get_current_breakpoint()
         icon_size = 40 if current_bp.value in ['xs', 'sm'] else 48
         
         icon_container = QWidget()
         icon_container.setFixedSize(icon_size, icon_size)
+        # Use theme color for icon background
+        theme_color = qconfig.themeColor()
         icon_container.setStyleSheet(f"""
             QWidget {{
-                background: {VidTaniumTheme.GRADIENT_PRIMARY};
+                background-color: {theme_color.name()};
                 border-radius: {icon_size//2}px;
-                border: 2px solid rgba(255, 255, 255, 0.2);
             }}
         """)
 
@@ -239,32 +216,25 @@ class EnhancedTaskItem(ResponsiveContainer):
         self.task_icon = TransparentToolButton(FIF.VIDEO)
         self.task_icon.setIconSize(QSize(icon_size//2, icon_size//2))
         self.task_icon.setStyleSheet(
-            f"background: transparent; border: none; color: {VidTaniumTheme.TEXT_WHITE};")
+            "background: transparent; border: none; color: white;")
         icon_layout.addWidget(self.task_icon, 0, Qt.AlignmentFlag.AlignCenter)
 
         header_layout.addWidget(icon_container)
 
-    def _create_task_info(self, header_layout: QHBoxLayout):
+    def _create_task_info(self, header_layout: QHBoxLayout) -> None:
         """Create responsive task information section"""
         info_layout = QVBoxLayout()
         info_layout.setSpacing(4)
 
         self.title_label = StrongBodyLabel(
             self.task_data.get('name', tr('task_manager.unknown_task')))
-        self.title_label.setStyleSheet(f"""
-            font-size: {VidTaniumTheme.FONT_SIZE_SUBHEADING}; 
-            font-weight: {VidTaniumTheme.FONT_WEIGHT_SEMIBOLD}; 
-            color: {VidTaniumTheme.TEXT_PRIMARY};
-            margin: 0;
-        """)
+        # Let qfluentwidgets StrongBodyLabel handle styling automatically
+        # No custom stylesheet needed
         self.title_label.setWordWrap(True)
 
         self.url_label = CaptionLabel(self.task_data.get('url', ''))
-        self.url_label.setStyleSheet(f"""
-            color: {VidTaniumTheme.TEXT_SECONDARY}; 
-            font-size: {VidTaniumTheme.FONT_SIZE_CAPTION};
-            margin: 0;
-        """)
+        # CaptionLabel already has appropriate styling from qfluentwidgets
+        # No custom stylesheet needed
         self.url_label.setWordWrap(True)
         
         # Limit URL length for better responsive display
@@ -279,7 +249,7 @@ class EnhancedTaskItem(ResponsiveContainer):
 
         header_layout.addLayout(info_layout)
 
-    def _create_status_controls(self, header_layout: QHBoxLayout):
+    def _create_status_controls(self, header_layout: QHBoxLayout) -> None:
         """Create responsive status and control section"""
         status_layout = QVBoxLayout()
         status_layout.setSpacing(8)
@@ -291,23 +261,15 @@ class EnhancedTaskItem(ResponsiveContainer):
         self.expand_btn.setIconSize(QSize(16, 16))
         self.expand_btn.setToolTip(tr('task_manager.expand_details'))
         self.expand_btn.clicked.connect(self._toggle_expand)
-        self.expand_btn.setStyleSheet(f"""
-            TransparentToolButton {{
-                border-radius: {VidTaniumTheme.RADIUS_MEDIUM};
-                background-color: {VidTaniumTheme.BG_OVERLAY};
-                padding: {VidTaniumTheme.SPACE_XS};
-            }}
-            TransparentToolButton:hover {{
-                background-color: {VidTaniumTheme.BG_SURFACE};
-            }}
-        """)
+        # TransparentToolButton already has proper hover effects from qfluentwidgets
+        # No custom stylesheet needed
 
         status_layout.addWidget(self.status_badge, 0, Qt.AlignmentFlag.AlignRight)
         status_layout.addWidget(self.expand_btn, 0, Qt.AlignmentFlag.AlignRight)
 
         header_layout.addLayout(status_layout)
 
-    def _create_progress_section(self):
+    def _create_progress_section(self) -> None:
         """Create beautiful progress visualization with Fluent Design"""
         progress_container = QWidget()
         progress_layout = QVBoxLayout(progress_container)
@@ -327,7 +289,7 @@ class EnhancedTaskItem(ResponsiveContainer):
         progress_layout.addWidget(self.progress_card)
         self.main_layout.addWidget(progress_container)
 
-    def _create_details_section(self):
+    def _create_details_section(self) -> None:
         """Create collapsible details section"""
         self.details_widget = QWidget()
         self.details_widget.setFixedHeight(0)  # Initially collapsed
@@ -351,15 +313,9 @@ class EnhancedTaskItem(ResponsiveContainer):
         size_layout = QVBoxLayout()
         size_layout.setSpacing(2)
         size_label = CaptionLabel(tr('task_manager.file_size'))
-        size_label.setStyleSheet(f"""
-            color: {VidTaniumTheme.TEXT_TERTIARY}; 
-            font-size: {VidTaniumTheme.FONT_SIZE_SMALL};
-        """)
+        # CaptionLabel already styled by qfluentwidgets
         self.file_size_label = BodyLabel("0 MB")
-        self.file_size_label.setStyleSheet(f"""
-            color: {VidTaniumTheme.TEXT_PRIMARY}; 
-            font-weight: {VidTaniumTheme.FONT_WEIGHT_SEMIBOLD};
-        """)
+        # BodyLabel already styled by qfluentwidgets
         size_layout.addWidget(size_label)
         size_layout.addWidget(self.file_size_label)
 
@@ -367,16 +323,10 @@ class EnhancedTaskItem(ResponsiveContainer):
         path_layout = QVBoxLayout()
         path_layout.setSpacing(2)
         path_label = CaptionLabel(tr('task_manager.download_path'))
-        path_label.setStyleSheet(f"""
-            color: {VidTaniumTheme.TEXT_TERTIARY}; 
-            font-size: {VidTaniumTheme.FONT_SIZE_SMALL};
-        """)
+        # CaptionLabel already styled by qfluentwidgets
         self.download_path_label = BodyLabel(
             self.task_data.get('output_dir', ''))
-        self.download_path_label.setStyleSheet(f"""
-            color: {VidTaniumTheme.TEXT_PRIMARY}; 
-            font-weight: {VidTaniumTheme.FONT_WEIGHT_SEMIBOLD};
-        """)
+        # BodyLabel already styled by qfluentwidgets
         self.download_path_label.setWordWrap(True)
         path_layout.addWidget(path_label)
         path_layout.addWidget(self.download_path_label)
@@ -389,7 +339,7 @@ class EnhancedTaskItem(ResponsiveContainer):
 
         self.main_layout.addWidget(self.details_widget)
 
-    def _create_actions_section(self):
+    def _create_actions_section(self) -> None:
         """Create modern action buttons"""
         actions_layout = QHBoxLayout()
         actions_layout.setSpacing(8)
@@ -439,7 +389,7 @@ class EnhancedTaskItem(ResponsiveContainer):
 
         self.main_layout.addLayout(actions_layout)
 
-    def _setup_style(self):
+    def _setup_style(self) -> None:
         """Setup beautiful card styling with hover effects"""
         self.setStyleSheet("""
             EnhancedTaskItem {
@@ -454,14 +404,14 @@ class EnhancedTaskItem(ResponsiveContainer):
             }
         """)
 
-    def _setup_animations(self):
+    def _setup_animations(self) -> None:
         """Setup smooth animations"""
         self.expand_animation = QPropertyAnimation(
             self.details_widget, QByteArray(b"maximumHeight"))
         self.expand_animation.setDuration(300)
         self.expand_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
 
-    def _toggle_expand(self):
+    def _toggle_expand(self) -> None:
         """Toggle details section with smooth animation"""
         if self.is_expanded:
             # Collapse
@@ -477,7 +427,7 @@ class EnhancedTaskItem(ResponsiveContainer):
         self.expand_animation.start()
         self.is_expanded = not self.is_expanded
 
-    def _update_status_badge(self, status: str):
+    def _update_status_badge(self, status: str) -> None:
         """Update status badge with appropriate styling"""
         status_map = {
             'downloading': ('downloading', tr('task_manager.status.downloading')),
@@ -492,9 +442,12 @@ class EnhancedTaskItem(ResponsiveContainer):
 
 
 # Legacy compatibility
-class ModernTaskItem(EnhancedTaskItem):
-    """Legacy compatibility wrapper"""
+class TaskManagerCompat:
+    """Legacy TaskManager for backward compatibility"""
     pass
+
+# Backward compatibility alias
+EnhancedTaskItem = TaskItem
 
 
 class TaskManager(QWidget):
@@ -503,7 +456,7 @@ class TaskManager(QWidget):
     # Signals
     task_action_requested = Signal(str, str)  # task_id, action
 
-    def __init__(self, download_manager, parent=None):
+    def __init__(self, download_manager, parent=None) -> None:
         super().__init__(parent)
         self.download_manager = download_manager
         self.task_items = {}  # task_id -> ModernTaskItem
@@ -512,20 +465,21 @@ class TaskManager(QWidget):
         self._create_ui()
         self._setup_refresh_timer()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """Create the beautiful modern UI"""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(20)
 
-        # Beautiful header with themed gradient background
+        # Beautiful header using qfluentwidgets theme
         header_card = ElevatedCardWidget()
+        # Use theme color for header background
+        theme_color = qconfig.themeColor()
         header_card.setStyleSheet(f"""
             ElevatedCardWidget {{
-                background: {VidTaniumTheme.GRADIENT_PRIMARY};
+                background-color: {theme_color.name()};
                 border: none;
-                border-radius: {VidTaniumTheme.RADIUS_LARGE};
-                color: {VidTaniumTheme.TEXT_WHITE};
+                border-radius: 12px;
             }}
         """)
 
@@ -556,13 +510,13 @@ class TaskManager(QWidget):
 
         # Main title with themed styling
         title_label = StrongBodyLabel(tr("task_manager.title"))
-        title_label.setStyleSheet(f"""
-            QLabel {{
-                color: {VidTaniumTheme.TEXT_WHITE};
-                font-size: {VidTaniumTheme.FONT_SIZE_TITLE};
-                font-weight: {VidTaniumTheme.FONT_WEIGHT_BOLD};
+        title_label.setStyleSheet("""
+            QLabel {
+                color: white;
+                font-size: 24px;
+                font-weight: bold;
                 background: transparent;
-            }}
+            }
         """)
 
         # Statistics cards with themed colors
@@ -571,17 +525,17 @@ class TaskManager(QWidget):
 
         # Active downloads stat
         self.active_stat = self._create_stat_widget(
-            tr("task_manager.stats.active"), "0", FIF.DOWNLOAD, VidTaniumTheme.SUCCESS_GREEN
+            tr("task_manager.stats.active"), "0", FIF.DOWNLOAD
         )
 
         # Completed stat
         self.completed_stat = self._create_stat_widget(
-            tr("task_manager.stats.completed"), "0", FIF.ACCEPT, VidTaniumTheme.INFO_BLUE
+            tr("task_manager.stats.completed"), "0", FIF.ACCEPT
         )
 
         # Total speed stat
         self.speed_stat = self._create_stat_widget(
-            tr("task_manager.stats.speed"), "0 MB/s", FIF.SPEED_HIGH, VidTaniumTheme.WARNING_ORANGE
+            tr("task_manager.stats.speed"), "0 MB/s", FIF.SPEED_HIGH
         )
 
         stats_layout.addWidget(self.active_stat)
@@ -594,7 +548,7 @@ class TaskManager(QWidget):
 
         return title_layout
 
-    def _create_stat_widget(self, label: str, value: str, icon: FIF, color: str) -> QWidget:
+    def _create_stat_widget(self, label: str, value: str, icon: FIF) -> QWidget:
         """Create a beautiful statistics widget"""
         widget = QWidget()
         widget.setFixedSize(100, 60)
@@ -736,32 +690,15 @@ class TaskManager(QWidget):
 
         return controls_layout
 
-    def _create_task_list_area(self, parent_layout: QVBoxLayout):
+    def _create_task_list_area(self, parent_layout: QVBoxLayout) -> None:
         """Create beautiful task list area"""
         # Task list with smooth scrolling and themed styling
         self.scroll_area = SmoothScrollArea()
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setHorizontalScrollBarPolicy(
             Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.scroll_area.setStyleSheet(f"""
-            SmoothScrollArea {{
-                background-color: transparent;
-                border: none;
-            }}
-            QScrollBar:vertical {{
-                background-color: {VidTaniumTheme.BG_SECONDARY};
-                width: 8px;
-                border-radius: 4px;
-            }}
-            QScrollBar::handle:vertical {{
-                background-color: {VidTaniumTheme.BORDER_MEDIUM};
-                border-radius: 4px;
-                min-height: 20px;
-            }}
-            QScrollBar::handle:vertical:hover {{
-                background-color: {VidTaniumTheme.BORDER_ACCENT};
-            }}
-        """)
+        # SmoothScrollArea already has proper styling from qfluentwidgets
+        # No custom styling needed
 
         # Task container
         self.task_container = QWidget()
@@ -781,14 +718,8 @@ class TaskManager(QWidget):
     def _create_beautiful_empty_state(self) -> QWidget:
         """Create beautiful empty state widget with themed design"""
         widget = ElevatedCardWidget()
-        widget.setStyleSheet(f"""
-            ElevatedCardWidget {{
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 {VidTaniumTheme.BG_SECONDARY}, stop:1 {VidTaniumTheme.BG_PRIMARY});
-                border: 2px dashed {VidTaniumTheme.BORDER_MEDIUM};
-                border-radius: {VidTaniumTheme.RADIUS_XLARGE};
-            }}
-        """)
+        # Let qfluentwidgets handle the styling
+        widget.setObjectName("empty-state")
 
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(60, 60, 60, 60)
@@ -800,8 +731,7 @@ class TaskManager(QWidget):
         icon_container.setFixedSize(120, 120)
         icon_container.setStyleSheet("""
             QWidget {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #667eea, stop:1 #764ba2);
+                background-color: #667eea;
                 border-radius: 60px;
             }
         """)
@@ -847,28 +777,28 @@ class TaskManager(QWidget):
 
         return widget
 
-    def _setup_refresh_timer(self):
+    def _setup_refresh_timer(self) -> None:
         """Setup timer for refreshing task display"""
         self.refresh_timer = QTimer(self)
         self.refresh_timer.timeout.connect(self._refresh_tasks)
         self.refresh_timer.start(1000)  # Refresh every second
 
-    def _connect_signals(self):
+    def _connect_signals(self) -> None:
         """Connect UI signals"""
         self.clear_completed_btn.clicked.connect(self._clear_completed_tasks)
         # Note: select_all_check was removed in the new design
 
-    def _on_search_changed(self, text: str):
+    def _on_search_changed(self, text: str) -> None:
         """Handle search text change"""
         self.search_text = text.lower()
         self._filter_tasks()
 
-    def _on_filter_changed(self, status: str):
+    def _on_filter_changed(self, status: str) -> None:
         """Handle filter change"""
         self.filter_status = status.lower()
         self._filter_tasks()
 
-    def _filter_tasks(self):
+    def _filter_tasks(self) -> None:
         """Filter visible tasks based on search and status"""
         for task_item in self.task_items.values():
             should_show = True
@@ -889,7 +819,7 @@ class TaskManager(QWidget):
 
         self._update_summary()
 
-    def _update_summary(self):
+    def _update_summary(self) -> None:
         """Update task statistics"""
         visible_count = sum(
             1 for item in self.task_items.values() if item.isVisible())
@@ -922,7 +852,7 @@ class TaskManager(QWidget):
             if value_label:
                 value_label.setText(format_speed(total_speed))
 
-    def _refresh_tasks(self):
+    def _refresh_tasks(self) -> None:
         """Refresh task data from download manager"""
         if not self.download_manager:
             return
@@ -931,7 +861,7 @@ class TaskManager(QWidget):
         # For now, we'll just update the display
         self._update_summary()
 
-    def _clear_completed_tasks(self):
+    def _clear_completed_tasks(self) -> None:
         """Clear all completed tasks"""
         completed_items = []
         for task_id, task_item in self.task_items.items():
@@ -941,14 +871,14 @@ class TaskManager(QWidget):
         for task_id in completed_items:
             self.remove_task(task_id)
 
-    def _on_select_all_toggled(self, checked: bool):
+    def _on_select_all_toggled(self, checked: bool) -> None:
         """Handle select all toggle"""
         # This would implement bulk selection
         # For now, just enable/disable bulk action buttons
         self.start_selected_btn.setEnabled(checked)
         self.pause_selected_btn.setEnabled(checked)
 
-    def add_task(self, task_id: str, task_data: dict):
+    def add_task(self, task_id: str, task_data: dict) -> None:
         """Add a new task item"""
         if task_id in self.task_items:
             return
@@ -975,7 +905,7 @@ class TaskManager(QWidget):
 
         self._update_summary()
 
-    def remove_task(self, task_id: str):
+    def remove_task(self, task_id: str) -> None:
         """Remove a task item"""
         if task_id not in self.task_items:
             return
@@ -991,7 +921,7 @@ class TaskManager(QWidget):
 
         self._update_summary()
 
-    def update_task_progress(self, task_id: str, progress_data: dict):
+    def update_task_progress(self, task_id: str, progress_data: dict) -> None:
         """Update progress for a specific task with error handling"""
         try:
             if task_id in self.task_items:
@@ -1004,7 +934,7 @@ class TaskManager(QWidget):
         except Exception as e:
             print(f"Error updating task progress for {task_id}: {e}")
 
-    def update_task_status(self, task_id: str, status: str):
+    def update_task_status(self, task_id: str, status: str) -> None:
         """Update status for a specific task with error handling"""
         try:
             if task_id in self.task_items:
@@ -1018,7 +948,7 @@ class TaskManager(QWidget):
         except Exception as e:
             print(f"Error updating task status for {task_id}: {e}")
 
-    def _create_task_item_safe(self, task_id: str, task):
+    def _create_task_item_safe(self, task_id: str, task) -> None:
         """Create a new task item widget safely"""
         try:
             # Extract task data safely
@@ -1068,7 +998,7 @@ class TaskManager(QWidget):
         except Exception as e:
             print(f"Error creating task item for {task_id}: {e}")
 
-    def _update_task_item_safe(self, task_id: str, task):
+    def _update_task_item_safe(self, task_id: str, task) -> None:
         """Update existing task item with latest data safely"""
         try:
             if task_id in self.task_items:
@@ -1086,7 +1016,7 @@ class TaskManager(QWidget):
         except Exception as e:
             print(f"Error updating task item for {task_id}: {e}")
 
-    def _remove_task_item_safe(self, task_id: str):
+    def _remove_task_item_safe(self, task_id: str) -> None:
         """Remove a task item widget safely"""
         try:
             if task_id in self.task_items:
@@ -1101,7 +1031,7 @@ class TaskManager(QWidget):
         except Exception as e:
             print(f"Error removing task item for {task_id}: {e}")
 
-    def _confirm_delete_task(self, task_id: str):
+    def _confirm_delete_task(self, task_id: str) -> None:
         """Show confirmation dialog before deleting task"""
         try:
             from PySide6.QtWidgets import QMessageBox
@@ -1118,7 +1048,7 @@ class TaskManager(QWidget):
         except Exception as e:
             print(f"Error showing delete confirmation for {task_id}: {e}")
 
-    def refresh_from_manager(self):
+    def refresh_from_manager(self) -> None:
         """Refresh task list from download manager with proper sync"""
         try:
             if not self.download_manager or not hasattr(self.download_manager, 'tasks'):

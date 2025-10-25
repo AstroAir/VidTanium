@@ -17,7 +17,7 @@ from src.app.logging_config import (
 class TestLoggingConfiguration:
     """Test suite for logging configuration functions."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         # Reset logging configuration state
         import src.app.logging_config
@@ -26,14 +26,14 @@ class TestLoggingConfiguration:
         # Create temporary directory for log files
         self.temp_dir = tempfile.mkdtemp()
 
-    def teardown_method(self):
+    def teardown_method(self) -> None:
         """Clean up after tests."""
         # Clean up temp directory
         import shutil
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     @patch('src.app.logging_config.logger')
-    def test_configure_logging_console_only(self, mock_logger):
+    def test_configure_logging_console_only(self, mock_logger) -> None:
         """Test configuring logging with console output only."""
         configure_logging(log_level="INFO", enable_console=True)
         
@@ -51,7 +51,7 @@ class TestLoggingConfiguration:
         assert call_args[1]['diagnose'] is True
 
     @patch('src.app.logging_config.logger')
-    def test_configure_logging_file_only(self, mock_logger):
+    def test_configure_logging_file_only(self, mock_logger) -> None:
         """Test configuring logging with file output only."""
         log_file = os.path.join(self.temp_dir, "test.log")
         
@@ -71,7 +71,7 @@ class TestLoggingConfiguration:
         assert call_args[1]['compression'] == "zip"
 
     @patch('src.app.logging_config.logger')
-    def test_configure_logging_both_console_and_file(self, mock_logger):
+    def test_configure_logging_both_console_and_file(self, mock_logger) -> None:
         """Test configuring logging with both console and file output."""
         log_file = os.path.join(self.temp_dir, "test.log")
         
@@ -90,7 +90,7 @@ class TestLoggingConfiguration:
         assert file_call[0][0] == log_file
 
     @patch('src.app.logging_config.logger')
-    def test_configure_logging_creates_log_directory(self, mock_logger):
+    def test_configure_logging_creates_log_directory(self, mock_logger) -> None:
         """Test that log directory is created if it doesn't exist."""
         log_dir = os.path.join(self.temp_dir, "nested", "log", "dir")
         log_file = os.path.join(log_dir, "test.log")
@@ -104,7 +104,7 @@ class TestLoggingConfiguration:
         assert os.path.exists(log_dir)
 
     @patch('src.app.logging_config.logger')
-    def test_get_logger_with_name(self, mock_logger):
+    def test_get_logger_with_name(self, mock_logger) -> None:
         """Test getting logger with specific name."""
         mock_bound_logger = Mock()
         mock_logger.bind.return_value = mock_bound_logger
@@ -115,7 +115,7 @@ class TestLoggingConfiguration:
         assert result == mock_bound_logger
 
     @patch('src.app.logging_config.logger')
-    def test_get_logger_without_name(self, mock_logger):
+    def test_get_logger_without_name(self, mock_logger) -> None:
         """Test getting logger without name."""
         result = get_logger()
         
@@ -123,7 +123,7 @@ class TestLoggingConfiguration:
         assert result == mock_logger
 
     @patch('src.app.logging_config.logger')
-    def test_get_logger_with_none_name(self, mock_logger):
+    def test_get_logger_with_none_name(self, mock_logger) -> None:
         """Test getting logger with None name."""
         result = get_logger(None)
         
@@ -134,13 +134,13 @@ class TestLoggingConfiguration:
 class TestInterceptHandler:
     """Test suite for InterceptHandler class."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.handler = InterceptHandler()
 
     @patch('src.app.logging_config.logger')
     @patch('sys._getframe')
-    def test_emit_with_valid_level(self, mock_getframe, mock_logger):
+    def test_emit_with_valid_level(self, mock_getframe, mock_logger) -> None:
         """Test emit method with valid log level."""
         # Mock log record
         record = logging.LogRecord(
@@ -178,7 +178,7 @@ class TestInterceptHandler:
 
     @patch('src.app.logging_config.logger')
     @patch('sys._getframe')
-    def test_emit_with_invalid_level(self, mock_getframe, mock_logger):
+    def test_emit_with_invalid_level(self, mock_getframe, mock_logger) -> None:
         """Test emit method with invalid log level."""
         # Mock log record
         record = logging.LogRecord(
@@ -214,7 +214,7 @@ class TestInterceptHandler:
 
     @patch('src.app.logging_config.logger')
     @patch('sys._getframe')
-    def test_emit_with_exception_info(self, mock_getframe, mock_logger):
+    def test_emit_with_exception_info(self, mock_getframe, mock_logger) -> None:
         """Test emit method with exception information."""
         # Create exception info
         try:
@@ -256,7 +256,7 @@ class TestInterceptHandler:
         mock_opt.log.assert_called_once_with("ERROR", "Error occurred")
 
     @patch('src.app.logging_config.logger')
-    def test_emit_frame_traversal(self, mock_logger):
+    def test_emit_frame_traversal(self, mock_logger) -> None:
         """Test frame traversal in emit method."""
         # This test is complex due to frame manipulation
         # We'll test the basic functionality
@@ -290,19 +290,19 @@ class TestInterceptHandler:
 class TestStandardLoggingIntercept:
     """Test suite for standard logging interception."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         # Store original handlers
         self.original_handlers = logging.getLogger().handlers.copy()
         self.original_level = logging.getLogger().level
 
-    def teardown_method(self):
+    def teardown_method(self) -> None:
         """Clean up after tests."""
         # Restore original handlers
         logging.getLogger().handlers = self.original_handlers
         logging.getLogger().setLevel(self.original_level)
 
-    def test_setup_standard_logging_intercept(self):
+    def test_setup_standard_logging_intercept(self) -> None:
         """Test setting up standard logging interception."""
         # Add some dummy handlers first
         dummy_handler = logging.StreamHandler()
@@ -318,7 +318,7 @@ class TestStandardLoggingIntercept:
         # Should set DEBUG level
         assert logging.getLogger().level == logging.DEBUG
 
-    def test_third_party_logger_levels(self):
+    def test_third_party_logger_levels(self) -> None:
         """Test that third-party loggers are set to WARNING level."""
         setup_standard_logging_intercept()
         
@@ -331,7 +331,7 @@ class TestStandardLoggingIntercept:
 class TestEnsureLoggingConfigured:
     """Test suite for ensure_logging_configured function."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         # Reset configuration state
         import src.app.logging_config
@@ -339,7 +339,7 @@ class TestEnsureLoggingConfigured:
 
     @patch('src.app.logging_config.setup_standard_logging_intercept')
     @patch('src.app.logging_config.configure_logging')
-    def test_ensure_logging_configured_first_call(self, mock_configure, mock_setup):
+    def test_ensure_logging_configured_first_call(self, mock_configure, mock_setup) -> None:
         """Test ensure_logging_configured on first call."""
         ensure_logging_configured()
         
@@ -353,7 +353,7 @@ class TestEnsureLoggingConfigured:
 
     @patch('src.app.logging_config.setup_standard_logging_intercept')
     @patch('src.app.logging_config.configure_logging')
-    def test_ensure_logging_configured_subsequent_calls(self, mock_configure, mock_setup):
+    def test_ensure_logging_configured_subsequent_calls(self, mock_configure, mock_setup) -> None:
         """Test ensure_logging_configured on subsequent calls."""
         # Call once
         ensure_logging_configured()
@@ -373,7 +373,7 @@ class TestEnsureLoggingConfigured:
 class TestLoguruFormat:
     """Test suite for LOGURU_FORMAT constant."""
 
-    def test_format_contains_required_elements(self):
+    def test_format_contains_required_elements(self) -> None:
         """Test that LOGURU_FORMAT contains required elements."""
         assert "{time:YYYY-MM-DD HH:mm:ss.SSS}" in LOGURU_FORMAT
         assert "{level: <8}" in LOGURU_FORMAT
@@ -382,7 +382,7 @@ class TestLoguruFormat:
         assert "{line}" in LOGURU_FORMAT
         assert "{message}" in LOGURU_FORMAT
 
-    def test_format_has_colors(self):
+    def test_format_has_colors(self) -> None:
         """Test that LOGURU_FORMAT includes color tags."""
         assert "<green>" in LOGURU_FORMAT
         assert "</green>" in LOGURU_FORMAT
@@ -395,7 +395,7 @@ class TestLoguruFormat:
 class TestIntegration:
     """Integration tests for logging configuration."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         # Reset configuration state
         import src.app.logging_config
@@ -404,14 +404,14 @@ class TestIntegration:
         # Create temporary directory
         self.temp_dir = tempfile.mkdtemp()
 
-    def teardown_method(self):
+    def teardown_method(self) -> None:
         """Clean up after tests."""
         # Clean up temp directory
         import shutil
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     @patch('src.app.logging_config.logger')
-    def test_full_logging_setup(self, mock_logger):
+    def test_full_logging_setup(self, mock_logger) -> None:
         """Test complete logging setup process."""
         log_file = os.path.join(self.temp_dir, "app.log")
         
@@ -429,7 +429,7 @@ class TestIntegration:
         assert mock_logger.add.call_count == 2  # Console + file
         mock_logger.bind.assert_called_once_with(name="test_app")
 
-    def test_standard_logging_integration(self):
+    def test_standard_logging_integration(self) -> None:
         """Test that standard logging integrates with loguru."""
         # Setup interception
         setup_standard_logging_intercept()

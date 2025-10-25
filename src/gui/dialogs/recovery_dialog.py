@@ -28,12 +28,12 @@ class RecoveryActionWidget(CardWidget):
     
     action_triggered = Signal(RecoveryAction)
     
-    def __init__(self, action: RecoveryAction, parent=None):
+    def __init__(self, action: RecoveryAction, parent=None) -> None:
         super().__init__(parent)
         self.action = action
         self._setup_ui()
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup the action widget UI"""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(16, 12, 16, 12)
@@ -117,12 +117,12 @@ class RecoveryExecutionWorker(QObject):
     action_completed = Signal(bool, str)
     finished = Signal()
     
-    def __init__(self, recovery_plan: RecoveryPlan, context: dict):
+    def __init__(self, recovery_plan: RecoveryPlan, context: dict) -> None:
         super().__init__()
         self.recovery_plan = recovery_plan
         self.context = context
     
-    def execute_recovery(self):
+    def execute_recovery(self) -> None:
         """Execute recovery plan"""
         from src.core.intelligent_recovery import intelligent_recovery_system
         
@@ -148,7 +148,7 @@ class ErrorRecoveryDialog(QDialog):
     recovery_requested = Signal(RecoveryAction)
     recovery_completed = Signal(bool, str)
     
-    def __init__(self, exception: VidTaniumException, recovery_plan: RecoveryPlan, parent=None):
+    def __init__(self, exception: VidTaniumException, recovery_plan: RecoveryPlan, parent=None) -> None:
         super().__init__(parent)
         self.exception = exception
         self.recovery_plan = recovery_plan
@@ -156,7 +156,7 @@ class ErrorRecoveryDialog(QDialog):
         self._setup_ui()
         self._setup_connections()
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup the dialog UI"""
         self.setWindowTitle(tr("recovery.dialog_title"))
         self.setMinimumSize(600, 500)
@@ -301,7 +301,7 @@ class ErrorRecoveryDialog(QDialog):
         
         return layout
     
-    def _setup_connections(self):
+    def _setup_connections(self) -> None:
         """Setup signal connections"""
         self.recovery_requested.connect(self._handle_manual_recovery)
     
@@ -315,7 +315,7 @@ class ErrorRecoveryDialog(QDialog):
         }
         return icon_map.get(severity, FIF.INFO)
     
-    def _start_auto_recovery(self):
+    def _start_auto_recovery(self) -> None:
         """Start automated recovery process"""
         self.progress_group.show()
         self.auto_recover_button.setEnabled(False)
@@ -335,11 +335,11 @@ class ErrorRecoveryDialog(QDialog):
         # Start recovery
         self.recovery_thread.start()
     
-    def _update_progress(self, message: str):
+    def _update_progress(self, message: str) -> None:
         """Update progress display"""
         self.progress_label.setText(message)
     
-    def _handle_recovery_completed(self, success: bool, message: str):
+    def _handle_recovery_completed(self, success: bool, message: str) -> None:
         """Handle recovery completion"""
         self.progress_group.hide()
         self.auto_recover_button.setEnabled(True)
@@ -361,7 +361,7 @@ class ErrorRecoveryDialog(QDialog):
             )
             self.recovery_completed.emit(False, message)
     
-    def _handle_manual_recovery(self, action: RecoveryAction):
+    def _handle_manual_recovery(self, action: RecoveryAction) -> None:
         """Handle manual recovery action"""
         InfoBar.info(
             title=tr("recovery.manual_action"),
@@ -373,6 +373,6 @@ class ErrorRecoveryDialog(QDialog):
         # Emit signal for parent to handle
         self.recovery_requested.emit(action)
     
-    def set_recovery_context(self, context: dict):
+    def set_recovery_context(self, context: dict) -> None:
         """Set recovery context for execution"""
         self.recovery_context = context

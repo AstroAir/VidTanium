@@ -44,13 +44,13 @@ class ResponsiveManager(QObject):
         BreakPoint.EXTRA_EXTRA_LARGE: 1400,
     }
     
-    def __new__(cls):
+    def __new__(cls) -> None:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance._initialized = False
         return cls._instance
     
-    def __init__(self):
+    def __init__(self) -> None:
         if hasattr(self, '_initialized') and self._initialized:
             return
         super().__init__()
@@ -107,26 +107,40 @@ class ResponsiveManager(QObject):
         return self._current_orientation
     
     def update_for_size(self, size: QSize) -> None:
-        """Update responsive state for given size"""
-        width, height = size.width(), size.height()
-        
-        # Determine breakpoint
-        new_breakpoint = self._get_breakpoint_for_width(width)
-        if new_breakpoint != self._current_breakpoint:
-            old_breakpoint = self._current_breakpoint
-            self._current_breakpoint = new_breakpoint
-            logger.debug(f"Breakpoint changed: {old_breakpoint.value} -> {new_breakpoint.value}")
-            self.breakpoint_changed.emit(new_breakpoint.value)
-            self._notify_breakpoint_callbacks(new_breakpoint.value)
-        
-        # Determine orientation
-        new_orientation = Qt.Orientation.Horizontal if width > height else Qt.Orientation.Vertical
-        if new_orientation != self._current_orientation:
-            old_orientation = self._current_orientation
-            self._current_orientation = new_orientation
-            logger.debug(f"Orientation changed: {old_orientation} -> {new_orientation}")
-            self.orientation_changed.emit(new_orientation)
-            self._notify_orientation_callbacks(new_orientation)
+        """Update responsive state for given size with error handling"""
+        try:
+            if not size or not size.isValid():
+                return
+                
+            width, height = size.width(), size.height()
+            
+            # Validate dimensions
+            if width <= 0 or height <= 0:
+                return
+            
+            # Determine breakpoint
+            new_breakpoint = self._get_breakpoint_for_width(width)
+            if new_breakpoint != self._current_breakpoint:
+                old_breakpoint = self._current_breakpoint
+                self._current_breakpoint = new_breakpoint
+                logger.debug(f"Breakpoint changed: {old_breakpoint.value} -> {new_breakpoint.value} (width: {width}px)")
+                
+                # Debounce the breakpoint change to avoid rapid updates
+                self._resize_timer.stop()
+                self._resize_timer.setInterval(150)  # 150ms debounce
+                self._resize_timer.start()
+            
+            # Determine orientation
+            new_orientation = Qt.Orientation.Horizontal if width > height else Qt.Orientation.Vertical
+            if new_orientation != self._current_orientation:
+                old_orientation = self._current_orientation
+                self._current_orientation = new_orientation
+                logger.debug(f"Orientation changed: {old_orientation} -> {new_orientation}")
+                self.orientation_changed.emit(new_orientation)
+                self._notify_orientation_callbacks(new_orientation)
+                
+        except Exception as e:
+            logger.error(f"Error updating responsive state: {e}")
     
     def _get_breakpoint_for_width(self, width: int) -> BreakPoint:
         """Get breakpoint for given width"""
@@ -136,12 +150,14 @@ class ResponsiveManager(QObject):
         return BreakPoint.EXTRA_SMALL
     
     def _handle_delayed_resize(self) -> None:
-        """Handle delayed resize event"""
-        if QApplication.instance():
-            screen = QApplication.primaryScreen()
-            if screen:
-                size = screen.availableSize()
-                self.update_for_size(size)
+        """Handle delayed resize event - emit the actual breakpoint change"""
+        try:
+            # Emit the breakpoint change that was debounced
+            if self._current_breakpoint:
+                self.breakpoint_changed.emit(self._current_breakpoint.value)
+                self._notify_breakpoint_callbacks(self._current_breakpoint.value)
+        except Exception as e:
+            logger.error(f"Error in delayed resize handler: {e}")
     
     def _notify_breakpoint_callbacks(self, breakpoint: str) -> None:
         """Notify breakpoint change callbacks"""
@@ -163,14 +179,14 @@ class ResponsiveManager(QObject):
 class ResponsiveWidget(QWidget):
     """Base widget with responsive capabilities"""
     
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self._responsive_manager = ResponsiveManager.instance()
         self._responsive_manager.register_widget(self)
         self._responsive_manager.breakpoint_changed.connect(self._on_breakpoint_changed)
         self._responsive_manager.orientation_changed.connect(self._on_orientation_changed)
         
-    def __del__(self):
+    def __del__(self) -> None:
         if hasattr(self, '_responsive_manager'):
             self._responsive_manager.unregister_widget(self)
     
@@ -220,7 +236,7 @@ class ResponsiveLayout:
         """
         layout = QGridLayout(parent)
         
-        def update_layout(breakpoint: str):
+        def update_layout(breakpoint: str) -> None:
             config = breakpoint_configs.get(breakpoint, breakpoint_configs.get('md', {}))
             columns = config.get('columns', 3)
             spacing = config.get('spacing', 16)
@@ -270,7 +286,7 @@ class ResponsiveLayout:
         container = QWidget(parent)
         current_layout: Optional[QLayout] = None
 
-        def update_layout(breakpoint: str):
+        def update_layout(breakpoint: str) -> None:
             nonlocal current_layout
 
             direction = breakpoint_configs.get(breakpoint, 'horizontal')
@@ -326,7 +342,7 @@ class ResponsiveLayout:
             layout: Layout to apply spacing to
             spacing_config: Spacing for each breakpoint
         """
-        def update_spacing(breakpoint: str):
+        def update_spacing(breakpoint: str) -> None:
             spacing = spacing_config.get(breakpoint, spacing_config.get('md', 16))
             layout.setSpacing(spacing)
         
@@ -340,7 +356,7 @@ class ResponsiveLayout:
 class ResponsiveContainer(ResponsiveWidget):
     """Container widget with responsive behavior"""
     
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self._content_margins = {
             'xs': (8, 8, 8, 8),

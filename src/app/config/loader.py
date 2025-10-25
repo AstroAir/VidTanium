@@ -64,7 +64,7 @@ class LoadResult:
 class EnvironmentVariableMapper:
     """Maps environment variables to configuration paths"""
     
-    def __init__(self, prefix: str = "VIDTANIUM_"):
+    def __init__(self, prefix: str = "VIDTANIUM_") -> None:
         self.prefix = prefix
         self.mappings = self._create_default_mappings()
     
@@ -154,7 +154,7 @@ class ConfigurationLoader:
     def __init__(self, 
                  schema: ConfigurationSchema,
                  validation_level: ValidationLevel = ValidationLevel.NORMAL,
-                 config_dir: Optional[Path] = None):
+                 config_dir: Optional[Path] = None) -> None:
         self.schema = schema
         self.validator = ConfigurationValidator(schema, validation_level)
         self.env_mapper = EnvironmentVariableMapper()

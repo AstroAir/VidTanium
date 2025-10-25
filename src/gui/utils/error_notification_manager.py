@@ -12,7 +12,7 @@ from qfluentwidgets import InfoBar, InfoBarPosition, FluentIcon as FIF
 
 from ..widgets.error_dialog import ErrorDialog as EnhancedErrorDialog
 from src.core.exceptions import VidTaniumException, ErrorSeverity, ErrorCategory, UserAction
-from src.core.error_handler import ErrorReport, EnhancedErrorHandler
+from src.core.error_handler import ErrorReport, ErrorHandler
 from .i18n import tr
 from loguru import logger
 
@@ -25,7 +25,7 @@ class ErrorNotificationManager(QObject):
     retry_requested = Signal(str)  # task_id
     error_dismissed = Signal(str)  # task_id
     
-    def __init__(self, parent_widget: QWidget, error_handler: EnhancedErrorHandler):
+    def __init__(self, parent_widget: QWidget, error_handler: ErrorHandler) -> None:
         super().__init__()
         self.parent_widget = parent_widget
         self.error_handler = error_handler
@@ -44,7 +44,7 @@ class ErrorNotificationManager(QObject):
         task_id: Optional[str] = None,
         retry_count: int = 0,
         show_dialog: Optional[bool] = None
-    ):
+    ) -> None:
         """Show error notification with appropriate UI"""
         
         # Create error report
@@ -87,7 +87,7 @@ class ErrorNotificationManager(QObject):
         
         return False
     
-    def _show_error_dialog(self, error_report: ErrorReport, task_id: Optional[str]):
+    def _show_error_dialog(self, error_report: ErrorReport, task_id: Optional[str]) -> None:
         """Show enhanced error dialog"""
         
         # Close existing dialog for this task if any
@@ -120,7 +120,7 @@ class ErrorNotificationManager(QObject):
         
         logger.info(f"Showed error dialog for task {task_id}: {error_report.title}")
     
-    def _show_error_infobar(self, error_report: ErrorReport, task_id: Optional[str]):
+    def _show_error_infobar(self, error_report: ErrorReport, task_id: Optional[str]) -> None:
         """Show error as InfoBar notification"""
         
         # Determine InfoBar type based on severity
@@ -177,7 +177,7 @@ class ErrorNotificationManager(QObject):
         
         logger.info(f"Showed error InfoBar for task {task_id}: {error_report.title}")
     
-    def _handle_action_request(self, task_id: Optional[str], action_type: str, action_data: Dict[str, Any]):
+    def _handle_action_request(self, task_id: Optional[str], action_type: str, action_data: Dict[str, Any]) -> None:
         """Handle user action request"""
         logger.info(f"Action requested for task {task_id}: {action_type}")
         
@@ -195,7 +195,7 @@ class ErrorNotificationManager(QObject):
             # TODO: Implement copy_details method
             pass
     
-    def _handle_retry_request(self, task_id: Optional[str]):
+    def _handle_retry_request(self, task_id: Optional[str]) -> None:
         """Handle retry request"""
         logger.info(f"Retry requested for task {task_id}")
         
@@ -208,7 +208,7 @@ class ErrorNotificationManager(QObject):
         if task_id:
             self.retry_requested.emit(task_id)
     
-    def _handle_dismiss_request(self, task_id: Optional[str]):
+    def _handle_dismiss_request(self, task_id: Optional[str]) -> None:
         """Handle dismiss request"""
         logger.info(f"Error dismissed for task {task_id}")
         
@@ -221,7 +221,7 @@ class ErrorNotificationManager(QObject):
         if task_id:
             self.error_dismissed.emit(task_id)
     
-    def _add_to_history(self, error_report: ErrorReport, task_id: Optional[str]):
+    def _add_to_history(self, error_report: ErrorReport, task_id: Optional[str]) -> None:
         """Add error to notification history"""
         history_entry = {
             "timestamp": time.time(),
@@ -239,7 +239,7 @@ class ErrorNotificationManager(QObject):
         if len(self.notification_history) > self.max_history_size:
             self.notification_history = self.notification_history[-self.max_history_size:]
     
-    def _auto_dismiss_notifications(self):
+    def _auto_dismiss_notifications(self) -> None:
         """Auto-dismiss old notifications"""
         current_time = time.time()
         
@@ -276,7 +276,7 @@ class ErrorNotificationManager(QObject):
             "active_dialogs": len(self.active_dialogs)
         }
     
-    def close_all_dialogs(self):
+    def close_all_dialogs(self) -> None:
         """Close all active error dialogs"""
         for dialog in list(self.active_dialogs.values()):
             dialog.close()
@@ -290,7 +290,7 @@ class ErrorNotificationManager(QObject):
 class ErrorActionHandler:
     """Handles common error actions"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.action_handlers: Dict[str, Callable] = {
             "check_connection": self._check_connection,
             "check_permissions": self._check_permissions,

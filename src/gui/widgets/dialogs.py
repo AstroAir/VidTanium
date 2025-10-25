@@ -19,18 +19,18 @@ from qfluentwidgets import (
     ElevatedCardWidget, HeaderCardWidget
 )
 
-from ..utils.design_system import DesignSystem, AnimatedCard, EnhancedDesignSystem
+from ..utils.design_system import DesignSystem, AnimatedCard
 
 
 class ModernMessageBox(Dialog):
     """Message box with modern styling"""
     
-    def __init__(self, title: str, content: str, icon: FIF = FIF.INFO, parent=None):
+    def __init__(self, title: str, content: str, icon: FIF = FIF.INFO, parent=None) -> None:
         super().__init__(title, content, parent)
         self.icon = icon
         self._enhance_styling()
     
-    def _enhance_styling(self):
+    def _enhance_styling(self) -> None:
         """Apply enhanced styling to message box"""
         self.setStyleSheet(f"""
             Dialog {{
@@ -49,7 +49,7 @@ class EnhancedInputDialog(Dialog):
     """Enhanced input dialog with validation and modern styling"""
     
     def __init__(self, title: str, content: str, placeholder: str = "", 
-                 validator: Optional[Callable[[str], bool]] = None, parent=None):
+                 validator: Optional[Callable[[str], bool]] = None, parent=None) -> None:
         super().__init__(title, content, parent)
         self.placeholder = placeholder
         self.validator = validator
@@ -58,7 +58,7 @@ class EnhancedInputDialog(Dialog):
         self._setup_input_ui()
         self._enhance_styling()
     
-    def _setup_input_ui(self):
+    def _setup_input_ui(self) -> None:
         """Setup input dialog UI"""
         # Add input field to the dialog
         self.input_field = LineEdit()
@@ -78,7 +78,7 @@ class EnhancedInputDialog(Dialog):
         self.error_label.hide()
         layout.insertWidget(3, self.error_label)
 
-    def _enhance_styling(self):
+    def _enhance_styling(self) -> None:
         """Apply enhanced styling"""
         self.setStyleSheet(f"""
             Dialog {{
@@ -97,7 +97,7 @@ class EnhancedInputDialog(Dialog):
             }}
         """)
     
-    def _validate_input(self, text: str):
+    def _validate_input(self, text: str) -> None:
         """Validate input text"""
         self.input_value = text
         
@@ -123,7 +123,7 @@ class ProgressDialog(Dialog):
     
     cancelled = Signal()
     
-    def __init__(self, title: str, parent=None):
+    def __init__(self, title: str, parent=None) -> None:
         super().__init__(title, "", parent)
         self.is_cancellable = True
         self.progress_value = 0
@@ -131,7 +131,7 @@ class ProgressDialog(Dialog):
         self._setup_progress_ui()
         self._enhance_styling()
     
-    def _setup_progress_ui(self):
+    def _setup_progress_ui(self) -> None:
         """Setup progress dialog UI"""
         # Remove default content
         self.contentLabel.hide()
@@ -180,18 +180,18 @@ class ProgressDialog(Dialog):
         self.cancelButton.setText("Cancel")
         self.cancelButton.clicked.connect(self._handle_cancel)
     
-    def _enhance_styling(self):
+    def _enhance_styling(self) -> None:
         """Apply enhanced styling"""
         self.setMinimumWidth(500)
         self.setStyleSheet(f"""
             Dialog {{
-                background: {EnhancedDesignSystem.get_color('surface_adaptive')};
-                border: 1px solid {EnhancedDesignSystem.get_color('border_adaptive')};
-                border-radius: {EnhancedDesignSystem.RADIUS['xl']}px;
+                background: {DesignSystem.get_color('surface_adaptive')};
+                border: 1px solid {DesignSystem.get_color('border_adaptive')};
+                border-radius: {DesignSystem.RADIUS['xl']}px;
             }}
         """)
     
-    def update_progress(self, value: int, status: str = "", details: str = ""):
+    def update_progress(self, value: int, status: str = "", details: str = "") -> None:
         """Update progress information"""
         self.progress_value = value
         self.progress_card.update_progress(value)
@@ -206,13 +206,13 @@ class ProgressDialog(Dialog):
             cursor.movePosition(cursor.MoveOperation.End)
             self.details_area.setTextCursor(cursor)
     
-    def set_cancellable(self, cancellable: bool):
+    def set_cancellable(self, cancellable: bool) -> None:
         """Set whether the dialog can be cancelled"""
         self.is_cancellable = cancellable
         self.cancelButton.setVisible(cancellable)
         self.progress_card.cancel_btn.setVisible(cancellable)
     
-    def _handle_cancel(self):
+    def _handle_cancel(self) -> None:
         """Handle cancel button click"""
         if self.is_cancellable:
             self.cancelled.emit()
@@ -224,7 +224,7 @@ class MultiStepDialog(Dialog):
     
     step_changed = Signal(int)
     
-    def __init__(self, title: str, steps: List[str], parent=None):
+    def __init__(self, title: str, steps: List[str], parent=None) -> None:
         super().__init__(title, "", parent)
         self.steps = steps
         self.current_step = 0
@@ -233,7 +233,7 @@ class MultiStepDialog(Dialog):
         self._setup_multistep_ui()
         self._enhance_styling()
     
-    def _setup_multistep_ui(self):
+    def _setup_multistep_ui(self) -> None:
         """Setup multi-step dialog UI"""
         # Remove default content
         self.contentLabel.hide()
@@ -277,8 +277,8 @@ class MultiStepDialog(Dialog):
             step_circle.setAlignment(Qt.AlignmentFlag.AlignCenter)
             step_circle.setStyleSheet(f"""
                 QLabel {{
-                    background: {EnhancedDesignSystem.get_color('surface_tertiary_adaptive')};
-                    color: {EnhancedDesignSystem.get_color('text_secondary_adaptive')};
+                    background: {DesignSystem.get_color('surface_tertiary_adaptive')};
+                    color: {DesignSystem.get_color('text_secondary_adaptive')};
                     border-radius: 16px;
                     font-weight: 600;
                 }}
@@ -288,7 +288,7 @@ class MultiStepDialog(Dialog):
             # Step label
             step_label = CaptionLabel(step)
             step_label.setStyleSheet(f"""
-                color: {EnhancedDesignSystem.get_color('text_secondary_adaptive')};
+                color: {DesignSystem.get_color('text_secondary_adaptive')};
                 margin-left: 8px;
             """)
             layout.addWidget(step_label)
@@ -302,7 +302,7 @@ class MultiStepDialog(Dialog):
                 connector.setFixedHeight(2)
                 connector.setStyleSheet(f"""
                     QFrame {{
-                        background: {EnhancedDesignSystem.get_color('border_adaptive')};
+                        background: {DesignSystem.get_color('border_adaptive')};
                         margin: 0px 16px;
                     }}
                 """)
@@ -310,18 +310,18 @@ class MultiStepDialog(Dialog):
         
         return indicator
     
-    def _enhance_styling(self):
+    def _enhance_styling(self) -> None:
         """Apply enhanced styling"""
         self.setMinimumWidth(600)
         self.setStyleSheet(f"""
             Dialog {{
-                background: {EnhancedDesignSystem.get_color('surface_adaptive')};
-                border: 1px solid {EnhancedDesignSystem.get_color('border_adaptive')};
-                border-radius: {EnhancedDesignSystem.RADIUS['xl']}px;
+                background: {DesignSystem.get_color('surface_adaptive')};
+                border: 1px solid {DesignSystem.get_color('border_adaptive')};
+                border-radius: {DesignSystem.RADIUS['xl']}px;
             }}
         """)
     
-    def add_step_widget(self, widget: QWidget):
+    def add_step_widget(self, widget: QWidget) -> None:
         """Add widget for a step"""
         widget.hide()
         self.content_layout.addWidget(widget)
@@ -330,7 +330,7 @@ class MultiStepDialog(Dialog):
         if len(self.step_widgets) == 1:
             widget.show()
     
-    def _next_step(self):
+    def _next_step(self) -> None:
         """Go to next step"""
         if self.current_step < len(self.steps) - 1:
             self.step_widgets[self.current_step].hide()
@@ -342,7 +342,7 @@ class MultiStepDialog(Dialog):
         else:
             self.accept()
     
-    def _previous_step(self):
+    def _previous_step(self) -> None:
         """Go to previous step"""
         if self.current_step > 0:
             self.step_widgets[self.current_step].hide()
@@ -354,21 +354,21 @@ class MultiStepDialog(Dialog):
         else:
             self.reject()
     
-    def _update_step_indicator(self):
+    def _update_step_indicator(self) -> None:
         """Update step indicator styling"""
         for i, (circle, label) in enumerate(self.step_labels):
             if i <= self.current_step:
                 # Active/completed step
                 circle.setStyleSheet(f"""
                     QLabel {{
-                        background: {EnhancedDesignSystem.get_color('primary')};
+                        background: {DesignSystem.get_color('primary')};
                         color: white;
                         border-radius: 16px;
                         font-weight: 600;
                     }}
                 """)
                 label.setStyleSheet(f"""
-                    color: {EnhancedDesignSystem.get_color('text_primary_adaptive')};
+                    color: {DesignSystem.get_color('text_primary_adaptive')};
                     font-weight: 500;
                     margin-left: 8px;
                 """)
@@ -376,18 +376,18 @@ class MultiStepDialog(Dialog):
                 # Inactive step
                 circle.setStyleSheet(f"""
                     QLabel {{
-                        background: {EnhancedDesignSystem.get_color('surface_tertiary_adaptive')};
-                        color: {EnhancedDesignSystem.get_color('text_secondary_adaptive')};
+                        background: {DesignSystem.get_color('surface_tertiary_adaptive')};
+                        color: {DesignSystem.get_color('text_secondary_adaptive')};
                         border-radius: 16px;
                         font-weight: 600;
                     }}
                 """)
                 label.setStyleSheet(f"""
-                    color: {EnhancedDesignSystem.get_color('text_secondary_adaptive')};
+                    color: {DesignSystem.get_color('text_secondary_adaptive')};
                     margin-left: 8px;
                 """)
     
-    def _update_navigation(self):
+    def _update_navigation(self) -> None:
         """Update navigation button states"""
         self.cancelButton.setText("Back" if self.current_step > 0 else "Cancel")
         self.yesButton.setText("Finish" if self.current_step == len(self.steps) - 1 else "Next")

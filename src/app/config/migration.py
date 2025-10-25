@@ -41,7 +41,7 @@ class MigrationResult:
 class ConfigurationMigrator:
     """Handles configuration version migration"""
     
-    def __init__(self, target_version: str = "2.0.0"):
+    def __init__(self, target_version: str = "2.0.0") -> None:
         self.target_version = target_version
         self.migration_rules: List[MigrationRule] = []
         self._register_default_migrations()

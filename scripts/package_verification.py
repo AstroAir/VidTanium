@@ -16,12 +16,12 @@ import json
 class PackageVerifier:
     """Package verification and signing utilities"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.project_root = Path(__file__).parent.parent
         self.dist_dir = self.project_root / "dist"
         self.platform = platform.system().lower()
         
-    def generate_checksums(self, files: List[Path] = None) -> Dict[str, str]:
+    def generate_checksums(self, files: Optional[List[Path]] = None) -> Dict[str, str]:
         """Generate SHA256 checksums for files"""
         if files is None:
             # Find all distributable files
@@ -47,7 +47,7 @@ class PackageVerifier:
         
         return checksums
     
-    def save_checksums(self, checksums: Dict[str, str], output_file: Path = None) -> Path:
+    def save_checksums(self, checksums: Dict[str, str], output_file: Optional[Path] = None) -> Path:
         """Save checksums to file"""
         if output_file is None:
             output_file = self.dist_dir / "SHA256SUMS"
@@ -314,7 +314,7 @@ class PackageVerifier:
         
         return type_map.get(suffix, "unknown")
 
-def main():
+def main() -> None:
     """Main verification function"""
     import argparse
     

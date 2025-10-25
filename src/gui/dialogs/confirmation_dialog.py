@@ -18,8 +18,8 @@ from qfluentwidgets import (
 )
 
 from ..utils.i18n import tr
-from ..utils.theme import VidTaniumTheme
 from ..utils.formatters import format_size, format_duration
+from qfluentwidgets import qconfig
 
 
 class OperationInfo:
@@ -35,7 +35,7 @@ class OperationInfo:
         consequences: Optional[List[str]] = None,
         is_destructive: bool = False,
         requires_confirmation: bool = True
-    ):
+    ) -> None:
         self.operation_type = operation_type
         self.title = title
         self.description = description
@@ -49,12 +49,12 @@ class OperationInfo:
 class OperationDetailsCard(ElevatedCardWidget):
     """Card displaying operation details"""
     
-    def __init__(self, operation_info: OperationInfo, parent=None):
+    def __init__(self, operation_info: OperationInfo, parent=None) -> None:
         super().__init__(parent)
         self.operation_info = operation_info
         self._setup_ui()
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup the UI components"""
         layout = VBoxLayout(self)
         layout.setSpacing(12)
@@ -69,16 +69,12 @@ class OperationDetailsCard(ElevatedCardWidget):
         
         if self.operation_info.is_destructive:
             icon_label.setPixmap(FIF.DELETE.icon().pixmap(icon_size, icon_size))
-            icon_color = VidTaniumTheme.ERROR_RED
         elif self.operation_info.operation_type == "cancel":
             icon_label.setPixmap(FIF.CANCEL.icon().pixmap(icon_size, icon_size))
-            icon_color = VidTaniumTheme.WARNING_ORANGE
         elif self.operation_info.operation_type == "pause":
             icon_label.setPixmap(FIF.PAUSE.icon().pixmap(icon_size, icon_size))
-            icon_color = VidTaniumTheme.ACCENT_CYAN
         else:
             icon_label.setPixmap(FIF.INFO.icon().pixmap(icon_size, icon_size))
-            icon_color = VidTaniumTheme.TEXT_PRIMARY
         
         icon_label.setFixedSize(icon_size, icon_size)
         header_layout.addWidget(icon_label)
@@ -88,12 +84,10 @@ class OperationDetailsCard(ElevatedCardWidget):
         title_layout.setSpacing(4)
         
         title_label = SubtitleLabel(self.operation_info.title)
-        title_label.setStyleSheet(f"color: {icon_color}; font-weight: bold;")
         title_layout.addWidget(title_label)
         
         desc_label = BodyLabel(self.operation_info.description)
         desc_label.setWordWrap(True)
-        desc_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_SECONDARY};")
         title_layout.addWidget(desc_label)
         
         header_layout.addLayout(title_layout)
@@ -104,14 +98,7 @@ class OperationDetailsCard(ElevatedCardWidget):
         # Warning message if present
         if self.operation_info.warning_message:
             warning_frame = QFrame()
-            warning_frame.setStyleSheet(f"""
-                QFrame {{
-                    background: {VidTaniumTheme.WARNING_ORANGE}20;
-                    border: 1px solid {VidTaniumTheme.WARNING_ORANGE};
-                    border-radius: 8px;
-                    padding: 12px;
-                }}
-            """)
+            warning_frame.setObjectName("warning-frame")
             
             warning_layout = QHBoxLayout(warning_frame)
             warning_layout.setSpacing(8)
@@ -122,7 +109,6 @@ class OperationDetailsCard(ElevatedCardWidget):
             
             warning_text = BodyLabel(self.operation_info.warning_message)
             warning_text.setWordWrap(True)
-            warning_text.setStyleSheet(f"color: {VidTaniumTheme.WARNING_ORANGE}; font-weight: 500;")
             warning_layout.addWidget(warning_text)
             
             layout.addWidget(warning_frame)
@@ -133,7 +119,6 @@ class OperationDetailsCard(ElevatedCardWidget):
             details_layout.setSpacing(8)
             
             details_title = CaptionLabel(tr("confirmation_dialog.details"))
-            details_title.setStyleSheet(f"color: {VidTaniumTheme.TEXT_PRIMARY}; font-weight: bold;")
             details_layout.addWidget(details_title)
             
             for key, value in self.operation_info.details.items():
@@ -141,12 +126,10 @@ class OperationDetailsCard(ElevatedCardWidget):
                 detail_layout.setSpacing(8)
                 
                 key_label = CaptionLabel(f"{key}:")
-                key_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_SECONDARY};")
                 key_label.setMinimumWidth(100)
                 detail_layout.addWidget(key_label)
                 
                 value_label = CaptionLabel(str(value))
-                value_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_PRIMARY};")
                 detail_layout.addWidget(value_label)
                 
                 detail_layout.addStretch()
@@ -160,7 +143,6 @@ class OperationDetailsCard(ElevatedCardWidget):
             consequences_layout.setSpacing(8)
             
             consequences_title = CaptionLabel(tr("confirmation_dialog.consequences"))
-            consequences_title.setStyleSheet(f"color: {VidTaniumTheme.ERROR_RED}; font-weight: bold;")
             consequences_layout.addWidget(consequences_title)
             
             for consequence in self.operation_info.consequences:
@@ -168,12 +150,10 @@ class OperationDetailsCard(ElevatedCardWidget):
                 consequence_layout.setSpacing(8)
                 
                 bullet_label = CaptionLabel("•")
-                bullet_label.setStyleSheet(f"color: {VidTaniumTheme.ERROR_RED};")
                 consequence_layout.addWidget(bullet_label)
                 
                 consequence_text = CaptionLabel(consequence)
                 consequence_text.setWordWrap(True)
-                consequence_text.setStyleSheet(f"color: {VidTaniumTheme.TEXT_SECONDARY};")
                 consequence_layout.addWidget(consequence_text)
                 
                 consequences_layout.addLayout(consequence_layout)
@@ -187,7 +167,7 @@ class ConfirmationDialog(QDialog):
     confirmed = Signal(dict)  # operation_data
     cancelled = Signal()
     
-    def __init__(self, operation_info: OperationInfo, parent=None):
+    def __init__(self, operation_info: OperationInfo, parent=None) -> None:
         super().__init__(parent)
         self.operation_info = operation_info
         self.confirmation_data: Dict[str, Any] = {}
@@ -198,7 +178,7 @@ class ConfirmationDialog(QDialog):
         self._setup_ui()
         self._apply_theme()
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup the UI components"""
         layout = QVBoxLayout(self)
         layout.setSpacing(16)
@@ -219,12 +199,6 @@ class ConfirmationDialog(QDialog):
             self.confirmation_checkbox = CheckBox(
                 tr("confirmation_dialog.understand_consequences")
             )
-            self.confirmation_checkbox.setStyleSheet(f"""
-                QCheckBox {{
-                    color: {VidTaniumTheme.TEXT_PRIMARY};
-                    font-weight: 500;
-                }}
-            """)
             self.confirmation_checkbox.stateChanged.connect(self._on_confirmation_changed)
             layout.addWidget(self.confirmation_checkbox)
         
@@ -251,22 +225,7 @@ class ConfirmationDialog(QDialog):
         
         if self.operation_info.is_destructive:
             self.confirm_button.setIcon(FIF.DELETE)
-            self.confirm_button.setStyleSheet(f"""
-                QPushButton {{
-                    background: {VidTaniumTheme.ERROR_RED};
-                    border: 2px solid {VidTaniumTheme.ERROR_RED};
-                    color: white;
-                    font-weight: bold;
-                }}
-                QPushButton:hover {{
-                    background: {VidTaniumTheme.ERROR_RED}CC;
-                }}
-                QPushButton:disabled {{
-                    background: {VidTaniumTheme.BG_SURFACE};
-                    border-color: {VidTaniumTheme.BORDER_COLOR};
-                    color: {VidTaniumTheme.TEXT_DISABLED};
-                }}
-            """)
+            self.confirm_button.setObjectName("destructive-button")
         else:
             self.confirm_button.setIcon(FIF.ACCEPT)
         
@@ -280,13 +239,12 @@ class ConfirmationDialog(QDialog):
         
         layout.addLayout(button_layout)
     
-    def _add_delete_options(self, layout: QVBoxLayout):
+    def _add_delete_options(self, layout: QVBoxLayout) -> None:
         """Add delete-specific options"""
         options_layout = QVBoxLayout()
         options_layout.setSpacing(8)
         
         options_title = CaptionLabel(tr("confirmation_dialog.delete_options"))
-        options_title.setStyleSheet(f"color: {VidTaniumTheme.TEXT_PRIMARY}; font-weight: bold;")
         options_layout.addWidget(options_title)
         
         self.delete_files_checkbox = CheckBox(tr("confirmation_dialog.delete_downloaded_files"))
@@ -300,13 +258,12 @@ class ConfirmationDialog(QDialog):
         
         layout.addLayout(options_layout)
     
-    def _add_cancel_options(self, layout: QVBoxLayout):
+    def _add_cancel_options(self, layout: QVBoxLayout) -> None:
         """Add cancel-specific options"""
         options_layout = QVBoxLayout()
         options_layout.setSpacing(8)
         
         options_title = CaptionLabel(tr("confirmation_dialog.cancel_options"))
-        options_title.setStyleSheet(f"color: {VidTaniumTheme.TEXT_PRIMARY}; font-weight: bold;")
         options_layout.addWidget(options_title)
         
         self.keep_partial_checkbox = CheckBox(tr("confirmation_dialog.keep_partial_files"))
@@ -316,20 +273,16 @@ class ConfirmationDialog(QDialog):
         
         layout.addLayout(options_layout)
     
-    def _apply_theme(self):
+    def _apply_theme(self) -> None:
         """Apply theme styling"""
-        self.setStyleSheet(f"""
-            QDialog {{
-                background: {VidTaniumTheme.BG_PRIMARY};
-                color: {VidTaniumTheme.TEXT_PRIMARY};
-            }}
-        """)
+        # qfluentwidgets handles dialog styling automatically
+        pass
     
-    def _on_confirmation_changed(self, state):
+    def _on_confirmation_changed(self, state) -> None:
         """Handle confirmation checkbox state change"""
         self.confirm_button.setEnabled(state == Qt.CheckState.Checked.value)
     
-    def _on_confirm(self):
+    def _on_confirm(self) -> None:
         """Handle confirm button click"""
         # Collect confirmation data
         self.confirmation_data = {
@@ -351,7 +304,7 @@ class ConfirmationDialog(QDialog):
         self.confirmed.emit(self.confirmation_data)
         self.accept()
     
-    def _on_cancel(self):
+    def _on_cancel(self) -> None:
         """Handle cancel button click"""
         self.cancelled.emit()
         self.reject()

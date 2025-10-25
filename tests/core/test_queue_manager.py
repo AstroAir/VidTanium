@@ -14,7 +14,7 @@ from src.core.queue_manager import (
 class TestTaskPriority:
     """Test suite for TaskPriority enum."""
 
-    def test_priority_values(self):
+    def test_priority_values(self) -> None:
         """Test enum values."""
         assert TaskPriority.URGENT.value == 1
         assert TaskPriority.HIGH.value == 2
@@ -26,7 +26,7 @@ class TestTaskPriority:
 class TestSchedulingStrategy:
     """Test suite for SchedulingStrategy enum."""
 
-    def test_strategy_values(self):
+    def test_strategy_values(self) -> None:
         """Test enum values."""
         assert SchedulingStrategy.PRIORITY_FIRST.value == "priority_first"
         assert SchedulingStrategy.SIZE_OPTIMIZED.value == "size_optimized"
@@ -38,7 +38,7 @@ class TestSchedulingStrategy:
 class TestQueuedTask:
     """Test suite for QueuedTask dataclass."""
 
-    def test_task_creation(self):
+    def test_task_creation(self) -> None:
         """Test QueuedTask creation with all fields."""
         task = QueuedTask(
             task_id="test_task",
@@ -66,7 +66,7 @@ class TestQueuedTask:
         assert task.attempts == 1
         assert task.max_attempts == 5
 
-    def test_task_defaults(self):
+    def test_task_defaults(self) -> None:
         """Test QueuedTask with default values."""
         task = QueuedTask(
             task_id="test_task",
@@ -85,7 +85,7 @@ class TestQueuedTask:
         assert task.attempts == 0
         assert task.max_attempts == 3
 
-    def test_task_comparison(self):
+    def test_task_comparison(self) -> None:
         """Test task comparison for priority queue."""
         task1 = QueuedTask(
             task_id="task1", name="Task 1", url="url1", output_path="path1",
@@ -112,7 +112,7 @@ class TestQueuedTask:
 class TestQueueStatistics:
     """Test suite for QueueStatistics dataclass."""
 
-    def test_statistics_creation(self):
+    def test_statistics_creation(self) -> None:
         """Test QueueStatistics creation."""
         stats = QueueStatistics(
             total_tasks=10,
@@ -142,18 +142,18 @@ class TestQueueStatistics:
 class TestSmartScheduler:
     """Test suite for SmartScheduler class."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.scheduler = SmartScheduler()
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test SmartScheduler initialization."""
         assert self.scheduler.strategy == SchedulingStrategy.PRIORITY_FIRST
         assert self.scheduler.max_concurrent_tasks == 3
         assert self.scheduler.size_threshold_mb == 100
         assert self.scheduler.time_threshold_minutes == 30
 
-    def test_schedule_tasks_priority_first(self):
+    def test_schedule_tasks_priority_first(self) -> None:
         """Test priority-first scheduling."""
         pending_tasks = [
             QueuedTask("task1", "Task 1", "url1", "path1", 1000, TaskPriority.LOW, 60.0),
@@ -170,7 +170,7 @@ class TestSmartScheduler:
         assert len(scheduled) > 0
         assert scheduled[0].priority == TaskPriority.HIGH
 
-    def test_schedule_tasks_size_optimized(self):
+    def test_schedule_tasks_size_optimized(self) -> None:
         """Test size-optimized scheduling."""
         self.scheduler.strategy = SchedulingStrategy.SIZE_OPTIMIZED
         
@@ -189,7 +189,7 @@ class TestSmartScheduler:
         assert len(scheduled) > 0
         assert scheduled[0].file_size == 1000
 
-    def test_schedule_tasks_with_max_concurrent_limit(self):
+    def test_schedule_tasks_with_max_concurrent_limit(self) -> None:
         """Test scheduling with concurrent task limit."""
         pending_tasks = [
             QueuedTask("task1", "Task 1", "url1", "path1", 1000, TaskPriority.HIGH, 60.0),
@@ -215,11 +215,11 @@ class TestSmartScheduler:
 class TestQueueManager:
     """Test suite for QueueManager class."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.manager = QueueManager()
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test QueueManager initialization."""
         assert isinstance(self.manager.pending_queue, list)
         assert isinstance(self.manager.running_tasks, dict)
@@ -229,7 +229,7 @@ class TestQueueManager:
         assert isinstance(self.manager.scheduler, SmartScheduler)
         assert self.manager.auto_schedule_enabled is True
 
-    def test_add_task(self):
+    def test_add_task(self) -> None:
         """Test adding task to queue."""
         result = self.manager.add_task(
             task_id="test_task",
@@ -253,7 +253,7 @@ class TestQueueManager:
         assert task.dependencies == ["dep1"]
         assert task.metadata == {"quality": "720p"}
 
-    def test_add_duplicate_task(self):
+    def test_add_duplicate_task(self) -> None:
         """Test adding duplicate task."""
         # Add first task
         self.manager.add_task("test_task", "Test Task", "url", "path", 1000)
@@ -264,7 +264,7 @@ class TestQueueManager:
         assert result is False
         assert len(self.manager.pending_queue) == 1
 
-    def test_remove_task_from_pending(self):
+    def test_remove_task_from_pending(self) -> None:
         """Test removing task from pending queue."""
         self.manager.add_task("test_task", "Test Task", "url", "path", 1000)
         
@@ -273,7 +273,7 @@ class TestQueueManager:
         assert result is True
         assert len(self.manager.pending_queue) == 0
 
-    def test_remove_task_from_running(self):
+    def test_remove_task_from_running(self) -> None:
         """Test removing task from running tasks."""
         self.manager.add_task("test_task", "Test Task", "url", "path", 1000)
         self.manager.mark_task_running("test_task")
@@ -283,12 +283,12 @@ class TestQueueManager:
         assert result is True
         assert "test_task" not in self.manager.running_tasks
 
-    def test_remove_nonexistent_task(self):
+    def test_remove_nonexistent_task(self) -> None:
         """Test removing nonexistent task."""
         result = self.manager.remove_task("nonexistent")
         assert result is False
 
-    def test_get_task_from_pending(self):
+    def test_get_task_from_pending(self) -> None:
         """Test getting task from pending queue."""
         self.manager.add_task("test_task", "Test Task", "url", "path", 1000)
         
@@ -297,7 +297,7 @@ class TestQueueManager:
         assert task is not None
         assert task.task_id == "test_task"
 
-    def test_get_task_from_running(self):
+    def test_get_task_from_running(self) -> None:
         """Test getting task from running tasks."""
         self.manager.add_task("test_task", "Test Task", "url", "path", 1000)
         self.manager.mark_task_running("test_task")
@@ -307,12 +307,12 @@ class TestQueueManager:
         assert task is not None
         assert task.task_id == "test_task"
 
-    def test_get_nonexistent_task(self):
+    def test_get_nonexistent_task(self) -> None:
         """Test getting nonexistent task."""
         task = self.manager.get_task("nonexistent")
         assert task is None
 
-    def test_update_task_priority(self):
+    def test_update_task_priority(self) -> None:
         """Test updating task priority."""
         self.manager.add_task("test_task", "Test Task", "url", "path", 1000, TaskPriority.NORMAL)
         
@@ -322,12 +322,12 @@ class TestQueueManager:
         task = self.manager.get_task("test_task")
         assert task.priority == TaskPriority.HIGH
 
-    def test_update_priority_nonexistent_task(self):
+    def test_update_priority_nonexistent_task(self) -> None:
         """Test updating priority of nonexistent task."""
         result = self.manager.update_task_priority("nonexistent", TaskPriority.HIGH)
         assert result is False
 
-    def test_reorder_tasks(self):
+    def test_reorder_tasks(self) -> None:
         """Test reordering tasks in queue."""
         # Add multiple tasks
         self.manager.add_task("task1", "Task 1", "url1", "path1", 1000)
@@ -343,7 +343,7 @@ class TestQueueManager:
         assert self.manager.pending_queue[1].task_id == "task1"
         assert self.manager.pending_queue[2].task_id == "task2"
 
-    def test_reorder_tasks_invalid_order(self):
+    def test_reorder_tasks_invalid_order(self) -> None:
         """Test reordering with invalid task order."""
         self.manager.add_task("task1", "Task 1", "url1", "path1", 1000)
         
@@ -351,7 +351,7 @@ class TestQueueManager:
         result = self.manager.reorder_tasks(["nonexistent", "task1"])
         assert result is False
 
-    def test_get_next_tasks(self):
+    def test_get_next_tasks(self) -> None:
         """Test getting next tasks to schedule."""
         # Add tasks with different priorities
         self.manager.add_task("task1", "Task 1", "url1", "path1", 1000, TaskPriority.LOW)
@@ -365,7 +365,7 @@ class TestQueueManager:
         if next_tasks:
             assert next_tasks[0].priority == TaskPriority.HIGH
 
-    def test_get_next_tasks_with_dependencies(self):
+    def test_get_next_tasks_with_dependencies(self) -> None:
         """Test getting next tasks with dependencies."""
         # Add task with dependency
         self.manager.add_task("dep_task", "Dependency Task", "url1", "path1", 1000)
@@ -386,7 +386,7 @@ class TestQueueManager:
         schedulable_ids = [task.task_id for task in next_tasks]
         assert "main_task" in schedulable_ids
 
-    def test_mark_task_running(self):
+    def test_mark_task_running(self) -> None:
         """Test marking task as running."""
         self.manager.add_task("test_task", "Test Task", "url", "path", 1000)
         
@@ -399,12 +399,12 @@ class TestQueueManager:
         task = self.manager.running_tasks["test_task"]
         assert task.scheduled_at is not None
 
-    def test_mark_nonexistent_task_running(self):
+    def test_mark_nonexistent_task_running(self) -> None:
         """Test marking nonexistent task as running."""
         result = self.manager.mark_task_running("nonexistent")
         assert result is False
 
-    def test_mark_task_completed(self):
+    def test_mark_task_completed(self) -> None:
         """Test marking task as completed."""
         self.manager.add_task("test_task", "Test Task", "url", "path", 1000)
         self.manager.mark_task_running("test_task")
@@ -415,7 +415,7 @@ class TestQueueManager:
         assert "test_task" in self.manager.completed_tasks
         assert "test_task" not in self.manager.running_tasks
 
-    def test_mark_task_failed_with_retry(self):
+    def test_mark_task_failed_with_retry(self) -> None:
         """Test marking task as failed with retry."""
         self.manager.add_task("test_task", "Test Task", "url", "path", 1000, max_attempts=3)
         self.manager.mark_task_running("test_task")
@@ -429,7 +429,7 @@ class TestQueueManager:
         task = self.manager.get_task("test_task")
         assert task.attempts == 1
 
-    def test_mark_task_failed_max_attempts(self):
+    def test_mark_task_failed_max_attempts(self) -> None:
         """Test marking task as failed after max attempts."""
         self.manager.add_task("test_task", "Test Task", "url", "path", 1000, max_attempts=1)
         self.manager.mark_task_running("test_task")
@@ -441,7 +441,7 @@ class TestQueueManager:
         assert "test_task" in self.manager.failed_tasks
         assert "test_task" not in self.manager.running_tasks
 
-    def test_clear_completed_tasks(self):
+    def test_clear_completed_tasks(self) -> None:
         """Test clearing completed tasks."""
         # Add and complete some tasks
         self.manager.add_task("task1", "Task 1", "url1", "path1", 1000)
@@ -458,7 +458,7 @@ class TestQueueManager:
         
         assert len(self.manager.completed_tasks) == 0
 
-    def test_clear_failed_tasks(self):
+    def test_clear_failed_tasks(self) -> None:
         """Test clearing failed tasks."""
         self.manager.add_task("test_task", "Test Task", "url", "path", 1000, max_attempts=1)
         self.manager.mark_task_running("test_task")
@@ -470,7 +470,7 @@ class TestQueueManager:
         
         assert len(self.manager.failed_tasks) == 0
 
-    def test_get_queue_statistics(self):
+    def test_get_queue_statistics(self) -> None:
         """Test getting queue statistics."""
         # Add various tasks
         self.manager.add_task("pending1", "Pending 1", "url1", "path1", 1000, TaskPriority.HIGH)
@@ -495,7 +495,7 @@ class TestQueueManager:
         assert "HIGH" in stats.priority_distribution
         assert "NORMAL" in stats.priority_distribution
 
-    def test_callback_registration(self):
+    def test_callback_registration(self) -> None:
         """Test callback registration."""
         scheduled_callback = Mock()
         completed_callback = Mock()
@@ -509,7 +509,7 @@ class TestQueueManager:
         assert completed_callback in self.manager.task_completed_callbacks
         assert changed_callback in self.manager.queue_changed_callbacks
 
-    def test_callback_triggering(self):
+    def test_callback_triggering(self) -> None:
         """Test callback triggering."""
         completed_callback = Mock()
         changed_callback = Mock()
@@ -526,7 +526,7 @@ class TestQueueManager:
         completed_callback.assert_called()
         changed_callback.assert_called()
 
-    def test_global_queue_manager_instance(self):
+    def test_global_queue_manager_instance(self) -> None:
         """Test global queue manager instance."""
         assert queue_manager is not None
         assert isinstance(queue_manager, QueueManager)

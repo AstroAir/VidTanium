@@ -11,7 +11,7 @@ from .thread_pool import ThreadPoolManager
 
 # Enhanced error handling and analytics
 from .exceptions import VidTaniumException, ErrorCategory, ErrorSeverity, ErrorContext
-from .error_handler import EnhancedErrorHandler, error_handler
+from .error_handler import ErrorHandler, error_handler
 from .retry_manager import IntelligentRetryManager, retry_manager
 from .task_state_manager import TaskStateManager, task_state_manager
 from .eta_calculator import ETACalculator, ETAResult, ETAAlgorithm
@@ -34,7 +34,7 @@ __all__ = [
     'ErrorCategory',
     'ErrorSeverity',
     'ErrorContext',
-    'EnhancedErrorHandler',
+    'ErrorHandler',
     'error_handler',
     'IntelligentRetryManager',
     'retry_manager',

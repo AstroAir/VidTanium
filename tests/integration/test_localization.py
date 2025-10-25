@@ -7,22 +7,22 @@ from typing import Dict, Any, Optional, List
 
 # Mock PySide6 components for testing
 class MockQLocale:
-    def __init__(self, name="en_US"):
+    def __init__(self, name="en_US") -> None:
         self._name = name
         
-    def name(self):
+    def name(self) -> None:
         return self._name
         
     @staticmethod
-    def system():
+    def system() -> None:
         return MockQLocale("en_US")
 
 class MockQTranslator:
-    def __init__(self):
+    def __init__(self) -> None:
         self.loaded_file = None
         self.loaded = False
         
-    def load(self, filename, directory=""):
+    def load(self, filename, directory="") -> None:
         self.loaded_file = filename
         self.loaded = True
         return True
@@ -31,11 +31,11 @@ class MockQCoreApplication:
     translators = []
     
     @classmethod
-    def installTranslator(cls, translator):
+    def installTranslator(cls, translator) -> None:
         cls.translators.append(translator)
         
     @classmethod
-    def removeTranslator(cls, translator):
+    def removeTranslator(cls, translator) -> None:
         if translator in cls.translators:
             cls.translators.remove(translator)
 
@@ -47,7 +47,7 @@ sys.modules['PySide6.QtCore'].QTranslator = MockQTranslator
 sys.modules['PySide6.QtCore'].QCoreApplication = MockQCoreApplication
 
 # Mock localization functions
-def mock_tr(key, *args, **kwargs):
+def mock_tr(key, *args, **kwargs) -> None:
     """Mock translation function that returns the key with optional formatting"""
     if args:
         try:
@@ -68,38 +68,38 @@ sys.modules['src.gui.utils.i18n'].get_current_locale = Mock(return_value='en')
 class TestLocalizationSystem:
     """Test suite for the localization system."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         # Reset translator list
         MockQCoreApplication.translators.clear()
 
-    def test_translation_function_basic(self):
+    def test_translation_function_basic(self) -> None:
         """Test basic translation function."""
         result = mock_tr("test.key")
         assert result == "test.key"
 
-    def test_translation_function_with_formatting(self):
+    def test_translation_function_with_formatting(self) -> None:
         """Test translation function with string formatting."""
         result = mock_tr("Hello {0}!", "World")
         assert result == "Hello World!"
 
-    def test_translation_function_with_multiple_args(self):
+    def test_translation_function_with_multiple_args(self) -> None:
         """Test translation function with multiple arguments."""
         result = mock_tr("{0} has {1} items", "User", "5")
         assert result == "User has 5 items"
 
-    def test_translation_function_error_handling(self):
+    def test_translation_function_error_handling(self) -> None:
         """Test translation function error handling."""
         # Should not raise exception with invalid format
         result = mock_tr("Invalid {format", "test")
         assert result == "Invalid {format"
 
-    def test_locale_detection(self):
+    def test_locale_detection(self) -> None:
         """Test system locale detection."""
         system_locale = MockQLocale.system()
         assert system_locale.name() == "en_US"
 
-    def test_translator_installation(self):
+    def test_translator_installation(self) -> None:
         """Test translator installation."""
         translator = MockQTranslator()
         MockQCoreApplication.installTranslator(translator)
@@ -107,7 +107,7 @@ class TestLocalizationSystem:
         assert translator in MockQCoreApplication.translators
         assert len(MockQCoreApplication.translators) == 1
 
-    def test_translator_removal(self):
+    def test_translator_removal(self) -> None:
         """Test translator removal."""
         translator = MockQTranslator()
         MockQCoreApplication.installTranslator(translator)
@@ -116,7 +116,7 @@ class TestLocalizationSystem:
         assert translator not in MockQCoreApplication.translators
         assert len(MockQCoreApplication.translators) == 0
 
-    def test_translation_file_loading(self):
+    def test_translation_file_loading(self) -> None:
         """Test translation file loading."""
         translator = MockQTranslator()
         result = translator.load("vidtanium_zh_CN.qm", "/translations")
@@ -129,7 +129,7 @@ class TestLocalizationSystem:
 class TestLocalizationKeys:
     """Test suite for localization keys and consistency."""
 
-    def test_common_ui_keys(self):
+    def test_common_ui_keys(self) -> None:
         """Test common UI localization keys."""
         common_keys = [
             "common.ok",
@@ -148,7 +148,7 @@ class TestLocalizationKeys:
             result = mock_tr(key)
             assert result == key
 
-    def test_menu_keys(self):
+    def test_menu_keys(self) -> None:
         """Test menu localization keys."""
         menu_keys = [
             "menu.file",
@@ -166,7 +166,7 @@ class TestLocalizationKeys:
             result = mock_tr(key)
             assert result == key
 
-    def test_dialog_keys(self):
+    def test_dialog_keys(self) -> None:
         """Test dialog localization keys."""
         dialog_keys = [
             "dialog.title",
@@ -184,7 +184,7 @@ class TestLocalizationKeys:
             result = mock_tr(key)
             assert result == key
 
-    def test_dashboard_keys(self):
+    def test_dashboard_keys(self) -> None:
         """Test dashboard localization keys."""
         dashboard_keys = [
             "dashboard.welcome.title",
@@ -199,7 +199,7 @@ class TestLocalizationKeys:
             result = mock_tr(key)
             assert result == key
 
-    def test_error_message_keys(self):
+    def test_error_message_keys(self) -> None:
         """Test error message localization keys."""
         error_keys = [
             "error.network",
@@ -214,7 +214,7 @@ class TestLocalizationKeys:
             result = mock_tr(key)
             assert result == key
 
-    def test_status_message_keys(self):
+    def test_status_message_keys(self) -> None:
         """Test status message localization keys."""
         status_keys = [
             "status.ready",
@@ -233,21 +233,21 @@ class TestLocalizationKeys:
 class TestLocalizationIntegration:
     """Test suite for localization integration with application components."""
 
-    def test_application_localization_init(self):
+    def test_application_localization_init(self) -> None:
         """Test localization initialization in application."""
         from src.gui.utils.i18n import init_i18n
         
         # Should not raise exception
         init_i18n()
 
-    def test_locale_setting(self):
+    def test_locale_setting(self) -> None:
         """Test setting application locale."""
         from src.gui.utils.i18n import set_locale
         
         # Should not raise exception
         set_locale("zh_CN")
 
-    def test_available_locales(self):
+    def test_available_locales(self) -> None:
         """Test getting available locales."""
         from src.gui.utils.i18n import get_available_locales
         
@@ -256,14 +256,14 @@ class TestLocalizationIntegration:
         assert len(locales) > 0
         assert 'en' in locales
 
-    def test_current_locale(self):
+    def test_current_locale(self) -> None:
         """Test getting current locale."""
         from src.gui.utils.i18n import get_current_locale
         
         current = get_current_locale()
         assert current == 'en'
 
-    def test_translation_in_widgets(self):
+    def test_translation_in_widgets(self) -> None:
         """Test translation usage in widgets."""
         # Test that widgets can use translation function
         from src.gui.utils.i18n import tr
@@ -272,7 +272,7 @@ class TestLocalizationIntegration:
         title = tr("widget.title")
         assert title == "widget.title"
 
-    def test_dynamic_language_switching(self):
+    def test_dynamic_language_switching(self) -> None:
         """Test dynamic language switching."""
         from src.gui.utils.i18n import set_locale, get_current_locale
         
@@ -285,13 +285,13 @@ class TestLocalizationIntegration:
         # Should not raise exceptions
         assert True
 
-    def test_fallback_translation(self):
+    def test_fallback_translation(self) -> None:
         """Test fallback translation behavior."""
         # Test with non-existent key
         result = mock_tr("nonexistent.key")
         assert result == "nonexistent.key"
 
-    def test_pluralization_support(self):
+    def test_pluralization_support(self) -> None:
         """Test pluralization support in translations."""
         # Test singular
         result = mock_tr("item.count.singular", "1")
@@ -301,7 +301,7 @@ class TestLocalizationIntegration:
         result = mock_tr("item.count.plural", "5")
         assert "5" in result
 
-    def test_context_sensitive_translation(self):
+    def test_context_sensitive_translation(self) -> None:
         """Test context-sensitive translations."""
         # Test same key in different contexts
         menu_result = mock_tr("menu.file")
@@ -310,13 +310,13 @@ class TestLocalizationIntegration:
         assert menu_result == "menu.file"
         assert dialog_result == "dialog.file"
 
-    def test_translation_with_html(self):
+    def test_translation_with_html(self) -> None:
         """Test translation with HTML content."""
         html_key = "message.html"
         result = mock_tr(html_key)
         assert result == html_key
 
-    def test_translation_caching(self):
+    def test_translation_caching(self) -> None:
         """Test translation caching behavior."""
         # Multiple calls to same key should be consistent
         key = "test.caching"
@@ -325,7 +325,7 @@ class TestLocalizationIntegration:
         
         assert result1 == result2
 
-    def test_translation_with_special_characters(self):
+    def test_translation_with_special_characters(self) -> None:
         """Test translation with special characters."""
         special_keys = [
             "special.unicode.中文",
@@ -337,7 +337,7 @@ class TestLocalizationIntegration:
             result = mock_tr(key)
             assert result == key
 
-    def test_translation_performance(self):
+    def test_translation_performance(self) -> None:
         """Test translation performance."""
         import time
         
@@ -350,7 +350,7 @@ class TestLocalizationIntegration:
         # Should complete quickly
         assert (end_time - start_time) < 1.0
 
-    def test_translation_memory_usage(self):
+    def test_translation_memory_usage(self) -> None:
         """Test translation memory usage."""
         # Test that translations don't cause memory leaks
         for i in range(100):
@@ -359,7 +359,7 @@ class TestLocalizationIntegration:
         # Should not raise memory errors
         assert True
 
-    def test_locale_specific_formatting(self):
+    def test_locale_specific_formatting(self) -> None:
         """Test locale-specific formatting."""
         # Test number formatting
         number_result = mock_tr("format.number", "1234.56")
@@ -369,13 +369,13 @@ class TestLocalizationIntegration:
         date_result = mock_tr("format.date", "2023-01-01")
         assert "2023-01-01" in date_result
 
-    def test_rtl_language_support(self):
+    def test_rtl_language_support(self) -> None:
         """Test right-to-left language support."""
         # Test RTL language handling
         rtl_result = mock_tr("rtl.text")
         assert rtl_result == "rtl.text"
 
-    def test_translation_validation(self):
+    def test_translation_validation(self) -> None:
         """Test translation validation."""
         # Test that all required keys have translations
         required_keys = [
@@ -390,7 +390,7 @@ class TestLocalizationIntegration:
             assert result is not None
             assert len(result) > 0
 
-    def test_translation_consistency(self):
+    def test_translation_consistency(self) -> None:
         """Test translation consistency across components."""
         # Test that same concepts use same translations
         ok_button = mock_tr("common.ok")
@@ -400,7 +400,7 @@ class TestLocalizationIntegration:
         assert ok_button == "common.ok"
         assert ok_dialog == "dialog.ok"
 
-    def test_error_handling_in_translation(self):
+    def test_error_handling_in_translation(self) -> None:
         """Test error handling in translation system."""
         # Test with None key
         try:

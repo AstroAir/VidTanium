@@ -27,7 +27,7 @@ class ExceptionPattern:
     exception_class: type
     priority: int = 0  # Higher priority patterns are checked first
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Compile regex patterns for better performance
         self.compiled_patterns = [re.compile(pattern, re.IGNORECASE) for pattern in self.patterns]
 
@@ -35,10 +35,10 @@ class ExceptionPattern:
 class ExceptionConverter:
     """Optimized exception converter using lookup tables and compiled regex"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._initialize_conversion_tables()
 
-    def _initialize_conversion_tables(self):
+    def _initialize_conversion_tables(self) -> None:
         """Initialize optimized conversion lookup tables"""
         # Network-related patterns (highest priority)
         self.network_patterns = [
@@ -253,10 +253,10 @@ class ErrorReport:
     context: Optional[ErrorContext] = None
 
 
-class EnhancedErrorHandler:
-    """Enhanced error handler with intelligent retry strategies"""
+class ErrorHandler:
+    """Error handler with intelligent retry strategies"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.retry_configs: Dict[ErrorCategory, RetryConfig] = self._get_default_retry_configs()
         self.error_history: List[Tuple[str, VidTaniumException, float]] = []
         self.max_history_size = 100
@@ -422,7 +422,7 @@ class EnhancedErrorHandler:
         else:
             return base_title
     
-    def _log_error(self, exception: VidTaniumException):
+    def _log_error(self, exception: VidTaniumException) -> None:
         """Log error with appropriate level"""
         log_message = f"{exception.category.value.title()} Error: {exception.message}"
         
@@ -441,7 +441,7 @@ class EnhancedErrorHandler:
         else:
             logger.info(log_message)
     
-    def _add_to_history(self, operation: str, exception: VidTaniumException):
+    def _add_to_history(self, operation: str, exception: VidTaniumException) -> None:
         """Add error to history for analysis"""
         self.error_history.append((operation, exception, time.time()))
         
@@ -478,4 +478,7 @@ class EnhancedErrorHandler:
 
 
 # Global error handler instance
-error_handler = EnhancedErrorHandler()
+error_handler = ErrorHandler()
+
+# Backward compatibility alias
+EnhancedErrorHandler = ErrorHandler

@@ -17,7 +17,7 @@ from PySide6.QtCore import QObject, Signal, QTimer
 class IPCMessage:
     """Represents an IPC message"""
     
-    def __init__(self, action: str, data: Optional[Dict[str, Any]] = None, timestamp: Optional[float] = None):
+    def __init__(self, action: str, data: Optional[Dict[str, Any]] = None, timestamp: Optional[float] = None) -> None:
         self.action = action
         self.data = data or {}
         self.timestamp = timestamp or time.time()
@@ -48,7 +48,7 @@ class IPCServer(QObject):
     activation_requested = Signal()
     message_received = Signal(str, dict)  # action, data
     
-    def __init__(self, port: Optional[int] = None, host: str = '127.0.0.1'):
+    def __init__(self, port: Optional[int] = None, host: str = '127.0.0.1') -> None:
         super().__init__()
         self.host = host
         self.port = port or self._find_available_port()

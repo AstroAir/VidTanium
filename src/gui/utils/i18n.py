@@ -13,7 +13,7 @@ from loguru import logger
 class I18nManager:
     """Internationalization manager for handling translations."""
 
-    def __init__(self, default_locale: str = "zh_CN"):
+    def __init__(self, default_locale: str = "zh_CN") -> None:
         """
         Initialize i18n manager.
 

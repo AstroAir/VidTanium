@@ -15,7 +15,7 @@ from src.core.exceptions import (
 class TestErrorSeverity:
     """Test suite for ErrorSeverity enum."""
 
-    def test_severity_values(self):
+    def test_severity_values(self) -> None:
         """Test enum values."""
         assert ErrorSeverity.LOW.value == "low"
         assert ErrorSeverity.MEDIUM.value == "medium"
@@ -26,7 +26,7 @@ class TestErrorSeverity:
 class TestErrorCategory:
     """Test suite for ErrorCategory enum."""
 
-    def test_category_values(self):
+    def test_category_values(self) -> None:
         """Test enum values."""
         assert ErrorCategory.NETWORK.value == "network"
         assert ErrorCategory.FILESYSTEM.value == "filesystem"
@@ -41,7 +41,7 @@ class TestErrorCategory:
 class TestErrorContext:
     """Test suite for ErrorContext dataclass."""
 
-    def test_context_creation(self):
+    def test_context_creation(self) -> None:
         """Test ErrorContext creation with all fields."""
         context = ErrorContext(
             task_id="test_task",
@@ -61,7 +61,7 @@ class TestErrorContext:
         assert context.retry_count == 2
         assert context.additional_info == {"key": "value"}
 
-    def test_context_defaults(self):
+    def test_context_defaults(self) -> None:
         """Test ErrorContext with default values."""
         context = ErrorContext()
         
@@ -77,7 +77,7 @@ class TestErrorContext:
 class TestUserAction:
     """Test suite for UserAction dataclass."""
 
-    def test_action_creation(self):
+    def test_action_creation(self) -> None:
         """Test UserAction creation with all fields."""
         action = UserAction(
             action_type="retry",
@@ -91,7 +91,7 @@ class TestUserAction:
         assert action.is_automatic is True
         assert action.priority == 1
 
-    def test_action_defaults(self):
+    def test_action_defaults(self) -> None:
         """Test UserAction with default values."""
         action = UserAction(
             action_type="check_connection",
@@ -105,7 +105,7 @@ class TestUserAction:
 class TestVidTaniumException:
     """Test suite for VidTaniumException base class."""
 
-    def test_exception_creation_minimal(self):
+    def test_exception_creation_minimal(self) -> None:
         """Test VidTaniumException creation with minimal parameters."""
         exception = VidTaniumException(
             message="Test error",
@@ -121,7 +121,7 @@ class TestVidTaniumException:
         assert exception.max_retries == 3
         assert exception.original_exception is None
 
-    def test_exception_creation_full(self):
+    def test_exception_creation_full(self) -> None:
         """Test VidTaniumException creation with all parameters."""
         context = ErrorContext(task_id="test_task")
         actions = [UserAction("retry", "Retry operation")]
@@ -147,7 +147,7 @@ class TestVidTaniumException:
         assert exception.max_retries == 5
         assert exception.original_exception == original_exc
 
-    def test_get_user_friendly_message_no_context(self):
+    def test_get_user_friendly_message_no_context(self) -> None:
         """Test user-friendly message without context."""
         exception = VidTaniumException(
             message="Test error",
@@ -157,7 +157,7 @@ class TestVidTaniumException:
         message = exception.get_user_friendly_message()
         assert message == "Test error"
 
-    def test_get_user_friendly_message_with_task_name(self):
+    def test_get_user_friendly_message_with_task_name(self) -> None:
         """Test user-friendly message with task name in context."""
         context = ErrorContext(task_name="Download Video")
         exception = VidTaniumException(
@@ -169,7 +169,7 @@ class TestVidTaniumException:
         message = exception.get_user_friendly_message()
         assert message == "Task 'Download Video': Connection failed"
 
-    def test_get_technical_details(self):
+    def test_get_technical_details(self) -> None:
         """Test technical details generation."""
         context = ErrorContext(
             task_id="test_task",
@@ -204,7 +204,7 @@ class TestVidTaniumException:
 class TestNetworkExceptions:
     """Test suite for network-related exceptions."""
 
-    def test_network_exception(self):
+    def test_network_exception(self) -> None:
         """Test NetworkException creation."""
         exception = NetworkException("Network error")
         
@@ -213,7 +213,7 @@ class TestNetworkExceptions:
         assert exception.is_retryable is True
         assert exception.max_retries == 3
 
-    def test_connection_timeout_exception(self):
+    def test_connection_timeout_exception(self) -> None:
         """Test ConnectionTimeoutException creation."""
         exception = ConnectionTimeoutException(
             url="https://example.com",
@@ -227,7 +227,7 @@ class TestNetworkExceptions:
         assert exception.max_retries == 5
         assert len(exception.suggested_actions) > 0
 
-    def test_http_exception_404(self):
+    def test_http_exception_404(self) -> None:
         """Test HTTPException with 404 status."""
         exception = HTTPException(
             status_code=404,
@@ -240,7 +240,7 @@ class TestNetworkExceptions:
         assert exception.is_retryable is False
         assert any("check_url" in action.action_type for action in exception.suggested_actions)
 
-    def test_http_exception_403(self):
+    def test_http_exception_403(self) -> None:
         """Test HTTPException with 403 status."""
         exception = HTTPException(
             status_code=403,
@@ -252,7 +252,7 @@ class TestNetworkExceptions:
         assert exception.is_retryable is False
         assert any("check_auth" in action.action_type for action in exception.suggested_actions)
 
-    def test_http_exception_500(self):
+    def test_http_exception_500(self) -> None:
         """Test HTTPException with 500 status."""
         exception = HTTPException(
             status_code=500,
@@ -268,14 +268,14 @@ class TestNetworkExceptions:
 class TestFilesystemExceptions:
     """Test suite for filesystem-related exceptions."""
 
-    def test_filesystem_exception(self):
+    def test_filesystem_exception(self) -> None:
         """Test FilesystemException creation."""
         exception = FilesystemException("File error")
         
         assert exception.category == ErrorCategory.FILESYSTEM
         assert exception.severity == ErrorSeverity.MEDIUM
 
-    def test_permission_exception(self):
+    def test_permission_exception(self) -> None:
         """Test PermissionException creation."""
         exception = PermissionException(
             path="/protected/file.mp4",
@@ -288,7 +288,7 @@ class TestFilesystemExceptions:
         assert exception.severity == ErrorSeverity.HIGH
         assert any("check_permissions" in action.action_type for action in exception.suggested_actions)
 
-    def test_insufficient_space_exception(self):
+    def test_insufficient_space_exception(self) -> None:
         """Test InsufficientSpaceException creation."""
         exception = InsufficientSpaceException(
             required_bytes=1048576,
@@ -304,14 +304,14 @@ class TestFilesystemExceptions:
 class TestEncryptionExceptions:
     """Test suite for encryption-related exceptions."""
 
-    def test_encryption_exception(self):
+    def test_encryption_exception(self) -> None:
         """Test EncryptionException creation."""
         exception = EncryptionException("Encryption error")
         
         assert exception.category == ErrorCategory.ENCRYPTION
         assert exception.severity == ErrorSeverity.HIGH
 
-    def test_decryption_key_exception_with_url(self):
+    def test_decryption_key_exception_with_url(self) -> None:
         """Test DecryptionKeyException with key URL."""
         exception = DecryptionKeyException(
             key_url="https://example.com/key.bin"
@@ -322,7 +322,7 @@ class TestEncryptionExceptions:
         assert exception.max_retries == 3
         assert any("check_key_url" in action.action_type for action in exception.suggested_actions)
 
-    def test_decryption_key_exception_without_url(self):
+    def test_decryption_key_exception_without_url(self) -> None:
         """Test DecryptionKeyException without key URL."""
         exception = DecryptionKeyException()
         
@@ -333,14 +333,14 @@ class TestEncryptionExceptions:
 class TestValidationExceptions:
     """Test suite for validation-related exceptions."""
 
-    def test_validation_exception(self):
+    def test_validation_exception(self) -> None:
         """Test ValidationException creation."""
         exception = ValidationException("Validation error")
         
         assert exception.category == ErrorCategory.VALIDATION
         assert exception.severity == ErrorSeverity.MEDIUM
 
-    def test_invalid_url_exception(self):
+    def test_invalid_url_exception(self) -> None:
         """Test InvalidURLException creation."""
         exception = InvalidURLException("invalid-url")
         
@@ -348,7 +348,7 @@ class TestValidationExceptions:
         assert "invalid-url" in exception.message
         assert any("check_url" in action.action_type for action in exception.suggested_actions)
 
-    def test_invalid_segment_exception(self):
+    def test_invalid_segment_exception(self) -> None:
         """Test InvalidSegmentException creation."""
         exception = InvalidSegmentException(
             segment_index=5,
@@ -364,13 +364,13 @@ class TestValidationExceptions:
 class TestResourceExceptions:
     """Test suite for resource-related exceptions."""
 
-    def test_resource_exception(self):
+    def test_resource_exception(self) -> None:
         """Test ResourceException creation."""
         exception = ResourceException("Resource error")
         
         assert exception.category == ErrorCategory.RESOURCE
 
-    def test_memory_exception(self):
+    def test_memory_exception(self) -> None:
         """Test MemoryException creation."""
         exception = MemoryException("video_processing")
         
@@ -383,14 +383,14 @@ class TestResourceExceptions:
 class TestSystemExceptions:
     """Test suite for system-related exceptions."""
 
-    def test_system_exception(self):
+    def test_system_exception(self) -> None:
         """Test SystemException creation."""
         exception = SystemException("System error")
         
         assert exception.category == ErrorCategory.SYSTEM
         assert exception.severity == ErrorSeverity.CRITICAL
 
-    def test_configuration_exception(self):
+    def test_configuration_exception(self) -> None:
         """Test ConfigurationException creation."""
         exception = ConfigurationException(
             setting="max_concurrent_downloads",
@@ -406,7 +406,7 @@ class TestSystemExceptions:
 class TestExceptionInheritance:
     """Test suite for exception inheritance hierarchy."""
 
-    def test_all_exceptions_inherit_from_vidtanium_exception(self):
+    def test_all_exceptions_inherit_from_vidtanium_exception(self) -> None:
         """Test that all custom exceptions inherit from VidTaniumException."""
         exceptions_to_test = [
             NetworkException("test"),
@@ -430,7 +430,7 @@ class TestExceptionInheritance:
             assert isinstance(exception, VidTaniumException)
             assert isinstance(exception, Exception)
 
-    def test_exception_categories_are_correct(self):
+    def test_exception_categories_are_correct(self) -> None:
         """Test that exceptions have correct categories."""
         test_cases = [
             (NetworkException("test"), ErrorCategory.NETWORK),

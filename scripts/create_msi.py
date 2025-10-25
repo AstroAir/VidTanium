@@ -18,7 +18,7 @@ from build_config import BuildConfig, get_build_config, BuildProfile
 class MSIBuilder:
     """Creates MSI installers using WiX Toolset"""
     
-    def __init__(self, config: BuildConfig):
+    def __init__(self, config: BuildConfig) -> None:
         self.config = config
         self.project_root = Path(__file__).parent.parent
         self.dist_dir = self.project_root / "dist"
@@ -239,7 +239,7 @@ class MSIBuilder:
                 print("STDERR:", e.stderr)
             return False
 
-def main():
+def main() -> None:
     """Main MSI builder function"""
     import argparse
     

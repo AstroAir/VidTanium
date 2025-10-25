@@ -13,7 +13,7 @@ from src.core.batch_progress_aggregator import (
 class TestTaskProgress:
     """Test suite for TaskProgress dataclass."""
 
-    def test_task_progress_creation(self):
+    def test_task_progress_creation(self) -> None:
         """Test TaskProgress creation with all fields."""
         progress = TaskProgress(
             task_id="test_task",
@@ -35,7 +35,7 @@ class TestTaskProgress:
         assert progress.eta == 10.0
         assert progress.status == "running"
 
-    def test_task_progress_defaults(self):
+    def test_task_progress_defaults(self) -> None:
         """Test TaskProgress with default values."""
         progress = TaskProgress(
             task_id="test_task",
@@ -54,7 +54,7 @@ class TestTaskProgress:
 class TestBatchProgress:
     """Test suite for BatchProgress dataclass."""
 
-    def test_batch_progress_creation(self):
+    def test_batch_progress_creation(self) -> None:
         """Test BatchProgress creation with all fields."""
         batch = BatchProgress(
             batch_id="test_batch",
@@ -80,7 +80,7 @@ class TestBatchProgress:
         assert batch.downloaded_bytes == 3072
         assert batch.combined_speed == 1024.0
 
-    def test_batch_progress_defaults(self):
+    def test_batch_progress_defaults(self) -> None:
         """Test BatchProgress with default values."""
         batch = BatchProgress(
             batch_id="test_batch",
@@ -106,17 +106,17 @@ class TestBatchProgress:
 class TestBatchProgressAggregator:
     """Test suite for BatchProgressAggregator class."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.aggregator = BatchProgressAggregator()
 
-    def teardown_method(self):
+    def teardown_method(self) -> None:
         """Clean up after tests."""
         # Stop cleanup timer
         if hasattr(self.aggregator, 'cleanup_timer'):
             self.aggregator.cleanup_timer.cancel()
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test BatchProgressAggregator initialization."""
         assert isinstance(self.aggregator.batches, dict)
         assert isinstance(self.aggregator.task_to_batch, dict)
@@ -125,7 +125,7 @@ class TestBatchProgressAggregator:
         assert self.aggregator.update_interval == 1.0
         assert self.aggregator.stale_threshold == 30.0
 
-    def test_create_batch(self):
+    def test_create_batch(self) -> None:
         """Test batch creation."""
         task_ids = ["task1", "task2", "task3"]
         batch = self.aggregator.create_batch("batch1", "Test Batch", task_ids)
@@ -143,7 +143,7 @@ class TestBatchProgressAggregator:
         # Check batch is stored
         assert "batch1" in self.aggregator.batches
 
-    def test_create_batch_existing(self):
+    def test_create_batch_existing(self) -> None:
         """Test creating batch with existing ID."""
         task_ids1 = ["task1", "task2"]
         task_ids2 = ["task3", "task4"]
@@ -155,7 +155,7 @@ class TestBatchProgressAggregator:
         assert batch2.name == "Second Batch"
         assert batch2.total_tasks == 2
 
-    def test_update_task_progress(self):
+    def test_update_task_progress(self) -> None:
         """Test updating task progress."""
         # Create batch first
         self.aggregator.create_batch("batch1", "Test Batch", ["task1", "task2"])
@@ -184,7 +184,7 @@ class TestBatchProgressAggregator:
         assert task_progress.eta == 10.0
         assert task_progress.name == "Task 1"
 
-    def test_update_task_progress_nonexistent_task(self):
+    def test_update_task_progress_nonexistent_task(self) -> None:
         """Test updating progress for nonexistent task."""
         # Should not raise error
         self.aggregator.update_task_progress(
@@ -198,7 +198,7 @@ class TestBatchProgressAggregator:
         # Should not create any batches
         assert len(self.aggregator.batches) == 0
 
-    def test_remove_task_from_batch(self):
+    def test_remove_task_from_batch(self) -> None:
         """Test removing task from batch."""
         # Create batch
         self.aggregator.create_batch("batch1", "Test Batch", ["task1", "task2"])
@@ -220,12 +220,12 @@ class TestBatchProgressAggregator:
         assert "task1" not in self.aggregator.task_to_batch
         assert batch.total_tasks == 1
 
-    def test_remove_nonexistent_task(self):
+    def test_remove_nonexistent_task(self) -> None:
         """Test removing nonexistent task."""
         # Should not raise error
         self.aggregator.remove_task_from_batch("nonexistent")
 
-    def test_recalculate_batch_progress_empty(self):
+    def test_recalculate_batch_progress_empty(self) -> None:
         """Test recalculating progress for empty batch."""
         batch = self.aggregator.create_batch("batch1", "Test Batch", [])
         
@@ -238,7 +238,7 @@ class TestBatchProgressAggregator:
         assert batch.combined_speed == 0.0
         assert batch.estimated_time_remaining is None
 
-    def test_recalculate_batch_progress_with_tasks(self):
+    def test_recalculate_batch_progress_with_tasks(self) -> None:
         """Test recalculating progress with tasks."""
         # Create batch
         self.aggregator.create_batch("batch1", "Test Batch", ["task1", "task2", "task3"])
@@ -258,7 +258,7 @@ class TestBatchProgressAggregator:
         assert batch.combined_speed == 512.0  # Only from running task
         assert batch.overall_progress == 50.0  # 3072/6144 * 100
 
-    def test_get_batch_progress(self):
+    def test_get_batch_progress(self) -> None:
         """Test getting batch progress."""
         batch = self.aggregator.create_batch("batch1", "Test Batch", ["task1"])
         
@@ -268,7 +268,7 @@ class TestBatchProgressAggregator:
         # Test nonexistent batch
         assert self.aggregator.get_batch_progress("nonexistent") is None
 
-    def test_get_all_batches(self):
+    def test_get_all_batches(self) -> None:
         """Test getting all batches."""
         self.aggregator.create_batch("batch1", "Batch 1", ["task1"])
         self.aggregator.create_batch("batch2", "Batch 2", ["task2"])
@@ -279,7 +279,7 @@ class TestBatchProgressAggregator:
         assert "batch1" in all_batches
         assert "batch2" in all_batches
 
-    def test_delete_batch(self):
+    def test_delete_batch(self) -> None:
         """Test deleting batch."""
         # Create batch
         self.aggregator.create_batch("batch1", "Test Batch", ["task1", "task2"])
@@ -291,12 +291,12 @@ class TestBatchProgressAggregator:
         assert "task1" not in self.aggregator.task_to_batch
         assert "task2" not in self.aggregator.task_to_batch
 
-    def test_delete_nonexistent_batch(self):
+    def test_delete_nonexistent_batch(self) -> None:
         """Test deleting nonexistent batch."""
         # Should not raise error
         self.aggregator.delete_batch("nonexistent")
 
-    def test_register_callbacks(self):
+    def test_register_callbacks(self) -> None:
         """Test callback registration."""
         progress_callback = Mock()
         completion_callback = Mock()
@@ -307,7 +307,7 @@ class TestBatchProgressAggregator:
         assert progress_callback in self.aggregator.progress_callbacks
         assert completion_callback in self.aggregator.completion_callbacks
 
-    def test_trigger_progress_callbacks(self):
+    def test_trigger_progress_callbacks(self) -> None:
         """Test progress callback triggering."""
         callback = Mock()
         self.aggregator.register_progress_callback(callback)
@@ -319,7 +319,7 @@ class TestBatchProgressAggregator:
         # Callback should be triggered
         callback.assert_called()
 
-    def test_trigger_completion_callbacks(self):
+    def test_trigger_completion_callbacks(self) -> None:
         """Test completion callback triggering."""
         callback = Mock()
         self.aggregator.register_completion_callback(callback)
@@ -331,7 +331,7 @@ class TestBatchProgressAggregator:
         # Completion callback should be triggered
         callback.assert_called()
 
-    def test_callback_error_handling(self):
+    def test_callback_error_handling(self) -> None:
         """Test error handling in callbacks."""
         error_callback = Mock(side_effect=Exception("Callback error"))
         good_callback = Mock()
@@ -347,7 +347,7 @@ class TestBatchProgressAggregator:
         error_callback.assert_called()
         good_callback.assert_called()
 
-    def test_get_aggregation_summary(self):
+    def test_get_aggregation_summary(self) -> None:
         """Test getting aggregation summary."""
         # Create multiple batches
         self.aggregator.create_batch("batch1", "Batch 1", ["task1", "task2"])

@@ -574,8 +574,22 @@
         "source": "Source"
       }
     },
+    "buttons": {
+      "clear": "Clear Logs",
+      "export": "Export Logs",
+      "refresh": "Refresh Logs"
+    },
     "filters": {
       "title": "Advanced Filters",
+      "search": "Search",
+      "search_placeholder": "Search logs...",
+      "level": "Log Level",
+      "all_levels": "All Levels",
+      "time_range": "Time Range",
+      "all_time": "All Time",
+      "last_hour": "Last Hour",
+      "last_day": "Last Day",
+      "last_week": "Last Week",
       "time_range": {
         "all": "All Time",
         "hour": "Last 1 Hour",
@@ -584,7 +598,8 @@
         "week": "Last 1 Week",
         "custom": "Custom Time"
       }
-    }
+    },
+    "auto_scroll": "Auto Scroll"
   },
   "batch_conversion_dialog": {
     "title": "Batch Media Conversion",
@@ -915,7 +930,8 @@
     "m3u8_valid": "Valid M3U8 playlist detected",
     "m3u8_invalid": "Invalid M3U8 format - not a valid playlist file",
     "no_write_permission": "No write permission to the selected directory",
-    "insufficient_disk_space": "Insufficient disk space for download"
+    "insufficient_disk_space": "Insufficient disk space for download",
+    "smart_defaults_applied": "Smart defaults applied based on content analysis"
   },
   "suggestions": {
     "enter_url": "Please enter a valid video URL to continue",
@@ -945,5 +961,31 @@
     "failed": "Recovery Failed",
     "initializing": "Initializing recovery...",
     "no_specific_guidance": "No specific guidance available for this error type."
+  },
+  "accessibility": {
+    "button": "button",
+    "text_input": "text input",
+    "text_area": "text area",
+    "dropdown": "dropdown",
+    "checkbox": "checkbox",
+    "radio_button": "radio button",
+    "slider": "slider",
+    "progress_bar": "progress bar",
+    "label": "label",
+    "list": "list",
+    "tree": "tree view",
+    "tab_container": "tab container",
+    "disabled": "disabled",
+    "checked": "checked",
+    "read_only": "read only",
+    "required": "required",
+    "high_contrast_mode": "High Contrast Mode",
+    "large_text_mode": "Large Text Mode",
+    "keyboard_navigation": "Keyboard Navigation",
+    "screen_reader_support": "Screen Reader Support",
+    "focus_indicators": "Focus Indicators",
+    "audio_feedback": "Audio Feedback",
+    "reduced_motion": "Reduced Motion",
+    "app_ready": "VidTanium application is ready"
   }
 }

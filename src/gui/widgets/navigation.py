@@ -22,7 +22,7 @@ class NavigationItem(AnimatedCard):
     
     clicked = Signal(str)
     
-    def __init__(self, route_key: str, icon: FIF, text: str, badge_count: int = 0, parent=None):
+    def __init__(self, route_key: str, icon: FIF, text: str, badge_count: int = 0, parent=None) -> None:
         super().__init__(parent)
         self.route_key = route_key
         self.icon = icon
@@ -33,7 +33,7 @@ class NavigationItem(AnimatedCard):
         self._setup_ui()
         self._setup_animations()
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup the navigation item UI"""
         self.setFixedHeight(56)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -78,13 +78,13 @@ class NavigationItem(AnimatedCard):
         """)
         return badge
     
-    def _setup_animations(self):
+    def _setup_animations(self) -> None:
         """Setup smooth animations"""
         self.slide_animation = QPropertyAnimation(self, QByteArray(b"geometry"))
         self.slide_animation.setDuration(250)
         self.slide_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
     
-    def _update_styling(self):
+    def _update_styling(self) -> None:
         """Update styling based on active state"""
         if self.is_active:
             self.setStyleSheet(f"""
@@ -110,13 +110,13 @@ class NavigationItem(AnimatedCard):
             color = DesignSystem.get_color('text_primary_adaptive')
             self.text_label.setStyleSheet(f"color: {color};")
     
-    def set_active(self, active: bool):
+    def set_active(self, active: bool) -> None:
         """Set active state with animation"""
         if self.is_active != active:
             self.is_active = active
             self._update_styling()
     
-    def update_badge(self, count: int):
+    def update_badge(self, count: int) -> None:
         """Update badge count"""
         self.badge_count = count
         if hasattr(self, 'badge_label'):
@@ -126,7 +126,7 @@ class NavigationItem(AnimatedCard):
             else:
                 self.badge_label.hide()
     
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event) -> None:
         """Handle click event"""
         super().mousePressEvent(event)
         if event.button() == Qt.MouseButton.LeftButton:
@@ -138,7 +138,7 @@ class NavigationPanel(ElevatedCardWidget):
 
     route_changed = Signal(str)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.navigation_items: Dict[str, NavigationItem] = {}
         self.current_route = ""
@@ -146,7 +146,7 @@ class NavigationPanel(ElevatedCardWidget):
         self._setup_ui()
         self._setup_styling()
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup the navigation panel UI"""
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(12, 16, 12, 16)
@@ -200,7 +200,7 @@ class NavigationPanel(ElevatedCardWidget):
         
         return header
     
-    def _setup_styling(self):
+    def _setup_styling(self) -> None:
         """Setup panel styling"""
         self.setFixedWidth(280)
         self.setStyleSheet(f"""
@@ -215,7 +215,7 @@ class NavigationPanel(ElevatedCardWidget):
         shadow = DesignSystem.create_shadow_effect('lg')
         self.setGraphicsEffect(shadow)
 
-    def add_navigation_item(self, route_key: str, icon: FIF, text: str, badge_count: int = 0):
+    def add_navigation_item(self, route_key: str, icon: FIF, text: str, badge_count: int = 0) -> None:
         """Add navigation item"""
         item = NavigationItem(route_key, icon, text, badge_count)
         item.clicked.connect(self._on_item_clicked)
@@ -223,7 +223,7 @@ class NavigationPanel(ElevatedCardWidget):
         self.navigation_items[route_key] = item
         self.nav_layout.addWidget(item)
     
-    def add_separator(self):
+    def add_separator(self) -> None:
         """Add separator between navigation groups"""
         separator = QFrame()
         separator.setFrameShape(QFrame.Shape.HLine)
@@ -236,7 +236,7 @@ class NavigationPanel(ElevatedCardWidget):
         """)
         self.nav_layout.addWidget(separator)
     
-    def set_active_route(self, route_key: str):
+    def set_active_route(self, route_key: str) -> None:
         """Set active navigation route"""
         if self.current_route == route_key:
             return
@@ -250,12 +250,12 @@ class NavigationPanel(ElevatedCardWidget):
             self.navigation_items[route_key].set_active(True)
             self.current_route = route_key
     
-    def update_badge(self, route_key: str, count: int):
+    def update_badge(self, route_key: str, count: int) -> None:
         """Update badge count for navigation item"""
         if route_key in self.navigation_items:
             self.navigation_items[route_key].update_badge(count)
     
-    def _on_item_clicked(self, route_key: str):
+    def _on_item_clicked(self, route_key: str) -> None:
         """Handle navigation item click"""
         self.set_active_route(route_key)
         self.route_changed.emit(route_key)
@@ -264,18 +264,18 @@ class NavigationPanel(ElevatedCardWidget):
 class ModernBreadcrumb(QWidget):
     """Modern breadcrumb navigation"""
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.breadcrumb_items: List[str] = []
         self._setup_ui()
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup breadcrumb UI"""
         self._layout = QHBoxLayout(self)
         self._layout.setContentsMargins(0, 0, 0, 0)
         self._layout.setSpacing(8)
     
-    def set_breadcrumb(self, items: List[str]):
+    def set_breadcrumb(self, items: List[str]) -> None:
         """Set breadcrumb items"""
         # Clear existing items
         while self._layout.count():

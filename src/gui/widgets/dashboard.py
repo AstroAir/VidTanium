@@ -29,7 +29,7 @@ class MetricCard(AnimatedCard):
     """Enhanced metric card with animations and modern styling"""
     
     def __init__(self, title: str, value: str, icon: FIF,
-                 trend: Optional[str] = None, color: str = "primary", parent=None):
+                 trend: Optional[str] = None, color: str = "primary", parent=None) -> None:
         super().__init__(parent)
         self.title = title
         self.value = value
@@ -40,7 +40,7 @@ class MetricCard(AnimatedCard):
         self._setup_ui()
         self._setup_animations()
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup metric card UI"""
         self.setFixedHeight(120)
         
@@ -90,14 +90,14 @@ class MetricCard(AnimatedCard):
         """)
         layout.addWidget(self.title_label)
     
-    def _setup_animations(self):
+    def _setup_animations(self) -> None:
         """Setup value change animations"""
         if hasattr(self, 'value_label'):
             self.value_animation = QPropertyAnimation(self.value_label, b"geometry")
             self.value_animation.setDuration(300)
             self.value_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
     
-    def update_value(self, new_value: str, new_trend: Optional[str] = None):
+    def update_value(self, new_value: str, new_trend: Optional[str] = None) -> None:
         """Update metric value with animation"""
         self.value = new_value
         self.value_label.setText(new_value)
@@ -118,14 +118,14 @@ class MetricCard(AnimatedCard):
 class ActivityCard(AnimatedCard):
     """Enhanced activity card showing recent activities"""
     
-    def __init__(self, title: str = "Recent Activity", parent=None):
+    def __init__(self, title: str = "Recent Activity", parent=None) -> None:
         super().__init__(parent)
         self.title = title
         self.activities: List[Dict[str, Any]] = []
         
         self._setup_ui()
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup activity card UI"""
         self.setMinimumHeight(300)
         
@@ -158,7 +158,7 @@ class ActivityCard(AnimatedCard):
         layout.addWidget(self.activities_container)
         layout.addStretch()
     
-    def add_activity(self, icon: FIF, title: str, description: str, time: str):
+    def add_activity(self, icon: FIF, title: str, description: str, time: str) -> None:
         """Add activity item"""
         activity_widget = self._create_activity_item(icon, title, description, time)
         self.activities_layout.addWidget(activity_widget)
@@ -216,12 +216,12 @@ class QuickActionsCard(AnimatedCard):
     
     action_clicked = Signal(str)
     
-    def __init__(self, title: str = "Quick Actions", parent=None):
+    def __init__(self, title: str = "Quick Actions", parent=None) -> None:
         super().__init__(parent)
         self.title = title
         self._setup_ui()
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup quick actions UI"""
         self.setFixedHeight(200)
         
@@ -280,7 +280,7 @@ class QuickActionsCard(AnimatedCard):
         layout.addStretch()
         
         # Connect click event
-        def on_click():
+        def on_click() -> None:
             self.action_clicked.emit(action_id)
         
         button.mousePressEvent = lambda e: on_click() if e.button() == Qt.MouseButton.LeftButton else None
@@ -291,12 +291,12 @@ class QuickActionsCard(AnimatedCard):
 class Dashboard(QWidget):
     """Dashboard with modern layout and components"""
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self._setup_ui()
         self._setup_demo_data()
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup dashboard UI"""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -367,7 +367,7 @@ class Dashboard(QWidget):
         
         return header
     
-    def _setup_demo_data(self):
+    def _setup_demo_data(self) -> None:
         """Setup demo data for the dashboard"""
         # Add some demo activities
         self.activity_card.add_activity(
@@ -380,7 +380,7 @@ class Dashboard(QWidget):
             FIF.ADD, "Task Created", "Batch download - 15 items", "10 min ago"
         )
     
-    def _handle_quick_action(self, action_id: str):
+    def _handle_quick_action(self, action_id: str) -> None:
         """Handle quick action clicks"""
         print(f"Quick action clicked: {action_id}")
         # This would be connected to the main application's routing system

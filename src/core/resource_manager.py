@@ -55,12 +55,12 @@ class ResourceMetrics:
     cleanup_attempts: int = 0
     state_changes: List[tuple] = field(default_factory=list)  # (timestamp, old_state, new_state)
 
-    def record_access(self):
+    def record_access(self) -> None:
         """Record resource access"""
         self.last_access_time = time.time()
         self.access_count += 1
 
-    def record_state_change(self, old_state: ResourceState, new_state: ResourceState):
+    def record_state_change(self, old_state: ResourceState, new_state: ResourceState) -> None:
         """Record state transition"""
         self.state_changes.append((time.time(), old_state, new_state))
 
@@ -105,7 +105,7 @@ class ResourceInfo:
         idle_time = self.metrics.get_idle_time()
         return age > max_age or idle_time > max_idle
 
-    def transition_state(self, new_state: ResourceState):
+    def transition_state(self, new_state: ResourceState) -> None:
         """Transition to new state"""
         old_state = self.state
         self.state = new_state
@@ -116,7 +116,7 @@ class ResourceInfo:
 class LeakDetector:
     """Resource leak detection system"""
 
-    def __init__(self, check_interval: float = 300.0):  # 5 minutes
+    def __init__(self, check_interval: float = 300.0) -> None:  # 5 minutes
         self.check_interval = check_interval
         self.leak_thresholds = {
             "age_threshold": 3600.0,  # 1 hour
@@ -249,7 +249,7 @@ class ResourceManager:
 
         with self.lock:
             # Create weak reference with cleanup callback
-            def on_delete(ref):
+            def on_delete(ref) -> None:
                 self._on_resource_deleted(resource_id)
 
             resource_ref = weakref.ref(resource, on_delete)
@@ -412,7 +412,7 @@ class ResourceManager:
         except:
             return 0
 
-    def _mark_as_leaked(self, resource_id: str):
+    def _mark_as_leaked(self, resource_id: str) -> None:
         """Mark resource as leaked"""
         if resource_id in self.resources:
             self.resources[resource_id].transition_state(ResourceState.LEAKED)
@@ -434,7 +434,7 @@ class ResourceManager:
                 logger.error(f"Error in resource cleanup loop: {e}", exc_info=True)
                 time.sleep(self.cleanup_interval)
 
-    def _check_for_leaks(self):
+    def _check_for_leaks(self) -> None:
         """Check for resource leaks using enhanced detection"""
         with self.lock:
             potential_leaks = self.leak_detector.check_for_leaks(self.resources)
@@ -540,7 +540,7 @@ class ResourceManager:
                 self.resources.pop(resource_id, None)
         logger.debug(f"Resource garbage collected: {resource_id}")
 
-    def cleanup_all_resources(self):
+    def cleanup_all_resources(self) -> None:
         """Clean up all resources"""
         with self.lock:
             resource_ids = list(self.resources.keys())
@@ -550,11 +550,11 @@ class ResourceManager:
 
         logger.info(f"Cleaned up all {len(resource_ids)} resources")
 
-    def start_monitoring(self):
+    def start_monitoring(self) -> None:
         """Start enhanced monitoring (alias for start)"""
         self.start()
 
-    def stop_monitoring(self):
+    def stop_monitoring(self) -> None:
         """Stop enhanced monitoring (alias for stop)"""
         self.stop()
 

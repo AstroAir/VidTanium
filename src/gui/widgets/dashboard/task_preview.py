@@ -9,7 +9,6 @@ from qfluentwidgets import (
 )
 
 from ...utils.i18n import tr
-from ...utils.theme import VidTaniumTheme
 from loguru import logger
 
 if TYPE_CHECKING:
@@ -19,14 +18,14 @@ if TYPE_CHECKING:
 class DashboardTaskPreview(QWidget):
     """Task preview component showing recent tasks"""
     
-    def __init__(self, main_window: "MainWindow", parent=None):
+    def __init__(self, main_window: "MainWindow", parent=None) -> None:
         super().__init__(parent)
         self.main_window = main_window
         self.task_preview_content: Optional[QWidget] = None
         self.main_log_preview: Optional[TextEdit] = None
         self._setup_ui()
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup the task preview UI with responsive design"""
         # Main card container with responsive sizing
         card = CardWidget()
@@ -37,7 +36,7 @@ class DashboardTaskPreview(QWidget):
         # Set responsive size policy
         card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         
-        card.setStyleSheet(VidTaniumTheme.get_card_style())
+        # Let qfluentwidgets handle card styling
         layout = QVBoxLayout(card)
         layout.setContentsMargins(20, 20, 20, 20)  # Slightly reduced margins
         layout.setSpacing(12)  # Reduced spacing
@@ -75,13 +74,12 @@ class DashboardTaskPreview(QWidget):
 
         icon = IconWidget(FIF.HISTORY)
         icon.setFixedSize(20, 20)
-        icon.setStyleSheet(f"color: {VidTaniumTheme.PRIMARY_BLUE};")
+        icon.setObjectName("primary-icon")
 
         title = SubtitleLabel(tr("dashboard.recent_tasks.title"))
-        title.setStyleSheet(f"""
-            font-weight: {VidTaniumTheme.FONT_WEIGHT_SEMIBOLD}; 
-            color: {VidTaniumTheme.TEXT_PRIMARY};
-            font-size: {VidTaniumTheme.FONT_SIZE_HEADING};
+        title.setStyleSheet("""
+            font-weight: 600;
+            font-size: 16px;
         """)
 
         header_layout.addWidget(icon)
@@ -100,15 +98,15 @@ class DashboardTaskPreview(QWidget):
         # Set responsive size policy
         item.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         
-        item.setStyleSheet(f"""
-                background-color: {VidTaniumTheme.BG_CARD};
-                border-radius: {VidTaniumTheme.RADIUS_MEDIUM};
-                border: 1px solid {VidTaniumTheme.BORDER_LIGHT};
-            }}
-            QWidget:hover {{
-                background-color: {VidTaniumTheme.BG_CARD_HOVER};
-                border-color: {VidTaniumTheme.BORDER_ACCENT};
-            }}
+        item.setObjectName("task-preview-item")
+        item.setStyleSheet("""
+            QWidget#task-preview-item {
+                border-radius: 6px;
+                border: 1px solid rgba(0, 0, 0, 0.1);
+            }
+            QWidget#task-preview-item:hover {
+                border-color: rgba(0, 120, 212, 0.5);
+            }
         """)
 
         layout = QHBoxLayout(item)
@@ -123,29 +121,28 @@ class DashboardTaskPreview(QWidget):
             "error": FIF.CLOSE
         }
 
-        status_colors = {
-            "downloading": VidTaniumTheme.INFO_BLUE,
-            "completed": VidTaniumTheme.SUCCESS_GREEN,
-            "paused": VidTaniumTheme.WARNING_ORANGE,
-            "error": VidTaniumTheme.ERROR_RED
+        status_classes = {
+            "downloading": "info",
+            "completed": "success",
+            "paused": "warning",
+            "error": "error"
         }
 
         icon = IconWidget(status_icons.get(status, FIF.INFO))
         icon.setFixedSize(16, 16)
-        icon.setStyleSheet(f"color: {status_colors.get(status, VidTaniumTheme.TEXT_SECONDARY)};")
+        icon.setObjectName(f"status-icon-{status_classes.get(status, 'secondary')}")
 
         # Task info
         info_layout = QVBoxLayout()
         info_layout.setSpacing(2)
 
         name_label = BodyLabel(name)
-        name_label.setStyleSheet(f"""
-            font-weight: {VidTaniumTheme.FONT_WEIGHT_SEMIBOLD}; 
-            color: {VidTaniumTheme.TEXT_PRIMARY};
+        name_label.setStyleSheet("""
+            font-weight: 600;
         """)
 
         status_label = CaptionLabel(f"{status.title()} - {progress}%")
-        status_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_SECONDARY};")
+        # Let qfluentwidgets handle label styling
 
         info_layout.addWidget(name_label)
         info_layout.addWidget(status_label)
@@ -163,7 +160,7 @@ class DashboardTaskPreview(QWidget):
 
         return item
 
-    def update_task_preview(self):
+    def update_task_preview(self) -> None:
         """Update task preview panel with recent activity"""
         try:
             if not self.main_window.download_manager:

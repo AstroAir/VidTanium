@@ -19,7 +19,7 @@ from src.core.error_handler import EnhancedErrorHandler
 class TestCircuitState:
     """Test suite for CircuitState enum."""
 
-    def test_state_values(self):
+    def test_state_values(self) -> None:
         """Test enum values."""
         assert CircuitState.CLOSED.value == "closed"
         assert CircuitState.OPEN.value == "open"
@@ -29,7 +29,7 @@ class TestCircuitState:
 class TestRetryAttempt:
     """Test suite for RetryAttempt dataclass."""
 
-    def test_attempt_creation(self):
+    def test_attempt_creation(self) -> None:
         """Test RetryAttempt creation with all fields."""
         exception = NetworkException("Network error")
         attempt = RetryAttempt(
@@ -46,7 +46,7 @@ class TestRetryAttempt:
         assert attempt.success is False
         assert attempt.duration == 5.5
 
-    def test_attempt_defaults(self):
+    def test_attempt_defaults(self) -> None:
         """Test RetryAttempt with default values."""
         attempt = RetryAttempt(
             attempt_number=1,
@@ -61,7 +61,7 @@ class TestRetryAttempt:
 class TestRetrySession:
     """Test suite for RetrySession dataclass."""
 
-    def test_session_creation(self):
+    def test_session_creation(self) -> None:
         """Test RetrySession creation with all fields."""
         context = ErrorContext(task_id="test_task")
         attempts = [RetryAttempt(1, time.time())]
@@ -82,7 +82,7 @@ class TestRetrySession:
         assert session.total_delay == 10.0
         assert session.context == context
 
-    def test_session_defaults(self):
+    def test_session_defaults(self) -> None:
         """Test RetrySession with default values."""
         session = RetrySession(operation_id="test_operation")
         
@@ -97,7 +97,7 @@ class TestRetrySession:
 class TestCircuitBreakerConfig:
     """Test suite for CircuitBreakerConfig dataclass."""
 
-    def test_config_creation(self):
+    def test_config_creation(self) -> None:
         """Test CircuitBreakerConfig creation with all fields."""
         config = CircuitBreakerConfig(
             failure_threshold=10,
@@ -111,7 +111,7 @@ class TestCircuitBreakerConfig:
         assert config.success_threshold == 5
         assert config.monitoring_window == 600.0
 
-    def test_config_defaults(self):
+    def test_config_defaults(self) -> None:
         """Test CircuitBreakerConfig with default values."""
         config = CircuitBreakerConfig()
         
@@ -124,7 +124,7 @@ class TestCircuitBreakerConfig:
 class TestCircuitBreaker:
     """Test suite for CircuitBreaker class."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.config = CircuitBreakerConfig(
             failure_threshold=3,
@@ -133,7 +133,7 @@ class TestCircuitBreaker:
         )
         self.breaker = CircuitBreaker("test_breaker", self.config)
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test CircuitBreaker initialization."""
         assert self.breaker.name == "test_breaker"
         assert self.breaker.config == self.config
@@ -144,12 +144,12 @@ class TestCircuitBreaker:
         assert isinstance(self.breaker.recent_attempts, list)
         assert isinstance(self.breaker.lock, Lock)
 
-    def test_can_execute_closed_state(self):
+    def test_can_execute_closed_state(self) -> None:
         """Test can_execute in CLOSED state."""
         assert self.breaker.state == CircuitState.CLOSED
         assert self.breaker.can_execute() is True
 
-    def test_can_execute_open_state_within_timeout(self):
+    def test_can_execute_open_state_within_timeout(self) -> None:
         """Test can_execute in OPEN state within recovery timeout."""
         # Force to OPEN state
         self.breaker.state = CircuitState.OPEN
@@ -157,7 +157,7 @@ class TestCircuitBreaker:
         
         assert self.breaker.can_execute() is False
 
-    def test_can_execute_open_state_after_timeout(self):
+    def test_can_execute_open_state_after_timeout(self) -> None:
         """Test can_execute in OPEN state after recovery timeout."""
         # Force to OPEN state with old failure time
         self.breaker.state = CircuitState.OPEN
@@ -169,12 +169,12 @@ class TestCircuitBreaker:
         assert self.breaker.state == CircuitState.HALF_OPEN
         assert self.breaker.success_count == 0
 
-    def test_can_execute_half_open_state(self):
+    def test_can_execute_half_open_state(self) -> None:
         """Test can_execute in HALF_OPEN state."""
         self.breaker.state = CircuitState.HALF_OPEN
         assert self.breaker.can_execute() is True
 
-    def test_record_success_closed_state(self):
+    def test_record_success_closed_state(self) -> None:
         """Test record_success in CLOSED state."""
         self.breaker.record_success()
         
@@ -183,7 +183,7 @@ class TestCircuitBreaker:
         assert len(self.breaker.recent_attempts) == 1
         assert self.breaker.recent_attempts[0][1] is True  # Success flag
 
-    def test_record_success_half_open_to_closed(self):
+    def test_record_success_half_open_to_closed(self) -> None:
         """Test record_success transitioning from HALF_OPEN to CLOSED."""
         self.breaker.state = CircuitState.HALF_OPEN
         
@@ -194,7 +194,7 @@ class TestCircuitBreaker:
         assert self.breaker.state == CircuitState.CLOSED
         assert self.breaker.failure_count == 0
 
-    def test_record_failure_closed_state(self):
+    def test_record_failure_closed_state(self) -> None:
         """Test record_failure in CLOSED state."""
         self.breaker.record_failure()
         
@@ -204,7 +204,7 @@ class TestCircuitBreaker:
         assert len(self.breaker.recent_attempts) == 1
         assert self.breaker.recent_attempts[0][1] is False  # Failure flag
 
-    def test_record_failure_closed_to_open(self):
+    def test_record_failure_closed_to_open(self) -> None:
         """Test record_failure transitioning from CLOSED to OPEN."""
         # Record enough failures to open circuit
         for _ in range(self.config.failure_threshold):
@@ -213,7 +213,7 @@ class TestCircuitBreaker:
         assert self.breaker.state == CircuitState.OPEN
         assert self.breaker.failure_count == self.config.failure_threshold
 
-    def test_record_failure_half_open_to_open(self):
+    def test_record_failure_half_open_to_open(self) -> None:
         """Test record_failure transitioning from HALF_OPEN to OPEN."""
         self.breaker.state = CircuitState.HALF_OPEN
         
@@ -221,7 +221,7 @@ class TestCircuitBreaker:
         
         assert self.breaker.state == CircuitState.OPEN
 
-    def test_get_stats(self):
+    def test_get_stats(self) -> None:
         """Test get_stats method."""
         # Record some attempts
         self.breaker.record_success()
@@ -237,7 +237,7 @@ class TestCircuitBreaker:
         assert stats["failure_rate"] == 1/3
         assert stats["last_failure_time"] > 0
 
-    def test_cleanup_old_attempts(self):
+    def test_cleanup_old_attempts(self) -> None:
         """Test cleanup of old attempts."""
         # Add old attempt (beyond monitoring window)
         old_time = time.time() - 400  # 400 seconds ago
@@ -256,12 +256,12 @@ class TestCircuitBreaker:
 class TestIntelligentRetryManager:
     """Test suite for IntelligentRetryManager class."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.error_handler = Mock(spec=EnhancedErrorHandler)
         self.manager = IntelligentRetryManager(error_handler=self.error_handler)
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test IntelligentRetryManager initialization."""
         assert self.manager.error_handler == self.error_handler
         assert isinstance(self.manager.active_sessions, dict)
@@ -274,12 +274,12 @@ class TestIntelligentRetryManager:
         assert ErrorCategory.FILESYSTEM in self.manager.circuit_configs
         assert ErrorCategory.ENCRYPTION in self.manager.circuit_configs
 
-    def test_initialization_without_error_handler(self):
+    def test_initialization_without_error_handler(self) -> None:
         """Test initialization without error handler."""
         manager = IntelligentRetryManager()
         assert manager.error_handler is None
 
-    def test_execute_with_retry_success(self):
+    def test_execute_with_retry_success(self) -> None:
         """Test successful operation execution."""
         operation = Mock(return_value="success")
         
@@ -294,7 +294,7 @@ class TestIntelligentRetryManager:
         operation.assert_called_once()
         assert "test_op" not in self.manager.active_sessions  # Should be cleaned up
 
-    def test_execute_with_retry_failure_then_success(self):
+    def test_execute_with_retry_failure_then_success(self) -> None:
         """Test operation that fails then succeeds."""
         operation = Mock(side_effect=[Exception("First failure"), "success"])
         self.error_handler.handle_exception.return_value = NetworkException("Network error")
@@ -311,7 +311,7 @@ class TestIntelligentRetryManager:
         assert operation.call_count == 2
         self.error_handler.handle_exception.assert_called_once()
 
-    def test_execute_with_retry_permanent_failure(self):
+    def test_execute_with_retry_permanent_failure(self) -> None:
         """Test operation that fails permanently."""
         operation = Mock(side_effect=Exception("Permanent failure"))
         enhanced_exception = NetworkException("Network error")
@@ -329,7 +329,7 @@ class TestIntelligentRetryManager:
         
         operation.assert_called_once()
 
-    def test_execute_with_retry_max_retries_exceeded(self):
+    def test_execute_with_retry_max_retries_exceeded(self) -> None:
         """Test operation that exceeds max retries."""
         operation = Mock(side_effect=Exception("Always fails"))
         enhanced_exception = NetworkException("Network error")
@@ -348,7 +348,7 @@ class TestIntelligentRetryManager:
         
         assert operation.call_count == 3  # Initial + 2 retries
 
-    def test_execute_with_retry_circuit_breaker_open(self):
+    def test_execute_with_retry_circuit_breaker_open(self) -> None:
         """Test operation blocked by open circuit breaker."""
         # Create and configure circuit breaker
         context = ErrorContext(url="https://example.com")
@@ -369,9 +369,9 @@ class TestIntelligentRetryManager:
         operation.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_execute_with_retry_async_success(self):
+    async def test_execute_with_retry_async_success(self) -> None:
         """Test successful async operation execution."""
-        async def async_operation():
+        async def async_operation() -> None:
             return "async_success"
         
         result = await self.manager.execute_with_retry_async(
@@ -382,11 +382,11 @@ class TestIntelligentRetryManager:
         assert result == "async_success"
 
     @pytest.mark.asyncio
-    async def test_execute_with_retry_async_failure(self):
+    async def test_execute_with_retry_async_failure(self) -> None:
         """Test async operation that fails then succeeds."""
         call_count = 0
         
-        async def async_operation():
+        async def async_operation() -> None:
             nonlocal call_count
             call_count += 1
             if call_count == 1:
@@ -405,7 +405,7 @@ class TestIntelligentRetryManager:
         assert result == "async_success"
         assert call_count == 2
 
-    def test_get_or_create_session_new(self):
+    def test_get_or_create_session_new(self) -> None:
         """Test creating new retry session."""
         context = ErrorContext(task_id="test_task")
         
@@ -416,7 +416,7 @@ class TestIntelligentRetryManager:
         assert session.max_retries == 5
         assert "new_op" in self.manager.active_sessions
 
-    def test_get_or_create_session_existing(self):
+    def test_get_or_create_session_existing(self) -> None:
         """Test getting existing retry session."""
         context = ErrorContext(task_id="test_task")
         
@@ -429,7 +429,7 @@ class TestIntelligentRetryManager:
         assert session1 is session2
         assert session2.max_retries == 3  # Should keep original max_retries
 
-    def test_get_circuit_breaker_new(self):
+    def test_get_circuit_breaker_new(self) -> None:
         """Test creating new circuit breaker."""
         context = ErrorContext(url="https://example.com")
         
@@ -439,7 +439,7 @@ class TestIntelligentRetryManager:
         assert breaker.name == "test_op"
         assert "test_op" in self.manager.circuit_breakers
 
-    def test_get_circuit_breaker_existing(self):
+    def test_get_circuit_breaker_existing(self) -> None:
         """Test getting existing circuit breaker."""
         context = ErrorContext(url="https://example.com")
         
@@ -451,7 +451,7 @@ class TestIntelligentRetryManager:
         
         assert breaker1 is breaker2
 
-    def test_should_retry_with_error_handler(self):
+    def test_should_retry_with_error_handler(self) -> None:
         """Test retry decision with error handler."""
         exception = NetworkException("Network error")
         session = RetrySession("test_op", max_retries=3)
@@ -464,7 +464,7 @@ class TestIntelligentRetryManager:
         assert result is True
         self.error_handler.should_retry.assert_called_once_with(exception, 1)
 
-    def test_should_retry_without_error_handler(self):
+    def test_should_retry_without_error_handler(self) -> None:
         """Test retry decision without error handler."""
         manager = IntelligentRetryManager()  # No error handler
         
@@ -477,7 +477,7 @@ class TestIntelligentRetryManager:
         
         assert result is True
 
-    def test_should_retry_max_attempts_exceeded(self):
+    def test_should_retry_max_attempts_exceeded(self) -> None:
         """Test retry decision when max attempts exceeded."""
         exception = NetworkException("Network error")
         session = RetrySession("test_op", max_retries=2)
@@ -490,7 +490,7 @@ class TestIntelligentRetryManager:
         
         assert result is False
 
-    def test_cleanup_session(self):
+    def test_cleanup_session(self) -> None:
         """Test session cleanup."""
         session = RetrySession("test_op")
         self.manager.active_sessions["test_op"] = session
@@ -499,7 +499,7 @@ class TestIntelligentRetryManager:
         
         assert "test_op" not in self.manager.active_sessions
 
-    def test_get_session_stats(self):
+    def test_get_session_stats(self) -> None:
         """Test getting session statistics."""
         session = RetrySession("test_op", max_retries=5, start_time=1234567890.0)
         session.attempts = [
@@ -520,12 +520,12 @@ class TestIntelligentRetryManager:
         assert stats["success_rate"] == 0.5
         assert stats["average_duration"] == 1.5
 
-    def test_get_session_stats_nonexistent(self):
+    def test_get_session_stats_nonexistent(self) -> None:
         """Test getting stats for nonexistent session."""
         stats = self.manager.get_session_stats("nonexistent")
         assert stats is None
 
-    def test_get_all_circuit_breaker_stats(self):
+    def test_get_all_circuit_breaker_stats(self) -> None:
         """Test getting all circuit breaker statistics."""
         # Create some circuit breakers
         context1 = ErrorContext(url="https://example1.com")
@@ -545,7 +545,7 @@ class TestIntelligentRetryManager:
         assert stats["op1"]["success_count"] == 1
         assert stats["op2"]["failure_count"] == 1
 
-    def test_global_retry_manager_instance(self):
+    def test_global_retry_manager_instance(self) -> None:
         """Test global retry manager instance."""
         assert retry_manager is not None
         assert isinstance(retry_manager, IntelligentRetryManager)

@@ -26,7 +26,7 @@ class ScheduleDialog(QDialog):
     # 信号定义
     task_created = Signal(SchedulerTask)  # 任务对象
 
-    def __init__(self, settings: Any, download_data: Optional[Dict[str, Any]] = None, parent: Optional[QWidget] = None):
+    def __init__(self, settings: Any, download_data: Optional[Dict[str, Any]] = None, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
 
         self.settings = settings
@@ -39,7 +39,7 @@ class ScheduleDialog(QDialog):
 
         self._create_ui()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """创建界面"""
         # 主布局
         main_layout = QVBoxLayout(self)
@@ -93,7 +93,7 @@ class ScheduleDialog(QDialog):
         # 填充数据
         self._fill_download_data()
 
-    def _fill_download_data(self):
+    def _fill_download_data(self) -> None:
         """填充下载任务数据"""
         if not self.download_data:
             return
@@ -104,7 +104,7 @@ class ScheduleDialog(QDialog):
             if isinstance(name_value, str):
                 self.task_info_widget.set_task_name(name_value)
 
-    def _on_ok(self):
+    def _on_ok(self) -> None:
         """确定按钮点击"""
         # 验证输入
         if not self.task_info_widget.get_task_name():
@@ -134,7 +134,7 @@ class ScheduleDialog(QDialog):
         # 创建任务
         self._create_task()
 
-    def _create_task(self):
+    def _create_task(self) -> None:
         """创建计划任务"""
         try:
             # 获取任务类型

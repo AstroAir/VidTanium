@@ -31,7 +31,7 @@ class MediaProcessingDialog(QDialog):
     # 处理完成信号
     processing_completed = Signal(bool, str)  # 成功/失败, 消息
 
-    def __init__(self, settings, input_file=None, parent=None):
+    def __init__(self, settings, input_file=None, parent=None) -> None:
         super().__init__(parent)
 
         self.settings = settings
@@ -55,7 +55,7 @@ class MediaProcessingDialog(QDialog):
             self.input_file_input.setText(self.input_file)
             self._input_file_changed()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """创建界面"""
         # 创建主布局
         main_layout = QVBoxLayout(self)
@@ -156,10 +156,10 @@ class MediaProcessingDialog(QDialog):
         self.progress_bar = self.progress_card.progress_bar
 
         # Add methods for compatibility
-        def set_progress_visible(visible):
+        def set_progress_visible(visible) -> None:
             self.progress_card.setVisible(visible)
 
-        def set_progress_format(format_string):
+        def set_progress_format(format_string) -> None:
             self.progress_card.setStatus(format_string)
 
         # Store methods for later use instead of assigning to attributes
@@ -188,7 +188,7 @@ class MediaProcessingDialog(QDialog):
         self.cancel_button = self.button_box.button(
             QDialogButtonBox.StandardButton.Cancel)
 
-    def _create_convert_tab(self):
+    def _create_convert_tab(self) -> None:
         """创建格式转换选项卡"""
         layout = QFormLayout(self.convert_tab)
         layout.setContentsMargins(15, 15, 15, 15)
@@ -261,7 +261,7 @@ class MediaProcessingDialog(QDialog):
         hint_label.setWordWrap(True)
         layout.addRow("", hint_label)
 
-    def _create_clip_tab(self):
+    def _create_clip_tab(self) -> None:
         """创建视频剪辑选项卡"""
         layout = QFormLayout(self.clip_tab)
         layout.setContentsMargins(15, 15, 15, 15)
@@ -314,7 +314,7 @@ class MediaProcessingDialog(QDialog):
         hint_label.setWordWrap(True)
         layout.addRow("", hint_label)
 
-    def _create_audio_tab(self):
+    def _create_audio_tab(self) -> None:
         """创建提取音频选项卡"""
         layout = QFormLayout(self.audio_tab)
         layout.setContentsMargins(15, 15, 15, 15)
@@ -348,7 +348,7 @@ class MediaProcessingDialog(QDialog):
         hint_label.setWordWrap(True)
         layout.addRow("", hint_label)
 
-    def _create_compress_tab(self):
+    def _create_compress_tab(self) -> None:
         """创建视频压缩选项卡"""
         layout = QFormLayout(self.compress_tab)
         layout.setContentsMargins(15, 15, 15, 15)
@@ -422,7 +422,7 @@ class MediaProcessingDialog(QDialog):
         hint_label.setWordWrap(True)
         layout.addRow("", hint_label)
 
-    def _browse_input(self):
+    def _browse_input(self) -> None:
         """浏览输入文件"""
         file_path, _ = QFileDialog.getOpenFileName(
             self, "选择媒体文件", "",
@@ -441,7 +441,7 @@ class MediaProcessingDialog(QDialog):
                 duration=2000,
                 parent=self)
 
-    def _browse_output(self):
+    def _browse_output(self) -> None:
         """浏览输出文件"""
         # 根据选项卡确定文件类型
         current_tab = self.stacked_widget.currentIndex()
@@ -472,7 +472,7 @@ class MediaProcessingDialog(QDialog):
         if file_path:
             self.output_file_input.setText(file_path)
 
-    def _input_file_changed(self):
+    def _input_file_changed(self) -> None:
         """输入文件变化时更新"""
         input_file = self.input_file_input.text()
 
@@ -489,7 +489,7 @@ class MediaProcessingDialog(QDialog):
             self.file_info_label.setText("请选择有效的输入文件")
             self.process_button.setEnabled(False)
 
-    def _update_file_info(self, file_path):
+    def _update_file_info(self, file_path) -> None:
         """更新文件信息"""
         # 获取文件大小
         size_bytes = os.path.getsize(file_path)
@@ -555,7 +555,7 @@ class MediaProcessingDialog(QDialog):
         # 如果无法获取详细信息，显示基本信息
         self.file_info_label.setText(f"大小: {size_mb:.2f} MB")
 
-    def _update_output_file(self):
+    def _update_output_file(self) -> None:
         """更新输出文件路径"""
         input_file = self.input_file_input.text()
 
@@ -596,7 +596,7 @@ class MediaProcessingDialog(QDialog):
         # 设置输出文件路径
         self.output_file_input.setText(output_file)
 
-    def _update_duration(self):
+    def _update_duration(self) -> None:
         """更新持续时间标签"""
         start_time = self.start_time_edit.time()
         end_time = self.end_time_edit.time()
@@ -615,7 +615,7 @@ class MediaProcessingDialog(QDialog):
 
         self.duration_label.setText(duration_str)
 
-    def _update_compression_ui(self):
+    def _update_compression_ui(self) -> None:
         """更新压缩UI"""
         is_quality = self.quality_radio.isChecked()
 
@@ -623,7 +623,7 @@ class MediaProcessingDialog(QDialog):
         self.quality_slider.setEnabled(is_quality)
         self.target_size_spin.setEnabled(not is_quality)
 
-    def _format_duration(self, seconds):
+    def _format_duration(self, seconds) -> None:
         """格式化时长"""
         hours = int(seconds // 3600)
         minutes = int((seconds % 3600) // 60)
@@ -636,7 +636,7 @@ class MediaProcessingDialog(QDialog):
         else:
             return f"{secs}秒"
 
-    def _start_processing(self):
+    def _start_processing(self) -> None:
         """开始处理"""
         input_file = self.input_file_input.text()
         output_file = self.output_file_input.text()
@@ -704,7 +704,7 @@ class MediaProcessingDialog(QDialog):
         elif current_tab == 3:  # 视频压缩
             self._compress_video(input_file, output_file)
 
-    def _convert_format(self, input_file, output_file):
+    def _convert_format(self, input_file, output_file) -> None:
         """转换视频格式"""
         # 准备格式选项
         format_options = {}
@@ -755,7 +755,7 @@ class MediaProcessingDialog(QDialog):
             format_options
         )
 
-    def _clip_video(self, input_file, output_file):
+    def _clip_video(self, input_file, output_file) -> None:
         """剪辑视频"""
         # 获取开始时间和持续时间
         start_time = self.start_time_edit.time().toString("HH:mm:ss")
@@ -787,7 +787,7 @@ class MediaProcessingDialog(QDialog):
             keep_codec=keep_codec
         )
 
-    def _extract_audio(self, input_file, output_file):
+    def _extract_audio(self, input_file, output_file) -> None:
         """提取音频"""
         # 获取音频格式
         audio_format = self.audio_format_combo.currentText().lower()
@@ -810,7 +810,7 @@ class MediaProcessingDialog(QDialog):
             audio_bitrate=audio_bitrate
         )
 
-    def _compress_video(self, input_file, output_file):
+    def _compress_video(self, input_file, output_file) -> None:
         """压缩视频"""
         # 确定是按质量还是按大小
         is_quality = self.quality_radio.isChecked()
@@ -838,13 +838,13 @@ class MediaProcessingDialog(QDialog):
                 target_size_mb=target_size
             )
 
-    def _execute_processing_task(self, func, *args, **kwargs):
+    def _execute_processing_task(self, func, *args, **kwargs) -> None:
         """执行处理任务"""
         # 使用QTimer让UI有机会更新
         QTimer.singleShot(
             100, lambda: self._do_execute_task(func, *args, **kwargs))
 
-    def _do_execute_task(self, func, *args, **kwargs):
+    def _do_execute_task(self, func, *args, **kwargs) -> None:
         """实际执行任务"""
         try:
             # 调用处理函数
@@ -921,7 +921,7 @@ class MediaProcessingDialog(QDialog):
                 False, f"处理出错: {str(e)}")            # 恢复UI
             self._enable_ui()
 
-    def _disable_ui(self):
+    def _disable_ui(self) -> None:
         """禁用UI"""
         self.input_file_input.setEnabled(False)
         self.output_file_input.setEnabled(False)
@@ -931,7 +931,7 @@ class MediaProcessingDialog(QDialog):
         self.process_button.setEnabled(False)
         self.cancel_button.setText("取消处理")
 
-    def _enable_ui(self):
+    def _enable_ui(self) -> None:
         """启用UI"""
         self.input_file_input.setEnabled(True)
         self.output_file_input.setEnabled(True)
@@ -943,6 +943,6 @@ class MediaProcessingDialog(QDialog):
         if self.progress_bar:
             self.progress_bar.setVisible(False)
 
-    def _format_time_for_ffmpeg(self, time):
+    def _format_time_for_ffmpeg(self, time) -> None:
         """将QTime格式化为FFmpeg可用的时间格式"""
         return time.toString("HH:mm:ss")

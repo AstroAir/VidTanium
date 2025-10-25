@@ -17,7 +17,7 @@ class TestStreamingBuffer:
     """Test StreamingBuffer class"""
     
     @pytest.fixture
-    def temp_file(self):
+    def temp_file(self) -> None:
         """Create a temporary file for testing"""
         fd, path = tempfile.mkstemp()
         os.close(fd)
@@ -25,7 +25,7 @@ class TestStreamingBuffer:
         if os.path.exists(path):
             os.unlink(path)
     
-    def test_streaming_buffer_creation(self):
+    def test_streaming_buffer_creation(self) -> None:
         """Test StreamingBuffer creation"""
         buffer_id = "test_buffer"
         buffer_size = 1024
@@ -41,7 +41,7 @@ class TestStreamingBuffer:
         assert buffer.write_count == 0
         assert buffer.flush_count == 0
     
-    def test_write_within_capacity(self):
+    def test_write_within_capacity(self) -> None:
         """Test writing data within buffer capacity"""
         buffer = StreamingBuffer("test", 1024)
         data = b"Hello, World!"
@@ -53,7 +53,7 @@ class TestStreamingBuffer:
         assert buffer.data == data
         assert buffer.write_count == 1
     
-    def test_write_exceeds_capacity(self):
+    def test_write_exceeds_capacity(self) -> None:
         """Test writing data that exceeds buffer capacity"""
         buffer = StreamingBuffer("test", 10)
         data = b"This is a long string that exceeds buffer capacity"
@@ -66,7 +66,7 @@ class TestStreamingBuffer:
         assert buffer.data == data[:10]
         assert buffer.write_count == 1
     
-    def test_flush_to_file(self, temp_file):
+    def test_flush_to_file(self, temp_file) -> None:
         """Test flushing buffer to file"""
         buffer = StreamingBuffer("test", 1024)
         data = b"Test data for flushing"
@@ -85,7 +85,7 @@ class TestStreamingBuffer:
             file_content = f.read()
         assert file_content == data
     
-    def test_clear_buffer(self):
+    def test_clear_buffer(self) -> None:
         """Test clearing buffer"""
         buffer = StreamingBuffer("test", 1024)
         buffer.write(b"Some data")
@@ -97,7 +97,7 @@ class TestStreamingBuffer:
         assert buffer.current_size == 0
         assert buffer.data == b""
     
-    def test_get_stats(self):
+    def test_get_stats(self) -> None:
         """Test getting buffer statistics"""
         buffer = StreamingBuffer("test", 1024)
         buffer.write(b"Test data")
@@ -117,11 +117,11 @@ class TestMemoryOptimizer:
     """Test MemoryOptimizer class"""
     
     @pytest.fixture
-    def memory_optimizer_instance(self):
+    def memory_optimizer_instance(self) -> None:
         """Create a fresh MemoryOptimizer for testing"""
         return MemoryOptimizer()
     
-    def test_initialization(self, memory_optimizer_instance):
+    def test_initialization(self, memory_optimizer_instance) -> None:
         """Test MemoryOptimizer initialization"""
         optimizer = memory_optimizer_instance
         assert optimizer.streaming_buffers == {}
@@ -133,7 +133,7 @@ class TestMemoryOptimizer:
         assert optimizer.default_buffer_size == 65536
     
     @patch('psutil.virtual_memory')
-    def test_check_memory_pressure_normal(self, mock_memory, memory_optimizer_instance):
+    def test_check_memory_pressure_normal(self, mock_memory, memory_optimizer_instance) -> None:
         """Test memory pressure check under normal conditions"""
         # Mock normal memory usage (60%)
         mock_memory.return_value = Mock(
@@ -149,7 +149,7 @@ class TestMemoryOptimizer:
         assert result["available_mb"] > 0
     
     @patch('psutil.virtual_memory')
-    def test_check_memory_pressure_high(self, mock_memory, memory_optimizer_instance):
+    def test_check_memory_pressure_high(self, mock_memory, memory_optimizer_instance) -> None:
         """Test memory pressure check under high memory usage"""
         # Mock high memory usage (85%)
         mock_memory.return_value = Mock(
@@ -164,7 +164,7 @@ class TestMemoryOptimizer:
         assert result["memory_percent"] == 85.0
     
     @patch('psutil.virtual_memory')
-    def test_check_memory_pressure_critical(self, mock_memory, memory_optimizer_instance):
+    def test_check_memory_pressure_critical(self, mock_memory, memory_optimizer_instance) -> None:
         """Test memory pressure check under critical memory usage"""
         # Mock critical memory usage (95%)
         mock_memory.return_value = Mock(
@@ -178,7 +178,7 @@ class TestMemoryOptimizer:
         assert result["action"] == "emergency_cleanup"
         assert result["memory_percent"] == 95.0
     
-    def test_create_streaming_buffer(self, memory_optimizer_instance):
+    def test_create_streaming_buffer(self, memory_optimizer_instance) -> None:
         """Test creating streaming buffer"""
         buffer_id = "test_buffer"
         
@@ -188,7 +188,7 @@ class TestMemoryOptimizer:
         assert buffer.buffer_id == buffer_id
         assert buffer_id in memory_optimizer_instance.streaming_buffers
     
-    def test_create_streaming_buffer_custom_size(self, memory_optimizer_instance):
+    def test_create_streaming_buffer_custom_size(self, memory_optimizer_instance) -> None:
         """Test creating streaming buffer with custom size"""
         buffer_id = "test_buffer"
         custom_size = 32768
@@ -197,7 +197,7 @@ class TestMemoryOptimizer:
         
         assert buffer.max_size == custom_size
     
-    def test_get_optimal_buffer_size_normal_memory(self, memory_optimizer_instance):
+    def test_get_optimal_buffer_size_normal_memory(self, memory_optimizer_instance) -> None:
         """Test optimal buffer size calculation under normal memory"""
         with patch.object(memory_optimizer_instance, 'check_memory_pressure') as mock_check:
             mock_check.return_value = {"action": "continue", "memory_percent": 60.0}
@@ -206,7 +206,7 @@ class TestMemoryOptimizer:
             
             assert size == memory_optimizer_instance.default_buffer_size
     
-    def test_get_optimal_buffer_size_high_memory(self, memory_optimizer_instance):
+    def test_get_optimal_buffer_size_high_memory(self, memory_optimizer_instance) -> None:
         """Test optimal buffer size calculation under high memory pressure"""
         with patch.object(memory_optimizer_instance, 'check_memory_pressure') as mock_check:
             mock_check.return_value = {"action": "reduce_usage", "memory_percent": 85.0}
@@ -216,7 +216,7 @@ class TestMemoryOptimizer:
             assert size < memory_optimizer_instance.default_buffer_size
             assert size >= memory_optimizer_instance.min_buffer_size
     
-    def test_get_optimal_buffer_size_critical_memory(self, memory_optimizer_instance):
+    def test_get_optimal_buffer_size_critical_memory(self, memory_optimizer_instance) -> None:
         """Test optimal buffer size calculation under critical memory pressure"""
         with patch.object(memory_optimizer_instance, 'check_memory_pressure') as mock_check:
             mock_check.return_value = {"action": "emergency_cleanup", "memory_percent": 95.0}
@@ -225,7 +225,7 @@ class TestMemoryOptimizer:
             
             assert size == memory_optimizer_instance.min_buffer_size
     
-    def test_release_streaming_buffer(self, memory_optimizer_instance):
+    def test_release_streaming_buffer(self, memory_optimizer_instance) -> None:
         """Test releasing streaming buffer"""
         buffer_id = "test_buffer"
         buffer = memory_optimizer_instance.create_streaming_buffer(buffer_id)
@@ -236,7 +236,7 @@ class TestMemoryOptimizer:
         
         assert buffer_id not in memory_optimizer_instance.streaming_buffers
     
-    def test_record_buffer_performance(self, memory_optimizer_instance):
+    def test_record_buffer_performance(self, memory_optimizer_instance) -> None:
         """Test recording buffer performance"""
         buffer_id = "test_buffer"
         bytes_processed = 1024
@@ -250,7 +250,7 @@ class TestMemoryOptimizer:
         assert perf["total_duration"] == duration
         assert perf["operation_count"] == 1
     
-    def test_record_buffer_performance_multiple(self, memory_optimizer_instance):
+    def test_record_buffer_performance_multiple(self, memory_optimizer_instance) -> None:
         """Test recording multiple buffer performance entries"""
         buffer_id = "test_buffer"
         
@@ -262,7 +262,7 @@ class TestMemoryOptimizer:
         assert perf["total_duration"] == 2.5
         assert perf["operation_count"] == 2
     
-    def test_get_memory_stats(self, memory_optimizer_instance):
+    def test_get_memory_stats(self, memory_optimizer_instance) -> None:
         """Test getting memory statistics"""
         # Create some buffers
         buffer1 = memory_optimizer_instance.create_streaming_buffer("buffer1")
@@ -286,7 +286,7 @@ class TestMemoryOptimizer:
             assert stats["optimizer_stats"]["active_buffers"] == 2
             assert stats["optimizer_stats"]["total_buffer_memory"] > 0
     
-    def test_cleanup_old_buffers(self, memory_optimizer_instance):
+    def test_cleanup_old_buffers(self, memory_optimizer_instance) -> None:
         """Test cleanup of old buffers"""
         buffer_id = "old_buffer"
         buffer = memory_optimizer_instance.create_streaming_buffer(buffer_id)
@@ -299,7 +299,7 @@ class TestMemoryOptimizer:
         # Old buffer should be removed
         assert buffer_id not in memory_optimizer_instance.streaming_buffers
     
-    def test_cleanup(self, memory_optimizer_instance):
+    def test_cleanup(self, memory_optimizer_instance) -> None:
         """Test general cleanup"""
         # Create some buffers and performance data
         memory_optimizer_instance.create_streaming_buffer("buffer1")
@@ -316,12 +316,12 @@ class TestMemoryOptimizer:
 class TestGlobalMemoryOptimizer:
     """Test global memory optimizer instance"""
     
-    def test_global_instance_exists(self):
+    def test_global_instance_exists(self) -> None:
         """Test that global instance exists and is properly initialized"""
         assert memory_optimizer is not None
         assert isinstance(memory_optimizer, MemoryOptimizer)
     
-    def test_global_instance_functionality(self):
+    def test_global_instance_functionality(self) -> None:
         """Test basic functionality of global instance"""
         buffer_id = "global_test_buffer"
         

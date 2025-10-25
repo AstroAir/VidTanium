@@ -81,7 +81,7 @@ class ConnectionInfo:
 class EnhancedHTTPAdapter(HTTPAdapter):
     """Enhanced HTTP adapter with better connection management"""
     
-    def __init__(self, pool_config: HostPoolConfig, **kwargs):
+    def __init__(self, pool_config: HostPoolConfig, **kwargs) -> None:
         self.pool_config = pool_config
 
         # Configure retry strategy
@@ -96,7 +96,7 @@ class EnhancedHTTPAdapter(HTTPAdapter):
         kwargs.pop('max_retries', None)
         super().__init__(max_retries=retry_strategy, **kwargs)
     
-    def init_poolmanager(self, *args, **kwargs):
+    def init_poolmanager(self, *args, **kwargs) -> None:
         """Initialize pool manager with custom settings"""
         # Override the maxsize parameter
         if len(args) >= 2:
@@ -115,7 +115,7 @@ class EnhancedHTTPAdapter(HTTPAdapter):
 class ConnectionPoolManager:
     """Enhanced connection pool manager with per-host limits and health monitoring"""
     
-    def __init__(self, default_config: Optional[HostPoolConfig] = None):
+    def __init__(self, default_config: Optional[HostPoolConfig] = None) -> None:
         self.default_config = default_config or HostPoolConfig()
         self.host_configs: Dict[str, HostPoolConfig] = {}
         self.connection_pools: Dict[str, List[ConnectionInfo]] = defaultdict(list)
@@ -143,7 +143,7 @@ class ConnectionPoolManager:
         
         logger.info("Enhanced connection pool manager initialized")
     
-    def start_monitoring(self):
+    def start_monitoring(self) -> None:
         """Start health monitoring thread"""
         if self.monitoring_active:
             return
@@ -156,14 +156,14 @@ class ConnectionPoolManager:
         self.health_monitor_thread.start()
         logger.info("Connection health monitoring started")
     
-    def stop_monitoring(self):
+    def stop_monitoring(self) -> None:
         """Stop health monitoring"""
         self.monitoring_active = False
         if self.health_monitor_thread:
             self.health_monitor_thread.join(timeout=5.0)
         logger.info("Connection health monitoring stopped")
     
-    def configure_host(self, host: str, config: HostPoolConfig):
+    def configure_host(self, host: str, config: HostPoolConfig) -> None:
         """Configure specific settings for a host"""
         with self.lock:
             self.host_configs[host] = config
@@ -189,7 +189,7 @@ class ConnectionPoolManager:
     
     def release_session(self, session: requests.Session, url: str, 
                        success: bool = True, bytes_transferred: int = 0,
-                       response_time: float = 0.0):
+                       response_time: float = 0.0) -> None:
         """Release a session back to the pool"""
         parsed_url = urlparse(url)
         host = f"{parsed_url.scheme}://{parsed_url.netloc}"
@@ -288,7 +288,7 @@ class ConnectionPoolManager:
                 original_exception=e
             )
     
-    def _close_connection(self, connection_info: ConnectionInfo):
+    def _close_connection(self, connection_info: ConnectionInfo) -> None:
         """Close and cleanup a connection"""
         try:
             connection_info.session.close()
@@ -296,7 +296,7 @@ class ConnectionPoolManager:
         except Exception as e:
             logger.warning(f"Error closing connection: {e}")
     
-    def _health_monitor_loop(self):
+    def _health_monitor_loop(self) -> None:
         """Health monitoring loop"""
         while self.monitoring_active:
             try:
@@ -307,7 +307,7 @@ class ConnectionPoolManager:
                 logger.error(f"Error in health monitoring loop: {e}")
                 time.sleep(30.0)
     
-    def _perform_health_checks(self):
+    def _perform_health_checks(self) -> None:
         """Perform health checks on connections"""
         with self.lock:
             for host, pool in self.connection_pools.items():
@@ -327,7 +327,7 @@ class ConnectionPoolManager:
         except Exception:
             return False
     
-    def _cleanup_expired_connections(self):
+    def _cleanup_expired_connections(self) -> None:
         """Clean up expired connections"""
         if time.time() - self.last_cleanup < self.cleanup_interval:
             return
@@ -344,7 +344,7 @@ class ConnectionPoolManager:
         
         self.last_cleanup = time.time()
     
-    def cleanup_all_connections(self):
+    def cleanup_all_connections(self) -> None:
         """Clean up all connections"""
         with self.lock:
             # Close all pooled connections

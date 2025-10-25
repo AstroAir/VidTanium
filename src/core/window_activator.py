@@ -49,12 +49,12 @@ class WindowActivatorBase(ABC):
 class WindowsWindowActivator(WindowActivatorBase):
     """Windows-specific window activation using Win32 API"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.user32 = None
         self.kernel32 = None
         self._init_win32_apis()
     
-    def _init_win32_apis(self):
+    def _init_win32_apis(self) -> None:
         """Initialize Win32 APIs"""
         try:
             import ctypes
@@ -379,7 +379,7 @@ class LinuxWindowActivator(WindowActivatorBase):
 class WindowActivator:
     """Main window activator that provides a unified interface"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self._implementation = self._create_implementation()
     
     def _create_implementation(self) -> WindowActivatorBase:
@@ -404,7 +404,7 @@ class WindowActivator:
     
     def activate_with_delay(self, widget: Optional[QWidget] = None, delay_ms: int = 100) -> None:
         """Activate window with a small delay (useful for Qt event processing)"""
-        def delayed_activation():
+        def delayed_activation() -> None:
             self.show_and_raise_window(widget)
         
         QTimer.singleShot(delay_ms, delayed_activation)

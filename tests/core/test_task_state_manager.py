@@ -16,7 +16,7 @@ from src.core.exceptions import (
 class TestTaskState:
     """Test suite for TaskState enum."""
 
-    def test_state_values(self):
+    def test_state_values(self) -> None:
         """Test enum values."""
         assert TaskState.CREATED.value == "created"
         assert TaskState.QUEUED.value == "queued"
@@ -36,7 +36,7 @@ class TestTaskState:
 class TestStateTransitionError:
     """Test suite for StateTransitionError exception."""
 
-    def test_error_creation(self):
+    def test_error_creation(self) -> None:
         """Test StateTransitionError creation."""
         error = StateTransitionError(
             from_state=TaskState.COMPLETED,
@@ -52,7 +52,7 @@ class TestStateTransitionError:
         assert error.category == ErrorCategory.VALIDATION
         assert error.severity == ErrorSeverity.MEDIUM
 
-    def test_error_without_reason(self):
+    def test_error_without_reason(self) -> None:
         """Test StateTransitionError without reason."""
         error = StateTransitionError(
             from_state=TaskState.FAILED,
@@ -66,7 +66,7 @@ class TestStateTransitionError:
 class TestStateTransition:
     """Test suite for StateTransition dataclass."""
 
-    def test_transition_creation(self):
+    def test_transition_creation(self) -> None:
         """Test StateTransition creation with all fields."""
         transition = StateTransition(
             from_state=TaskState.QUEUED,
@@ -82,7 +82,7 @@ class TestStateTransition:
         assert transition.reason == "Task started"
         assert transition.metadata == {"worker_id": "worker_1"}
 
-    def test_transition_defaults(self):
+    def test_transition_defaults(self) -> None:
         """Test StateTransition with default values."""
         transition = StateTransition(
             from_state=TaskState.CREATED,
@@ -97,7 +97,7 @@ class TestStateTransition:
 class TestTaskStateInfo:
     """Test suite for TaskStateInfo dataclass."""
 
-    def test_state_info_creation(self):
+    def test_state_info_creation(self) -> None:
         """Test TaskStateInfo creation with all fields."""
         transitions = [
             StateTransition(TaskState.CREATED, TaskState.QUEUED, time.time())
@@ -123,7 +123,7 @@ class TestTaskStateInfo:
         assert state_info.error_count == 1
         assert state_info.metadata == {"priority": "high"}
 
-    def test_state_info_defaults(self):
+    def test_state_info_defaults(self) -> None:
         """Test TaskStateInfo with default values."""
         state_info = TaskStateInfo(
             task_id="test_task",
@@ -142,11 +142,11 @@ class TestTaskStateInfo:
 class TestTaskStateManager:
     """Test suite for TaskStateManager class."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.manager = TaskStateManager()
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test TaskStateManager initialization."""
         assert isinstance(self.manager.task_states, dict)
         assert isinstance(self.manager.state_callbacks, dict)
@@ -157,7 +157,7 @@ class TestTaskStateManager:
         assert isinstance(self.manager.terminal_states, set)
         assert isinstance(self.manager.transitional_states, set)
 
-    def test_valid_transitions_definition(self):
+    def test_valid_transitions_definition(self) -> None:
         """Test valid transitions are properly defined."""
         transitions = self.manager.valid_transitions
         
@@ -172,7 +172,7 @@ class TestTaskStateManager:
         assert len(transitions[TaskState.COMPLETED]) == 0
         assert len(transitions[TaskState.CANCELED]) == 0
 
-    def test_create_task(self):
+    def test_create_task(self) -> None:
         """Test creating a new task."""
         metadata = {"priority": "high", "user": "test_user"}
         
@@ -183,14 +183,14 @@ class TestTaskStateManager:
         assert state_info.metadata == metadata
         assert "test_task" in self.manager.task_states
 
-    def test_create_duplicate_task(self):
+    def test_create_duplicate_task(self) -> None:
         """Test creating duplicate task raises error."""
         self.manager.create_task("test_task")
         
         with pytest.raises(ValueError, match="already exists"):
             self.manager.create_task("test_task")
 
-    def test_transition_state_valid(self):
+    def test_transition_state_valid(self) -> None:
         """Test valid state transition."""
         self.manager.create_task("test_task")
         
@@ -214,7 +214,7 @@ class TestTaskStateManager:
         assert transition.reason == "Task queued for processing"
         assert transition.metadata == {"queue_position": 1}
 
-    def test_transition_state_invalid(self):
+    def test_transition_state_invalid(self) -> None:
         """Test invalid state transition."""
         self.manager.create_task("test_task")
         
@@ -227,7 +227,7 @@ class TestTaskStateManager:
         state_info = self.manager.get_task_state("test_task")
         assert state_info.current_state == TaskState.CREATED
 
-    def test_transition_state_force(self):
+    def test_transition_state_force(self) -> None:
         """Test forced state transition."""
         self.manager.create_task("test_task")
         
@@ -244,12 +244,12 @@ class TestTaskStateManager:
         state_info = self.manager.get_task_state("test_task")
         assert state_info.current_state == TaskState.RUNNING
 
-    def test_transition_nonexistent_task(self):
+    def test_transition_nonexistent_task(self) -> None:
         """Test transitioning nonexistent task."""
         result = self.manager.transition_state("nonexistent", TaskState.QUEUED)
         assert result is False
 
-    def test_is_valid_transition(self):
+    def test_is_valid_transition(self) -> None:
         """Test transition validation."""
         # Valid transitions
         assert self.manager._is_valid_transition(TaskState.CREATED, TaskState.QUEUED)
@@ -260,7 +260,7 @@ class TestTaskStateManager:
         assert not self.manager._is_valid_transition(TaskState.COMPLETED, TaskState.RUNNING)
         assert not self.manager._is_valid_transition(TaskState.CREATED, TaskState.RUNNING)
 
-    def test_handle_special_transitions_retry(self):
+    def test_handle_special_transitions_retry(self) -> None:
         """Test special handling for retry transitions."""
         self.manager.create_task("test_task")
         self.manager.transition_state("test_task", TaskState.QUEUED)
@@ -274,7 +274,7 @@ class TestTaskStateManager:
         state_info = self.manager.get_task_state("test_task")
         assert state_info.retry_count == 1
 
-    def test_handle_special_transitions_failed(self):
+    def test_handle_special_transitions_failed(self) -> None:
         """Test special handling for failed transitions."""
         self.manager.create_task("test_task")
         self.manager.transition_state("test_task", TaskState.QUEUED)
@@ -288,7 +288,7 @@ class TestTaskStateManager:
         assert state_info.error_count == 1
         assert state_info.metadata.get("last_error_reason") == "Network error"
 
-    def test_handle_special_transitions_completed(self):
+    def test_handle_special_transitions_completed(self) -> None:
         """Test special handling for completed transitions."""
         self.manager.create_task("test_task")
         state_info = self.manager.get_task_state("test_task")
@@ -304,7 +304,7 @@ class TestTaskStateManager:
         assert state_info.last_error is None
         assert "last_error_reason" not in state_info.metadata
 
-    def test_handle_special_transitions_transitional_timeout(self):
+    def test_handle_special_transitions_transitional_timeout(self) -> None:
         """Test timeout setting for transitional states."""
         self.manager.create_task("test_task")
         self.manager.transition_state("test_task", TaskState.QUEUED)
@@ -318,7 +318,7 @@ class TestTaskStateManager:
         assert "transition_timeout" in state_info.metadata
         assert state_info.metadata["transition_timeout"] > time.time()
 
-    def test_get_task_state(self):
+    def test_get_task_state(self) -> None:
         """Test getting task state."""
         self.manager.create_task("test_task")
         
@@ -329,7 +329,7 @@ class TestTaskStateManager:
         # Test nonexistent task
         assert self.manager.get_task_state("nonexistent") is None
 
-    def test_get_tasks_by_state(self):
+    def test_get_tasks_by_state(self) -> None:
         """Test getting tasks by state."""
         # Create tasks in different states
         self.manager.create_task("task1")
@@ -349,7 +349,7 @@ class TestTaskStateManager:
         assert queued_tasks[1].task_id in ["task1", "task2"]
         assert created_tasks[0].task_id == "task3"
 
-    def test_get_active_tasks(self):
+    def test_get_active_tasks(self) -> None:
         """Test getting active (non-terminal) tasks."""
         # Create tasks in different states
         self.manager.create_task("active1")
@@ -382,7 +382,7 @@ class TestTaskStateManager:
         assert "completed" not in active_ids
         assert "failed" not in active_ids
 
-    def test_cleanup_task_terminal_state(self):
+    def test_cleanup_task_terminal_state(self) -> None:
         """Test cleaning up task in terminal state."""
         self.manager.create_task("test_task")
         self.manager.transition_state("test_task", TaskState.QUEUED)
@@ -395,7 +395,7 @@ class TestTaskStateManager:
         assert result is True
         assert "test_task" not in self.manager.task_states
 
-    def test_cleanup_task_non_terminal_state(self):
+    def test_cleanup_task_non_terminal_state(self) -> None:
         """Test cleaning up task in non-terminal state."""
         self.manager.create_task("test_task")
         self.manager.transition_state("test_task", TaskState.QUEUED)
@@ -405,12 +405,12 @@ class TestTaskStateManager:
         assert result is False
         assert "test_task" in self.manager.task_states
 
-    def test_cleanup_nonexistent_task(self):
+    def test_cleanup_nonexistent_task(self) -> None:
         """Test cleaning up nonexistent task."""
         result = self.manager.cleanup_task("nonexistent")
         assert result is False
 
-    def test_check_transitional_timeouts(self):
+    def test_check_transitional_timeouts(self) -> None:
         """Test checking for transitional state timeouts."""
         self.manager.create_task("test_task")
         self.manager.transition_state("test_task", TaskState.QUEUED)
@@ -430,7 +430,7 @@ class TestTaskStateManager:
         state_info = self.manager.get_task_state("test_task")
         assert state_info.current_state == TaskState.FAILED
 
-    def test_register_state_callback(self):
+    def test_register_state_callback(self) -> None:
         """Test registering state callback."""
         callback = Mock()
         
@@ -439,7 +439,7 @@ class TestTaskStateManager:
         assert TaskState.COMPLETED in self.manager.state_callbacks
         assert callback in self.manager.state_callbacks[TaskState.COMPLETED]
 
-    def test_register_transition_callback(self):
+    def test_register_transition_callback(self) -> None:
         """Test registering transition callback."""
         callback = Mock()
         
@@ -447,7 +447,7 @@ class TestTaskStateManager:
         
         assert callback in self.manager.transition_callbacks
 
-    def test_trigger_state_callbacks(self):
+    def test_trigger_state_callbacks(self) -> None:
         """Test triggering state callbacks."""
         callback = Mock()
         self.manager.register_state_callback(TaskState.COMPLETED, callback)
@@ -460,7 +460,7 @@ class TestTaskStateManager:
         
         callback.assert_called_once_with("test_task")
 
-    def test_trigger_transition_callbacks(self):
+    def test_trigger_transition_callbacks(self) -> None:
         """Test triggering transition callbacks."""
         callback = Mock()
         self.manager.register_transition_callback(callback)
@@ -470,7 +470,7 @@ class TestTaskStateManager:
         
         callback.assert_called_once_with("test_task", TaskState.CREATED, TaskState.QUEUED)
 
-    def test_callback_error_handling(self):
+    def test_callback_error_handling(self) -> None:
         """Test error handling in callbacks."""
         error_callback = Mock(side_effect=Exception("Callback error"))
         good_callback = Mock()
@@ -485,7 +485,7 @@ class TestTaskStateManager:
         error_callback.assert_called_once()
         good_callback.assert_called_once()
 
-    def test_get_state_statistics(self):
+    def test_get_state_statistics(self) -> None:
         """Test getting state statistics."""
         # Create tasks in various states
         self.manager.create_task("created1")
@@ -513,7 +513,7 @@ class TestTaskStateManager:
         assert stats["active_tasks"] == 4  # All except completed
         assert stats["terminal_tasks"] == 1  # Only completed
 
-    def test_detect_state_issues(self):
+    def test_detect_state_issues(self) -> None:
         """Test detecting state issues."""
         # Create task stuck in transitional state
         self.manager.create_task("stuck_task")
@@ -546,7 +546,7 @@ class TestTaskStateManager:
         assert any("excessive retry count" in issue for issue in issues)
         assert any("failed state for over 24 hours" in issue for issue in issues)
 
-    def test_global_task_state_manager_instance(self):
+    def test_global_task_state_manager_instance(self) -> None:
         """Test global task state manager instance."""
         assert task_state_manager is not None
         assert isinstance(task_state_manager, TaskStateManager)

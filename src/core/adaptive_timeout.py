@@ -30,7 +30,7 @@ class NetworkMetrics:
     connection_failures: int = 0
     timeout_failures: int = 0
     
-    def add_response_time(self, response_time: float, success: bool):
+    def add_response_time(self, response_time: float, success: bool) -> None:
         """Add a response time measurement"""
         self.response_times.append(response_time)
         self.total_requests += 1
@@ -80,7 +80,7 @@ class TimeoutConfig:
 class AdaptiveTimeoutManager:
     """Manages adaptive timeouts based on network conditions and performance"""
     
-    def __init__(self, config: Optional[TimeoutConfig] = None):
+    def __init__(self, config: Optional[TimeoutConfig] = None) -> None:
         self.config = config or TimeoutConfig()
         self.host_metrics: Dict[str, NetworkMetrics] = {}
         self.lock = threading.RLock()
@@ -142,7 +142,7 @@ class AdaptiveTimeoutManager:
             return (adaptive_connection_timeout, adaptive_read_timeout)
     
     def record_request(self, url: str, response_time: float, success: bool, 
-                      error_type: Optional[str] = None):
+                      error_type: Optional[str] = None) -> None:
         """Record request performance for adaptive learning"""
         host = self.get_host_from_url(url)
         
@@ -170,7 +170,7 @@ class AdaptiveTimeoutManager:
             logger.debug(f"Recorded request for {host}: {response_time:.2f}s, "
                         f"success={success}, total_requests={metrics.total_requests}")
     
-    def _update_network_quality(self):
+    def _update_network_quality(self) -> None:
         """Update global network quality score"""
         if self.global_metrics.total_requests < 10:
             return
@@ -234,7 +234,7 @@ class AdaptiveTimeoutManager:
                 "stable_hosts": sum(1 for m in self.host_metrics.values() if m.is_stable())
             }
     
-    def reset_host_metrics(self, url: str):
+    def reset_host_metrics(self, url: str) -> None:
         """Reset metrics for a specific host"""
         host = self.get_host_from_url(url)
         
@@ -243,7 +243,7 @@ class AdaptiveTimeoutManager:
                 del self.host_metrics[host]
                 logger.info(f"Reset metrics for host: {host}")
     
-    def cleanup_old_metrics(self, max_age_hours: float = 24.0):
+    def cleanup_old_metrics(self, max_age_hours: float = 24.0) -> None:
         """Clean up old metrics that haven't been updated recently"""
         cutoff_time = time.time() - (max_age_hours * 3600)
         

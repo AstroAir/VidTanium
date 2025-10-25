@@ -16,7 +16,7 @@ from src.core.download_history_manager import (
 class TestHistoryEntryStatus:
     """Test suite for HistoryEntryStatus enum."""
 
-    def test_status_values(self):
+    def test_status_values(self) -> None:
         """Test enum values."""
         assert HistoryEntryStatus.COMPLETED.value == "completed"
         assert HistoryEntryStatus.FAILED.value == "failed"
@@ -27,7 +27,7 @@ class TestHistoryEntryStatus:
 class TestDownloadHistoryEntry:
     """Test suite for DownloadHistoryEntry dataclass."""
 
-    def test_entry_creation(self):
+    def test_entry_creation(self) -> None:
         """Test DownloadHistoryEntry creation with all fields."""
         entry = DownloadHistoryEntry(
             entry_id="test_entry",
@@ -67,7 +67,7 @@ class TestDownloadHistoryEntry:
         assert entry.metadata == {"quality": "720p"}
         assert entry.tags == ["video", "entertainment"]
 
-    def test_entry_defaults(self):
+    def test_entry_defaults(self) -> None:
         """Test DownloadHistoryEntry with default values."""
         entry = DownloadHistoryEntry(
             entry_id="test_entry",
@@ -90,7 +90,7 @@ class TestDownloadHistoryEntry:
         assert entry.metadata == {}
         assert entry.tags == []
 
-    def test_completion_percentage(self):
+    def test_completion_percentage(self) -> None:
         """Test completion percentage calculation."""
         # Complete download
         entry = DownloadHistoryEntry(
@@ -113,7 +113,7 @@ class TestDownloadHistoryEntry:
         entry.status = HistoryEntryStatus.FAILED
         assert entry.completion_percentage == 0.0
 
-    def test_is_successful(self):
+    def test_is_successful(self) -> None:
         """Test success status check."""
         entry = DownloadHistoryEntry(
             entry_id="test1", task_name="Test", original_url="url", output_file="file",
@@ -130,7 +130,7 @@ class TestDownloadHistoryEntry:
         entry.status = HistoryEntryStatus.CANCELED
         assert entry.is_successful() is False
 
-    def test_format_file_size(self):
+    def test_format_file_size(self) -> None:
         """Test file size formatting."""
         entry = DownloadHistoryEntry(
             entry_id="test1", task_name="Test", original_url="url", output_file="file",
@@ -146,7 +146,7 @@ class TestDownloadHistoryEntry:
 class TestHistoryFilter:
     """Test suite for HistoryFilter dataclass."""
 
-    def test_filter_creation(self):
+    def test_filter_creation(self) -> None:
         """Test HistoryFilter creation."""
         filter_obj = HistoryFilter(
             status=HistoryEntryStatus.COMPLETED,
@@ -170,7 +170,7 @@ class TestHistoryFilter:
 class TestDownloadHistoryManager:
     """Test suite for DownloadHistoryManager class."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         # Use temporary database for testing with unique name
         import uuid
@@ -178,7 +178,7 @@ class TestDownloadHistoryManager:
         self.temp_db.close()
         self.manager = DownloadHistoryManager(db_path=self.temp_db.name)
 
-    def teardown_method(self):
+    def teardown_method(self) -> None:
         """Clean up after tests."""
         # Close any open connections and remove temporary database
         if hasattr(self, 'manager') and self.manager:
@@ -199,14 +199,14 @@ class TestDownloadHistoryManager:
                 except (OSError, PermissionError):
                     pass  # Ignore if still can't delete
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test DownloadHistoryManager initialization."""
         assert self.manager.db_path == self.temp_db.name
         assert isinstance(self.manager.callbacks, list)
         assert self.manager._stats_cache is None
         assert self.manager._cache_ttl == 300.0
 
-    def test_database_initialization(self):
+    def test_database_initialization(self) -> None:
         """Test database table creation."""
         # Check if database file exists
         assert os.path.exists(self.temp_db.name)
@@ -219,7 +219,7 @@ class TestDownloadHistoryManager:
             """)
             assert cursor.fetchone() is not None
 
-    def test_add_entry(self):
+    def test_add_entry(self) -> None:
         """Test adding history entry."""
         entry = DownloadHistoryEntry(
             entry_id="test_entry",
@@ -249,7 +249,7 @@ class TestDownloadHistoryManager:
         assert entries[0].entry_id == "test_entry"
         assert entries[0].task_name == "Test Task"
 
-    def test_add_entry_duplicate(self):
+    def test_add_entry_duplicate(self) -> None:
         """Test adding duplicate entry (should replace)."""
         entry1 = DownloadHistoryEntry(
             entry_id="test_entry", task_name="Task 1", original_url="url1",
@@ -272,7 +272,7 @@ class TestDownloadHistoryManager:
         assert len(entries) == 1
         assert entries[0].task_name == "Task 2"  # Should be replaced
 
-    def test_get_entries_no_filter(self):
+    def test_get_entries_no_filter(self) -> None:
         """Test getting all entries without filter."""
         # Add test entries
         for i in range(3):
@@ -288,7 +288,7 @@ class TestDownloadHistoryManager:
         entries = self.manager.get_entries()
         assert len(entries) == 3
 
-    def test_get_entries_with_filter(self):
+    def test_get_entries_with_filter(self) -> None:
         """Test getting entries with filter."""
         # Add test entries with different statuses
         completed_entry = DownloadHistoryEntry(
@@ -315,7 +315,7 @@ class TestDownloadHistoryManager:
         assert len(entries) == 1
         assert entries[0].status == HistoryEntryStatus.COMPLETED
 
-    def test_get_entries_with_limit(self):
+    def test_get_entries_with_limit(self) -> None:
         """Test getting entries with limit."""
         # Add multiple entries
         for i in range(5):
@@ -330,7 +330,7 @@ class TestDownloadHistoryManager:
         entries = self.manager.get_entries(limit=3)
         assert len(entries) == 3
 
-    def test_get_entry_by_id(self):
+    def test_get_entry_by_id(self) -> None:
         """Test getting entry by ID."""
         entry = DownloadHistoryEntry(
             entry_id="test_entry", task_name="Test Task", original_url="url",
@@ -348,7 +348,7 @@ class TestDownloadHistoryManager:
         # Test nonexistent entry
         assert self.manager.get_entry("nonexistent") is None
 
-    def test_update_entry(self):
+    def test_update_entry(self) -> None:
         """Test updating existing entry."""
         entry = DownloadHistoryEntry(
             entry_id="test_entry", task_name="Original Task", original_url="url",
@@ -368,7 +368,7 @@ class TestDownloadHistoryManager:
         retrieved = self.manager.get_entry("test_entry")
         assert retrieved.task_name == "Updated Task"
 
-    def test_delete_entry(self):
+    def test_delete_entry(self) -> None:
         """Test deleting entry."""
         entry = DownloadHistoryEntry(
             entry_id="test_entry", task_name="Test Task", original_url="url",
@@ -385,19 +385,19 @@ class TestDownloadHistoryManager:
         # Verify deletion
         assert self.manager.get_entry("test_entry") is None
 
-    def test_delete_nonexistent_entry(self):
+    def test_delete_nonexistent_entry(self) -> None:
         """Test deleting nonexistent entry."""
         result = self.manager.delete_entry("nonexistent")
         assert result is False
 
-    def test_register_callback(self):
+    def test_register_callback(self) -> None:
         """Test callback registration."""
         callback = Mock()
         self.manager.register_callback(callback)
         
         assert callback in self.manager.callbacks
 
-    def test_trigger_callbacks(self):
+    def test_trigger_callbacks(self) -> None:
         """Test callback triggering."""
         callback = Mock()
         self.manager.register_callback(callback)
@@ -413,7 +413,7 @@ class TestDownloadHistoryManager:
         
         callback.assert_called_once_with(entry)
 
-    def test_callback_error_handling(self):
+    def test_callback_error_handling(self) -> None:
         """Test error handling in callbacks."""
         error_callback = Mock(side_effect=Exception("Callback error"))
         good_callback = Mock()
@@ -434,7 +434,7 @@ class TestDownloadHistoryManager:
         error_callback.assert_called_once()
         good_callback.assert_called_once()
 
-    def test_export_data(self):
+    def test_export_data(self) -> None:
         """Test data export."""
         entry = DownloadHistoryEntry(
             entry_id="test_entry", task_name="Test Task", original_url="url",
@@ -451,12 +451,12 @@ class TestDownloadHistoryManager:
         assert len(data) == 1
         assert data[0]["entry_id"] == "test_entry"
 
-    def test_export_unsupported_format(self):
+    def test_export_unsupported_format(self) -> None:
         """Test export with unsupported format."""
         with pytest.raises(ValueError):
             self.manager.export_data("xml")
 
-    def test_cleanup_old_entries(self):
+    def test_cleanup_old_entries(self) -> None:
         """Test cleanup of old entries."""
         # Add old entry
         old_entry = DownloadHistoryEntry(
@@ -485,7 +485,7 @@ class TestDownloadHistoryManager:
         assert self.manager.get_entry("old_entry") is None
         assert self.manager.get_entry("recent_entry") is not None
 
-    def test_global_history_manager_instance(self):
+    def test_global_history_manager_instance(self) -> None:
         """Test global history manager instance."""
         assert download_history_manager is not None
         assert isinstance(download_history_manager, DownloadHistoryManager)

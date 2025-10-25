@@ -38,7 +38,7 @@ class FeatureFlag:
 class FeatureFlagManager:
     """Manages application feature flags"""
     
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         self.flags: Dict[str, FeatureFlag] = {}
         self.enabled_features: Set[str] = set()
         self.config = config or {}

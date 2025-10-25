@@ -38,7 +38,7 @@ class EnhancedSettingsDialog(ResponsiveWidget, QDialog):
 
     settings_changed = Signal()
 
-    def __init__(self, settings, theme_manager=None, parent=None):
+    def __init__(self, settings, theme_manager=None, parent=None) -> None:
         QDialog.__init__(self, parent)
         ResponsiveWidget.__init__(self)
         
@@ -58,7 +58,7 @@ class EnhancedSettingsDialog(ResponsiveWidget, QDialog):
         # Load current settings
         self._load_settings()
 
-    def _setup_window(self):
+    def _setup_window(self) -> None:
         """Setup window properties with responsive sizing"""
         self.setWindowTitle(tr("settings.dialog.title"))
         self.setWindowIcon(FIF.SETTING.icon())
@@ -79,7 +79,7 @@ class EnhancedSettingsDialog(ResponsiveWidget, QDialog):
             self.setMinimumSize(750, 650)
             self.resize(800, 700)
 
-    def _apply_enhanced_theme_styles(self):
+    def _apply_enhanced_theme_styles(self) -> None:
         """Apply enhanced theme-aware styles"""
         if self.theme_manager:
             colors = self.theme_manager.get_theme_colors()
@@ -110,7 +110,6 @@ class EnhancedSettingsDialog(ResponsiveWidget, QDialog):
                 background-color: {surface};
                 border: 1px solid {border};
                 border-radius: 8px;
-                box-shadow: 0 2px 4px {shadow};
             }}
             CardWidget {{
                 background-color: {surface};
@@ -124,7 +123,7 @@ class EnhancedSettingsDialog(ResponsiveWidget, QDialog):
             }}
         """)
 
-    def _create_enhanced_ui(self):
+    def _create_enhanced_ui(self) -> None:
         """Create enhanced responsive user interface"""
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
@@ -139,7 +138,7 @@ class EnhancedSettingsDialog(ResponsiveWidget, QDialog):
         # Footer with responsive buttons
         self._create_responsive_footer(main_layout)
 
-    def _create_enhanced_header(self, main_layout: QVBoxLayout):
+    def _create_enhanced_header(self, main_layout: QVBoxLayout) -> None:
         """Create enhanced header with gradient and responsive design"""
         header_card = HeaderCardWidget()
         header_card.setFixedHeight(80)
@@ -184,7 +183,7 @@ class EnhancedSettingsDialog(ResponsiveWidget, QDialog):
 
         main_layout.addWidget(header_card)
 
-    def _create_responsive_content(self, main_layout: QVBoxLayout):
+    def _create_responsive_content(self, main_layout: QVBoxLayout) -> None:
         """Create responsive content area with adaptive tabs"""
         content_widget = QWidget()
         content_layout = QVBoxLayout(content_widget)
@@ -206,7 +205,7 @@ class EnhancedSettingsDialog(ResponsiveWidget, QDialog):
 
         main_layout.addWidget(content_widget)
 
-    def _create_enhanced_tabs(self):
+    def _create_enhanced_tabs(self) -> None:
         """Create enhanced tab pages with responsive design"""
         # General tab
         self.general_tab = GeneralTab()
@@ -254,7 +253,7 @@ class EnhancedSettingsDialog(ResponsiveWidget, QDialog):
         self.pivot.setCurrentItem("general")
         self.stack_widget.setCurrentWidget(self.general_tab)
 
-    def _create_responsive_footer(self, main_layout: QVBoxLayout):
+    def _create_responsive_footer(self, main_layout: QVBoxLayout) -> None:
         """Create responsive footer with adaptive button layout"""
         footer_widget = QWidget()
         footer_layout = QHBoxLayout(footer_widget)
@@ -303,17 +302,17 @@ class EnhancedSettingsDialog(ResponsiveWidget, QDialog):
         footer_layout.addLayout(button_layout)
         main_layout.addWidget(footer_widget)
 
-    def on_breakpoint_changed(self, breakpoint: str):
+    def on_breakpoint_changed(self, breakpoint: str) -> None:
         """Handle responsive breakpoint changes"""
         logger.debug(f"Settings dialog adapting to breakpoint: {breakpoint}")
         self._setup_window()
 
-    def resizeEvent(self, event: QResizeEvent):
+    def resizeEvent(self, event: QResizeEvent) -> None:
         """Handle resize events for responsive behavior"""
         super().resizeEvent(event)
         self.responsive_manager.update_for_size(event.size())
 
-    def _load_settings(self):
+    def _load_settings(self) -> None:
         """Load current settings into the dialog"""
         try:
             # Load settings for each tab
@@ -328,7 +327,7 @@ class EnhancedSettingsDialog(ResponsiveWidget, QDialog):
         except Exception as e:
             logger.error(f"Error loading settings: {e}")
 
-    def _apply_settings(self):
+    def _apply_settings(self) -> None:
         """Apply current settings"""
         try:
             # Apply settings from each tab
@@ -363,7 +362,7 @@ class EnhancedSettingsDialog(ResponsiveWidget, QDialog):
                 parent=self
             ).show()
 
-    def _reset_settings(self):
+    def _reset_settings(self) -> None:
         """Reset settings to defaults"""
         try:
             # Reset each tab
@@ -379,7 +378,7 @@ class EnhancedSettingsDialog(ResponsiveWidget, QDialog):
         except Exception as e:
             logger.error(f"Error resetting settings: {e}")
 
-    def _ok_clicked(self):
+    def _ok_clicked(self) -> None:
         """Handle OK button click"""
         self._apply_settings()
         self.accept()

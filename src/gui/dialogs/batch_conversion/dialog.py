@@ -24,7 +24,7 @@ class BatchConversionDialog(QDialog):
     # 处理完成时发出信号
     processing_completed = Signal(bool, str)
 
-    def __init__(self, settings: Any, parent: Optional[QWidget] = None):
+    def __init__(self, settings: Any, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
 
         self.settings = settings
@@ -36,7 +36,7 @@ class BatchConversionDialog(QDialog):
         self._create_ui()
         self._load_settings()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """创建用户界面"""
         # 主布局
         main_layout = QVBoxLayout(self)
@@ -108,7 +108,7 @@ class BatchConversionDialog(QDialog):
         main_layout.addLayout(self.status_layout)
         main_layout.addWidget(self.button_box)
 
-    def _load_settings(self):
+    def _load_settings(self) -> None:
         """加载设置"""
         # 设置默认输出目录
         default_output_dir: str = self.settings.get(
@@ -119,11 +119,11 @@ class BatchConversionDialog(QDialog):
         self._update_file_count(0)
 
     @Slot(int)
-    def _on_file_list_changed(self, file_count: int):
+    def _on_file_list_changed(self, file_count: int) -> None:
         """处理文件列表变化"""
         self._update_file_count(file_count)
 
-    def _update_file_count(self, count: int):
+    def _update_file_count(self, count: int) -> None:
         """更新文件计数显示"""
         if count == 0:
             self.file_count_label.setText("未选择文件")
@@ -133,7 +133,7 @@ class BatchConversionDialog(QDialog):
         # 根据是否有文件启用或禁用转换按钮
         self.convert_button.setEnabled(count > 0)
 
-    def _start_conversion(self):
+    def _start_conversion(self) -> None:
         """开始批量转换过程"""
         input_files: List[str] = self.file_list_widget.get_input_files()
 

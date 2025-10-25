@@ -10,7 +10,7 @@ import tempfile
 import shutil
 from pathlib import Path
 
-def run_command(cmd, cwd=None):
+def run_command(cmd, cwd=None) -> tuple[bool, str, str]:
     """Run a command and return the result"""
     try:
         result = subprocess.run(
@@ -27,7 +27,7 @@ def run_command(cmd, cwd=None):
     except Exception as e:
         return False, "", str(e)
 
-def check_mkdocs_installation():
+def check_mkdocs_installation() -> bool:
     """Check if MkDocs and required plugins are installed"""
     print("🔍 Checking MkDocs installation...")
     
@@ -39,7 +39,7 @@ def check_mkdocs_installation():
     print(f"✅ MkDocs installed: {stdout.strip()}")
     return True
 
-def validate_mkdocs_config():
+def validate_mkdocs_config() -> bool:
     """Validate the mkdocs.yml configuration"""
     print("🔍 Validating MkDocs configuration...")
     
@@ -55,7 +55,7 @@ def validate_mkdocs_config():
     print("✅ MkDocs configuration is valid")
     return True
 
-def test_build():
+def test_build() -> bool:
     """Test building the documentation"""
     print("🔍 Testing documentation build...")
     
@@ -75,7 +75,7 @@ def test_build():
     print("✅ Documentation build successful")
     return True
 
-def test_serve():
+def test_serve() -> bool:
     """Test serving the documentation (quick test)"""
     print("🔍 Testing documentation serve...")
     
@@ -90,7 +90,7 @@ def test_serve():
     print("✅ Documentation serve test completed")
     return True
 
-def check_documentation_files():
+def check_documentation_files() -> bool:
     """Check if all required documentation files exist"""
     print("🔍 Checking documentation files...")
     
@@ -120,7 +120,7 @@ def check_documentation_files():
     print("✅ All required documentation files exist")
     return True
 
-def check_internal_links():
+def check_internal_links() -> bool:
     """Basic check for internal links in markdown files"""
     print("🔍 Checking internal links...")
     
@@ -159,7 +159,7 @@ def check_internal_links():
     print("✅ Internal links check passed")
     return True
 
-def main():
+def main() -> int:
     """Main test function"""
     print("🚀 Testing VidTanium MkDocs Documentation Setup")
     print("=" * 50)

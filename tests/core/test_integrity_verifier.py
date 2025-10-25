@@ -17,7 +17,7 @@ from src.core.integrity_verifier import (
 class TestIntegrityLevel:
     """Test IntegrityLevel enum"""
     
-    def test_integrity_levels(self):
+    def test_integrity_levels(self) -> None:
         """Test IntegrityLevel enum values"""
         assert IntegrityLevel.BASIC.value == "basic"
         assert IntegrityLevel.STANDARD.value == "standard"
@@ -28,7 +28,7 @@ class TestIntegrityLevel:
 class TestIntegrityResult:
     """Test IntegrityResult dataclass"""
     
-    def test_integrity_result_valid(self):
+    def test_integrity_result_valid(self) -> None:
         """Test IntegrityResult for valid content"""
         result = IntegrityResult(
             file_path="/path/to/file.ts",
@@ -49,7 +49,7 @@ class TestIntegrityResult:
         assert result.warnings == []
         assert result.verification_time > 0
     
-    def test_integrity_result_invalid(self):
+    def test_integrity_result_invalid(self) -> None:
         """Test IntegrityResult for invalid content"""
         result = IntegrityResult(
             file_path="/path/to/corrupted.ts",
@@ -66,7 +66,7 @@ class TestIntegrityResult:
         assert result.error_message == "Hash mismatch detected"
         assert "File size suspicious" in result.warnings
     
-    def test_has_warnings(self):
+    def test_has_warnings(self) -> None:
         """Test has_warnings method"""
         result_no_warnings = IntegrityResult(
             file_path="/path/to/file.ts", is_valid=True,
@@ -88,7 +88,7 @@ class TestContentIntegrityVerifier:
     """Test ContentIntegrityVerifier class"""
     
     @pytest.fixture
-    def temp_file(self):
+    def temp_file(self) -> None:
         """Create a temporary file for testing"""
         fd, path = tempfile.mkstemp(suffix=".ts")
         test_data = b"Test content for integrity verification"
@@ -99,11 +99,11 @@ class TestContentIntegrityVerifier:
             os.unlink(path)
     
     @pytest.fixture
-    def verifier(self):
+    def verifier(self) -> None:
         """Create a fresh ContentIntegrityVerifier for testing"""
         return ContentIntegrityVerifier()
     
-    def test_initialization(self, verifier):
+    def test_initialization(self, verifier) -> None:
         """Test ContentIntegrityVerifier initialization"""
         assert verifier.verification_stats == {
             "total_verifications": 0,
@@ -114,7 +114,7 @@ class TestContentIntegrityVerifier:
         assert verifier.hash_algorithms == ["md5", "sha1", "sha256"]
         assert verifier.max_file_size == 100 * 1024 * 1024  # 100MB
     
-    def test_verify_file_integrity_basic(self, verifier, temp_file):
+    def test_verify_file_integrity_basic(self, verifier, temp_file) -> None:
         """Test basic file integrity verification"""
         file_path, test_data = temp_file
         expected_hash = hashlib.md5(test_data).hexdigest()
@@ -130,7 +130,7 @@ class TestContentIntegrityVerifier:
         assert "size" in result.checks_performed
         assert result.error_message == ""
     
-    def test_verify_file_integrity_standard(self, verifier, temp_file):
+    def test_verify_file_integrity_standard(self, verifier, temp_file) -> None:
         """Test standard file integrity verification"""
         file_path, test_data = temp_file
         expected_hash = hashlib.md5(test_data).hexdigest()
@@ -144,7 +144,7 @@ class TestContentIntegrityVerifier:
         assert "size" in result.checks_performed
         assert "hash" in result.checks_performed
     
-    def test_verify_file_integrity_strict(self, verifier, temp_file):
+    def test_verify_file_integrity_strict(self, verifier, temp_file) -> None:
         """Test strict file integrity verification"""
         file_path, test_data = temp_file
         expected_hash = hashlib.sha256(test_data).hexdigest()
@@ -159,7 +159,7 @@ class TestContentIntegrityVerifier:
         assert "hash" in result.checks_performed
         assert "format" in result.checks_performed
     
-    def test_verify_file_integrity_paranoid(self, verifier, temp_file):
+    def test_verify_file_integrity_paranoid(self, verifier, temp_file) -> None:
         """Test paranoid file integrity verification"""
         file_path, test_data = temp_file
         expected_hash = hashlib.sha256(test_data).hexdigest()
@@ -174,7 +174,7 @@ class TestContentIntegrityVerifier:
         assert "format" in result.checks_performed
         assert "multiple_hash" in result.checks_performed
     
-    def test_verify_file_integrity_nonexistent_file(self, verifier):
+    def test_verify_file_integrity_nonexistent_file(self, verifier) -> None:
         """Test verification of non-existent file"""
         nonexistent_file = "/path/to/nonexistent/file.ts"
         
@@ -184,7 +184,7 @@ class TestContentIntegrityVerifier:
         assert result.is_valid is False
         assert "File does not exist" in result.error_message
     
-    def test_verify_file_integrity_hash_mismatch(self, verifier, temp_file):
+    def test_verify_file_integrity_hash_mismatch(self, verifier, temp_file) -> None:
         """Test verification with hash mismatch"""
         file_path, test_data = temp_file
         wrong_hash = "wrong_hash_value"
@@ -196,7 +196,7 @@ class TestContentIntegrityVerifier:
         assert result.is_valid is False
         assert "Hash mismatch" in result.error_message
     
-    def test_verify_file_integrity_empty_hash(self, verifier, temp_file):
+    def test_verify_file_integrity_empty_hash(self, verifier, temp_file) -> None:
         """Test verification with empty expected hash"""
         file_path, test_data = temp_file
         
@@ -209,7 +209,7 @@ class TestContentIntegrityVerifier:
         assert result.has_warnings()
         assert any("hash not provided" in warning.lower() for warning in result.warnings)
     
-    def test_verify_file_integrity_large_file(self, verifier):
+    def test_verify_file_integrity_large_file(self, verifier) -> None:
         """Test verification of file that's too large"""
         large_file = "/path/to/large/file.ts"
         
@@ -221,7 +221,7 @@ class TestContentIntegrityVerifier:
             assert result.is_valid is False
             assert "too large" in result.error_message.lower()
     
-    def test_calculate_file_hash_md5(self, verifier, temp_file):
+    def test_calculate_file_hash_md5(self, verifier, temp_file) -> None:
         """Test MD5 hash calculation"""
         file_path, test_data = temp_file
         expected_hash = hashlib.md5(test_data).hexdigest()
@@ -230,7 +230,7 @@ class TestContentIntegrityVerifier:
         
         assert calculated_hash == expected_hash
     
-    def test_calculate_file_hash_sha256(self, verifier, temp_file):
+    def test_calculate_file_hash_sha256(self, verifier, temp_file) -> None:
         """Test SHA256 hash calculation"""
         file_path, test_data = temp_file
         expected_hash = hashlib.sha256(test_data).hexdigest()
@@ -239,14 +239,14 @@ class TestContentIntegrityVerifier:
         
         assert calculated_hash == expected_hash
     
-    def test_calculate_file_hash_invalid_algorithm(self, verifier, temp_file):
+    def test_calculate_file_hash_invalid_algorithm(self, verifier, temp_file) -> None:
         """Test hash calculation with invalid algorithm"""
         file_path, test_data = temp_file
         
         with pytest.raises(ValueError):
             verifier._calculate_file_hash(file_path, "invalid_algorithm")
     
-    def test_verify_multiple_hashes(self, verifier, temp_file):
+    def test_verify_multiple_hashes(self, verifier, temp_file) -> None:
         """Test verification with multiple hash algorithms"""
         file_path, test_data = temp_file
         
@@ -258,7 +258,7 @@ class TestContentIntegrityVerifier:
         assert result["md5"] == hashlib.md5(test_data).hexdigest()
         assert result["sha256"] == hashlib.sha256(test_data).hexdigest()
     
-    def test_verify_file_format_ts(self, verifier):
+    def test_verify_file_format_ts(self, verifier) -> None:
         """Test TS file format verification"""
         # Create a file with TS sync bytes
         fd, ts_file = tempfile.mkstemp(suffix=".ts")
@@ -275,7 +275,7 @@ class TestContentIntegrityVerifier:
             if os.path.exists(ts_file):
                 os.unlink(ts_file)
     
-    def test_verify_file_format_invalid_ts(self, verifier):
+    def test_verify_file_format_invalid_ts(self, verifier) -> None:
         """Test verification of invalid TS format"""
         # Create a file without proper TS structure
         fd, invalid_file = tempfile.mkstemp(suffix=".ts")
@@ -293,7 +293,7 @@ class TestContentIntegrityVerifier:
             if os.path.exists(invalid_file):
                 os.unlink(invalid_file)
     
-    def test_verify_file_format_non_ts(self, verifier):
+    def test_verify_file_format_non_ts(self, verifier) -> None:
         """Test verification of non-TS file"""
         # Create a regular text file
         fd, text_file = tempfile.mkstemp(suffix=".txt")
@@ -310,7 +310,7 @@ class TestContentIntegrityVerifier:
             if os.path.exists(text_file):
                 os.unlink(text_file)
     
-    def test_get_verification_stats(self, verifier, temp_file):
+    def test_get_verification_stats(self, verifier, temp_file) -> None:
         """Test getting verification statistics"""
         # Initially empty
         stats = verifier.get_verification_stats()
@@ -332,7 +332,7 @@ class TestContentIntegrityVerifier:
         assert stats["failed_verifications"] == 1
         assert stats["success_rate"] == 0.5
     
-    def test_reset_stats(self, verifier, temp_file):
+    def test_reset_stats(self, verifier, temp_file) -> None:
         """Test resetting verification statistics"""
         # Perform some verifications
         file_path, test_data = temp_file
@@ -358,12 +358,12 @@ class TestContentIntegrityVerifier:
 class TestGlobalContentIntegrityVerifier:
     """Test global content integrity verifier instance"""
     
-    def test_global_instance_exists(self):
+    def test_global_instance_exists(self) -> None:
         """Test that global instance exists and is properly initialized"""
         assert content_integrity_verifier is not None
         assert isinstance(content_integrity_verifier, ContentIntegrityVerifier)
     
-    def test_global_instance_functionality(self):
+    def test_global_instance_functionality(self) -> None:
         """Test basic functionality of global instance"""
         # Create a temporary test file
         fd, temp_file = tempfile.mkstemp(suffix=".ts")

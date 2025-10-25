@@ -7,41 +7,41 @@ from typing import Optional
 
 # Mock PySide6 components for testing
 class MockQApplication:
-    def __init__(self, argv):
+    def __init__(self, argv) -> None:
         self.argv = argv
         self._app_name = ""
         self._app_version = ""
         self._org_name = ""
         self._org_domain = ""
     
-    def setApplicationName(self, name):
+    def setApplicationName(self, name) -> None:
         self._app_name = name
     
-    def setApplicationVersion(self, version):
+    def setApplicationVersion(self, version) -> None:
         self._app_version = version
     
-    def setOrganizationName(self, name):
+    def setOrganizationName(self, name) -> None:
         self._org_name = name
     
-    def setOrganizationDomain(self, domain):
+    def setOrganizationDomain(self, domain) -> None:
         self._org_domain = domain
     
-    def exec(self):
+    def exec(self) -> None:
         return 0
 
 class MockQObject:
     pass
 
 class MockQMutex:
-    def lock(self):
+    def lock(self) -> None:
         pass
     
-    def unlock(self):
+    def unlock(self) -> None:
         pass
 
 class MockQLocale:
     @staticmethod
-    def system():
+    def system() -> None:
         mock_locale = Mock()
         mock_locale.name.return_value = "en_US"
         return mock_locale
@@ -74,7 +74,7 @@ from src.app.application import Application
 class TestApplication:
     """Test suite for Application class."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         # Reset singleton instance before each test
         Application._instance = None
@@ -82,7 +82,7 @@ class TestApplication:
         # Create temporary directory for config
         self.temp_dir = tempfile.mkdtemp()
 
-    def teardown_method(self):
+    def teardown_method(self) -> None:
         """Clean up after tests."""
         # Reset singleton instance
         Application._instance = None
@@ -99,7 +99,7 @@ class TestApplication:
     @patch('src.app.application.TaskScheduler')
     @patch('src.app.application.MainWindow')
     def test_singleton_pattern(self, mock_main_window, mock_scheduler, mock_download_manager,
-                              mock_theme_manager, mock_init_i18n, mock_settings, mock_logging):
+                              mock_theme_manager, mock_init_i18n, mock_settings, mock_logging) -> None:
         """Test that Application follows singleton pattern."""
         # Create first instance
         app1 = Application(self.temp_dir)
@@ -119,7 +119,7 @@ class TestApplication:
     @patch('src.app.application.TaskScheduler')
     @patch('src.app.application.MainWindow')
     def test_initialization(self, mock_main_window, mock_scheduler, mock_download_manager,
-                           mock_theme_manager, mock_init_i18n, mock_settings, mock_logging):
+                           mock_theme_manager, mock_init_i18n, mock_settings, mock_logging) -> None:
         """Test Application initialization."""
         app = Application(self.temp_dir)
         
@@ -146,7 +146,7 @@ class TestApplication:
     @patch('src.app.application.MainWindow')
     def test_double_initialization_prevention(self, mock_main_window, mock_scheduler, 
                                             mock_download_manager, mock_theme_manager, 
-                                            mock_init_i18n, mock_settings, mock_logging):
+                                            mock_init_i18n, mock_settings, mock_logging) -> None:
         """Test that double initialization is prevented."""
         app = Application(self.temp_dir)
         
@@ -169,7 +169,7 @@ class TestApplication:
     @patch('src.app.application.TaskScheduler')
     @patch('src.app.application.MainWindow')
     def test_run_method(self, mock_main_window, mock_scheduler, mock_download_manager,
-                       mock_theme_manager, mock_init_i18n, mock_settings, mock_logging):
+                       mock_theme_manager, mock_init_i18n, mock_settings, mock_logging) -> None:
         """Test Application run method."""
         app = Application(self.temp_dir)
         
@@ -210,7 +210,7 @@ class TestApplication:
     @patch('src.app.application.TaskScheduler')
     @patch('src.app.application.MainWindow')
     def test_add_task_from_url(self, mock_main_window, mock_scheduler, mock_download_manager,
-                              mock_theme_manager, mock_init_i18n, mock_settings, mock_logging):
+                              mock_theme_manager, mock_init_i18n, mock_settings, mock_logging) -> None:
         """Test adding task from URL."""
         app = Application(self.temp_dir)
         
@@ -236,7 +236,7 @@ class TestApplication:
     @patch('src.app.application.MainWindow')
     def test_apply_language_auto(self, mock_main_window, mock_scheduler, mock_download_manager,
                                 mock_theme_manager, mock_set_locale, mock_init_i18n, 
-                                mock_settings, mock_logging):
+                                mock_settings, mock_logging) -> None:
         """Test language application with auto setting."""
         # Mock settings to return auto language
         mock_settings_instance = Mock()
@@ -258,7 +258,7 @@ class TestApplication:
     @patch('src.app.application.MainWindow')
     def test_apply_language_specific(self, mock_main_window, mock_scheduler, mock_download_manager,
                                    mock_theme_manager, mock_set_locale, mock_init_i18n, 
-                                   mock_settings, mock_logging):
+                                   mock_settings, mock_logging) -> None:
         """Test language application with specific language."""
         # Mock settings to return specific language
         mock_settings_instance = Mock()
@@ -281,7 +281,7 @@ class TestApplication:
     @patch('src.app.application.TaskPriority')
     def test_handle_download_task(self, mock_priority, mock_task, mock_main_window, 
                                  mock_scheduler, mock_download_manager, mock_theme_manager, 
-                                 mock_init_i18n, mock_settings, mock_logging):
+                                 mock_init_i18n, mock_settings, mock_logging) -> None:
         """Test handling download task."""
         app = Application(self.temp_dir)
         
@@ -330,7 +330,7 @@ class TestApplication:
     @patch('src.app.application.MainWindow')
     def test_handle_download_task_error(self, mock_main_window, mock_scheduler, 
                                        mock_download_manager, mock_theme_manager, 
-                                       mock_init_i18n, mock_settings, mock_logging):
+                                       mock_init_i18n, mock_settings, mock_logging) -> None:
         """Test error handling in download task processing."""
         app = Application(self.temp_dir)
         
@@ -363,14 +363,14 @@ class TestApplication:
     @patch('src.app.application.TaskScheduler')
     @patch('src.app.application.MainWindow')
     def test_check_updates(self, mock_main_window, mock_scheduler, mock_download_manager,
-                          mock_theme_manager, mock_init_i18n, mock_settings, mock_logging):
+                          mock_theme_manager, mock_init_i18n, mock_settings, mock_logging) -> None:
         """Test update checking."""
         app = Application(self.temp_dir)
         
         # Should not raise exception
         app._check_updates()
 
-    def test_instance_method(self):
+    def test_instance_method(self) -> None:
         """Test instance class method."""
         # Initially should be None
         assert Application.instance() is None

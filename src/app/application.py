@@ -31,7 +31,7 @@ class InitializationStep:
     dependencies: Optional[list] = None
     critical: bool = True  # If False, failure won't stop initialization
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.dependencies is None:
             self.dependencies = []
 
@@ -47,7 +47,7 @@ class InitializationPhase(Enum):
 class CentralizedInitializer:
     """Centralized initialization system for the application"""
 
-    def __init__(self, app_instance):
+    def __init__(self, app_instance) -> None:
         self.app = app_instance
         self.completed_steps = set()
         self.failed_steps = set()
@@ -56,7 +56,7 @@ class CentralizedInitializer:
             phase: [] for phase in InitializationPhase
         }
 
-    def register_step(self, phase: InitializationPhase, step: InitializationStep):
+    def register_step(self, phase: InitializationPhase, step: InitializationStep) -> None:
         """Register an initialization step"""
         self._steps[phase].append(step)
 
@@ -124,7 +124,7 @@ class Application(QApplication):
     singleton_manager = None
     window_activator = None
 
-    def __new__(cls, config_dir=None, cli_args=None):
+    def __new__(cls, config_dir=None, cli_args=None) -> None:
         """Ensure singleton pattern"""
         cls._mutex.lock()
         try:
@@ -143,7 +143,7 @@ class Application(QApplication):
         """Get the singleton instance"""
         return cls._instance
 
-    def __init__(self, config_dir=None, cli_args=None):
+    def __init__(self, config_dir=None, cli_args=None) -> None:
         if hasattr(self, '_initialized') and self._initialized:
             logger.debug("Application already initialized, skipping")
             return
@@ -164,7 +164,7 @@ class Application(QApplication):
             logger.error("Application initialization failed")
             raise RuntimeError("Failed to initialize application")
 
-    def _register_initialization_steps(self):
+    def _register_initialization_steps(self) -> None:
         """Register all initialization steps with the centralizer"""
         # Core systems phase
         self._initializer.register_step(
@@ -217,46 +217,46 @@ class Application(QApplication):
             InitializationStep("ipc_server", self._start_ipc_server, ["main_window"])
         )
 
-    def _set_app_properties(self):
+    def _set_app_properties(self) -> None:
         """Set application properties"""
         self.setApplicationName("VidTanium")
         self.setApplicationVersion("0.1.0")
         self.setOrganizationName("VidTanium Team")
         self.setOrganizationDomain("vidtanium.com")
 
-    def _init_settings(self):
+    def _init_settings(self) -> None:
         """Initialize settings and validate them"""
         self.settings = Settings(self._config_dir, cli_args=self._cli_args)
         self._validate_and_fix_settings()
 
-    def _init_i18n_system(self):
+    def _init_i18n_system(self) -> None:
         """Initialize internationalization system"""
         init_i18n()
         self._i18n_initialized = True
         self._apply_language()
 
-    def _init_theme_manager(self):
+    def _init_theme_manager(self) -> None:
         """Initialize theme manager"""
         from src.gui.theme_manager import EnhancedThemeManager
         self.theme_manager = EnhancedThemeManager(self.settings, self)
 
-    def _init_download_manager(self):
+    def _init_download_manager(self) -> None:
         """Initialize download manager"""
         self.download_manager = DownloadManager(self.settings)
 
-    def _init_task_scheduler(self):
+    def _init_task_scheduler(self) -> None:
         """Initialize task scheduler"""
         self.task_scheduler = TaskScheduler(self._config_dir)
         self.task_scheduler.register_handler("download", self._handle_download_task)
 
-    def _init_main_window(self):
+    def _init_main_window(self) -> None:
         """Initialize main window"""
         from typing import cast
         from src.gui.main_window import SettingsType, AppType
         self.main_window = MainWindow(
             cast(AppType, self), self.download_manager, cast(SettingsType, self.settings), self.theme_manager)
 
-    def _init_core_systems(self):
+    def _init_core_systems(self) -> None:
         """Initialize core application systems"""
         # Set application properties (only once)
         self.setApplicationName("VidTanium")
@@ -273,7 +273,7 @@ class Application(QApplication):
         self._i18n_initialized = True
         self._apply_language()
 
-    def _init_managers(self):
+    def _init_managers(self) -> None:
         """Initialize application managers"""
         # Initialize theme manager
         from src.gui.theme_manager import EnhancedThemeManager
@@ -286,7 +286,7 @@ class Application(QApplication):
         self.task_scheduler = TaskScheduler(self._config_dir)
         self.task_scheduler.register_handler("download", self._handle_download_task)
 
-    def _init_ui_components(self):
+    def _init_ui_components(self) -> None:
         """Initialize UI components"""
         self._init_system_tray()
 
@@ -296,7 +296,7 @@ class Application(QApplication):
         self.main_window = MainWindow(
             cast(AppType, self), self.download_manager, cast(SettingsType, self.settings), self.theme_manager)
 
-    def _finalize_initialization(self):
+    def _finalize_initialization(self) -> None:
         """Finalize initialization process"""
         # Apply any pending locale settings
         if hasattr(self, '_pending_locale'):
@@ -309,7 +309,7 @@ class Application(QApplication):
 
         logger.info("Application initialization completed successfully")
 
-    def _init_singleton_components(self):
+    def _init_singleton_components(self) -> None:
         """Initialize singleton and IPC components"""
         try:
             # Get singleton manager and window activator
@@ -327,7 +327,7 @@ class Application(QApplication):
             self.window_activator = None
             self.ipc_server = None
 
-    def _start_ipc_server(self):
+    def _start_ipc_server(self) -> None:
         """Start the IPC server for inter-process communication"""
         if not self.ipc_server:
             logger.warning("IPC server not initialized, skipping startup")
@@ -354,7 +354,7 @@ class Application(QApplication):
         except Exception as e:
             logger.error(f"Error starting IPC server: {e}")
 
-    def _handle_activation_request(self):
+    def _handle_activation_request(self) -> None:
         """Handle window activation request from another instance"""
         logger.info("Received window activation request")
 
@@ -368,7 +368,7 @@ class Application(QApplication):
         except Exception as e:
             logger.error(f"Error handling activation request: {e}")
 
-    def _handle_ipc_message(self, action: str, data: dict):
+    def _handle_ipc_message(self, action: str, data: dict) -> None:
         """Handle IPC messages from other instances"""
         logger.debug(f"Received IPC message: {action} with data: {data}")
 
@@ -398,7 +398,7 @@ class Application(QApplication):
         exit_code: int = self.exec()
         return exit_code
 
-    def send_notification(self, title: str, message: str, icon=None, duration=5000):
+    def send_notification(self, title: str, message: str, icon=None, duration=5000) -> None:
         """Send system notification
 
         Args:
@@ -418,7 +418,7 @@ class Application(QApplication):
         else:
             logger.debug("System tray not available, notification not shown")
 
-    def add_task_from_url(self, url):
+    def add_task_from_url(self, url) -> None:
         """Automatically create task from URL
 
         Args:
@@ -428,7 +428,7 @@ class Application(QApplication):
         logger.info(f"Attempting to create task from URL: {url}")
         self.main_window.import_from_url()
 
-    def _apply_theme(self):
+    def _apply_theme(self) -> None:
         """Apply theme settings using QFluentWidgets"""
         from qfluentwidgets import setTheme, Theme, qconfig
 
@@ -455,7 +455,7 @@ class Application(QApplication):
         except Exception as e:
             logger.error(f"Error applying theme: {e}", exc_info=True)
 
-    def _apply_language(self):
+    def _apply_language(self) -> None:
         """Apply language settings with optimized locale detection"""
         language = self.settings.get("general", "language", "auto")
 
@@ -474,7 +474,7 @@ class Application(QApplication):
         # TODO: Implement Qt translator when translation files are available
         # self._setup_qt_translator(locale)
 
-    def _validate_and_fix_settings(self):
+    def _validate_and_fix_settings(self) -> None:
         """Validate and fix settings during initialization"""
         settings_changed = False
 
@@ -519,13 +519,13 @@ class Application(QApplication):
                 return True
         return False
 
-    def _check_updates(self):
+    def _check_updates(self) -> None:
         """Check for updates"""
         # In an actual application, connect to a server to check for updates
         # Simplified handling here
         logger.info("Checking for updates...")
 
-    def _handle_download_task(self, task_data):
+    def _handle_download_task(self, task_data) -> None:
         """Handle download task
 
         Args:
@@ -580,7 +580,7 @@ class Application(QApplication):
                     f"Failed to start scheduled task: {task_data.get('name', 'Unknown')}"
                 )
 
-    def _init_system_tray(self):
+    def _init_system_tray(self) -> None:
         """Initialize system tray"""
         from src.gui.widgets.system_tray import SystemTrayIcon
 
@@ -606,7 +606,7 @@ class Application(QApplication):
             logger.debug("System tray integration disabled in settings")
             self.tray_icon = None
 
-    def _handle_tray_action(self, action):
+    def _handle_tray_action(self, action) -> None:
         """Handle tray actions
 
         Args:
@@ -630,7 +630,7 @@ class Application(QApplication):
             logger.info("Exiting application from tray menu")
             self.main_window.close()
 
-    def cleanup_singleton_components(self):
+    def cleanup_singleton_components(self) -> None:
         """Clean up singleton and IPC components"""
         try:
             # Stop IPC server
@@ -651,7 +651,7 @@ class Application(QApplication):
         except Exception as e:
             logger.error(f"Error cleaning up singleton components: {e}")
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Destructor to ensure cleanup"""
         try:
             self.cleanup_singleton_components()

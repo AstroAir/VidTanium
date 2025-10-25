@@ -12,19 +12,19 @@ from src.app.settings import Settings
 class TestSettings:
     """Test suite for Settings class."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         # Create temporary directory for config
         self.temp_dir = tempfile.mkdtemp()
         self.config_dir = Path(self.temp_dir) / "test_config"
 
-    def teardown_method(self):
+    def teardown_method(self) -> None:
         """Clean up after tests."""
         # Clean up temp directory
         import shutil
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
-    def test_initialization_default_config_dir(self):
+    def test_initialization_default_config_dir(self) -> None:
         """Test Settings initialization with default config directory."""
         with patch('pathlib.Path.home') as mock_home:
             mock_home.return_value = Path(self.temp_dir)
@@ -36,7 +36,7 @@ class TestSettings:
             assert settings.config_file == expected_dir / "settings.json"
             assert settings.presets_dir == expected_dir / "presets"
 
-    def test_initialization_custom_config_dir(self):
+    def test_initialization_custom_config_dir(self) -> None:
         """Test Settings initialization with custom config directory."""
         settings = Settings(self.config_dir)
         
@@ -44,7 +44,7 @@ class TestSettings:
         assert settings.config_file == self.config_dir / "settings.json"
         assert settings.presets_dir == self.config_dir / "presets"
 
-    def test_initialization_creates_directories(self):
+    def test_initialization_creates_directories(self) -> None:
         """Test that initialization creates necessary directories."""
         # Directory shouldn't exist initially
         assert not self.config_dir.exists()
@@ -55,7 +55,7 @@ class TestSettings:
         assert self.config_dir.exists()
         assert settings.presets_dir.exists()
 
-    def test_default_settings_structure(self):
+    def test_default_settings_structure(self) -> None:
         """Test that default settings have correct structure."""
         settings = Settings(self.config_dir)
         
@@ -77,7 +77,7 @@ class TestSettings:
         assert "max_workers_per_task" in download
         assert "max_retries" in download
 
-    def test_load_settings_first_run(self):
+    def test_load_settings_first_run(self) -> None:
         """Test loading settings on first run (no config file)."""
         settings = Settings(self.config_dir)
         
@@ -87,7 +87,7 @@ class TestSettings:
         # Should create config file
         assert settings.config_file.exists()
 
-    def test_load_settings_existing_file(self):
+    def test_load_settings_existing_file(self) -> None:
         """Test loading settings from existing file."""
         # Create config file with custom settings
         custom_settings = {
@@ -115,7 +115,7 @@ class TestSettings:
         assert settings.get("general", "auto_cleanup") is True
         assert settings.get("download", "max_workers_per_task") == 10
 
-    def test_load_settings_corrupted_file(self):
+    def test_load_settings_corrupted_file(self) -> None:
         """Test loading settings from corrupted file."""
         # Create corrupted config file
         self.config_dir.mkdir(parents=True, exist_ok=True)
@@ -127,7 +127,7 @@ class TestSettings:
         # Should fall back to default settings
         assert settings.settings == settings.default_settings
 
-    def test_save_settings_success(self):
+    def test_save_settings_success(self) -> None:
         """Test successful settings save."""
         settings = Settings(self.config_dir)
         
@@ -147,7 +147,7 @@ class TestSettings:
         assert saved_data["general"]["language"] == "zh_CN"
         assert saved_data["download"]["max_concurrent_tasks"] == 8
 
-    def test_save_settings_with_custom_data(self):
+    def test_save_settings_with_custom_data(self) -> None:
         """Test saving custom settings data."""
         settings = Settings(self.config_dir)
         
@@ -168,7 +168,7 @@ class TestSettings:
         assert saved_data == custom_data
 
     @patch('builtins.open', side_effect=PermissionError("Permission denied"))
-    def test_save_settings_permission_error(self, mock_open):
+    def test_save_settings_permission_error(self, mock_open) -> None:
         """Test save settings with permission error."""
         settings = Settings(self.config_dir)
         
@@ -176,7 +176,7 @@ class TestSettings:
         
         assert result is False
 
-    def test_reset_to_defaults(self):
+    def test_reset_to_defaults(self) -> None:
         """Test resetting settings to defaults."""
         settings = Settings(self.config_dir)
         
@@ -196,7 +196,7 @@ class TestSettings:
         
         assert saved_data == settings.default_settings
 
-    def test_get_existing_setting(self):
+    def test_get_existing_setting(self) -> None:
         """Test getting existing setting value."""
         settings = Settings(self.config_dir)
         
@@ -208,7 +208,7 @@ class TestSettings:
         value = settings.get("download", "max_concurrent_tasks")
         assert value == 3
 
-    def test_get_setting_from_defaults(self):
+    def test_get_setting_from_defaults(self) -> None:
         """Test getting setting value from defaults when not in current settings."""
         settings = Settings(self.config_dir)
         
@@ -219,21 +219,21 @@ class TestSettings:
         value = settings.get("general", "auto_cleanup")
         assert value is True
 
-    def test_get_nonexistent_setting_with_default(self):
+    def test_get_nonexistent_setting_with_default(self) -> None:
         """Test getting nonexistent setting with provided default."""
         settings = Settings(self.config_dir)
         
         value = settings.get("nonexistent", "key", "default_value")
         assert value == "default_value"
 
-    def test_get_nonexistent_setting_without_default(self):
+    def test_get_nonexistent_setting_without_default(self) -> None:
         """Test getting nonexistent setting without provided default."""
         settings = Settings(self.config_dir)
         
         value = settings.get("nonexistent", "key")
         assert value is None
 
-    def test_set_existing_section(self):
+    def test_set_existing_section(self) -> None:
         """Test setting value in existing section."""
         settings = Settings(self.config_dir)
         
@@ -241,7 +241,7 @@ class TestSettings:
         
         assert settings.settings["general"]["language"] == "fr"
 
-    def test_set_new_section(self):
+    def test_set_new_section(self) -> None:
         """Test setting value in new section."""
         settings = Settings(self.config_dir)
         
@@ -250,7 +250,7 @@ class TestSettings:
         assert "new_section" in settings.settings
         assert settings.settings["new_section"]["new_key"] == "new_value"
 
-    def test_set_new_key_in_existing_section(self):
+    def test_set_new_key_in_existing_section(self) -> None:
         """Test setting new key in existing section."""
         settings = Settings(self.config_dir)
         
@@ -258,7 +258,7 @@ class TestSettings:
         
         assert settings.settings["general"]["new_key"] == "new_value"
 
-    def test_deep_update_simple(self):
+    def test_deep_update_simple(self) -> None:
         """Test deep update with simple values."""
         settings = Settings(self.config_dir)
         
@@ -269,7 +269,7 @@ class TestSettings:
         
         assert target == {"a": 1, "b": 3, "c": 4}
 
-    def test_deep_update_nested_dicts(self):
+    def test_deep_update_nested_dicts(self) -> None:
         """Test deep update with nested dictionaries."""
         settings = Settings(self.config_dir)
         
@@ -292,7 +292,7 @@ class TestSettings:
         
         assert target == expected
 
-    def test_deep_update_mixed_types(self):
+    def test_deep_update_mixed_types(self) -> None:
         """Test deep update with mixed types."""
         settings = Settings(self.config_dir)
         
@@ -314,7 +314,7 @@ class TestSettings:
         
         assert target == expected
 
-    def test_settings_isolation(self):
+    def test_settings_isolation(self) -> None:
         """Test that settings instances are isolated."""
         settings1 = Settings(self.config_dir)
         settings2 = Settings(self.config_dir)
@@ -325,7 +325,7 @@ class TestSettings:
         # settings2 should not be affected
         assert settings2.get("general", "language") == "auto"
 
-    def test_settings_persistence(self):
+    def test_settings_persistence(self) -> None:
         """Test that settings persist across instances."""
         # Create first instance and modify settings
         settings1 = Settings(self.config_dir)
@@ -338,7 +338,7 @@ class TestSettings:
         # Should load the modified settings
         assert settings2.get("general", "language") == "zh_CN"
 
-    def test_unicode_handling(self):
+    def test_unicode_handling(self) -> None:
         """Test handling of unicode characters in settings."""
         settings = Settings(self.config_dir)
         
@@ -353,7 +353,7 @@ class TestSettings:
         assert settings2.get("general", "unicode_test") == "测试中文"
         assert settings2.get("general", "emoji_test") == "🎉📁"
 
-    def test_large_settings_data(self):
+    def test_large_settings_data(self) -> None:
         """Test handling of large settings data."""
         settings = Settings(self.config_dir)
         

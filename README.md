@@ -169,6 +169,18 @@ python main.py --config "/path/to/config"
 
 **[📋 Complete Workflow Guide](docs/workflow-guide.md)** - Your comprehensive guide from installation to advanced usage
 
+### 🎨 Design System Documentation
+
+VidTanium uses a modern, unified design system for consistent and beautiful UI. For developers working on the GUI:
+
+| Document | Purpose | Best For |
+|----------|---------|----------|
+| [🎨 **Design System Reference**](DESIGN_SYSTEM.md) | **Complete design system specification** | **GUI developers - start here!** |
+| [🔄 Migration Guide](MIGRATION_GUIDE.md) | Migrating to the new design system | Updating existing code |
+| [💻 Code Examples](CODE_EXAMPLES.md) | Practical implementation examples | Learning by example |
+| [📐 Design Patterns](DESIGN_PATTERNS.md) | Common UI patterns and layouts | Implementing standard components |
+| [✅ Testing Guide](TESTING_GUIDE.md) | Testing and verification procedures | Ensuring design consistency |
+
 ### 📚 User Documentation
 
 | Document | Purpose | Best For |

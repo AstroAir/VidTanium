@@ -18,12 +18,12 @@ class TaskTable(TableWidget):
     # 信号
     task_clicked = Signal(str)  # task_id
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self._setup_table()
-        self._action_handlers = {}
+        self._action_handlers: dict[str, object] = {}
 
-    def _setup_table(self):
+    def _setup_table(self) -> None:
         """设置表格属性"""
         self.setColumnCount(6)
         self.setHorizontalHeaderLabels(
@@ -46,11 +46,11 @@ class TaskTable(TableWidget):
         header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)
 
-    def set_action_handlers(self, handlers):
+    def set_action_handlers(self, handlers) -> None:
         """设置操作按钮的处理函数"""
         self._action_handlers = handlers
 
-    def populate_tasks(self, tasks):
+    def populate_tasks(self, tasks) -> None:
         """填充任务列表"""
         self.setRowCount(0)
         self.setRowCount(len(tasks))
@@ -89,7 +89,7 @@ class TaskTable(TableWidget):
             # 操作按钮
             self._add_action_buttons(i, task)
 
-    def _add_action_buttons(self, row, task):
+    def _add_action_buttons(self, row, task) -> None:
         """添加操作按钮"""
         action_buttons = TaskActionButtons()
         action_buttons.setup_for_task(task)
@@ -106,7 +106,7 @@ class TaskTable(TableWidget):
 
         self.setCellWidget(row, 5, action_buttons)
 
-    def _on_item_clicked(self, item):
+    def _on_item_clicked(self, item) -> None:
         """处理项目点击"""
         row = item.row()
         name_item = self.item(row, 0)
@@ -114,7 +114,7 @@ class TaskTable(TableWidget):
             task_id = name_item.data(Qt.ItemDataRole.UserRole)
             self.task_clicked.emit(task_id)
 
-    def update_task_row(self, task_id, task):
+    def update_task_row(self, task_id, task) -> None:
         """更新特定任务的行"""
         for row in range(self.rowCount()):
             item = self.item(row, 0)
@@ -146,16 +146,16 @@ class TaskTable(TableWidget):
                 self._add_action_buttons(row, task)
                 break
 
-    def get_visible_rows_count(self):
+    def get_visible_rows_count(self) -> int:
         """获取可见行数"""
         return sum(1 for row in range(self.rowCount())
                    if not self.isRowHidden(row))
 
-    def get_total_rows_count(self):
+    def get_total_rows_count(self) -> int:
         """获取总行数"""
         return self.rowCount()
 
-    def filter_tasks(self, search_text="", filter_type="all"):
+    def filter_tasks(self, search_text="", filter_type="all") -> None:
         """过滤任务"""
         search_text = search_text.lower() if search_text else ""
 
@@ -191,7 +191,7 @@ class TaskTable(TableWidget):
 
             self.setRowHidden(row, not show_row)
 
-    def _get_task_type_text(self, task_type):
+    def _get_task_type_text(self, task_type) -> str:
         """获取任务类型文本"""
         type_texts = {
             TaskType.ONE_TIME: "一次性",
@@ -201,7 +201,7 @@ class TaskTable(TableWidget):
         }
         return type_texts.get(task_type, str(task_type))
 
-    def _format_datetime(self, dt):
+    def _format_datetime(self, dt) -> str:
         """格式化日期时间"""
         if not dt:
             return "--"

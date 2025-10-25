@@ -27,9 +27,9 @@ def _try_fcntl_lock(fd: int, operation: str) -> bool:
     try:
         import fcntl
         if operation == "exclusive":
-            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)  # type: ignore
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)  # 
         elif operation == "unlock":
-            fcntl.flock(fd, fcntl.LOCK_UN)  # type: ignore
+            fcntl.flock(fd, fcntl.LOCK_UN)  # 
         return True
     except ImportError:
         # fcntl not available on Windows
@@ -81,7 +81,7 @@ class SingletonBase(ABC):
 class UnixSingleton(SingletonBase):
     """Unix-based singleton implementation using file locks"""
     
-    def __init__(self, app_name: str, user_specific: bool = True):
+    def __init__(self, app_name: str, user_specific: bool = True) -> None:
         self.app_name = app_name
         self.user_specific = user_specific
         self.lock_file_path = self._get_lock_file_path()
@@ -258,7 +258,7 @@ class UnixSingleton(SingletonBase):
 class WindowsSingleton(UnixSingleton):
     """Windows-specific singleton implementation"""
     
-    def __init__(self, app_name: str, user_specific: bool = True):
+    def __init__(self, app_name: str, user_specific: bool = True) -> None:
         super().__init__(app_name, user_specific)
         self.mutex_name = f"Global\\VidTanium_{app_name}" if not user_specific else f"Local\\VidTanium_{app_name}_{os.getenv('USERNAME', 'user')}"
         self.mutex_handle = None
@@ -312,7 +312,7 @@ class WindowsSingleton(UnixSingleton):
 class SingletonManager:
     """Main singleton manager that provides a unified interface"""
     
-    def __init__(self, app_name: str = "VidTanium", user_specific: bool = True):
+    def __init__(self, app_name: str = "VidTanium", user_specific: bool = True) -> None:
         self.app_name = app_name
         self.user_specific = user_specific
         self._implementation = self._create_implementation()

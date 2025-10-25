@@ -11,11 +11,11 @@ from qfluentwidgets import (
 class UITab(QWidget):
     """UI settings tab"""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self._create_ui()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """Create user interface"""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(15, 15, 15, 15)
@@ -48,7 +48,7 @@ class UITab(QWidget):
         layout.addLayout(form_layout)
         layout.addStretch()
 
-    def load_settings(self, settings):
+    def load_settings(self, settings) -> None:
         """Load settings to UI"""
         # UI settings
         self.show_detailed_progress_check.setChecked(
@@ -60,7 +60,7 @@ class UITab(QWidget):
         self.confirm_on_exit_check.setChecked(
             settings.get("ui", "confirm_on_exit", True))
 
-    def save_settings(self, settings):
+    def save_settings(self, settings) -> None:
         """Save settings"""
         # UI settings
         settings.set("ui", "show_detailed_progress",

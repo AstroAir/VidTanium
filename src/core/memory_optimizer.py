@@ -34,7 +34,7 @@ class MemoryConfig:
 class StreamingBuffer:
     """Intelligent streaming buffer with adaptive sizing"""
     
-    def __init__(self, initial_size: int = 65536, max_size: int = 1048576):
+    def __init__(self, initial_size: int = 65536, max_size: int = 1048576) -> None:
         self.buffer = bytearray(initial_size)
         self.size = initial_size
         self.max_size = max_size
@@ -42,7 +42,7 @@ class StreamingBuffer:
         self.data_length = 0
         self.performance_history: List[Dict[str, Any]] = []
         
-    def resize(self, new_size: int):
+    def resize(self, new_size: int) -> None:
         """Resize buffer based on performance"""
         new_size = min(max(new_size, 8192), self.max_size)
         if new_size != self.size:
@@ -91,7 +91,7 @@ class StreamingBuffer:
             return written
         return 0
     
-    def clear(self):
+    def clear(self) -> None:
         """Clear buffer"""
         self.position = 0
         self.data_length = 0
@@ -100,23 +100,23 @@ class StreamingBuffer:
 class MemoryMappedFile:
     """Memory-mapped file handler for efficient large file operations"""
     
-    def __init__(self, file_path: Union[str, Path], mode: str = 'r+b', size: Optional[int] = None):
+    def __init__(self, file_path: Union[str, Path], mode: str = 'r+b', size: Optional[int] = None) -> None:
         self.file_path = Path(file_path)
         self.mode = mode
         self.file_handle: Optional[BinaryIO] = None
         self.mmap_handle: Optional[mmap.mmap] = None
         self.size = size
         
-    def __enter__(self):
+    def __enter__(self) -> "MemoryMappedFile":
         """Context manager entry"""
         self.open()
         return self
     
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         """Context manager exit"""
         self.close()
     
-    def open(self):
+    def open(self) -> None:
         """Open memory-mapped file"""
         try:
             # Create file if it doesn't exist and we're writing
@@ -128,7 +128,7 @@ class MemoryMappedFile:
                         f.seek(self.size - 1)
                         f.write(b'\0')
             
-            self.file_handle = open(self.file_path, self.mode)  # type: ignore
+            self.file_handle = open(self.file_path, self.mode)  # 
 
             # Create memory map
             if self.file_handle is not None:
@@ -144,7 +144,7 @@ class MemoryMappedFile:
             self.close()
             raise
     
-    def close(self):
+    def close(self) -> None:
         """Close memory-mapped file"""
         if self.mmap_handle:
             self.mmap_handle.close()
@@ -154,7 +154,7 @@ class MemoryMappedFile:
             self.file_handle.close()
             self.file_handle = None
     
-    def write(self, data: bytes, offset: int = 0):
+    def write(self, data: bytes, offset: int = 0) -> None:
         """Write data to memory-mapped file"""
         if not self.mmap_handle:
             raise RuntimeError("Memory-mapped file not open")
@@ -179,7 +179,7 @@ class MemoryMappedFile:
 class MemoryOptimizer:
     """Intelligent memory optimizer for download operations"""
     
-    def __init__(self, config: Optional[MemoryConfig] = None):
+    def __init__(self, config: Optional[MemoryConfig] = None) -> None:
         self.config = config or MemoryConfig()
         self.lock = threading.RLock()
         
@@ -242,14 +242,14 @@ class MemoryOptimizer:
             logger.debug(f"Created streaming buffer for {context}: {buffer_size} bytes")
             return buffer
     
-    def release_streaming_buffer(self, context: str):
+    def release_streaming_buffer(self, context: str) -> None:
         """Release streaming buffer"""
         with self.lock:
             if context in self.active_buffers:
                 del self.active_buffers[context]
                 logger.debug(f"Released streaming buffer for {context}")
     
-    def record_buffer_performance(self, context: str, bytes_processed: int, duration: float):
+    def record_buffer_performance(self, context: str, bytes_processed: int, duration: float) -> None:
         """Record buffer performance for optimization"""
         with self.lock:
             if context not in self.buffer_performance:
@@ -293,7 +293,7 @@ class MemoryOptimizer:
             logger.debug(f"Created memory-mapped file: {file_path}")
             return mmap_file
     
-    def release_memory_mapped_file(self, file_path: Union[str, Path]):
+    def release_memory_mapped_file(self, file_path: Union[str, Path]) -> None:
         """Release memory-mapped file"""
         file_key = str(file_path)
         
@@ -342,7 +342,7 @@ class MemoryOptimizer:
         
         return result
     
-    def _reduce_memory_usage(self):
+    def _reduce_memory_usage(self) -> None:
         """Reduce memory usage by optimizing buffers and cleaning up"""
         with self.lock:
             # Reduce buffer sizes
@@ -363,7 +363,7 @@ class MemoryOptimizer:
             
             logger.info("Reduced memory usage due to high memory pressure")
     
-    def _trigger_garbage_collection(self):
+    def _trigger_garbage_collection(self) -> None:
         """Trigger garbage collection"""
         collected = gc.collect()
         self.last_gc_memory = psutil.virtual_memory().used
@@ -397,7 +397,7 @@ class MemoryOptimizer:
                 }
             }
     
-    def cleanup(self):
+    def cleanup(self) -> None:
         """Clean up all resources"""
         with self.lock:
             # Close all memory-mapped files

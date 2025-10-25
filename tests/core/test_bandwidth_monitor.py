@@ -15,7 +15,7 @@ from src.core.bandwidth_monitor import (
 class TestBandwidthSample:
     """Test suite for BandwidthSample dataclass."""
 
-    def test_bandwidth_sample_creation(self):
+    def test_bandwidth_sample_creation(self) -> None:
         """Test BandwidthSample creation with all fields."""
         sample = BandwidthSample(
             timestamp=1234567890.0,
@@ -35,7 +35,7 @@ class TestBandwidthSample:
         assert sample.active_connections == 5
         assert sample.task_id == "test_task"
 
-    def test_bandwidth_sample_defaults(self):
+    def test_bandwidth_sample_defaults(self) -> None:
         """Test BandwidthSample with default values."""
         sample = BandwidthSample(
             timestamp=1234567890.0,
@@ -52,7 +52,7 @@ class TestBandwidthSample:
 class TestBandwidthStats:
     """Test suite for BandwidthStats dataclass."""
 
-    def test_bandwidth_stats_creation(self):
+    def test_bandwidth_stats_creation(self) -> None:
         """Test BandwidthStats creation with all fields."""
         stats = BandwidthStats(
             current_download_speed=1024.0,
@@ -78,16 +78,16 @@ class TestBandwidthStats:
 class TestBandwidthMonitor:
     """Test suite for BandwidthMonitor class."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.monitor = BandwidthMonitor(sample_interval=0.1, max_samples=100)
 
-    def teardown_method(self):
+    def teardown_method(self) -> None:
         """Clean up after tests."""
         if self.monitor.monitoring:
             self.monitor.stop_monitoring()
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test BandwidthMonitor initialization."""
         assert self.monitor.sample_interval == 0.1
         assert self.monitor.max_samples == 100
@@ -97,7 +97,7 @@ class TestBandwidthMonitor:
         assert isinstance(self.monitor.task_bandwidth, dict)
 
     @patch('src.core.bandwidth_monitor.psutil.net_io_counters')
-    def test_detect_primary_interface(self, mock_net_io):
+    def test_detect_primary_interface(self, mock_net_io) -> None:
         """Test primary network interface detection."""
         # Mock network interfaces
         mock_interface1 = Mock()
@@ -114,7 +114,7 @@ class TestBandwidthMonitor:
         assert interface == 'wlan0'  # Should pick the one with more bytes_recv
 
     @patch('src.core.bandwidth_monitor.psutil.net_io_counters')
-    def test_detect_primary_interface_error(self, mock_net_io):
+    def test_detect_primary_interface_error(self, mock_net_io) -> None:
         """Test primary interface detection with error."""
         mock_net_io.side_effect = Exception("Network error")
         
@@ -122,7 +122,7 @@ class TestBandwidthMonitor:
         assert interface is None
 
     @patch('src.core.bandwidth_monitor.psutil.net_io_counters')
-    def test_get_network_stats(self, mock_net_io):
+    def test_get_network_stats(self, mock_net_io) -> None:
         """Test network statistics collection."""
         # Mock specific interface stats
         mock_stats = Mock()
@@ -142,7 +142,7 @@ class TestBandwidthMonitor:
         assert stats['packets_recv'] == 20
 
     @patch('src.core.bandwidth_monitor.psutil.net_io_counters')
-    def test_get_network_stats_fallback(self, mock_net_io):
+    def test_get_network_stats_fallback(self, mock_net_io) -> None:
         """Test network stats fallback to total stats."""
         # Mock total stats when per-interface fails
         mock_total_stats = Mock()
@@ -161,7 +161,7 @@ class TestBandwidthMonitor:
         assert stats['bytes_recv'] == 10000
 
     @patch('src.core.bandwidth_monitor.psutil.net_connections')
-    def test_count_active_connections(self, mock_connections):
+    def test_count_active_connections(self, mock_connections) -> None:
         """Test active connection counting."""
         # Mock connections
         conn1 = Mock()
@@ -177,20 +177,20 @@ class TestBandwidthMonitor:
         assert count == 2  # Only ESTABLISHED connections
 
     @patch('src.core.bandwidth_monitor.psutil.net_connections')
-    def test_count_active_connections_error(self, mock_connections):
+    def test_count_active_connections_error(self, mock_connections) -> None:
         """Test connection counting with error."""
         mock_connections.side_effect = Exception("Connection error")
         
         count = self.monitor._count_active_connections()
         assert count == 0
 
-    def test_estimate_max_bandwidth(self):
+    def test_estimate_max_bandwidth(self) -> None:
         """Test bandwidth estimation."""
         max_bandwidth = self.monitor._estimate_max_bandwidth()
         assert max_bandwidth == 100 * 1024 * 1024  # 100 Mbps default
 
     @patch.object(BandwidthMonitor, '_get_network_stats')
-    def test_collect_sample(self, mock_get_stats):
+    def test_collect_sample(self, mock_get_stats) -> None:
         """Test bandwidth sample collection."""
         # Setup baseline
         self.monitor.baseline_stats = {
@@ -220,7 +220,7 @@ class TestBandwidthMonitor:
         assert sample.total_uploaded == 500
 
     @patch.object(BandwidthMonitor, '_get_network_stats')
-    def test_collect_sample_no_baseline(self, mock_get_stats):
+    def test_collect_sample_no_baseline(self, mock_get_stats) -> None:
         """Test sample collection without baseline."""
         self.monitor.baseline_stats = None
         mock_get_stats.return_value = {'bytes_recv': 1000, 'bytes_sent': 500}
@@ -228,7 +228,7 @@ class TestBandwidthMonitor:
         sample = self.monitor._collect_sample()
         assert sample is None
 
-    def test_start_stop_monitoring(self):
+    def test_start_stop_monitoring(self) -> None:
         """Test starting and stopping monitoring."""
         assert not self.monitor.monitoring
         
@@ -239,7 +239,7 @@ class TestBandwidthMonitor:
         self.monitor.stop_monitoring()
         assert not self.monitor.monitoring
 
-    def test_start_monitoring_already_running(self):
+    def test_start_monitoring_already_running(self) -> None:
         """Test starting monitoring when already running."""
         self.monitor.monitoring = True
         original_thread = Mock()
@@ -250,7 +250,7 @@ class TestBandwidthMonitor:
         # Should not create new thread
         assert self.monitor.monitor_thread == original_thread
 
-    def test_update_task_bandwidth(self):
+    def test_update_task_bandwidth(self) -> None:
         """Test per-task bandwidth tracking."""
         sample = BandwidthSample(
             timestamp=time.time(),
@@ -267,7 +267,7 @@ class TestBandwidthMonitor:
         assert len(self.monitor.task_bandwidth["test_task"]) == 1
         assert self.monitor.task_bandwidth["test_task"][0] == sample
 
-    def test_update_task_bandwidth_no_task_id(self):
+    def test_update_task_bandwidth_no_task_id(self) -> None:
         """Test bandwidth update without task ID."""
         sample = BandwidthSample(
             timestamp=time.time(),
@@ -283,12 +283,12 @@ class TestBandwidthMonitor:
         # Should not add any new task entries
         assert len(self.monitor.task_bandwidth) == initial_count
 
-    def test_get_current_stats_no_samples(self):
+    def test_get_current_stats_no_samples(self) -> None:
         """Test getting stats with no samples."""
         stats = self.monitor.get_current_stats()
         assert stats is None
 
-    def test_get_current_stats_with_samples(self):
+    def test_get_current_stats_with_samples(self) -> None:
         """Test getting current statistics with samples."""
         # Add test samples
         samples = [
@@ -307,7 +307,7 @@ class TestBandwidthMonitor:
         assert stats.peak_download_speed == 2000
         assert stats.peak_upload_speed == 1000
 
-    def test_get_task_stats(self):
+    def test_get_task_stats(self) -> None:
         """Test getting task-specific statistics."""
         task_id = "test_task"
         samples = [
@@ -325,12 +325,12 @@ class TestBandwidthMonitor:
         assert stats["peak_speed"] == 2000
         assert stats["sample_count"] == 3
 
-    def test_get_task_stats_nonexistent(self):
+    def test_get_task_stats_nonexistent(self) -> None:
         """Test getting stats for nonexistent task."""
         stats = self.monitor.get_task_stats("nonexistent_task")
         assert stats is None
 
-    def test_register_callbacks(self):
+    def test_register_callbacks(self) -> None:
         """Test callback registration."""
         bandwidth_callback = Mock()
         optimization_callback = Mock()
@@ -341,7 +341,7 @@ class TestBandwidthMonitor:
         assert bandwidth_callback in self.monitor.bandwidth_callbacks
         assert optimization_callback in self.monitor.optimization_callbacks
 
-    def test_trigger_callbacks(self):
+    def test_trigger_callbacks(self) -> None:
         """Test callback triggering."""
         callback = Mock()
         self.monitor.register_bandwidth_callback(callback)
@@ -351,7 +351,7 @@ class TestBandwidthMonitor:
         
         callback.assert_called_once_with(sample)
 
-    def test_trigger_callbacks_with_error(self):
+    def test_trigger_callbacks_with_error(self) -> None:
         """Test callback triggering with error handling."""
         error_callback = Mock(side_effect=Exception("Callback error"))
         good_callback = Mock()
@@ -366,7 +366,7 @@ class TestBandwidthMonitor:
         error_callback.assert_called_once_with(sample)
         good_callback.assert_called_once_with(sample)
 
-    def test_export_data(self):
+    def test_export_data(self) -> None:
         """Test data export functionality."""
         current_time = time.time()
         samples = [
@@ -384,7 +384,7 @@ class TestBandwidthMonitor:
         assert exported[0]["download_speed"] == 1500
         assert exported[1]["download_speed"] == 2000
 
-    def test_reset_statistics(self):
+    def test_reset_statistics(self) -> None:
         """Test statistics reset."""
         # Add some data
         sample = BandwidthSample(time.time(), 1000, 500, 1000, 500, task_id="test")
@@ -396,7 +396,7 @@ class TestBandwidthMonitor:
         assert len(self.monitor.samples) == 0
         assert len(self.monitor.task_bandwidth) == 0
 
-    def test_global_bandwidth_monitor_instance(self):
+    def test_global_bandwidth_monitor_instance(self) -> None:
         """Test global bandwidth monitor instance."""
         assert bandwidth_monitor is not None
         assert isinstance(bandwidth_monitor, BandwidthMonitor)

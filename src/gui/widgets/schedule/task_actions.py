@@ -7,12 +7,12 @@ from qfluentwidgets import ToolButton, FluentIcon as FIF
 class TaskActionButtons(QWidget):
     """任务操作按钮组件"""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self._create_ui()
-        self._connections = []  # 存储信号连接
+        self._connections: list[tuple] = []  # 存储信号连接
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """创建用户界面"""
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -20,7 +20,7 @@ class TaskActionButtons(QWidget):
         self.setLayout(layout)
         self._layout = layout  # Keep reference if needed
 
-    def setup_for_task(self, task):
+    def setup_for_task(self, task) -> None:
         """根据任务状态设置按钮"""
         # 清除当前所有按钮
         self._clear_layout()
@@ -57,7 +57,7 @@ class TaskActionButtons(QWidget):
         self._layout.addWidget(delete_button)
         self.delete_button = delete_button
 
-    def connect_buttons(self, task_id, enable_fn, disable_fn, run_fn, info_fn, delete_fn):
+    def connect_buttons(self, task_id, enable_fn, disable_fn, run_fn, info_fn, delete_fn) -> None:
         """连接按钮信号到提供的函数"""
         self._clear_connections()
 
@@ -83,7 +83,7 @@ class TaskActionButtons(QWidget):
         self.delete_button.clicked.connect(delete_connection[1])
         self._connections.append(delete_connection)
 
-    def _clear_layout(self):
+    def _clear_layout(self) -> None:
         """清除布局中的所有按钮"""
         while self._layout.count():
             item = self._layout.takeAt(0)
@@ -91,7 +91,7 @@ class TaskActionButtons(QWidget):
             if widget:
                 widget.deleteLater()
 
-    def _clear_connections(self):
+    def _clear_connections(self) -> None:
         """清除所有信号连接"""
         for signal, slot in self._connections:
             try:

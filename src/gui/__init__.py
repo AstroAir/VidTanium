@@ -49,7 +49,7 @@ __all__ = [
 ]
 
 
-def initialize_gui_systems(parent_widget, error_handler):
+def initialize_gui_systems(parent_widget, error_handler) -> None:
     """Initialize all GUI systems with proper dependencies"""
     from .utils.error_notification_manager import ErrorNotificationManager
 

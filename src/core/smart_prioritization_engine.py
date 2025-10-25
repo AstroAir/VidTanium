@@ -39,7 +39,7 @@ class PrioritizationWeights:
     bandwidth_efficiency: float = 0.05
     completion_probability: float = 0.05
     
-    def normalize(self):
+    def normalize(self) -> None:
         """Normalize weights to sum to 1.0"""
         total = (self.file_size + self.user_preference + self.system_resources +
                 self.historical_performance + self.time_sensitivity + 
@@ -87,7 +87,7 @@ class PrioritizationResult:
 class SmartPrioritizationEngine:
     """Intelligent task prioritization engine"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.weights = PrioritizationWeights()
         self.weights.normalize()
         
@@ -401,7 +401,7 @@ class SmartPrioritizationEngine:
         actual_duration: float,
         final_size: int,
         metadata: Optional[Dict] = None
-    ):
+    ) -> None:
         """Learn from completed task to improve future prioritization"""
         if not self.learning_enabled:
             return
@@ -448,7 +448,7 @@ class SmartPrioritizationEngine:
         else:
             return "very_large"
     
-    def _update_performance_metrics(self, task_id: str, completion_record: Dict):
+    def _update_performance_metrics(self, task_id: str, completion_record: Dict) -> None:
         """Update performance metrics for the task"""
         if task_id not in self.performance_metrics:
             self.performance_metrics[task_id] = {
@@ -468,7 +468,7 @@ class SmartPrioritizationEngine:
         metrics['average_duration'] = metrics['total_duration'] / metrics['attempts']
         metrics['success_rate'] = metrics['successes'] / metrics['attempts']
     
-    def _adapt_weights_from_feedback(self, completion_record: Dict):
+    def _adapt_weights_from_feedback(self, completion_record: Dict) -> None:
         """Adapt prioritization weights based on completion feedback"""
         # Simple adaptive mechanism - could be more sophisticated
         if completion_record['success']:
@@ -478,22 +478,22 @@ class SmartPrioritizationEngine:
             # Failed completion - slightly decrease weight of factors that predicted success
             pass  # Implementation would analyze which factors led to failure
     
-    def update_system_state(self, system_state: Dict[str, float]):
+    def update_system_state(self, system_state: Dict[str, float]) -> None:
         """Update current system state for prioritization"""
         with self.lock:
             self.current_system_load = system_state
     
-    def set_prioritization_weights(self, weights: PrioritizationWeights):
+    def set_prioritization_weights(self, weights: PrioritizationWeights) -> None:
         """Set custom prioritization weights"""
         with self.lock:
             self.weights = weights
             self.weights.normalize()
     
-    def register_prioritization_callback(self, callback: Callable[[List[PrioritizationResult]], None]):
+    def register_prioritization_callback(self, callback: Callable[[List[PrioritizationResult]], None]) -> None:
         """Register callback for prioritization results"""
         self.prioritization_callbacks.append(callback)
     
-    def _trigger_prioritization_callbacks(self, results: List[PrioritizationResult]):
+    def _trigger_prioritization_callbacks(self, results: List[PrioritizationResult]) -> None:
         """Trigger prioritization callbacks"""
         for callback in self.prioritization_callbacks:
             try:

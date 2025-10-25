@@ -578,8 +578,22 @@
         "source": "来源"
       }
     },
+    "buttons": {
+      "clear": "清空日志",
+      "export": "导出日志",
+      "refresh": "刷新日志"
+    },
     "filters": {
       "title": "高级筛选",
+      "search": "搜索",
+      "search_placeholder": "搜索日志...",
+      "level": "日志级别",
+      "all_levels": "全部级别",
+      "time_range": "时间范围",
+      "all_time": "全部时间",
+      "last_hour": "最近1小时",
+      "last_day": "最近1天",
+      "last_week": "最近1周",
       "time_range": {
         "all": "全部时间",
         "hour": "最近1小时",
@@ -588,7 +602,8 @@
         "week": "最近1周",
         "custom": "自定义时间"
       }
-    }
+    },
+    "auto_scroll": "自动滚动"
   },
   "batch_conversion_dialog": {
     "title": "批量媒体转换",
@@ -919,7 +934,8 @@
     "m3u8_valid": "检测到有效的M3U8播放列表",
     "m3u8_invalid": "无效的M3U8格式 - 不是有效的播放列表文件",
     "no_write_permission": "对所选目录没有写入权限",
-    "insufficient_disk_space": "磁盘空间不足，无法下载"
+    "insufficient_disk_space": "磁盘空间不足，无法下载",
+    "smart_defaults_applied": "基于内容分析应用了智能默认设置"
   },
   "suggestions": {
     "enter_url": "请输入有效的视频URL以继续",
@@ -949,5 +965,31 @@
     "failed": "恢复失败",
     "initializing": "正在初始化恢复...",
     "no_specific_guidance": "此错误类型没有特定指导。"
+  },
+  "accessibility": {
+    "button": "按钮",
+    "text_input": "文本输入",
+    "text_area": "文本区域",
+    "dropdown": "下拉菜单",
+    "checkbox": "复选框",
+    "radio_button": "单选按钮",
+    "slider": "滑块",
+    "progress_bar": "进度条",
+    "label": "标签",
+    "list": "列表",
+    "tree": "树形视图",
+    "tab_container": "选项卡容器",
+    "disabled": "已禁用",
+    "checked": "已选中",
+    "read_only": "只读",
+    "required": "必填",
+    "high_contrast_mode": "高对比度模式",
+    "large_text_mode": "大字体模式",
+    "keyboard_navigation": "键盘导航",
+    "screen_reader_support": "屏幕阅读器支持",
+    "focus_indicators": "焦点指示器",
+    "audio_feedback": "音频反馈",
+    "reduced_motion": "减少动画",
+    "app_ready": "VidTanium应用程序已准备就绪"
   }
 }

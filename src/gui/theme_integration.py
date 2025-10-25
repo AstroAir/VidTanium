@@ -21,7 +21,7 @@ class QFluentWidgetsThemeIntegration(QObject):
     accent_changed = Signal(str)  # Accent color
     qfluent_theme_updated = Signal()
     
-    def __init__(self, main_window: "MainWindow", theme_manager: "ThemeManager"):
+    def __init__(self, main_window: "MainWindow", theme_manager: "ThemeManager") -> None:
         super().__init__()
         self.main_window = main_window
         self.theme_manager = theme_manager
@@ -36,7 +36,7 @@ class QFluentWidgetsThemeIntegration(QObject):
         
         self._setup_qfluent_theming()
     
-    def _setup_qfluent_theming(self):
+    def _setup_qfluent_theming(self) -> None:
         """Setup QFluentWidgets theming integration"""
         try:
             # Set QFluentWidgets theme based on current theme
@@ -59,7 +59,7 @@ class QFluentWidgetsThemeIntegration(QObject):
         except Exception as e:
             logger.warning(f"Could not initialize QFluentWidgets theming: {e}")
     
-    def register_qfluent_component(self, component: QWidget, component_type: str = "qfluent"):
+    def register_qfluent_component(self, component: QWidget, component_type: str = "qfluent") -> None:
         """Register a QFluentWidgets component for theme updates"""
         if component not in self._registered_qfluent_components:
             self._registered_qfluent_components.append(component)
@@ -68,12 +68,12 @@ class QFluentWidgetsThemeIntegration(QObject):
             # QFluentWidgets components automatically inherit theme
             # No manual styling needed in most cases
     
-    def unregister_qfluent_component(self, component: QWidget):
+    def unregister_qfluent_component(self, component: QWidget) -> None:
         """Unregister a QFluentWidgets component"""
         if component in self._registered_qfluent_components:
             self._registered_qfluent_components.remove(component)
     
-    def apply_qfluent_theme(self, theme_name: Optional[str] = None, accent_color: Optional[str] = None):
+    def apply_qfluent_theme(self, theme_name: Optional[str] = None, accent_color: Optional[str] = None) -> None:
         """Apply QFluentWidgets theme globally"""
         try:
             # Update QFluentWidgets theme
@@ -101,7 +101,7 @@ class QFluentWidgetsThemeIntegration(QObject):
         except Exception as e:
             logger.error(f"Error applying QFluentWidgets theme: {e}")
     
-    def _apply_qfluent_updates(self):
+    def _apply_qfluent_updates(self) -> None:
         """Apply pending QFluentWidgets theme updates"""
         try:
             # QFluentWidgets components automatically update with setTheme()
@@ -117,7 +117,7 @@ class QFluentWidgetsThemeIntegration(QObject):
         except Exception as e:
             logger.error(f"Error applying QFluentWidgets updates: {e}")
     
-    def _update_enhanced_components(self):
+    def _update_enhanced_components(self) -> None:
         """Update enhanced components that have custom theming"""
         try:
             # Update main window enhanced components
@@ -137,7 +137,7 @@ class QFluentWidgetsThemeIntegration(QObject):
         except Exception as e:
             logger.error(f"Error updating enhanced components: {e}")
     
-    def on_system_theme_changed(self):
+    def on_system_theme_changed(self) -> None:
         """Handle system theme changes"""
         try:
             # Detect system theme and apply accordingly
@@ -159,7 +159,7 @@ class QFluentWidgetsThemeIntegration(QObject):
         """Get count of registered QFluentWidgets components"""
         return len(self._registered_qfluent_components)
     
-    def cleanup(self):
+    def cleanup(self) -> None:
         """Clean up resources"""
         try:
             self._update_timer.stop()
@@ -171,17 +171,17 @@ class QFluentWidgetsThemeIntegration(QObject):
 class QFluentWidgetsComponentMixin:
     """Mixin for components using QFluentWidgets that want enhanced theming"""
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._qfluent_integration_registered = False
     
-    def register_for_qfluent_theming(self, integration: QFluentWidgetsThemeIntegration):
+    def register_for_qfluent_theming(self, integration: QFluentWidgetsThemeIntegration) -> None:
         """Register for QFluentWidgets theme updates"""
         if not self._qfluent_integration_registered:
             integration.register_qfluent_component(cast(QWidget, self), self.__class__.__name__)
             self._qfluent_integration_registered = True
     
-    def update_qfluent_theme(self, theme_manager: "ThemeManager"):
+    def update_qfluent_theme(self, theme_manager: "ThemeManager") -> None:
         """Override for custom theming on top of QFluentWidgets"""
         # Most QFluentWidgets components don't need custom theming
         # Override only when you need additional styling
@@ -189,7 +189,7 @@ class QFluentWidgetsComponentMixin:
 
 
 # QFluentWidgets helpers
-def apply_qfluent_theme_to_app(theme_name: str = "auto", accent_color: Optional[str] = None):
+def apply_qfluent_theme_to_app(theme_name: str = "auto", accent_color: Optional[str] = None) -> None:
     """Apply QFluentWidgets theme to entire application"""
     try:
         if theme_name == "auto":
@@ -210,7 +210,7 @@ def apply_qfluent_theme_to_app(theme_name: str = "auto", accent_color: Optional[
         logger.error(f"Error applying QFluentWidgets theme: {e}")
 
 
-def create_qfluent_component(component_class, *args, **kwargs):
+def create_qfluent_component(component_class, *args, **kwargs) -> None:
     """Factory for creating QFluentWidgets components with automatic theming"""
     try:
         component = component_class(*args, **kwargs)

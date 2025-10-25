@@ -11,17 +11,16 @@ from qfluentwidgets import (
 )
 
 from ...utils.i18n import tr
-from ...utils.theme import VidTaniumTheme
 from ...utils.responsive import ResponsiveWidget, ResponsiveManager
-from ...theme_manager import EnhancedThemeManager
+from ...theme_manager import ThemeManager
 from loguru import logger
 
 if TYPE_CHECKING:
     from ...main_window import MainWindow
 
 
-class EnhancedDashboardHeroSection(ResponsiveWidget):
-    """Enhanced hero section component with responsive design and modern theming
+class DashboardHeroSection(ResponsiveWidget):
+    """Hero section component with responsive design and modern theming
     
     Features:
     - Responsive design that adapts to different screen sizes
@@ -31,7 +30,7 @@ class EnhancedDashboardHeroSection(ResponsiveWidget):
     - Performance optimizations and smooth interactions
     """
 
-    def __init__(self, main_window: "MainWindow", theme_manager=None, parent=None):
+    def __init__(self, main_window: "MainWindow", theme_manager=None, parent=None) -> None:
         super().__init__(parent)
         self.main_window = main_window
         self.theme_manager = theme_manager
@@ -43,7 +42,7 @@ class EnhancedDashboardHeroSection(ResponsiveWidget):
         self._connect_signals()
         self._apply_enhanced_theming()
 
-    def _setup_enhanced_ui(self):
+    def _setup_enhanced_ui(self) -> None:
         """Setup enhanced responsive hero section UI"""
         current_bp = self.responsive_manager.get_current_breakpoint()
         
@@ -154,13 +153,13 @@ class EnhancedDashboardHeroSection(ResponsiveWidget):
         # Responsive button sizing
         if current_bp.value in ['xs', 'sm']:
             button_height = 36
-            font_size = VidTaniumTheme.FONT_SIZE_CAPTION
+            font_size = "12px"
         elif current_bp.value == 'md':
             button_height = 40
-            font_size = VidTaniumTheme.FONT_SIZE_BODY
+            font_size = "13px"
         else:
             button_height = 44
-            font_size = VidTaniumTheme.FONT_SIZE_BODY
+            font_size = "13px"
 
         # New task button with responsive sizing
         self.new_task_btn = PrimaryPushButton(
@@ -221,7 +220,7 @@ class EnhancedDashboardHeroSection(ResponsiveWidget):
 
         return icon_container
 
-    def _connect_signals(self):
+    def _connect_signals(self) -> None:
         """Connect button signals"""
         if self.new_task_btn:
             self.new_task_btn.clicked.connect(self._handle_new_task_clicked)
@@ -229,7 +228,7 @@ class EnhancedDashboardHeroSection(ResponsiveWidget):
             self.batch_btn.clicked.connect(self._handle_batch_import_clicked)
 
     @Slot()
-    def _handle_new_task_clicked(self):
+    def _handle_new_task_clicked(self) -> None:
         """Handle new task button click"""
         try:
             logger.info("New task button clicked")
@@ -254,7 +253,7 @@ class EnhancedDashboardHeroSection(ResponsiveWidget):
                     True) if self.new_task_btn else None)
 
     @Slot()
-    def _handle_batch_import_clicked(self):
+    def _handle_batch_import_clicked(self) -> None:
         """Handle batch import button click"""
         try:
             logger.info("Batch import button clicked")
@@ -278,7 +277,7 @@ class EnhancedDashboardHeroSection(ResponsiveWidget):
                 QTimer.singleShot(1000, lambda: self.batch_btn.setEnabled(
                     True) if self.batch_btn else None)
 
-    def _apply_enhanced_theming(self):
+    def _apply_enhanced_theming(self) -> None:
         """Apply enhanced theming using QFluentWidgets theming system"""
         # Use QFluentWidgets built-in theming instead of custom styles
         if isDarkTheme():
@@ -302,14 +301,39 @@ class EnhancedDashboardHeroSection(ResponsiveWidget):
                 }}
             """)
 
-    def on_breakpoint_changed(self, breakpoint: str):
+    def on_breakpoint_changed(self, breakpoint: str) -> None:
         """Handle responsive breakpoint changes"""
         logger.debug(f"Hero section adapting to breakpoint: {breakpoint}")
+        # Clear existing layout before recreating
+        self._clear_layout()
         # Recreate UI with new breakpoint
         self._setup_enhanced_ui()
         self._apply_enhanced_theming()
 
-    def update_theme(self, theme_manager: Optional[EnhancedThemeManager] = None):
+    def _clear_layout(self) -> None:
+        """Clear existing layout to prevent QLayout warnings"""
+        current_layout = self.layout()
+        if current_layout:
+            # Remove all widgets from layout
+            while current_layout.count():
+                item = current_layout.takeAt(0)
+                if item.widget():
+                    item.widget().setParent(None)
+                elif item.layout():
+                    self._clear_sublayout(item.layout())
+            # Delete the layout
+            current_layout.deleteLater()
+
+    def _clear_sublayout(self, layout) -> None:
+        """Recursively clear sublayout"""
+        while layout.count():
+            item = layout.takeAt(0)
+            if item.widget():
+                item.widget().setParent(None)
+            elif item.layout():
+                self._clear_sublayout(item.layout())
+
+    def update_theme(self, theme_manager: Optional["ThemeManager"] = None) -> None:
         """Update theme styling"""
         if theme_manager:
             self.theme_manager = theme_manager
@@ -317,4 +341,4 @@ class EnhancedDashboardHeroSection(ResponsiveWidget):
 
 
 # Backward compatibility alias
-DashboardHeroSection = EnhancedDashboardHeroSection
+EnhancedDashboardHeroSection = DashboardHeroSection

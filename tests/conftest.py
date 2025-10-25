@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 
 @pytest.fixture(scope="session")
-def temp_config_dir():
+def temp_config_dir() -> None:
     """Create a temporary configuration directory for tests."""
     temp_dir = tempfile.mkdtemp(prefix="vidtanium_test_")
     yield temp_dir
@@ -22,10 +22,10 @@ def temp_config_dir():
 
 
 @pytest.fixture
-def mock_settings():
+def mock_settings() -> None:
     """Mock settings object for testing."""
     class MockSettings:
-        def __init__(self):
+        def __init__(self) -> None:
             self.data = {
                 "general": {
                     "output_directory": "/downloads",
@@ -51,25 +51,25 @@ def mock_settings():
                 }
             }
         
-        def get(self, section, key, default=None):
+        def get(self, section, key, default=None) -> None:
             return self.data.get(section, {}).get(key, default)
         
-        def set(self, section, key, value):
+        def set(self, section, key, value) -> None:
             if section not in self.data:
                 self.data[section] = {}
             self.data[section][key] = value
         
-        def save_settings(self):
+        def save_settings(self) -> None:
             return True
     
     return MockSettings()
 
 
 @pytest.fixture
-def mock_download_manager():
+def mock_download_manager() -> None:
     """Mock download manager for testing."""
     class MockDownloadManager:
-        def __init__(self):
+        def __init__(self) -> None:
             self.tasks = {}
             self.started = False
             self.on_task_progress = None
@@ -77,40 +77,40 @@ def mock_download_manager():
             self.on_task_completed = None
             self.on_task_failed = None
         
-        def start(self):
+        def start(self) -> None:
             self.started = True
         
-        def stop(self):
+        def stop(self) -> None:
             self.started = False
         
-        def add_task(self, task):
+        def add_task(self, task) -> None:
             task_id = f"task_{len(self.tasks)}"
             self.tasks[task_id] = task
             return task_id
         
-        def remove_task(self, task_id):
+        def remove_task(self, task_id) -> None:
             if task_id in self.tasks:
                 del self.tasks[task_id]
         
-        def get_task(self, task_id):
+        def get_task(self, task_id) -> None:
             return self.tasks.get(task_id)
         
-        def get_all_tasks(self):
+        def get_all_tasks(self) -> None:
             return self.tasks.copy()
         
-        def start_task(self, task_id):
+        def start_task(self, task_id) -> None:
             if task_id in self.tasks:
                 self.tasks[task_id]['status'] = 'running'
         
-        def pause_task(self, task_id):
+        def pause_task(self, task_id) -> None:
             if task_id in self.tasks:
                 self.tasks[task_id]['status'] = 'paused'
         
-        def resume_task(self, task_id):
+        def resume_task(self, task_id) -> None:
             if task_id in self.tasks:
                 self.tasks[task_id]['status'] = 'running'
         
-        def cancel_task(self, task_id):
+        def cancel_task(self, task_id) -> None:
             if task_id in self.tasks:
                 self.tasks[task_id]['status'] = 'cancelled'
     
@@ -118,10 +118,10 @@ def mock_download_manager():
 
 
 @pytest.fixture
-def mock_theme_manager():
+def mock_theme_manager() -> None:
     """Mock theme manager for testing."""
     class MockThemeManager:
-        def __init__(self):
+        def __init__(self) -> None:
             self.current_theme = "system"
             self.current_accent = "blue"
             self.animations_enabled = True
@@ -136,81 +136,81 @@ def mock_theme_manager():
                 "teal": "#14B8A6"
             }
         
-        def set_theme(self, theme, animate=True):
+        def set_theme(self, theme, animate=True) -> None:
             self.current_theme = theme
         
-        def get_current_theme(self):
+        def get_current_theme(self) -> None:
             return self.current_theme
         
-        def set_accent_color(self, color):
+        def set_accent_color(self, color) -> None:
             self.current_accent = color
         
-        def get_current_accent(self):
+        def get_current_accent(self) -> None:
             return self.current_accent
         
-        def is_dark_theme(self):
+        def is_dark_theme(self) -> None:
             return self.current_theme == "dark"
         
-        def set_animations_enabled(self, enabled):
+        def set_animations_enabled(self, enabled) -> None:
             self.animations_enabled = enabled
     
     return MockThemeManager()
 
 
 @pytest.fixture
-def mock_main_window():
+def mock_main_window() -> None:
     """Mock main window for testing."""
     class MockMainWindow:
-        def __init__(self):
+        def __init__(self) -> None:
             self.visible = False
             self.download_manager = None
             self.settings = None
             self.theme_manager = None
         
-        def show(self):
+        def show(self) -> None:
             self.visible = True
         
-        def hide(self):
+        def hide(self) -> None:
             self.visible = False
         
-        def isVisible(self):
+        def isVisible(self) -> None:
             return self.visible
         
-        def import_from_url(self):
+        def import_from_url(self) -> None:
             pass
     
     return MockMainWindow()
 
 
 @pytest.fixture
-def mock_task_scheduler():
+def mock_task_scheduler() -> None:
     """Mock task scheduler for testing."""
     class MockTaskScheduler:
-        def __init__(self, config_dir=None):
+        def __init__(self, config_dir=None) -> None:
             self.config_dir = config_dir
             self.started = False
             self.scheduled_tasks = []
         
-        def start(self):
+        def start(self) -> None:
             self.started = True
         
-        def stop(self):
+        def stop(self) -> None:
             self.started = False
         
-        def add_scheduled_task(self, task):
+        def add_scheduled_task(self, task) -> None:
             self.scheduled_tasks.append(task)
         
-        def remove_scheduled_task(self, task_id):
+        def remove_scheduled_task(self, task_id) -> None:
             self.scheduled_tasks = [t for t in self.scheduled_tasks if t.get('id') != task_id]
         
-        def get_scheduled_tasks(self):
+        def get_scheduled_tasks(self) -> None:
             return self.scheduled_tasks.copy()
     
     return MockTaskScheduler()
 
 
 @pytest.fixture(autouse=True)
-def mock_pyside6():
+def mock_pyside6() -> None:
     """Automatically mock PySide6 for all tests."""
     # Create more robust mocks that handle attribute access properly
     pyside6_mock = Mock()
@@ -241,7 +241,7 @@ def mock_pyside6():
 
 
 @pytest.fixture(autouse=True)
-def mock_loguru():
+def mock_loguru() -> None:
     """Automatically mock loguru for all tests."""
     with patch.dict('sys.modules', {
         'loguru': Mock(),
@@ -250,7 +250,7 @@ def mock_loguru():
 
 
 @pytest.fixture
-def sample_task_data():
+def sample_task_data() -> None:
     """Sample task data for testing."""
     return {
         "name": "Test Video Download",
@@ -265,7 +265,7 @@ def sample_task_data():
 
 
 @pytest.fixture
-def sample_progress_data():
+def sample_progress_data() -> None:
     """Sample progress data for testing."""
     return {
         "completed": 50,
@@ -277,7 +277,7 @@ def sample_progress_data():
 
 
 @pytest.fixture
-def sample_settings_data():
+def sample_settings_data() -> None:
     """Sample settings data for testing."""
     return {
         "general": {
@@ -310,7 +310,7 @@ def sample_settings_data():
 
 
 # Test markers
-def pytest_configure(config):
+def pytest_configure(config) -> None:
     """Configure pytest markers."""
     config.addinivalue_line(
         "markers", "unit: mark test as a unit test"
@@ -333,7 +333,7 @@ def pytest_configure(config):
 
 
 # Test collection customization
-def pytest_collection_modifyitems(config, items):
+def pytest_collection_modifyitems(config, items) -> None:
     """Modify test collection to add markers based on test location."""
     for item in items:
         # Add markers based on test file location
@@ -357,7 +357,7 @@ def pytest_collection_modifyitems(config, items):
 
 # Cleanup after tests
 @pytest.fixture(autouse=True)
-def cleanup_after_test():
+def cleanup_after_test() -> None:
     """Cleanup after each test."""
     yield
     # Reset any global state if needed

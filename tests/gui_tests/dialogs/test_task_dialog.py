@@ -6,7 +6,7 @@ from typing import Dict, Any, Optional
 
 # Mock PySide6 components for testing
 class MockQDialog:
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         self.parent_obj = parent
         self.window_title = ""
         self.window_icon = None
@@ -16,157 +16,157 @@ class MockQDialog:
         self.context_menu_policy = None
         self.accepted = False
         
-    def setWindowTitle(self, title):
+    def setWindowTitle(self, title) -> None:
         self.window_title = title
         
-    def setWindowIcon(self, icon):
+    def setWindowIcon(self, icon) -> None:
         self.window_icon = icon
         
-    def setMinimumSize(self, width, height):
+    def setMinimumSize(self, width, height) -> None:
         self.minimum_size = (width, height)
         
-    def resize(self, width, height):
+    def resize(self, width, height) -> None:
         self.size_value = (width, height)
         
-    def setMaximumHeight(self, height):
+    def setMaximumHeight(self, height) -> None:
         self.maximum_height = height
         
-    def setContextMenuPolicy(self, policy):
+    def setContextMenuPolicy(self, policy) -> None:
         self.context_menu_policy = policy
         
-    def accept(self):
+    def accept(self) -> None:
         self.accepted = True
         
-    def showEvent(self, event):
+    def showEvent(self, event) -> None:
         pass
         
-    def closeEvent(self, event):
+    def closeEvent(self, event) -> None:
         pass
 
 class MockQWidget:
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
 class MockQVBoxLayout:
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         self.parent_obj = parent
         self.widgets = []
         self.margins = (0, 0, 0, 0)
         self.spacing = 0
         
-    def addWidget(self, widget, stretch=0):
+    def addWidget(self, widget, stretch=0) -> None:
         self.widgets.append(widget)
         
-    def setContentsMargins(self, left, top, right, bottom):
+    def setContentsMargins(self, left, top, right, bottom) -> None:
         self.margins = (left, top, right, bottom)
         
-    def setSpacing(self, spacing):
+    def setSpacing(self, spacing) -> None:
         self.spacing = spacing
 
 class MockQHBoxLayout:
-    def __init__(self):
+    def __init__(self) -> None:
         self.widgets = []
         self.spacing = 0
         
-    def addWidget(self, widget):
+    def addWidget(self, widget) -> None:
         self.widgets.append(widget)
         
-    def setSpacing(self, spacing):
+    def setSpacing(self, spacing) -> None:
         self.spacing = spacing
 
 class MockQTimer:
-    def __init__(self):
+    def __init__(self) -> None:
         self.timeout = Mock()
         self.interval = 0
         self.single_shot = False
         self.running = False
         
-    def setSingleShot(self, single_shot):
+    def setSingleShot(self, single_shot) -> None:
         self.single_shot = single_shot
         
-    def start(self, interval=None):
+    def start(self, interval=None) -> None:
         if interval:
             self.interval = interval
         self.running = True
         
-    def stop(self):
+    def stop(self) -> None:
         self.running = False
         
     @staticmethod
-    def singleShot(interval, callback):
+    def singleShot(interval, callback) -> None:
         # Immediately call the callback for testing
         callback()
 
 class MockLineEdit:
-    def __init__(self):
+    def __init__(self) -> None:
         self.text_value = ""
         self.textChanged = Mock()
         
-    def setText(self, text):
+    def setText(self, text) -> None:
         self.text_value = text
         
-    def text(self):
+    def text(self) -> None:
         return self.text_value
         
-    def setPlaceholderText(self, text):
+    def setPlaceholderText(self, text) -> None:
         pass
 
 class MockSpinBox:
-    def __init__(self):
+    def __init__(self) -> None:
         self.value_int = 0
         self.valueChanged = Mock()
         
-    def setValue(self, value):
+    def setValue(self, value) -> None:
         self.value_int = value
         
-    def value(self):
+    def value(self) -> None:
         return self.value_int
         
-    def setMinimum(self, minimum):
+    def setMinimum(self, minimum) -> None:
         pass
         
-    def setMaximum(self, maximum):
+    def setMaximum(self, maximum) -> None:
         pass
 
 class MockComboBox:
-    def __init__(self):
+    def __init__(self) -> None:
         self.items = []
         self.current_index = 0
         self.currentTextChanged = Mock()
         
-    def addItem(self, text, data=None):
+    def addItem(self, text, data=None) -> None:
         self.items.append((text, data))
         
-    def currentData(self):
+    def currentData(self) -> None:
         if self.current_index < len(self.items):
             return self.items[self.current_index][1]
         return None
         
-    def setCurrentIndex(self, index):
+    def setCurrentIndex(self, index) -> None:
         self.current_index = index
 
 class MockCheckBox:
-    def __init__(self):
+    def __init__(self) -> None:
         self.checked = False
         self.toggled = Mock()
         
-    def setChecked(self, checked):
+    def setChecked(self, checked) -> None:
         self.checked = checked
         
-    def isChecked(self):
+    def isChecked(self) -> None:
         return self.checked
 
 class MockPushButton:
-    def __init__(self, text=""):
+    def __init__(self, text="") -> None:
         self.text_value = text
         self.clicked = Mock()
         self.enabled = True
         
-    def setEnabled(self, enabled):
+    def setEnabled(self, enabled) -> None:
         self.enabled = enabled
 
 class MockSettings:
-    def __init__(self):
+    def __init__(self) -> None:
         self.data = {
             "general": {
                 "output_directory": "/downloads"
@@ -176,50 +176,50 @@ class MockSettings:
             }
         }
         
-    def get(self, section, key, default=None):
+    def get(self, section, key, default=None) -> None:
         return self.data.get(section, {}).get(key, default)
 
 class MockResponsiveManager:
-    def __init__(self):
+    def __init__(self) -> None:
         self.current_breakpoint = Mock()
         self.current_breakpoint.value = "lg"
         
     @staticmethod
-    def instance():
+    def instance() -> None:
         return MockResponsiveManager()
         
-    def get_current_breakpoint(self):
+    def get_current_breakpoint(self) -> None:
         return self.current_breakpoint
 
 class MockHistoryManager:
-    def __init__(self):
+    def __init__(self) -> None:
         self.urls = []
         self.output_paths = []
         
-    def add_url(self, url):
+    def add_url(self, url) -> None:
         self.urls.append(url)
         
-    def add_output_path(self, path):
+    def add_output_path(self, path) -> None:
         self.output_paths.append(path)
         
-    def get_recent_urls(self):
+    def get_recent_urls(self) -> None:
         return self.urls[-10:]
         
-    def get_recent_output_paths(self):
+    def get_recent_output_paths(self) -> None:
         return self.output_paths[-10:]
 
 class MockURLValidator:
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         self.parent_obj = parent
         
-    def validate(self, text, pos):
+    def validate(self, text, pos) -> None:
         from PySide6.QtGui import QValidator
         if text.startswith("http"):
             return (QValidator.State.Acceptable, text, pos)
         return (QValidator.State.Invalid, text, pos)
 
 class MockURLAnalyzer:
-    def analyze_url(self, url):
+    def analyze_url(self, url) -> None:
         return {
             'is_valid': url.startswith("http"),
             'type': 'm3u8' if 'm3u8' in url else 'unknown',
@@ -283,15 +283,15 @@ from src.gui.dialogs.task_dialog import TaskDialog, URLValidator, URLAnalyzer
 class TestURLValidator:
     """Test suite for URLValidator class."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.validator = URLValidator()
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test URLValidator initialization."""
         assert self.validator is not None
 
-    def test_valid_url_validation(self):
+    def test_valid_url_validation(self) -> None:
         """Test validation of valid URLs."""
         from PySide6.QtGui import QValidator
         
@@ -305,7 +305,7 @@ class TestURLValidator:
             state, text, pos = self.validator.validate(url, 0)
             assert state == QValidator.State.Acceptable
 
-    def test_invalid_url_validation(self):
+    def test_invalid_url_validation(self) -> None:
         """Test validation of invalid URLs."""
         from PySide6.QtGui import QValidator
         
@@ -324,15 +324,15 @@ class TestURLValidator:
 class TestURLAnalyzer:
     """Test suite for URLAnalyzer class."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.analyzer = URLAnalyzer()
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test URLAnalyzer initialization."""
         assert self.analyzer is not None
 
-    def test_analyze_valid_m3u8_url(self):
+    def test_analyze_valid_m3u8_url(self) -> None:
         """Test analyzing valid M3U8 URL."""
         url = "http://example.com/stream.m3u8"
         result = self.analyzer.analyze_url(url)
@@ -342,14 +342,14 @@ class TestURLAnalyzer:
         assert isinstance(result['properties'], dict)
         assert isinstance(result['suggestions'], list)
 
-    def test_analyze_invalid_url(self):
+    def test_analyze_invalid_url(self) -> None:
         """Test analyzing invalid URL."""
         url = "not_a_url"
         result = self.analyzer.analyze_url(url)
         
         assert result['is_valid'] is False
 
-    def test_analyze_empty_url(self):
+    def test_analyze_empty_url(self) -> None:
         """Test analyzing empty URL."""
         result = self.analyzer.analyze_url("")
         
@@ -359,7 +359,7 @@ class TestURLAnalyzer:
 class TestTaskDialog:
     """Test suite for TaskDialog class."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.mock_settings = MockSettings()
         self.mock_theme_manager = Mock()
@@ -368,7 +368,7 @@ class TestTaskDialog:
     @patch('src.gui.dialogs.task_dialog.HistoryManager')
     @patch('src.gui.dialogs.task_dialog.URLValidator')
     @patch('src.gui.dialogs.task_dialog.URLAnalyzer')
-    def test_initialization(self, mock_analyzer, mock_validator, mock_history, mock_responsive):
+    def test_initialization(self, mock_analyzer, mock_validator, mock_history, mock_responsive) -> None:
         """Test TaskDialog initialization."""
         # Mock responsive manager
         mock_responsive_instance = MockResponsiveManager()
@@ -386,7 +386,7 @@ class TestTaskDialog:
     @patch('src.gui.dialogs.task_dialog.HistoryManager')
     @patch('src.gui.dialogs.task_dialog.URLValidator')
     @patch('src.gui.dialogs.task_dialog.URLAnalyzer')
-    def test_responsive_window_setup_small_screen(self, mock_analyzer, mock_validator, mock_history, mock_responsive):
+    def test_responsive_window_setup_small_screen(self, mock_analyzer, mock_validator, mock_history, mock_responsive) -> None:
         """Test responsive window setup for small screens."""
         # Mock responsive manager for small screen
         mock_responsive_instance = MockResponsiveManager()
@@ -402,7 +402,7 @@ class TestTaskDialog:
     @patch('src.gui.dialogs.task_dialog.HistoryManager')
     @patch('src.gui.dialogs.task_dialog.URLValidator')
     @patch('src.gui.dialogs.task_dialog.URLAnalyzer')
-    def test_responsive_window_setup_large_screen(self, mock_analyzer, mock_validator, mock_history, mock_responsive):
+    def test_responsive_window_setup_large_screen(self, mock_analyzer, mock_validator, mock_history, mock_responsive) -> None:
         """Test responsive window setup for large screens."""
         # Mock responsive manager for large screen
         mock_responsive_instance = MockResponsiveManager()
@@ -418,7 +418,7 @@ class TestTaskDialog:
     @patch('src.gui.dialogs.task_dialog.HistoryManager')
     @patch('src.gui.dialogs.task_dialog.URLValidator')
     @patch('src.gui.dialogs.task_dialog.URLAnalyzer')
-    def test_get_task_data(self, mock_analyzer, mock_validator, mock_history, mock_responsive):
+    def test_get_task_data(self, mock_analyzer, mock_validator, mock_history, mock_responsive) -> None:
         """Test getting task data from dialog."""
         # Mock responsive manager
         mock_responsive_instance = MockResponsiveManager()
@@ -460,7 +460,7 @@ class TestTaskDialog:
     @patch('src.gui.dialogs.task_dialog.HistoryManager')
     @patch('src.gui.dialogs.task_dialog.URLValidator')
     @patch('src.gui.dialogs.task_dialog.URLAnalyzer')
-    def test_form_validation_valid(self, mock_analyzer, mock_validator, mock_history, mock_responsive):
+    def test_form_validation_valid(self, mock_analyzer, mock_validator, mock_history, mock_responsive) -> None:
         """Test form validation with valid data."""
         # Mock responsive manager
         mock_responsive_instance = MockResponsiveManager()
@@ -486,7 +486,7 @@ class TestTaskDialog:
     @patch('src.gui.dialogs.task_dialog.HistoryManager')
     @patch('src.gui.dialogs.task_dialog.URLValidator')
     @patch('src.gui.dialogs.task_dialog.URLAnalyzer')
-    def test_form_validation_invalid(self, mock_analyzer, mock_validator, mock_history, mock_responsive):
+    def test_form_validation_invalid(self, mock_analyzer, mock_validator, mock_history, mock_responsive) -> None:
         """Test form validation with invalid data."""
         # Mock responsive manager
         mock_responsive_instance = MockResponsiveManager()
@@ -512,7 +512,7 @@ class TestTaskDialog:
     @patch('src.gui.dialogs.task_dialog.HistoryManager')
     @patch('src.gui.dialogs.task_dialog.URLValidator')
     @patch('src.gui.dialogs.task_dialog.URLAnalyzer')
-    def test_auto_save_functionality(self, mock_analyzer, mock_validator, mock_history, mock_responsive):
+    def test_auto_save_functionality(self, mock_analyzer, mock_validator, mock_history, mock_responsive) -> None:
         """Test auto-save functionality."""
         # Mock responsive manager
         mock_responsive_instance = MockResponsiveManager()
@@ -530,7 +530,7 @@ class TestTaskDialog:
     @patch('src.gui.dialogs.task_dialog.HistoryManager')
     @patch('src.gui.dialogs.task_dialog.URLValidator')
     @patch('src.gui.dialogs.task_dialog.URLAnalyzer')
-    def test_performance_metrics_tracking(self, mock_analyzer, mock_validator, mock_history, mock_responsive):
+    def test_performance_metrics_tracking(self, mock_analyzer, mock_validator, mock_history, mock_responsive) -> None:
         """Test performance metrics tracking."""
         # Mock responsive manager
         mock_responsive_instance = MockResponsiveManager()

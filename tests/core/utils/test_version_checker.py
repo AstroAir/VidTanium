@@ -15,16 +15,16 @@ class TestVersionChecker:
 
     checker: VersionChecker
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.checker = VersionChecker()
 
-    def teardown_method(self):
+    def teardown_method(self) -> None:
         """Tear down test fixtures."""
         pass
 
     @patch('platform.system')
-    def test_get_platform(self, mock_system: Mock):
+    def test_get_platform(self, mock_system: Mock) -> None:
         """Test platform detection."""
         # Test Windows detection
         mock_system.return_value = 'Windows'
@@ -46,7 +46,7 @@ class TestVersionChecker:
     @patch('src.core.utils.version_checker.VersionChecker._check_software_windows')
     @patch('src.core.utils.version_checker.VersionChecker._check_software_macos')
     @patch('src.core.utils.version_checker.VersionChecker._check_software_linux')
-    def test_check_software_routing(self, mock_linux: Mock, mock_macos: Mock, mock_windows: Mock, mock_platform: Mock):
+    def test_check_software_routing(self, mock_linux: Mock, mock_macos: Mock, mock_windows: Mock, mock_platform: Mock) -> None:
         """Test proper routing by platform."""
         # Test Windows route
         mock_platform.return_value = Platform.WINDOWS
@@ -100,7 +100,7 @@ class TestVersionChecker:
         mock_macos.assert_not_called()
         mock_linux.assert_not_called()
 
-    def test_parse_version_output(self):
+    def test_parse_version_output(self) -> None:
         """Test version parsing from command output."""
         # Test version pattern 'version X.Y.Z'
         assert getattr(self.checker, "_parse_version_output")(
@@ -129,7 +129,7 @@ class TestVersionChecker:
     @patch('winreg.EnumKey')
     @patch('winreg.QueryInfoKey')
     def test_check_software_windows(self, mock_query_info: Mock, mock_enum_key: Mock, mock_query_value: Mock,
-                                    _mock_open_key: Mock, mock_run: Mock, mock_which: Mock):
+                                    _mock_open_key: Mock, mock_run: Mock, mock_which: Mock) -> None:
         """Test Windows software detection."""
         # Test successful detection in PATH
         mock_which.return_value = r"C:\Program Files\TestApp\testapp.exe"
@@ -152,7 +152,7 @@ class TestVersionChecker:
         mock_which.return_value = None
 
         # Mock registry operations
-        mock_query_info.return_value = (1, 0, 0)  # type: ignore
+        mock_query_info.return_value = (1, 0, 0)  # 
         mock_enum_key.return_value = "TestApp"
 
         # Setup QueryValueEx to return appropriate values for different keys
@@ -186,7 +186,7 @@ class TestVersionChecker:
     @patch('shutil.which')
     @patch('subprocess.run')
     @patch('os.path.exists')
-    def test_check_software_macos(self, mock_exists: Mock, mock_run: Mock, mock_which: Mock):
+    def test_check_software_macos(self, mock_exists: Mock, mock_run: Mock, mock_which: Mock) -> None:
         """Test macOS software detection."""
         # Test successful detection in PATH
         mock_which.return_value = "/usr/local/bin/testapp"
@@ -227,7 +227,7 @@ class TestVersionChecker:
         mock_which.reset_mock()
         mock_run.reset_mock()
         mock_which.return_value = None
-        mock_which.side_effect = None  # type: ignore
+        mock_which.side_effect = None  # 
 
         # Test Applications directory detection
         mock_exists.return_value = True
@@ -254,7 +254,7 @@ class TestVersionChecker:
     @pytest.mark.skipif(platform.system() != 'Linux', reason="Linux-only test")
     @patch('shutil.which')
     @patch('subprocess.run')
-    def test_check_software_linux(self, mock_run: Mock, mock_which: Mock):
+    def test_check_software_linux(self, mock_run: Mock, mock_which: Mock) -> None:
         """Test Linux software detection."""
         # Test successful detection in PATH
         mock_which.return_value = "/usr/bin/testapp"
@@ -333,9 +333,9 @@ class TestVersionChecker:
 
         # Test when software is not found
         mock_which.return_value = None
-        mock_which.side_effect = None  # type: ignore
+        mock_which.side_effect = None  # 
         mock_run.return_value = Mock(returncode=1)
-        mock_run.side_effect = None  # type: ignore
+        mock_run.side_effect = None  # 
 
         result = getattr(self.checker, "_check_software_linux")("nonexistent")
         assert not result.installed

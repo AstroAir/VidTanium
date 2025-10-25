@@ -30,7 +30,7 @@ class ScheduleManager(QWidget):
     # 信号定义
     task_action_requested = Signal(str, str)  # task_id, action
 
-    def __init__(self, scheduler, parent=None):
+    def __init__(self, scheduler, parent=None) -> None:
         super().__init__(parent)
 
         self.scheduler = scheduler
@@ -42,7 +42,7 @@ class ScheduleManager(QWidget):
         self._populate_tasks()
         self._setup_auto_refresh()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """创建界面"""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -117,7 +117,7 @@ class ScheduleManager(QWidget):
 
         layout.addWidget(self.splitter)
 
-    def _connect_signals(self):
+    def _connect_signals(self) -> None:
         """连接信号与槽"""
         # 自动刷新开关
         self.auto_refresh.toggled.connect(self._toggle_auto_refresh)
@@ -156,14 +156,14 @@ class ScheduleManager(QWidget):
         # 初始隐藏详情面板
         self.task_details.setVisible(False)
 
-    def _setup_auto_refresh(self):
+    def _setup_auto_refresh(self) -> None:
         """设置自动刷新"""
         self.refresh_timer = QTimer(self)
         self.refresh_timer.timeout.connect(self._auto_refresh)
         self.refresh_timer.start(30 * 1000)  # 30秒刷新一次
         self._update_refresh_countdown()
 
-    def _update_refresh_countdown(self):
+    def _update_refresh_countdown(self) -> None:
         """更新刷新倒计时"""
         if self.refresh_timer and self.refresh_timer.isActive():
             seconds = self.refresh_timer.remainingTime() // 1000
@@ -174,7 +174,7 @@ class ScheduleManager(QWidget):
         else:
             self.next_update_label.setText("自动刷新已关闭")
 
-    def _toggle_auto_refresh(self, enabled):
+    def _toggle_auto_refresh(self, enabled) -> None:
         """切换自动刷新"""
         if enabled and self.refresh_timer:
             self.refresh_timer.start(30 * 1000)
@@ -183,18 +183,18 @@ class ScheduleManager(QWidget):
             self.refresh_timer.stop()
             self.next_update_label.setText("自动刷新已关闭")
 
-    def _auto_refresh(self):
+    def _auto_refresh(self) -> None:
         """自动刷新"""
         self._populate_tasks()
 
-    def _on_filter_changed(self, index):
+    def _on_filter_changed(self, index) -> None:
         """处理过滤器变化"""
         filters = ["all", "enabled", "disabled", "one_time", "recurring"]
         if index >= 0 and index < len(filters):
             self.current_filter = filters[index]
             self._filter_tasks()
 
-    def _filter_tasks(self):
+    def _filter_tasks(self) -> None:
         """过滤任务"""
         search_text = self.search_input.text()
         self.task_table.filter_tasks(search_text, self.current_filter)
@@ -204,7 +204,7 @@ class ScheduleManager(QWidget):
         total_rows = self.task_table.get_total_rows_count()
         self.status_label.setText(f"显示 {visible_rows}/{total_rows} 个任务")
 
-    def _populate_tasks(self):
+    def _populate_tasks(self) -> None:
         """填充任务列表"""
         tasks = self.scheduler.get_all_tasks()
         self.task_table.populate_tasks(tasks)
@@ -212,14 +212,14 @@ class ScheduleManager(QWidget):
         # 应用当前过滤器
         self._filter_tasks()
 
-    def _show_task_details(self, task_id):
+    def _show_task_details(self, task_id) -> None:
         """显示任务详情"""
         task = self.scheduler.get_task(task_id)
         if task:
             self.toolbar.set_details_checked(True)
             self.task_details.update_task(task)
 
-    def _on_toggle_task(self):
+    def _on_toggle_task(self) -> None:
         """切换任务状态"""
         if not self.task_details.current_task:
             return
@@ -228,7 +228,7 @@ class ScheduleManager(QWidget):
         action = "disable" if self.task_details.current_task.enabled else "enable"
         self.task_action_requested.emit(task_id, action)
 
-    def _on_run_now(self):
+    def _on_run_now(self) -> None:
         """立即执行任务"""
         if not self.task_details.current_task:
             return
@@ -236,7 +236,7 @@ class ScheduleManager(QWidget):
         self.task_action_requested.emit(
             self.task_details.current_task.task_id, "run_now")
 
-    def _on_delete_task(self):
+    def _on_delete_task(self) -> None:
         """删除任务"""
         if not self.task_details.current_task:
             return
@@ -244,7 +244,7 @@ class ScheduleManager(QWidget):
         self.task_action_requested.emit(
             self.task_details.current_task.task_id, "remove")
 
-    def _show_context_menu(self, position):
+    def _show_context_menu(self, position) -> None:
         """显示上下文菜单"""
         index = self.task_table.indexAt(position)
         if not index.isValid():
@@ -298,7 +298,7 @@ class ScheduleManager(QWidget):
         # 显示菜单
         menu.exec(QCursor.pos())
 
-    def _on_enable_all(self):
+    def _on_enable_all(self) -> None:
         """启用所有任务"""
         result = MessageBox("确认操作", "是否要启用所有任务？", self).exec()
         if not result:
@@ -317,7 +317,7 @@ class ScheduleManager(QWidget):
         else:
             self.show_message("批量操作", "没有需要启用的任务", type_="info")
 
-    def _on_disable_all(self):
+    def _on_disable_all(self) -> None:
         """禁用所有任务"""
         result = MessageBox("确认操作", "是否要禁用所有任务？", self).exec()
         if not result:
@@ -336,7 +336,7 @@ class ScheduleManager(QWidget):
         else:
             self.show_message("批量操作", "没有需要禁用的任务", type_="info")
 
-    def show_message(self, title, content, type_="success"):
+    def show_message(self, title, content, type_="success") -> None:
         """显示消息通知"""
         if type_ == "success":
             InfoBar.success(title, content, parent=self,
@@ -351,7 +351,7 @@ class ScheduleManager(QWidget):
             InfoBar.info(title, content, parent=self,
                          position=InfoBarPosition.TOP)
 
-    def update_task(self, task_id):
+    def update_task(self, task_id) -> None:
         """更新特定任务"""
         task = self.scheduler.get_task(task_id)
         if task:

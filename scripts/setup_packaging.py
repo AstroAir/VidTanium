@@ -10,13 +10,13 @@ import stat
 import platform
 from pathlib import Path
 
-def make_executable(file_path: Path):
+def make_executable(file_path: Path) -> None:
     """Make a file executable on Unix systems"""
     if platform.system() != "Windows":
         current_permissions = file_path.stat().st_mode
         file_path.chmod(current_permissions | stat.S_IEXEC)
 
-def setup_packaging_system():
+def setup_packaging_system() -> None:
     """Initialize the packaging system"""
     project_root = Path(__file__).parent.parent
     scripts_dir = project_root / "scripts"
@@ -46,13 +46,13 @@ def setup_packaging_system():
     print("📝 Making scripts executable...")
     
     # Make Python scripts executable
-    for script_path in scripts_to_setup:
-        full_path = project_root / script_path
+    for script_path_str in scripts_to_setup:
+        full_path = project_root / script_path_str
         if full_path.exists():
             make_executable(full_path)
-            print(f"   ✅ {script_path}")
+            print(f"   ✅ {script_path_str}")
         else:
-            print(f"   ⚠️  {script_path} not found")
+            print(f"   ⚠️  {script_path_str} not found")
     
     # Make shell scripts executable
     for script_name in shell_scripts:
@@ -180,7 +180,7 @@ def setup_packaging_system():
     print()
     print("🎉 Setup complete!")
 
-def main():
+def main() -> None:
     """Main setup function"""
     try:
         setup_packaging_system()

@@ -75,7 +75,7 @@ class VidTaniumException(Exception):
         is_retryable: bool = False,
         max_retries: int = 3,
         original_exception: Optional[Exception] = None
-    ):
+    ) -> None:
         super().__init__(message)
         self.message = message
         self.category = category
@@ -132,7 +132,7 @@ class VidTaniumException(Exception):
 class NetworkException(VidTaniumException):
     """Base class for network-related errors"""
     
-    def __init__(self, message: str, **kwargs):
+    def __init__(self, message: str, **kwargs) -> None:
         super().__init__(
             message,
             category=ErrorCategory.NETWORK,
@@ -144,7 +144,7 @@ class NetworkException(VidTaniumException):
 class ConnectionTimeoutException(NetworkException):
     """Connection timeout error"""
     
-    def __init__(self, url: str, timeout_seconds: int, **kwargs):
+    def __init__(self, url: str, timeout_seconds: int, **kwargs) -> None:
         self.url = url
         self.timeout_seconds = timeout_seconds
         message = f"Connection timeout after {timeout_seconds}s while accessing {url}"
@@ -164,7 +164,7 @@ class ConnectionTimeoutException(NetworkException):
 class HTTPException(NetworkException):
     """HTTP error responses"""
     
-    def __init__(self, status_code: int, url: str, **kwargs):
+    def __init__(self, status_code: int, url: str, **kwargs) -> None:
         self.status_code = status_code
         # Remove is_retryable from kwargs to avoid conflict
         kwargs.pop('is_retryable', None)
@@ -211,7 +211,7 @@ class HTTPException(NetworkException):
 class FilesystemException(VidTaniumException):
     """Base class for filesystem-related errors"""
     
-    def __init__(self, message: str, **kwargs):
+    def __init__(self, message: str, **kwargs) -> None:
         super().__init__(
             message,
             category=ErrorCategory.FILESYSTEM,
@@ -222,7 +222,7 @@ class FilesystemException(VidTaniumException):
 class InsufficientSpaceException(FilesystemException):
     """Insufficient disk space error"""
     
-    def __init__(self, required_space: int, available_space: int, path: str, **kwargs):
+    def __init__(self, required_space: int, available_space: int, path: str, **kwargs) -> None:
         message = f"Insufficient disk space. Required: {required_space} bytes, Available: {available_space} bytes at {path}"
         suggested_actions = [
             UserAction("free_space", "Free up disk space", priority=1),
@@ -240,7 +240,7 @@ class InsufficientSpaceException(FilesystemException):
 class PermissionException(FilesystemException):
     """File permission error"""
 
-    def __init__(self, path: str, operation: str, **kwargs):
+    def __init__(self, path: str, operation: str, **kwargs) -> None:
         self.file_path = path
         self.operation = operation
         message = f"Permission denied: Cannot {operation} file/directory at {path}"
@@ -262,7 +262,7 @@ class PermissionException(FilesystemException):
 class NetworkTimeoutException(NetworkException):
     """Network timeout specific exception"""
 
-    def __init__(self, url: str, timeout_duration: float, **kwargs):
+    def __init__(self, url: str, timeout_duration: float, **kwargs) -> None:
         self.url = url
         self.timeout_duration = timeout_duration
         message = f"Network timeout after {timeout_duration}s for URL: {url}"
@@ -282,7 +282,7 @@ class NetworkTimeoutException(NetworkException):
 class DNSResolutionException(NetworkException):
     """DNS resolution failure"""
 
-    def __init__(self, hostname: str, **kwargs):
+    def __init__(self, hostname: str, **kwargs) -> None:
         self.hostname = hostname
         message = f"Failed to resolve hostname: {hostname}"
         suggested_actions = [
@@ -301,7 +301,7 @@ class DNSResolutionException(NetworkException):
 class SSLCertificateException(NetworkException):
     """SSL certificate validation error"""
 
-    def __init__(self, hostname: str, cert_error: str, **kwargs):
+    def __init__(self, hostname: str, cert_error: str, **kwargs) -> None:
         self.hostname = hostname
         self.cert_error = cert_error
         message = f"SSL certificate error for {hostname}: {cert_error}"
@@ -321,7 +321,7 @@ class SSLCertificateException(NetworkException):
 class ProxyException(NetworkException):
     """Proxy connection error"""
 
-    def __init__(self, proxy_url: str, **kwargs):
+    def __init__(self, proxy_url: str, **kwargs) -> None:
         self.proxy_url = proxy_url
         message = f"Proxy connection failed: {proxy_url}"
         suggested_actions = [
@@ -340,7 +340,7 @@ class ProxyException(NetworkException):
 class RateLimitException(NetworkException):
     """Rate limiting error"""
 
-    def __init__(self, url: str, retry_after: Optional[int] = None, **kwargs):
+    def __init__(self, url: str, retry_after: Optional[int] = None, **kwargs) -> None:
         self.url = url
         self.retry_after = retry_after
         message = f"Rate limited for URL: {url}"
@@ -366,7 +366,7 @@ class RateLimitException(NetworkException):
 class HTTPClientException(HTTPException):
     """HTTP 4xx client error"""
 
-    def __init__(self, status_code: int, url: str, response_text: str = "", **kwargs):
+    def __init__(self, status_code: int, url: str, response_text: str = "", **kwargs) -> None:
         self.status_code = status_code
         self.url = url
         self.response_text = response_text
@@ -406,7 +406,7 @@ class HTTPClientException(HTTPException):
 class HTTPServerException(HTTPException):
     """HTTP 5xx server error"""
 
-    def __init__(self, status_code: int, url: str, response_text: str = "", **kwargs):
+    def __init__(self, status_code: int, url: str, response_text: str = "", **kwargs) -> None:
         self.status_code = status_code
         self.url = url
         self.response_text = response_text
@@ -433,7 +433,7 @@ class HTTPServerException(HTTPException):
 class SegmentDownloadException(VidTaniumException):
     """Segment download specific error"""
 
-    def __init__(self, segment_index: int, segment_url: str, reason: str, **kwargs):
+    def __init__(self, segment_index: int, segment_url: str, reason: str, **kwargs) -> None:
         self.segment_index = segment_index
         self.segment_url = segment_url
         self.reason = reason
@@ -459,7 +459,7 @@ class SegmentDownloadException(VidTaniumException):
 class ValidationException(VidTaniumException):
     """Base class for validation errors"""
 
-    def __init__(self, message: str, **kwargs):
+    def __init__(self, message: str, **kwargs) -> None:
         super().__init__(
             message,
             category=ErrorCategory.VALIDATION,
@@ -472,7 +472,7 @@ class ValidationException(VidTaniumException):
 class M3U8ParseException(ValidationException):
     """M3U8 playlist parsing error"""
 
-    def __init__(self, playlist_url: str, parse_error: str, **kwargs):
+    def __init__(self, playlist_url: str, parse_error: str, **kwargs) -> None:
         self.playlist_url = playlist_url
         self.parse_error = parse_error
         message = f"Failed to parse M3U8 playlist from {playlist_url}: {parse_error}"
@@ -495,7 +495,7 @@ class M3U8ParseException(ValidationException):
 class EncryptionException(VidTaniumException):
     """Base class for encryption-related errors"""
 
-    def __init__(self, message: str, **kwargs):
+    def __init__(self, message: str, **kwargs) -> None:
         super().__init__(
             message,
             category=ErrorCategory.ENCRYPTION,
@@ -506,7 +506,7 @@ class EncryptionException(VidTaniumException):
 class EncryptionKeyException(EncryptionException):
     """Encryption key specific error"""
 
-    def __init__(self, key_url: str, key_error: str, **kwargs):
+    def __init__(self, key_url: str, key_error: str, **kwargs) -> None:
         self.key_url = key_url
         self.key_error = key_error
         message = f"Failed to obtain encryption key from {key_url}: {key_error}"
@@ -528,7 +528,7 @@ class EncryptionKeyException(EncryptionException):
 class ContentIntegrityException(ValidationException):
     """Content integrity validation error"""
 
-    def __init__(self, file_path: str, expected_hash: str, actual_hash: str, **kwargs):
+    def __init__(self, file_path: str, expected_hash: str, actual_hash: str, **kwargs) -> None:
         self.file_path = file_path
         self.expected_hash = expected_hash
         self.actual_hash = actual_hash
@@ -552,7 +552,7 @@ class ContentIntegrityException(ValidationException):
 class SystemException(VidTaniumException):
     """Base class for system-related errors"""
 
-    def __init__(self, message: str, **kwargs):
+    def __init__(self, message: str, **kwargs) -> None:
         super().__init__(
             message,
             category=ErrorCategory.SYSTEM,
@@ -565,7 +565,7 @@ class SystemException(VidTaniumException):
 class ResourceException(VidTaniumException):
     """Base class for resource-related errors"""
 
-    def __init__(self, message: str, **kwargs):
+    def __init__(self, message: str, **kwargs) -> None:
         super().__init__(
             message,
             category=ErrorCategory.RESOURCE,
@@ -576,7 +576,7 @@ class ResourceException(VidTaniumException):
 class ConcurrencyException(SystemException):
     """Concurrency and threading related error"""
 
-    def __init__(self, operation: str, thread_info: str, **kwargs):
+    def __init__(self, operation: str, thread_info: str, **kwargs) -> None:
         self.operation = operation
         self.thread_info = thread_info
         message = f"Concurrency error during {operation}: {thread_info}"
@@ -598,7 +598,7 @@ class ConcurrencyException(SystemException):
 class CircuitBreakerException(SystemException):
     """Circuit breaker is open"""
 
-    def __init__(self, host: str, failure_count: int, **kwargs):
+    def __init__(self, host: str, failure_count: int, **kwargs) -> None:
         self.host = host
         self.failure_count = failure_count
         message = f"Circuit breaker is OPEN for {host} after {failure_count} failures"
@@ -621,7 +621,7 @@ class CircuitBreakerException(SystemException):
 class ResourceExhaustionException(ResourceException):
     """System resource exhaustion"""
 
-    def __init__(self, resource_type: str, current_usage: str, limit: str, **kwargs):
+    def __init__(self, resource_type: str, current_usage: str, limit: str, **kwargs) -> None:
         self.resource_type = resource_type
         self.current_usage = current_usage
         self.limit = limit
@@ -644,7 +644,7 @@ class ResourceExhaustionException(ResourceException):
 class DecryptionKeyException(EncryptionException):
     """Decryption key error"""
     
-    def __init__(self, key_url: Optional[str] = None, **kwargs):
+    def __init__(self, key_url: Optional[str] = None, **kwargs) -> None:
         self.key_url = key_url
         if key_url:
             message = f"Failed to obtain or use decryption key from {key_url}"
@@ -668,7 +668,7 @@ class DecryptionKeyException(EncryptionException):
 class InvalidURLException(ValidationException):
     """Invalid URL format error"""
     
-    def __init__(self, url: str, **kwargs):
+    def __init__(self, url: str, **kwargs) -> None:
         message = f"Invalid URL format: {url}"
         suggested_actions = [
             UserAction("check_url", "Verify the URL format is correct", priority=1),
@@ -684,7 +684,7 @@ class InvalidURLException(ValidationException):
 class InvalidSegmentException(ValidationException):
     """Invalid segment data error"""
     
-    def __init__(self, segment_index: int, reason: str, **kwargs):
+    def __init__(self, segment_index: int, reason: str, **kwargs) -> None:
         message = f"Invalid segment {segment_index}: {reason}"
         suggested_actions = [
             UserAction("retry_segment", "Retry downloading this segment", is_automatic=True, priority=1),
@@ -701,7 +701,7 @@ class InvalidSegmentException(ValidationException):
 class MemoryException(ResourceException):
     """Memory-related error"""
     
-    def __init__(self, operation: str, **kwargs):
+    def __init__(self, operation: str, **kwargs) -> None:
         self.operation = operation
         message = f"Insufficient memory for operation: {operation}"
         suggested_actions = [
@@ -720,7 +720,7 @@ class MemoryException(ResourceException):
 class ConfigurationException(SystemException):
     """Configuration error"""
     
-    def __init__(self, setting: str, value: Any, **kwargs):
+    def __init__(self, setting: str, value: Any, **kwargs) -> None:
         message = f"Invalid configuration: {setting} = {value}"
         suggested_actions = [
             UserAction("reset_settings", "Reset to default settings", priority=1),

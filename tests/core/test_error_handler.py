@@ -21,7 +21,7 @@ from src.core.exceptions import (
 class TestRetryStrategy:
     """Test suite for RetryStrategy enum."""
 
-    def test_strategy_values(self):
+    def test_strategy_values(self) -> None:
         """Test enum values."""
         assert RetryStrategy.EXPONENTIAL_BACKOFF.value == "exponential_backoff"
         assert RetryStrategy.LINEAR_BACKOFF.value == "linear_backoff"
@@ -33,7 +33,7 @@ class TestRetryStrategy:
 class TestRetryConfig:
     """Test suite for RetryConfig dataclass."""
 
-    def test_config_creation(self):
+    def test_config_creation(self) -> None:
         """Test RetryConfig creation with all fields."""
         config = RetryConfig(
             strategy=RetryStrategy.EXPONENTIAL_BACKOFF,
@@ -51,7 +51,7 @@ class TestRetryConfig:
         assert config.jitter is True
         assert config.backoff_multiplier == 3.0
 
-    def test_config_defaults(self):
+    def test_config_defaults(self) -> None:
         """Test RetryConfig with default values."""
         config = RetryConfig()
         
@@ -66,7 +66,7 @@ class TestRetryConfig:
 class TestErrorReport:
     """Test suite for ErrorReport dataclass."""
 
-    def test_report_creation(self):
+    def test_report_creation(self) -> None:
         """Test ErrorReport creation with all fields."""
         context = ErrorContext(task_id="test_task", url="https://example.com")
         
@@ -96,11 +96,11 @@ class TestErrorReport:
 class TestEnhancedErrorHandler:
     """Test suite for EnhancedErrorHandler class."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.handler = EnhancedErrorHandler()
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test EnhancedErrorHandler initialization."""
         assert isinstance(self.handler.retry_configs, dict)
         assert isinstance(self.handler.error_history, list)
@@ -110,7 +110,7 @@ class TestEnhancedErrorHandler:
         for category in ErrorCategory:
             assert category in self.handler.retry_configs
 
-    def test_get_default_retry_configs(self):
+    def test_get_default_retry_configs(self) -> None:
         """Test default retry configuration setup."""
         configs = self.handler._get_default_retry_configs()
         
@@ -123,7 +123,7 @@ class TestEnhancedErrorHandler:
         assert network_config.strategy == RetryStrategy.EXPONENTIAL_BACKOFF
         assert network_config.max_retries > 0
 
-    def test_handle_exception_vidtanium_exception(self):
+    def test_handle_exception_vidtanium_exception(self) -> None:
         """Test handling VidTaniumException (should return as-is with context update)."""
         context = ErrorContext(task_id="test_task")
         original_exception = NetworkException("Network error")
@@ -133,7 +133,7 @@ class TestEnhancedErrorHandler:
         assert result == original_exception
         assert result.context == context
 
-    def test_handle_exception_generic_exception(self):
+    def test_handle_exception_generic_exception(self) -> None:
         """Test handling generic exception (should convert to VidTaniumException)."""
         context = ErrorContext(task_id="test_task", url="https://example.com")
         generic_exception = Exception("Generic error")
@@ -143,7 +143,7 @@ class TestEnhancedErrorHandler:
         assert isinstance(result, VidTaniumException)
         assert result.context == context
 
-    def test_convert_exception_timeout(self):
+    def test_convert_exception_timeout(self) -> None:
         """Test conversion of timeout exceptions."""
         context = ErrorContext(url="https://example.com")
         timeout_exception = Exception("Connection timed out")
@@ -154,7 +154,7 @@ class TestEnhancedErrorHandler:
         assert result.url == "https://example.com"
         assert result.context == context
 
-    def test_convert_exception_http_error(self):
+    def test_convert_exception_http_error(self) -> None:
         """Test conversion of HTTP exceptions."""
         context = ErrorContext(url="https://example.com")
         http_exception = Exception("HTTP 404 Not Found")
@@ -165,7 +165,7 @@ class TestEnhancedErrorHandler:
         assert result.status_code == 404
         assert result.url == "https://example.com"
 
-    def test_convert_exception_network_error(self):
+    def test_convert_exception_network_error(self) -> None:
         """Test conversion of network exceptions."""
         context = ErrorContext(url="https://example.com")
         network_exception = Exception("Connection refused")
@@ -175,7 +175,7 @@ class TestEnhancedErrorHandler:
         assert isinstance(result, NetworkException)
         assert "Connection refused" in result.message
 
-    def test_convert_exception_permission_error(self):
+    def test_convert_exception_permission_error(self) -> None:
         """Test conversion of permission exceptions."""
         context = ErrorContext(file_path="/protected/file.mp4")
         permission_exception = Exception("Permission denied")
@@ -185,7 +185,7 @@ class TestEnhancedErrorHandler:
         assert isinstance(result, PermissionException)
         assert result.file_path == "/protected/file.mp4"
 
-    def test_convert_exception_filesystem_error(self):
+    def test_convert_exception_filesystem_error(self) -> None:
         """Test conversion of filesystem exceptions."""
         context = ErrorContext(file_path="/missing/file.mp4")
         fs_exception = Exception("File not found")
@@ -194,7 +194,7 @@ class TestEnhancedErrorHandler:
         
         assert isinstance(result, FilesystemException)
 
-    def test_convert_exception_encryption_error(self):
+    def test_convert_exception_encryption_error(self) -> None:
         """Test conversion of encryption exceptions."""
         context = ErrorContext(url="https://example.com/key.bin")
         encryption_exception = Exception("Decryption failed")
@@ -204,7 +204,7 @@ class TestEnhancedErrorHandler:
         assert isinstance(result, DecryptionKeyException)
         assert result.key_url == "https://example.com/key.bin"
 
-    def test_convert_exception_memory_error(self):
+    def test_convert_exception_memory_error(self) -> None:
         """Test conversion of memory exceptions."""
         context = ErrorContext(task_id="test_task")
         memory_exception = Exception("Out of memory")
@@ -214,7 +214,7 @@ class TestEnhancedErrorHandler:
         assert isinstance(result, MemoryException)
         assert result.operation == "process_video"
 
-    def test_convert_exception_fallback(self):
+    def test_convert_exception_fallback(self) -> None:
         """Test fallback conversion for unknown exceptions."""
         context = ErrorContext(task_id="test_task")
         unknown_exception = Exception("Unknown error")
@@ -224,7 +224,7 @@ class TestEnhancedErrorHandler:
         assert isinstance(result, SystemException)
         assert "Unknown error" in result.message
 
-    def test_should_retry(self):
+    def test_should_retry(self) -> None:
         """Test retry decision logic."""
         # Retryable exception
         network_exception = NetworkException("Connection failed")
@@ -237,7 +237,7 @@ class TestEnhancedErrorHandler:
         # Max retries exceeded
         assert self.handler.should_retry(network_exception, 10) is False
 
-    def test_calculate_retry_delay_exponential(self):
+    def test_calculate_retry_delay_exponential(self) -> None:
         """Test exponential backoff delay calculation."""
         config = RetryConfig(
             strategy=RetryStrategy.EXPONENTIAL_BACKOFF,
@@ -254,7 +254,7 @@ class TestEnhancedErrorHandler:
         assert delay2 == 4.0  # base_delay * multiplier^2
         assert delay3 == 8.0  # base_delay * multiplier^3
 
-    def test_calculate_retry_delay_linear(self):
+    def test_calculate_retry_delay_linear(self) -> None:
         """Test linear backoff delay calculation."""
         config = RetryConfig(
             strategy=RetryStrategy.LINEAR_BACKOFF,
@@ -270,7 +270,7 @@ class TestEnhancedErrorHandler:
         assert delay2 == 2.0  # base_delay * 2
         assert delay3 == 3.0  # base_delay * 3
 
-    def test_calculate_retry_delay_fixed(self):
+    def test_calculate_retry_delay_fixed(self) -> None:
         """Test fixed delay calculation."""
         config = RetryConfig(
             strategy=RetryStrategy.FIXED_DELAY,
@@ -284,21 +284,21 @@ class TestEnhancedErrorHandler:
         assert delay1 == 5.0
         assert delay2 == 5.0
 
-    def test_calculate_retry_delay_immediate(self):
+    def test_calculate_retry_delay_immediate(self) -> None:
         """Test immediate retry (no delay)."""
         config = RetryConfig(strategy=RetryStrategy.IMMEDIATE)
         
         delay = self.handler.calculate_retry_delay(config, 1)
         assert delay == 0.0
 
-    def test_calculate_retry_delay_no_retry(self):
+    def test_calculate_retry_delay_no_retry(self) -> None:
         """Test no retry strategy."""
         config = RetryConfig(strategy=RetryStrategy.NO_RETRY)
         
         delay = self.handler.calculate_retry_delay(config, 1)
         assert delay == 0.0
 
-    def test_calculate_retry_delay_max_limit(self):
+    def test_calculate_retry_delay_max_limit(self) -> None:
         """Test maximum delay limit enforcement."""
         config = RetryConfig(
             strategy=RetryStrategy.EXPONENTIAL_BACKOFF,
@@ -312,7 +312,7 @@ class TestEnhancedErrorHandler:
         assert delay == 30.0  # Should be capped at max_delay
 
     @patch('random.random')
-    def test_calculate_retry_delay_jitter(self, mock_random):
+    def test_calculate_retry_delay_jitter(self, mock_random) -> None:
         """Test jitter application."""
         mock_random.return_value = 0.5  # Fixed random value
         
@@ -328,7 +328,7 @@ class TestEnhancedErrorHandler:
         
         assert delay == expected_delay
 
-    def test_create_error_report(self):
+    def test_create_error_report(self) -> None:
         """Test error report creation."""
         exception = NetworkException("Connection failed")
         exception.context = ErrorContext(task_id="test_task")
@@ -340,21 +340,21 @@ class TestEnhancedErrorHandler:
         assert report.retry_count == 2
         assert report.context == exception.context
 
-    def test_get_error_title(self):
+    def test_get_error_title(self) -> None:
         """Test error title generation."""
         network_exception = NetworkException("Connection failed")
         title = self.handler._get_error_title(network_exception)
         
         assert "Network" in title
 
-    def test_log_error(self):
+    def test_log_error(self) -> None:
         """Test error logging."""
         exception = NetworkException("Test error")
         
         # Should not raise exception
         self.handler._log_error(exception)
 
-    def test_add_to_history(self):
+    def test_add_to_history(self) -> None:
         """Test adding errors to history."""
         exception = NetworkException("Test error")
         
@@ -364,7 +364,7 @@ class TestEnhancedErrorHandler:
         assert self.handler.error_history[0][0] == "test_operation"
         assert self.handler.error_history[0][1] == exception
 
-    def test_history_size_limit(self):
+    def test_history_size_limit(self) -> None:
         """Test error history size limit."""
         # Set small limit for testing
         self.handler.max_history_size = 3
@@ -379,12 +379,12 @@ class TestEnhancedErrorHandler:
         assert self.handler.error_history[0][0] == "operation_2"  # Oldest kept
         assert self.handler.error_history[-1][0] == "operation_4"  # Most recent
 
-    def test_get_error_statistics_empty(self):
+    def test_get_error_statistics_empty(self) -> None:
         """Test error statistics with no errors."""
         stats = self.handler.get_error_statistics()
         assert stats == {}
 
-    def test_get_error_statistics_with_errors(self):
+    def test_get_error_statistics_with_errors(self) -> None:
         """Test error statistics with errors."""
         # Add some errors
         network_error = NetworkException("Network error")
@@ -401,7 +401,7 @@ class TestEnhancedErrorHandler:
         assert stats["category_breakdown"]["filesystem"] == 1
         assert stats["most_common_category"] == "network"
 
-    def test_set_retry_config(self):
+    def test_set_retry_config(self) -> None:
         """Test setting custom retry configuration."""
         custom_config = RetryConfig(
             strategy=RetryStrategy.LINEAR_BACKOFF,
@@ -413,14 +413,14 @@ class TestEnhancedErrorHandler:
         
         assert self.handler.retry_configs[ErrorCategory.NETWORK] == custom_config
 
-    def test_get_retry_config(self):
+    def test_get_retry_config(self) -> None:
         """Test getting retry configuration."""
         config = self.handler.get_retry_config(ErrorCategory.NETWORK)
         
         assert isinstance(config, RetryConfig)
         assert config.strategy == RetryStrategy.EXPONENTIAL_BACKOFF
 
-    def test_clear_error_history(self):
+    def test_clear_error_history(self) -> None:
         """Test clearing error history."""
         # Add some errors
         exception = NetworkException("Test error")
@@ -432,7 +432,7 @@ class TestEnhancedErrorHandler:
         
         assert len(self.handler.error_history) == 0
 
-    def test_global_error_handler_instance(self):
+    def test_global_error_handler_instance(self) -> None:
         """Test global error handler instance."""
         assert error_handler is not None
         assert isinstance(error_handler, EnhancedErrorHandler)

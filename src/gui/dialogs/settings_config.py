@@ -13,10 +13,10 @@ from qfluentwidgets import (
 class OptionsValidator(ConfigValidator):
     """Validator for options"""
 
-    def __init__(self, options):
+    def __init__(self, options) -> None:
         self.options = options
 
-    def validate(self, value):
+    def validate(self, value) -> bool:
         return True  # Always return True as required by base class
 
     def correct(self, value):
@@ -30,7 +30,7 @@ class SettingsConfig(QObject):
     settings_changed = Signal()
     theme_changed = Signal(str)
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         # General settings
@@ -126,7 +126,7 @@ class SettingsManager:
     """Utility class for managing settings operations"""
 
     @staticmethod
-    def load_from_settings(config: SettingsConfig, settings):
+    def load_from_settings(config: SettingsConfig, settings) -> None:
         """Load configuration from settings object"""
         try:
             # General settings
@@ -172,7 +172,7 @@ class SettingsManager:
             print(f"Error loading settings: {e}")
 
     @staticmethod
-    def save_to_settings(config: SettingsConfig, settings):
+    def save_to_settings(config: SettingsConfig, settings) -> None:
         """Save configuration to settings object"""
         try:
             # General settings
@@ -218,7 +218,7 @@ class SettingsManager:
             raise
 
     @staticmethod
-    def reset_to_defaults(config: SettingsConfig):
+    def reset_to_defaults(config: SettingsConfig) -> None:
         """Reset configuration to default values"""
         # General settings
         config.output_directory.value = str(Path.home() / "Downloads")

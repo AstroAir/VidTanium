@@ -9,7 +9,7 @@ from src.core.analyzer import MediaAnalyzer
 class TestMediaAnalyzer:
     """测试 MediaAnalyzer 类的测试套件。"""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """设置测试装置。"""
         self.default_analyzer = MediaAnalyzer()
         self.custom_analyzer = MediaAnalyzer({
@@ -19,7 +19,7 @@ class TestMediaAnalyzer:
             "proxy": "http://test-proxy:8080"
         })
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """测试使用不同设置初始化。"""
         # 测试默认初始化
         assert self.default_analyzer.user_agent.startswith("Mozilla/5.0")
@@ -34,7 +34,7 @@ class TestMediaAnalyzer:
         assert self.custom_analyzer.proxy == "http://test-proxy:8080"
 
     # 移除对受保护方法的直接测试，改为测试公开方法
-    def test_analyze_url_with_direct_m3u8(self):
+    def test_analyze_url_with_direct_m3u8(self) -> None:
         """测试使用直接 M3U8 URL 的 analyze_url 方法。"""
         with patch('src.core.analyzer.MediaAnalyzer._is_direct_m3u8') as mock_is_direct_m3u8:
             with patch('src.core.analyzer.MediaAnalyzer.analyze_m3u8') as mock_analyze_m3u8:

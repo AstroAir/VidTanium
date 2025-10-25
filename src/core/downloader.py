@@ -22,7 +22,7 @@ from .exceptions import (
     InvalidURLException, InvalidSegmentException, ResourceException,
     MemoryException, SystemException, ConfigurationException
 )
-from .error_handler import EnhancedErrorHandler, error_handler
+from .error_handler import ErrorHandler, error_handler
 from .retry_manager import IntelligentRetryManager, retry_manager
 from .resource_manager import resource_manager, ResourceType, register_for_cleanup
 from .connection_pool import connection_pool_manager, HostPoolConfig
@@ -93,6 +93,7 @@ class DownloadTask:
     progress: ProgressDict
     segments_info: Dict[str, SegmentDetail]
     downloaded_size: int
+    retry_manager: Optional[ErrorHandler]  # Changed to Optional[ErrorHandler]
     key_data: Optional[bytes]
     worker_thread: Optional[threading.Thread]
     paused_event: threading.Event
@@ -109,7 +110,7 @@ class DownloadTask:
                  output_file: Optional[str] = None,
                  # Actual settings object or dict-like
                  settings: Optional[SettingsProvider] = None,
-                 priority: TaskPriority = TaskPriority.NORMAL):
+                 priority: TaskPriority = TaskPriority.NORMAL) -> None:
         """Initialize download task"""
         self.task_id = task_id or str(uuid.uuid4())
         self.name = name or f"Task-{self.task_id[:8]}"
@@ -123,7 +124,7 @@ class DownloadTask:
         # For simplicity, we'll assume `settings or {}` is handled appropriately by the caller
         # or that SettingsProvider can accommodate an empty dict-like structure for its `get`.
         # A more robust approach might involve a default SettingsProvider object.
-        self.settings = settings or {}  # type: ignore
+        self.settings = settings or {}  # 
         self.priority = priority
 
         # Status information
@@ -345,11 +346,11 @@ class DownloadManager:
     event_thread: Optional[threading.Thread]
 
     # Enhanced error handling components
-    error_handler: EnhancedErrorHandler
+    error_handler: ErrorHandler
     retry_manager: IntelligentRetryManager
     on_error_occurred: Optional[Callable[[str, VidTaniumException], None]]
 
-    def __init__(self, settings: Optional[SettingsProvider] = None):
+    def __init__(self, settings: Optional[SettingsProvider] = None) -> None:
         """Initialize enhanced download manager with error handling"""
         self.settings = settings
         self.tasks = {}
@@ -373,7 +374,7 @@ class DownloadManager:
         self.on_error_occurred = None
 
         # Enhanced error handling components
-        self.error_handler = EnhancedErrorHandler()
+        self.error_handler = ErrorHandler()
         self.retry_manager = IntelligentRetryManager(self.error_handler)
 
         # Enhanced connection pooling
@@ -420,7 +421,7 @@ class DownloadManager:
         self._memory_threshold = self._get_memory_threshold()
         self._last_memory_log: float = time.time()
 
-    def _configure_connection_pools(self):
+    def _configure_connection_pools(self) -> None:
         """Configure connection pools for optimal performance"""
         # Start connection pool monitoring
         self.connection_pool.start_monitoring()
@@ -455,7 +456,7 @@ class DownloadManager:
         logger.info(f"Connection pools configured: max_connections={default_config.max_connections}, "
                    f"max_per_host={default_config.max_connections_per_host}")
 
-    def _register_for_resource_management(self):
+    def _register_for_resource_management(self) -> None:
         """Register this download manager for automatic resource management"""
         register_for_cleanup(
             self,
@@ -476,7 +477,7 @@ class DownloadManager:
             return int(self.settings.get("advanced", "memory_threshold_mb", 512))
         return 512
 
-    def _cleanup_resources(self):
+    def _cleanup_resources(self) -> None:
         """Cleanup resources when called by resource manager"""
         try:
             # Clean up completed tasks
@@ -671,7 +672,7 @@ class DownloadManager:
 
         return task.task_id
 
-    def _check_memory_usage(self):
+    def _check_memory_usage(self) -> None:
         """Check memory usage and trigger cleanup if needed with enhanced optimization"""
         # Use the memory optimizer for comprehensive memory management
         memory_status = self.memory_optimizer.check_memory_pressure()
@@ -694,7 +695,7 @@ class DownloadManager:
         else:
             self._last_memory_log = time.time()
 
-    def _cleanup_task_resources(self, task_id: str):
+    def _cleanup_task_resources(self, task_id: str) -> None:
         """Clean up resources for a specific task"""
         try:
             task = self.tasks.get(task_id)
@@ -718,7 +719,7 @@ class DownloadManager:
         except Exception as e:
             logger.error(f"Error cleaning up task resources for {task_id}: {e}")
 
-    def _enhanced_cleanup_task(self, task_id: str):
+    def _enhanced_cleanup_task(self, task_id: str) -> None:
         """Enhanced cleanup for tasks using the enhanced resource manager"""
         try:
             task = self.tasks.get(task_id)

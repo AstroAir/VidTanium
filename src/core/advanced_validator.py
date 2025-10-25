@@ -80,7 +80,7 @@ class SmartDefaults:
 class ContentTypeDetector:
     """Detects content type from URLs and headers"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.url_patterns = {
             ContentType.M3U8_PLAYLIST: [
                 r'\.m3u8(\?.*)?$',
@@ -155,7 +155,7 @@ class ContentTypeDetector:
 class BandwidthEstimator:
     """Estimates network bandwidth and performance"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.test_urls = [
             "https://httpbin.org/bytes/1048576",  # 1MB test file
             "https://httpbin.org/bytes/5242880",  # 5MB test file
@@ -245,7 +245,7 @@ class BandwidthEstimator:
 class ContentAnalyzer:
     """Analyzes content to extract metadata and information"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.session = requests.Session()
         self.session.headers.update({'User-Agent': 'VidTanium/1.0'})
     
@@ -283,7 +283,7 @@ class ContentAnalyzer:
             logger.error(f"Content analysis failed for {url}: {e}")
             return ContentInfo(url=url, content_type=ContentType.UNKNOWN)
     
-    def _analyze_m3u8_playlist(self, content_info: ContentInfo):
+    def _analyze_m3u8_playlist(self, content_info: ContentInfo) -> None:
         """Analyze M3U8 playlist content"""
         try:
             response = self.session.get(content_info.url, timeout=10)
@@ -331,7 +331,7 @@ class ContentAnalyzer:
         except Exception as e:
             logger.error(f"M3U8 analysis failed: {e}")
     
-    def _analyze_video_file(self, content_info: ContentInfo, headers: Dict[str, str]):
+    def _analyze_video_file(self, content_info: ContentInfo, headers: Dict[str, str]) -> None:
         """Analyze video file content"""
         # Extract container format from content type or URL
         content_type_header = headers.get('content-type', '').lower()
@@ -359,7 +359,7 @@ class ContentAnalyzer:
 class SmartDefaultsGenerator:
     """Generates smart default settings based on content analysis"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.bandwidth_estimator = BandwidthEstimator()
     
     def generate_defaults(self, content_info: ContentInfo) -> SmartDefaults:
@@ -434,7 +434,7 @@ class SmartDefaultsGenerator:
 class AdvancedValidator:
     """Main advanced validation system"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.content_analyzer = ContentAnalyzer()
         self.defaults_generator = SmartDefaultsGenerator()
         logger.info("Advanced validator initialized")

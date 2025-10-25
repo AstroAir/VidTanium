@@ -143,8 +143,8 @@ class TestDecryptor:
         plaintext = b'This is a test!!'
 
         # 加密数据
-        cipher = AES.new(key=self.key, mode=AES.MODE_CBC, # type: ignore
-                         iv=self.iv)  # type: ignore
+        cipher = AES.new(key=self.key, mode=AES.MODE_CBC, # 
+                         iv=self.iv)  # 
         encrypted_data = cipher.encrypt(plaintext)
 
         # 现在解密它
@@ -164,8 +164,8 @@ class TestDecryptor:
         padded_plaintext = plaintext + (b'\x00' * padding_length)
 
         # 加密填充数据
-        cipher = AES.new(key=self.key, mode=AES.MODE_CBC, # type: ignore
-                         iv=self.iv)  # type: ignore
+        cipher = AES.new(key=self.key, mode=AES.MODE_CBC, # 
+                         iv=self.iv)  # 
         encrypted_data = cipher.encrypt(padded_plaintext)
 
         # 现在使用 last_block=True 解密它以删除填充

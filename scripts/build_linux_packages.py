@@ -19,7 +19,7 @@ from build_config import BuildConfig, get_build_config, BuildProfile
 class LinuxPackager:
     """Linux package builder for multiple formats"""
     
-    def __init__(self, config: BuildConfig):
+    def __init__(self, config: BuildConfig) -> None:
         self.config = config
         self.project_root = Path(__file__).parent.parent
         self.dist_dir = self.project_root / "dist"
@@ -287,7 +287,7 @@ cp {self.config.app_name.lower()}.png $RPM_BUILD_ROOT/usr/share/icons/hicolor/25
             print(f"❌ Failed to create RPM package: {e}")
             return False
 
-def main():
+def main() -> None:
     """Main function"""
     import argparse
     

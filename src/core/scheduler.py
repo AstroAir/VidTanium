@@ -31,7 +31,7 @@ class SchedulerTask:
                  first_run: Optional[datetime] = None,
                  interval: int = 0,
                  days: Optional[List[int]] = None,
-                 enabled: bool = True):
+                 enabled: bool = True) -> None:
         """
         Initialize scheduler task
 
@@ -224,7 +224,7 @@ class SchedulerTask:
 class TaskScheduler:
     """Task scheduler"""
 
-    def __init__(self, config_dir: Optional[str] = None):
+    def __init__(self, config_dir: Optional[str] = None) -> None:
         """
         Initialize the task scheduler
 

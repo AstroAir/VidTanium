@@ -21,11 +21,11 @@ class TextInputTab(QWidget):
     # Consider using Signal(List[str]) after importing List
     urls_extracted = Signal(list)
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self._create_ui()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """创建界面"""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(10, 10, 10, 10)
@@ -74,7 +74,7 @@ class TextInputTab(QWidget):
 
         layout.addWidget(options_card)
 
-    def _paste_from_clipboard(self):
+    def _paste_from_clipboard(self) -> None:
         """从剪贴板粘贴"""
         clipboard = QApplication.clipboard()
         text = clipboard.text()
@@ -100,7 +100,7 @@ class TextInputTab(QWidget):
                 parent=self
             )
 
-    def _clear_text(self):
+    def _clear_text(self) -> None:
         """清空文本框"""
         self.text_input.clear()
         self._process_text_input()
@@ -115,7 +115,7 @@ class TextInputTab(QWidget):
             parent=self
         )
 
-    def _process_text_input(self):
+    def _process_text_input(self) -> None:
         """处理文本输入"""
         text: str = self.text_input.toPlainText()
         pattern_text: str = self.regex_input.text()

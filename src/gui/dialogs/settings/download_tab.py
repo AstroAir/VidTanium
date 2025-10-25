@@ -11,11 +11,11 @@ from qfluentwidgets import (
 class DownloadTab(QWidget):
     """Download settings tab"""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self._create_ui()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """Create user interface"""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(15, 15, 15, 15)
@@ -81,7 +81,7 @@ class DownloadTab(QWidget):
         layout.addLayout(form_layout)
         layout.addStretch()
 
-    def _update_bandwidth_label(self, value):
+    def _update_bandwidth_label(self, value) -> None:
         """Update bandwidth limit label"""
         if value == 0:
             self.bandwidth_label.setText("No limit")
@@ -90,7 +90,7 @@ class DownloadTab(QWidget):
                       "20MB/s", "50MB/s", "100MB/s", "200MB/s", "Unlimited"]
             self.bandwidth_label.setText(speeds[value - 1])
 
-    def load_settings(self, settings):
+    def load_settings(self, settings) -> None:
         """Load settings to UI"""
         # Download settings
         self.max_tasks_spin.setValue(settings.get(
@@ -131,7 +131,7 @@ class DownloadTab(QWidget):
 
         self.bandwidth_slider.setValue(bandwidth_value)
 
-    def save_settings(self, settings):
+    def save_settings(self, settings) -> None:
         """Save settings"""
         # Download settings
         settings.set("download", "max_concurrent_tasks",

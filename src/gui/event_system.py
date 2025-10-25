@@ -1,5 +1,5 @@
 """
-Enhanced Event Handling System for VidTanium
+Event Handling System for VidTanium
 Streamlines event handling to improve GUI responsiveness and reduce overhead
 """
 
@@ -23,17 +23,17 @@ class EventPriority(Enum):
 
 
 @dataclass
-class EnhancedEvent:
-    """Enhanced event structure"""
+class Event:
+    """Event structure"""
     event_type: str
     data: Any
     priority: EventPriority = EventPriority.NORMAL
     timestamp: float = field(default_factory=time.time)
     source_id: Optional[str] = None
-    callback: Optional[Callable[['EnhancedEvent'], None]] = None
+    callback: Optional[Callable[['Event'], None]] = None
     processed: bool = False
     
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.timestamp == 0:
             self.timestamp = time.time()
 
@@ -43,10 +43,10 @@ class EventBatcher:
     
     def __init__(self, batch_window: float = 0.016) -> None:  # ~60fps
         self.batch_window = batch_window
-        self.batched_events: Dict[str, List[EnhancedEvent]] = {}
+        self.batched_events: Dict[str, List[Event]] = {}
         self.last_flush: Dict[str, float] = {}
     
-    def add_event(self, event: EnhancedEvent) -> bool:
+    def add_event(self, event: Event) -> bool:
         """Add event to batch, returns True if should be processed immediately"""
         event_key = f"{event.event_type}_{event.source_id}"
         current_time = time.time()
@@ -76,7 +76,7 @@ class EventBatcher:
         
         return should_flush
     
-    def flush_batch(self, event_key: str) -> List[EnhancedEvent]:
+    def flush_batch(self, event_key: str) -> List[Event]:
         """Flush and return batched events"""
         events = self.batched_events.get(event_key, [])
         if events:
@@ -84,7 +84,7 @@ class EventBatcher:
             self.last_flush[event_key] = time.time()
         return events
     
-    def get_ready_batches(self) -> Dict[str, List[EnhancedEvent]]:
+    def get_ready_batches(self) -> Dict[str, List[Event]]:
         """Get all batches ready for processing"""
         ready_batches = {}
         current_time = time.time()
@@ -100,8 +100,8 @@ class EventBatcher:
         return ready_batches
 
 
-class EnhancedEventSystem(QObject):
-    """Enhanced event system with batching and priority queues"""
+class EventSystem(QObject):
+    """Event system with batching and priority queues"""
     
     # Signals for different priority levels
     critical_event = Signal(object)
@@ -113,7 +113,7 @@ class EnhancedEventSystem(QObject):
         super().__init__(parent)
 
         # Event queues by priority
-        self.event_queues: Dict[EventPriority, deque[EnhancedEvent]] = {
+        self.event_queues: Dict[EventPriority, deque[Event]] = {
             priority: deque() for priority in EventPriority
         }
 
@@ -121,7 +121,7 @@ class EnhancedEventSystem(QObject):
         self.batcher = EventBatcher()
 
         # Registered handlers
-        self.handlers: Dict[str, List[weakref.ref[Callable[[EnhancedEvent], None]]]] = {}
+        self.handlers: Dict[str, List[weakref.ref[Callable[[Event], None]]]] = {}
         self.handler_stats: Dict[str, Dict[str, Any]] = {}
         
         # Processing control
@@ -139,7 +139,7 @@ class EnhancedEventSystem(QObject):
         # Performance monitoring
         self.performance_monitor = PerformanceMonitor()
     
-    def _setup_processing_timers(self):
+    def _setup_processing_timers(self) -> None:
         """Setup timers for processing different priority events"""
         # Critical events - immediate processing
         self.critical_timer = QTimer()
@@ -166,7 +166,7 @@ class EnhancedEventSystem(QObject):
         self.background_timer.timeout.connect(lambda: self._process_priority_queue(EventPriority.BACKGROUND))
         self.background_timer.start(1000)
     
-    def register_handler(self, event_type: str, handler: Callable[[EnhancedEvent], None], priority: EventPriority = EventPriority.NORMAL) -> None:
+    def register_handler(self, event_type: str, handler: Callable[[Event], None], priority: EventPriority = EventPriority.NORMAL) -> None:
         """Register an event handler"""
         if event_type not in self.handlers:
             self.handlers[event_type] = []
@@ -184,13 +184,13 @@ class EnhancedEventSystem(QObject):
         logger.debug(f"Registered handler for event type: {event_type}")
     
     def emit_event(self, event_type: str, data: Any = None, priority: EventPriority = EventPriority.NORMAL,
-                   source_id: Optional[str] = None, callback: Optional[Callable[[EnhancedEvent], None]] = None) -> None:
-        """Emit an enhanced event"""
+                   source_id: Optional[str] = None, callback: Optional[Callable[[Event], None]] = None) -> None:
+        """Emit an event"""
         if not self.processing_enabled:
             self.processing_stats["events_dropped"] += 1
             return
         
-        event = EnhancedEvent(
+        event = Event(
             event_type=event_type,
             data=data,
             priority=priority,
@@ -211,7 +211,7 @@ class EnhancedEventSystem(QObject):
         if priority == EventPriority.CRITICAL:
             self.critical_timer.start(0)
     
-    def _process_priority_queue(self, priority: EventPriority):
+    def _process_priority_queue(self, priority: EventPriority) -> None:
         """Process events from a specific priority queue"""
         if not self.processing_enabled:
             return
@@ -248,7 +248,7 @@ class EnhancedEventSystem(QObject):
             avg_time = processing_time / processed_count
             self.performance_monitor.record_processing_time(priority, avg_time)
     
-    def _process_single_event(self, event: EnhancedEvent):
+    def _process_single_event(self, event: Event) -> None:
         """Process a single event"""
         if event.processed:
             return
@@ -308,13 +308,13 @@ class EnhancedEventSystem(QObject):
 class PerformanceMonitor:
     """Monitors event processing performance"""
     
-    def __init__(self, history_size: int = 1000):
+    def __init__(self, history_size: int = 1000) -> None:
         self.history_size = history_size
         self.processing_times: Dict[EventPriority, deque] = {
             priority: deque(maxlen=history_size) for priority in EventPriority
         }
     
-    def record_processing_time(self, priority: EventPriority, time_ms: float):
+    def record_processing_time(self, priority: EventPriority, time_ms: float) -> None:
         """Record processing time for a priority level"""
         self.processing_times[priority].append(time_ms)
     
@@ -336,18 +336,18 @@ class PerformanceMonitor:
         return stats
 
 
-# Global enhanced event system instance
-_enhanced_event_system: Optional[EnhancedEventSystem] = None
+# Global event system instance
+_event_system: Optional[EventSystem] = None
 
 
-def get_event_system() -> EnhancedEventSystem:
-    """Get the global enhanced event system instance"""
-    global _enhanced_event_system
-    if _enhanced_event_system is None:
-        _enhanced_event_system = EnhancedEventSystem()
-    return _enhanced_event_system
+def get_event_system() -> EventSystem:
+    """Get the global event system instance"""
+    global _event_system
+    if _event_system is None:
+        _event_system = EventSystem()
+    return _event_system
 
 
-def emit_enhanced_event(event_type: str, data: Any = None, priority: EventPriority = EventPriority.NORMAL):
-    """Convenience function to emit an enhanced event"""
+def emit_event(event_type: str, data: Any = None, priority: EventPriority = EventPriority.NORMAL) -> None:
+    """Convenience function to emit an event"""
     get_event_system().emit_event(event_type, data, priority)

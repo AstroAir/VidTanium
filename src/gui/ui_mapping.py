@@ -79,11 +79,11 @@ class ComponentMapping:
 class UIMapping:
     """Central UI component mapping system"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.component_registry = ComponentRegistry()
         self._initialize_mappings()
     
-    def _initialize_mappings(self):
+    def _initialize_mappings(self) -> None:
         """Initialize all component mappings"""
         
         # Main window components

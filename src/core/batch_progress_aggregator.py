@@ -60,7 +60,7 @@ class BatchProgress:
 class BatchProgressAggregator:
     """Aggregates progress from multiple download tasks"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.batches: Dict[str, BatchProgress] = {}
         self.task_to_batch: Dict[str, str] = {}  # Map task ID to batch ID
         self.lock = threading.RLock()
@@ -126,7 +126,7 @@ class BatchProgressAggregator:
         status: str = "running",
         eta: Optional[float] = None,
         task_name: Optional[str] = None
-    ):
+    ) -> None:
         """Update progress for a specific task"""
         with self.lock:
             batch_id = self.task_to_batch.get(task_id)
@@ -184,7 +184,7 @@ class BatchProgressAggregator:
             logger.debug(f"Removed task {task_id} from batch {batch_id}")
             return removed_count
     
-    def _recalculate_batch_progress(self, batch_id: str):
+    def _recalculate_batch_progress(self, batch_id: str) -> None:
         """Recalculate aggregated progress for a batch"""
         batch = self.batches[batch_id]
         task_progresses = list(batch.task_progresses.values())
@@ -289,7 +289,7 @@ class BatchProgressAggregator:
         with self.lock:
             return self.statistics.get(batch_id)
     
-    def _update_batch_statistics(self, batch_id: str, batch: BatchProgress):
+    def _update_batch_statistics(self, batch_id: str, batch: BatchProgress) -> None:
         """Update statistics for a batch"""
         stats = self.statistics[batch_id]
         
@@ -341,7 +341,7 @@ class BatchProgressAggregator:
         # Duration
         stats["duration"] = time.time() - batch.start_time
     
-    def _cleanup_stale_data(self):
+    def _cleanup_stale_data(self) -> None:
         """Clean up stale batches and restart timer"""
         try:
             with self.lock:
@@ -368,15 +368,15 @@ class BatchProgressAggregator:
             self.cleanup_timer.daemon = True
             self.cleanup_timer.start()
     
-    def register_progress_callback(self, callback: Callable[[str, BatchProgress], None]):
+    def register_progress_callback(self, callback: Callable[[str, BatchProgress], None]) -> None:
         """Register callback for progress updates"""
         self.progress_callbacks.append(callback)
     
-    def register_completion_callback(self, callback: Callable[[str, BatchProgress], None]):
+    def register_completion_callback(self, callback: Callable[[str, BatchProgress], None]) -> None:
         """Register callback for batch completion"""
         self.completion_callbacks.append(callback)
     
-    def _trigger_progress_callbacks(self, batch_id: str, batch: BatchProgress):
+    def _trigger_progress_callbacks(self, batch_id: str, batch: BatchProgress) -> None:
         """Trigger progress update callbacks"""
         for callback in self.progress_callbacks:
             try:
@@ -384,7 +384,7 @@ class BatchProgressAggregator:
             except Exception as e:
                 logger.error(f"Error in progress callback: {e}")
     
-    def _trigger_completion_callbacks(self, batch_id: str, batch: BatchProgress):
+    def _trigger_completion_callbacks(self, batch_id: str, batch: BatchProgress) -> None:
         """Trigger completion callbacks"""
         for callback in self.completion_callbacks:
             try:

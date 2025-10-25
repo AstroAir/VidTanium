@@ -46,6 +46,8 @@ from .dialogs.batch_url_dialog import BatchURLDialog
 from src.core.downloader import DownloadTask
 from .utils.formatters import format_speed
 from .utils.i18n import tr
+from .utils.accessibility import accessibility_manager, AccessibilitySettings
+from src.core.performance_optimizer import performance_optimizer, OptimizationLevel
 
 
 class AppType(QApplication):
@@ -82,7 +84,7 @@ class SettingsType:
 class StatusInfoWidget(QWidget):
     """Status information widget with icon and text"""
 
-    def __init__(self, icon: Union[FIF, QPixmap], text: str, parent: Optional[QWidget] = None):
+    def __init__(self, icon: Union[FIF, QPixmap], text: str, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self.icon: Union[FIF, QPixmap] = icon
         self.text: str = text
@@ -154,7 +156,7 @@ class StatusInfoWidget(QWidget):
 class MainWindow(FluentWindow):
     """Enhanced main application window with responsive design"""
 
-    def __init__(self, app: AppType, download_manager: "DownloadManager", settings: SettingsType, theme_manager=None):
+    def __init__(self, app: AppType, download_manager: "DownloadManager", settings: SettingsType, theme_manager=None) -> None:
         super().__init__()
         self.app: AppType = app
         self.download_manager: "DownloadManager" = download_manager
@@ -164,6 +166,12 @@ class MainWindow(FluentWindow):
         
         # Initialize responsive manager
         self.responsive_manager = ResponsiveManager.instance()
+
+        # Initialize accessibility manager
+        self.accessibility_manager = accessibility_manager
+
+        # Initialize performance optimizer
+        self.performance_optimizer = performance_optimizer
         
         # Initialize interface components
         self.dashboard_component: Optional[DashboardInterface] = None
@@ -216,13 +224,39 @@ class MainWindow(FluentWindow):
         # Apply theme and add theme listener
         self._setup_theme_system()
 
+        # Setup accessibility features
+        self._setup_accessibility()
+
+        # Setup performance optimization
+        self._setup_performance_optimization()
+
         # Apply theme enhancements
         if self.theme_manager:
             self.theme_manager.apply_widget_enhancement(self, "main-window")
+        
+        # Load responsive CSS
+        self._load_responsive_styles()
 
         logger.info("Main window initialized")
+    
+    def _load_responsive_styles(self) -> None:
+        """Load responsive CSS styles for the application"""
+        try:
+            import os
+            css_path = os.path.join(os.path.dirname(__file__), 'styles', 'responsive.css')
+            if os.path.exists(css_path):
+                with open(css_path, 'r', encoding='utf-8') as f:
+                    css_content = f.read()
+                    # Apply CSS to the application
+                    existing_style = self.styleSheet()
+                    self.setStyleSheet(existing_style + '\n' + css_content)
+                    logger.info("Responsive CSS loaded successfully")
+            else:
+                logger.debug(f"Responsive CSS not found at {css_path}")
+        except Exception as e:
+            logger.error(f"Failed to load responsive CSS: {e}")
 
-    def _setup_responsive_window(self):
+    def _setup_responsive_window(self) -> None:
         """Setup responsive window sizing and behavior"""
         self.setWindowTitle(tr("app.title"))
         
@@ -248,18 +282,40 @@ class MainWindow(FluentWindow):
             # Update responsive manager with current size
             self.responsive_manager.update_for_size(self.size())
 
-    def _on_breakpoint_changed(self, breakpoint: str):
-        """Handle responsive breakpoint changes"""
-        logger.debug(f"Main window adapting to breakpoint: {breakpoint}")
-        
-        # Adjust navigation panel based on breakpoint
-        if hasattr(self, 'navigationInterface'):
-            if breakpoint in ['xs', 'sm']:
-                # Collapse navigation on small screens
-                self.navigationInterface.setCollapsed(True)
-            else:
-                # Expand navigation on larger screens
-                self.navigationInterface.setCollapsed(False)
+    def _on_breakpoint_changed(self, breakpoint: str) -> None:
+        """Handle responsive breakpoint changes with improved error handling"""
+        try:
+            logger.debug(f"Main window adapting to breakpoint: {breakpoint}")
+            
+            # Safely adjust navigation panel based on breakpoint
+            if hasattr(self, 'navigationInterface') and self.navigationInterface:
+                try:
+                    if breakpoint in ['xs', 'sm']:
+                        # Use compact mode for small screens
+                        if hasattr(self.navigationInterface, 'setMinimumExpandWidth'):
+                            self.navigationInterface.setMinimumExpandWidth(900)
+                        if hasattr(self.navigationInterface, 'setExpandWidth'):
+                            self.navigationInterface.setExpandWidth(48)  # Collapsed width
+                        if hasattr(self.navigationInterface, 'panel') and self.navigationInterface.panel:
+                            try:
+                                self.navigationInterface.panel.setMaximumWidth(48)
+                            except:
+                                pass
+                    else:
+                        # Use expanded mode for larger screens  
+                        if hasattr(self.navigationInterface, 'setMinimumExpandWidth'):
+                            self.navigationInterface.setMinimumExpandWidth(900)
+                        if hasattr(self.navigationInterface, 'setExpandWidth'):
+                            self.navigationInterface.setExpandWidth(250)  # Expanded width
+                        if hasattr(self.navigationInterface, 'panel') and self.navigationInterface.panel:
+                            try:
+                                self.navigationInterface.panel.setMaximumWidth(250)
+                            except:
+                                pass
+                except (AttributeError, RuntimeError) as e:
+                    logger.debug(f"NavigationInterface adjustment skipped: {e}")
+        except Exception as e:
+            logger.debug(f"Error in breakpoint change handler: {e}")
         
         # Adjust content layout
         self._adjust_content_layout(breakpoint)
@@ -268,17 +324,17 @@ class MainWindow(FluentWindow):
         if self.theme_manager:
             self.theme_manager._apply_custom_styling()
 
-    def _on_orientation_changed(self, orientation: Qt.Orientation):
+    def _on_orientation_changed(self, orientation: Qt.Orientation) -> None:
         """Handle orientation changes"""
         logger.debug(f"Main window orientation changed: {orientation}")
         # Additional orientation-specific adjustments can be added here
 
-    def _on_help_error(self, error_message: str):
+    def _on_help_error(self, error_message: str) -> None:
         """Handle help system errors"""
         logger.warning(f"Help system error: {error_message}")
         # Error is already displayed by the help interface, just log it
 
-    def _adjust_content_layout(self, breakpoint: str):
+    def _adjust_content_layout(self, breakpoint: str) -> None:
         """Adjust content layout based on breakpoint"""
         if not hasattr(self, 'dashboard_component') or not self.dashboard_component:
             return
@@ -291,10 +347,14 @@ class MainWindow(FluentWindow):
             # Use horizontal layout on larger screens
             self.dashboard_component.set_layout_mode('horizontal')
 
-    def resizeEvent(self, event):
-        """Handle window resize events"""
-        super().resizeEvent(event)
-        self.responsive_manager.update_for_size(event.size())
+    def resizeEvent(self, event) -> None:
+        """Handle window resize events with error handling"""
+        try:
+            super().resizeEvent(event)
+            if hasattr(self, 'responsive_manager') and self.responsive_manager:
+                self.responsive_manager.update_for_size(event.size())
+        except Exception as e:
+            logger.debug(f"Error handling resize event: {e}")
 
     def _create_interfaces(self) -> None:
         """Create all application interfaces"""
@@ -324,8 +384,8 @@ class MainWindow(FluentWindow):
         # Apply styling to navigation
         self.navigationInterface.setStyleSheet(f"""
             NavigationInterface {{
-                background: {DesignSystem.get_color('surface_adaptive')};
-                border-right: 1px solid {DesignSystem.get_color('border_adaptive')};
+                background: {DS.color('surface')};
+                border-right: 1px solid {DS.color('outline')};
             }}
         """)
 
@@ -372,12 +432,12 @@ class MainWindow(FluentWindow):
         # Apply enhanced navigation styling
         self._apply_enhanced_styling()
 
-    def _apply_enhanced_styling(self):
+    def _apply_enhanced_styling(self) -> None:
         """Apply styling to the main window"""
         # Main window styling
         self.setStyleSheet(f"""
             FluentWindow {{
-                background: {DesignSystem.get_color('surface_adaptive')};
+                background: {DS.color('surface')};
             }}
 
             /* Navigation item styling */
@@ -390,16 +450,16 @@ class MainWindow(FluentWindow):
             NavigationTreeWidget::item {{
                 padding: 8px 12px;
                 margin: 2px 8px;
-                border-radius: {DesignSystem.RADIUS['md']}px;
-                color: {DesignSystem.get_color('text_primary_adaptive')};
+                border-radius: {DS.radius('md')}px;
+                color: {DS.color('on_surface')};
             }}
 
             NavigationTreeWidget::item:hover {{
-                background: {DesignSystem.get_color('surface_secondary_adaptive')};
+                background: {DS.color('surface_container')};
             }}
 
             NavigationTreeWidget::item:selected {{
-                background: {DesignSystem.get_color('primary')};
+                background: {DS.color('primary')};
                 color: white;
                 font-weight: 600;
             }}
@@ -659,14 +719,14 @@ class MainWindow(FluentWindow):
             layout.setContentsMargins(24, 24, 24, 24)
 
             error_label = BodyLabel(tr("help.error.load_failed"))
-            error_label.setStyleSheet(f"color: {DesignSystem.get_color('text_secondary_adaptive')};")
+            error_label.setStyleSheet(f"color: {DS.color('on_surface_variant')};")
             layout.addWidget(error_label)
             layout.addStretch()
 
             return fallback
     # in src/gui/widgets/settings/settings_interface.py
 
-    def _browse_output_directory(self, line_edit: LineEdit):
+    def _browse_output_directory(self, line_edit: LineEdit) -> None:
         """Browse for output directory"""
         from PySide6.QtWidgets import QFileDialog
 
@@ -760,6 +820,101 @@ class MainWindow(FluentWindow):
             except Exception as e:
                 logger.error(f"Auto save failed: {e}")
 
+    def _setup_accessibility(self) -> None:
+        """Setup accessibility features"""
+        try:
+            # Load accessibility settings from user preferences
+            accessibility_settings = AccessibilitySettings(
+                high_contrast=self.settings.get("accessibility", "high_contrast", False),
+                large_text=self.settings.get("accessibility", "large_text", False),
+                keyboard_navigation=self.settings.get("accessibility", "keyboard_navigation", True),
+                screen_reader_support=self.settings.get("accessibility", "screen_reader_support", True),
+                focus_indicators=self.settings.get("accessibility", "focus_indicators", True),
+                audio_feedback=self.settings.get("accessibility", "audio_feedback", False),
+                reduced_motion=self.settings.get("accessibility", "reduced_motion", False),
+                text_scale_factor=self.settings.get("accessibility", "text_scale_factor", 1.0),
+                contrast_ratio=self.settings.get("accessibility", "contrast_ratio", 1.0)
+            )
+
+            # Apply accessibility settings
+            self.accessibility_manager.apply_settings(accessibility_settings)
+
+            # Register main window for keyboard navigation
+            self.accessibility_manager.register_widget(self, "main_window")
+
+            logger.info("Accessibility features initialized successfully")
+
+        except Exception as e:
+            logger.error(f"Failed to setup accessibility features: {e}")
+
+    def register_widget_for_accessibility(self, widget, group="default") -> None:
+        """Register a widget for accessibility features"""
+        if self.accessibility_manager:
+            self.accessibility_manager.register_widget(widget, group)
+
+    def announce_to_screen_reader(self, text: str, priority: str = "normal") -> None:
+        """Make an announcement to screen readers"""
+        if self.accessibility_manager:
+            self.accessibility_manager.announce(text, priority)
+
+    def _setup_performance_optimization(self) -> None:
+        """Setup performance optimization features"""
+        try:
+            # Load performance settings
+            optimization_level_str = self.settings.get("performance", "optimization_level", "balanced")
+            optimization_level = OptimizationLevel(optimization_level_str)
+
+            # Configure performance optimizer
+            self.performance_optimizer.set_optimization_level(optimization_level)
+
+            # Start monitoring if enabled
+            monitoring_enabled = self.settings.get("performance", "monitoring_enabled", True)
+            if monitoring_enabled:
+                monitor_interval = self.settings.get("performance", "monitor_interval_ms", 30000)  # Increased to 30 seconds
+                self.performance_optimizer.start_monitoring(monitor_interval)
+
+            # Register main window for tracking
+            self.performance_optimizer.register_object_for_tracking(self, "main_window")
+
+            # Connect performance signals
+            self.performance_optimizer.performance_updated.connect(self._on_performance_updated)
+            self.performance_optimizer.optimization_completed.connect(self._on_optimization_completed)
+
+            logger.info("Performance optimization features initialized successfully")
+
+        except Exception as e:
+            logger.error(f"Failed to setup performance optimization: {e}")
+
+    def _on_performance_updated(self, snapshot) -> None:
+        """Handle performance data updates"""
+        # Log performance warnings if needed
+        if snapshot.memory_mb > 1000:  # 1GB threshold
+            logger.warning(f"High memory usage detected: {snapshot.memory_mb:.1f}MB")
+
+        if snapshot.cpu_percent > 90:  # 90% CPU threshold
+            logger.warning(f"High CPU usage detected: {snapshot.cpu_percent:.1f}%")
+
+    def _on_optimization_completed(self, result) -> None:
+        """Handle optimization completion"""
+        if result.success:
+            message = result.description
+            if result.memory_saved_mb > 0:
+                message += f" (Saved {result.memory_saved_mb:.1f}MB)"
+            logger.info(f"Optimization completed: {message}")
+        else:
+            logger.warning(f"Optimization failed: {result.description}")
+
+    def optimize_performance(self) -> None:
+        """Manually trigger performance optimization"""
+        if self.performance_optimizer:
+            self.performance_optimizer.optimize_performance()
+
+    def get_performance_summary(self) -> dict:
+        """Get current performance summary"""
+        if self.performance_optimizer:
+            return self.performance_optimizer.get_performance_summary()
+        return {}
+
     def closeEvent(self, e: QCloseEvent) -> None:
         """Handle window close event"""
         if self.app.tray_icon and self.settings.get("ui", "minimize_to_tray", False) and not self._force_close:
@@ -814,6 +969,14 @@ class MainWindow(FluentWindow):
                     logger.info("Log viewer cleaned up")
             except Exception as ex:
                 logger.error(f"Error cleaning up log viewer: {ex}")
+
+        # Cleanup performance optimizer if it exists
+        if hasattr(self, 'performance_optimizer') and self.performance_optimizer:
+            try:
+                self.performance_optimizer.stop_monitoring()
+                logger.info("Performance optimizer cleaned up")
+            except Exception as ex:
+                logger.error(f"Error cleaning up performance optimizer: {ex}")
 
         if self.download_manager and active_tasks_list:
             try:
@@ -987,7 +1150,7 @@ class MainWindow(FluentWindow):
 
     def handle_task_action(self, action: str, task_id: str) -> None:
         """Handle task actions"""
-        def _wrap_none(func):
+        def _wrap_none(func) -> None:
             try:
                 return func(task_id)
             except Exception as e:
@@ -1212,7 +1375,7 @@ class MainWindow(FluentWindow):
             )
 
     def _setup_theme_system(self) -> None:
-        """Setup automatic theme switching system"""
+        """Setup theme system with system integration and responsive CSS"""
         try:
 
 

@@ -50,7 +50,7 @@ class QueuedTask:
     attempts: int = 0
     max_attempts: int = 3
     
-    def __lt__(self, other):
+    def __lt__(self, other) -> None:
         """Comparison for priority queue"""
         # Lower priority value = higher priority
         if self.priority.value != other.priority.value:
@@ -77,7 +77,7 @@ class QueueStatistics:
 class SmartScheduler:
     """Smart scheduling algorithms for queue optimization"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.strategy = SchedulingStrategy.PRIORITY_FIRST
         self.max_concurrent_tasks = 3
         self.size_threshold_mb = 100
@@ -200,7 +200,7 @@ class SmartScheduler:
 class QueueManager:
     """Download queue manager with smart scheduling"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.pending_queue: List[QueuedTask] = []
         self.running_tasks: Dict[str, QueuedTask] = {}
         self.completed_tasks: Dict[str, QueuedTask] = {}
@@ -271,7 +271,7 @@ class QueueManager:
             
             return True
     
-    def _insert_task_by_priority(self, task: QueuedTask):
+    def _insert_task_by_priority(self, task: QueuedTask) -> None:
         """Insert task in queue maintaining priority order"""
         inserted = False
         for i, existing_task in enumerate(self.pending_queue):
@@ -434,7 +434,7 @@ class QueueManager:
             
             return False
     
-    def _schedule_next_tasks(self):
+    def _schedule_next_tasks(self) -> None:
         """Schedule next available tasks"""
         next_tasks = self.get_next_tasks(self.scheduler.max_concurrent_tasks)
         
@@ -506,7 +506,7 @@ class QueueManager:
                 size_distribution=size_dist
             )
     
-    def _start_auto_scheduling(self):
+    def _start_auto_scheduling(self) -> None:
         """Start auto-scheduling timer"""
         if self._schedule_timer:
             self._schedule_timer.cancel()
@@ -515,7 +515,7 @@ class QueueManager:
         self._schedule_timer.daemon = True
         self._schedule_timer.start()
     
-    def _auto_schedule_tick(self):
+    def _auto_schedule_tick(self) -> None:
         """Auto-scheduling timer tick"""
         try:
             if self.auto_schedule_enabled:
@@ -525,19 +525,19 @@ class QueueManager:
         finally:
             self._start_auto_scheduling()
     
-    def register_task_scheduled_callback(self, callback: Callable[[QueuedTask], None]):
+    def register_task_scheduled_callback(self, callback: Callable[[QueuedTask], None]) -> None:
         """Register callback for when tasks are scheduled"""
         self.task_scheduled_callbacks.append(callback)
     
-    def register_task_completed_callback(self, callback: Callable[[QueuedTask], None]):
+    def register_task_completed_callback(self, callback: Callable[[QueuedTask], None]) -> None:
         """Register callback for when tasks are completed"""
         self.task_completed_callbacks.append(callback)
     
-    def register_queue_changed_callback(self, callback: Callable[[], None]):
+    def register_queue_changed_callback(self, callback: Callable[[], None]) -> None:
         """Register callback for queue changes"""
         self.queue_changed_callbacks.append(callback)
     
-    def _trigger_task_scheduled_callbacks(self, task: QueuedTask):
+    def _trigger_task_scheduled_callbacks(self, task: QueuedTask) -> None:
         """Trigger task scheduled callbacks"""
         for callback in self.task_scheduled_callbacks:
             try:
@@ -545,7 +545,7 @@ class QueueManager:
             except Exception as e:
                 logger.error(f"Error in task scheduled callback: {e}")
     
-    def _trigger_task_completed_callbacks(self, task: QueuedTask):
+    def _trigger_task_completed_callbacks(self, task: QueuedTask) -> None:
         """Trigger task completed callbacks"""
         for callback in self.task_completed_callbacks:
             try:
@@ -553,7 +553,7 @@ class QueueManager:
             except Exception as e:
                 logger.error(f"Error in task completed callback: {e}")
     
-    def _trigger_queue_changed_callbacks(self):
+    def _trigger_queue_changed_callbacks(self) -> None:
         """Trigger queue changed callbacks"""
         for callback in self.queue_changed_callbacks:
             try:
@@ -627,11 +627,8 @@ class QueueManager:
             return count
 
 
+# Global queue manager instance
+queue_manager = QueueManager()
+
 # Backward compatibility alias
 EnhancedQueueManager = QueueManager
-
-# Global enhanced queue manager instance
-enhanced_queue_manager = EnhancedQueueManager()
-
-# Global queue manager instance (alias for compatibility)
-queue_manager = enhanced_queue_manager

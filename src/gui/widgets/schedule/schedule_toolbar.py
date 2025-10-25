@@ -17,11 +17,11 @@ class ScheduleToolbar(QToolBar):
     disable_all_clicked = Signal()
     view_details_toggled = Signal(bool)  # 是否查看详情
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self._create_ui()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """创建用户界面"""
         self.setIconSize(QSize(16, 16))
         self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
@@ -59,11 +59,11 @@ class ScheduleToolbar(QToolBar):
         self.view_details_action.triggered.connect(self.view_details_toggled)
         self.addAction(self.view_details_action)
 
-    def set_details_checked(self, checked):
+    def set_details_checked(self, checked) -> None:
         """设置详情按钮的选中状态"""
         self.view_details_action.setChecked(checked)
 
-    def update_locale(self, translations):
+    def update_locale(self, translations) -> None:
         """更新工具栏按钮的文本以适应当前语言环境"""
         self.new_task_action.setText(translations.get("new_task", "新建计划"))
         self.new_task_action.setToolTip(translations.get("new_task_tooltip", "创建新的计划任务"))

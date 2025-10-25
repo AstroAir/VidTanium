@@ -32,7 +32,7 @@ class MarkdownViewer(QTextBrowser):
     link_clicked = Signal(str)  # url
     content_loaded = Signal()
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         
         self.markdown_content = ""
@@ -44,7 +44,7 @@ class MarkdownViewer(QTextBrowser):
         
         logger.debug("MarkdownViewer initialized")
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup the markdown viewer UI"""
         # Configure text browser
         self.setOpenExternalLinks(False)  # Handle links manually
@@ -61,7 +61,7 @@ class MarkdownViewer(QTextBrowser):
         font.setPointSize(10)
         self.setFont(font)
     
-    def _setup_styling(self):
+    def _setup_styling(self) -> None:
         """Setup markdown viewer styling with design system"""
         # Get colors from design system
         bg_color = DesignSystem.get_color('surface_adaptive')
@@ -242,7 +242,7 @@ class MarkdownViewer(QTextBrowser):
             }}
         """)
     
-    def set_markdown_content(self, content: str):
+    def set_markdown_content(self, content: str) -> None:
         """Set and render markdown content"""
         self.markdown_content = content
         
@@ -291,7 +291,7 @@ class MarkdownViewer(QTextBrowser):
             logger.error(f"Failed to render markdown content: {e}")
             self._set_fallback_content(content)
     
-    def _set_fallback_content(self, content: str):
+    def _set_fallback_content(self, content: str) -> None:
         """Set content as plain text fallback"""
         # Simple text formatting for fallback
         formatted_content = self._format_plain_text(content)
@@ -311,7 +311,7 @@ class MarkdownViewer(QTextBrowser):
         
         return content
     
-    def _on_anchor_clicked(self, url: QUrl):
+    def _on_anchor_clicked(self, url: QUrl) -> None:
         """Handle anchor/link clicks"""
         url_string = url.toString()
         self.link_clicked.emit(url_string)
@@ -321,12 +321,12 @@ class MarkdownViewer(QTextBrowser):
         """Get the current markdown content"""
         return self.markdown_content
     
-    def clear_content(self):
+    def clear_content(self) -> None:
         """Clear the viewer content"""
         self.clear()
         self.markdown_content = ""
     
-    def refresh_styling(self):
+    def refresh_styling(self) -> None:
         """Refresh styling (useful for theme changes)"""
         self._setup_styling()
         if self.markdown_content:
@@ -344,14 +344,14 @@ class MarkdownViewer(QTextBrowser):
             return True
         return False
     
-    def zoom_in(self):
+    def zoom_in(self) -> None:
         """Increase font size"""
         self.zoomIn(1)
     
-    def zoom_out(self):
+    def zoom_out(self) -> None:
         """Decrease font size"""
         self.zoomOut(1)
     
-    def reset_zoom(self):
+    def reset_zoom(self) -> None:
         """Reset font size to default"""
         self.zoomIn(0)  # Reset to default zoom

@@ -13,7 +13,7 @@ from src.core.smart_prioritization_engine import (
 class TestPrioritizationFactor:
     """Test suite for PrioritizationFactor enum."""
 
-    def test_factor_values(self):
+    def test_factor_values(self) -> None:
         """Test enum values."""
         assert PrioritizationFactor.FILE_SIZE.value == "file_size"
         assert PrioritizationFactor.USER_PREFERENCE.value == "user_preference"
@@ -28,7 +28,7 @@ class TestPrioritizationFactor:
 class TestPrioritizationWeights:
     """Test suite for PrioritizationWeights dataclass."""
 
-    def test_weights_creation(self):
+    def test_weights_creation(self) -> None:
         """Test PrioritizationWeights creation with all fields."""
         weights = PrioritizationWeights(
             file_size=0.25,
@@ -50,7 +50,7 @@ class TestPrioritizationWeights:
         assert weights.bandwidth_efficiency == 0.02
         assert weights.completion_probability == 0.01
 
-    def test_weights_defaults(self):
+    def test_weights_defaults(self) -> None:
         """Test PrioritizationWeights with default values."""
         weights = PrioritizationWeights()
         
@@ -63,7 +63,7 @@ class TestPrioritizationWeights:
         assert weights.bandwidth_efficiency == 0.05
         assert weights.completion_probability == 0.05
 
-    def test_normalize_weights(self):
+    def test_normalize_weights(self) -> None:
         """Test weight normalization."""
         weights = PrioritizationWeights(
             file_size=2.0,
@@ -90,7 +90,7 @@ class TestPrioritizationWeights:
 class TestTaskMetrics:
     """Test suite for TaskMetrics dataclass."""
 
-    def test_task_metrics_creation(self):
+    def test_task_metrics_creation(self) -> None:
         """Test TaskMetrics creation with all fields."""
         current_time = time.time()
         deadline = current_time + 3600  # 1 hour from now
@@ -121,7 +121,7 @@ class TestTaskMetrics:
         assert metrics.resource_intensity == 0.7
         assert metrics.metadata == {"quality": "720p"}
 
-    def test_task_metrics_defaults(self):
+    def test_task_metrics_defaults(self) -> None:
         """Test TaskMetrics with default values."""
         metrics = TaskMetrics(
             task_id="test_task",
@@ -142,7 +142,7 @@ class TestTaskMetrics:
 class TestPrioritizationResult:
     """Test suite for PrioritizationResult dataclass."""
 
-    def test_result_creation(self):
+    def test_result_creation(self) -> None:
         """Test PrioritizationResult creation."""
         factor_scores = {
             "file_size": 0.8,
@@ -171,11 +171,11 @@ class TestPrioritizationResult:
 class TestSmartPrioritizationEngine:
     """Test suite for SmartPrioritizationEngine class."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.engine = SmartPrioritizationEngine()
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test SmartPrioritizationEngine initialization."""
         assert isinstance(self.engine.weights, PrioritizationWeights)
         assert isinstance(self.engine.lock, threading.RLock)
@@ -188,7 +188,7 @@ class TestSmartPrioritizationEngine:
         assert self.engine.adaptive_weights is True
         assert self.engine.max_history_size == 1000
 
-    def test_prioritize_tasks_single_task(self):
+    def test_prioritize_tasks_single_task(self) -> None:
         """Test prioritizing a single task."""
         task = TaskMetrics(
             task_id="task1",
@@ -209,7 +209,7 @@ class TestSmartPrioritizationEngine:
         assert isinstance(result.reasoning, list)
         assert 0 <= result.confidence <= 1
 
-    def test_prioritize_tasks_multiple_tasks(self):
+    def test_prioritize_tasks_multiple_tasks(self) -> None:
         """Test prioritizing multiple tasks."""
         tasks = [
             TaskMetrics("task1", 10 * 1024 * 1024, 300.0, 2, time.time()),  # Large, low priority
@@ -229,7 +229,7 @@ class TestSmartPrioritizationEngine:
         for i, result in enumerate(results):
             assert result.recommended_order == i + 1
 
-    def test_calculate_size_score(self):
+    def test_calculate_size_score(self) -> None:
         """Test file size score calculation."""
         # Test different file sizes
         small_task = TaskMetrics("small", 500 * 1024, 30.0, 3, time.time())  # 500KB
@@ -245,7 +245,7 @@ class TestSmartPrioritizationEngine:
         assert small_score == 1.0  # < 1MB should get max score
         assert large_score == 0.3   # 1-5GB range
 
-    def test_calculate_user_preference_score(self):
+    def test_calculate_user_preference_score(self) -> None:
         """Test user preference score calculation."""
         low_priority = TaskMetrics("low", 1024, 60.0, 1, time.time())
         high_priority = TaskMetrics("high", 1024, 60.0, 5, time.time())
@@ -257,7 +257,7 @@ class TestSmartPrioritizationEngine:
         assert low_score == 0.2   # Priority 1 -> 0.2
         assert high_score == 1.0  # Priority 5 -> 1.0
 
-    def test_calculate_system_resource_score(self):
+    def test_calculate_system_resource_score(self) -> None:
         """Test system resource score calculation."""
         # Test with different system loads
         light_task = TaskMetrics("light", 1024, 60.0, 3, time.time(), resource_intensity=0.2)
@@ -272,7 +272,7 @@ class TestSmartPrioritizationEngine:
         # Light tasks should score better when system is loaded
         assert light_score > heavy_score
 
-    def test_calculate_time_sensitivity_score(self):
+    def test_calculate_time_sensitivity_score(self) -> None:
         """Test time sensitivity score calculation."""
         current_time = time.time()
         
@@ -294,7 +294,7 @@ class TestSmartPrioritizationEngine:
         
         assert urgent_score > distant_score
 
-    def test_calculate_dependency_score(self):
+    def test_calculate_dependency_score(self) -> None:
         """Test dependency chain score calculation."""
         independent_task = TaskMetrics("independent", 1024, 60.0, 3, time.time())
         blocking_task = TaskMetrics("blocking", 1024, 60.0, 3, time.time())
@@ -308,7 +308,7 @@ class TestSmartPrioritizationEngine:
         
         assert blocking_score > independent_score
 
-    def test_calculate_completion_probability_score(self):
+    def test_calculate_completion_probability_score(self) -> None:
         """Test completion probability score calculation."""
         reliable_task = TaskMetrics("reliable", 1024, 60.0, 3, time.time(), historical_success_rate=0.95)
         unreliable_task = TaskMetrics("unreliable", 1024, 60.0, 3, time.time(), historical_success_rate=0.6)
@@ -318,7 +318,7 @@ class TestSmartPrioritizationEngine:
         
         assert reliable_score > unreliable_score
 
-    def test_calculate_confidence(self):
+    def test_calculate_confidence(self) -> None:
         """Test confidence calculation."""
         task = TaskMetrics(
             "test", 1024, 60.0, 3, time.time(),
@@ -339,7 +339,7 @@ class TestSmartPrioritizationEngine:
         # Task with complete information should have reasonable confidence
         assert confidence > 0.5
 
-    def test_learn_from_completion_success(self):
+    def test_learn_from_completion_success(self) -> None:
         """Test learning from successful completion."""
         initial_history_size = len(self.engine.completion_history.get("test_task", []))
         
@@ -361,7 +361,7 @@ class TestSmartPrioritizationEngine:
         assert record["duration"] == 120.0
         assert record["size"] == 1048576
 
-    def test_learn_from_completion_failure(self):
+    def test_learn_from_completion_failure(self) -> None:
         """Test learning from failed completion."""
         self.engine.learn_from_completion(
             task_id="failed_task",
@@ -374,7 +374,7 @@ class TestSmartPrioritizationEngine:
         record = self.engine.completion_history["failed_task"][-1]
         assert record["success"] is False
 
-    def test_learn_from_completion_disabled(self):
+    def test_learn_from_completion_disabled(self) -> None:
         """Test learning when disabled."""
         self.engine.learning_enabled = False
         initial_history_size = len(self.engine.completion_history)
@@ -384,7 +384,7 @@ class TestSmartPrioritizationEngine:
         # Should not have added anything
         assert len(self.engine.completion_history) == initial_history_size
 
-    def test_update_system_state(self):
+    def test_update_system_state(self) -> None:
         """Test updating system state."""
         system_state = {
             "cpu": 0.7,
@@ -397,7 +397,7 @@ class TestSmartPrioritizationEngine:
         
         assert self.engine.current_system_load == system_state
 
-    def test_set_prioritization_weights(self):
+    def test_set_prioritization_weights(self) -> None:
         """Test setting custom prioritization weights."""
         custom_weights = PrioritizationWeights(
             file_size=0.5,
@@ -420,7 +420,7 @@ class TestSmartPrioritizationEngine:
         
         assert abs(total - 1.0) < 0.001
 
-    def test_register_prioritization_callback(self):
+    def test_register_prioritization_callback(self) -> None:
         """Test registering prioritization callback."""
         callback = Mock()
         
@@ -428,7 +428,7 @@ class TestSmartPrioritizationEngine:
         
         assert callback in self.engine.prioritization_callbacks
 
-    def test_trigger_prioritization_callbacks(self):
+    def test_trigger_prioritization_callbacks(self) -> None:
         """Test triggering prioritization callbacks."""
         callback = Mock()
         self.engine.register_prioritization_callback(callback)
@@ -441,7 +441,7 @@ class TestSmartPrioritizationEngine:
         
         callback.assert_called_once_with(results)
 
-    def test_callback_error_handling(self):
+    def test_callback_error_handling(self) -> None:
         """Test error handling in callbacks."""
         error_callback = Mock(side_effect=Exception("Callback error"))
         good_callback = Mock()
@@ -458,7 +458,7 @@ class TestSmartPrioritizationEngine:
         error_callback.assert_called_once()
         good_callback.assert_called_once()
 
-    def test_get_engine_statistics(self):
+    def test_get_engine_statistics(self) -> None:
         """Test getting engine statistics."""
         # Add some completion history
         self.engine.learn_from_completion("task1", True, 60.0, 1024)
@@ -474,7 +474,7 @@ class TestSmartPrioritizationEngine:
         assert "current_weights" in stats
         assert len(stats["task_types"]) == 3
 
-    def test_history_size_limit(self):
+    def test_history_size_limit(self) -> None:
         """Test completion history size limit."""
         # Set small limit for testing
         self.engine.max_history_size = 3
@@ -487,7 +487,7 @@ class TestSmartPrioritizationEngine:
         total_records = sum(len(records) for records in self.engine.completion_history.values())
         assert total_records <= 3
 
-    def test_global_prioritization_engine_instance(self):
+    def test_global_prioritization_engine_instance(self) -> None:
         """Test global prioritization engine instance."""
         assert smart_prioritization_engine is not None
         assert isinstance(smart_prioritization_engine, SmartPrioritizationEngine)

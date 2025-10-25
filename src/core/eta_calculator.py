@@ -45,7 +45,7 @@ class ETAResult:
 class ETACalculator:
     """Advanced ETA calculator with multiple algorithms"""
     
-    def __init__(self, max_samples: int = 100):
+    def __init__(self, max_samples: int = 100) -> None:
         self.max_samples = max_samples
         self.speed_samples: deque = deque(maxlen=max_samples)
         self.historical_data: Dict[str, List[float]] = {
@@ -68,7 +68,7 @@ class ETACalculator:
         speed: float,
         bytes_downloaded: int,
         segment_index: Optional[int] = None
-    ):
+    ) -> None:
         """Add a new speed sample"""
         sample = SpeedSample(
             timestamp=time.time(),
@@ -397,11 +397,11 @@ class ETACalculator:
             "data_quality": self._assess_data_quality()
         }
     
-    def reset(self):
+    def reset(self) -> None:
         """Reset calculator state"""
         self.speed_samples.clear()
     
-    def add_historical_completion(self, file_size: int, completion_time: float, avg_speed: float):
+    def add_historical_completion(self, file_size: int, completion_time: float, avg_speed: float) -> None:
         """Add historical completion data for future predictions"""
         self.historical_data["file_sizes"].append(file_size)
         self.historical_data["completion_times"].append(completion_time)

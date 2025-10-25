@@ -26,7 +26,7 @@ class HelpNavigationItem(AnimatedCard):
     
     clicked = Signal(str)  # page_name
     
-    def __init__(self, page_name: str, title: str, description: str = "", icon: FIF = FIF.DOCUMENT, parent=None):
+    def __init__(self, page_name: str, title: str, description: str = "", icon: FIF = FIF.DOCUMENT, parent=None) -> None:
         super().__init__(parent)
         self.page_name = page_name
         self.title = title
@@ -37,7 +37,7 @@ class HelpNavigationItem(AnimatedCard):
         self._setup_ui()
         self._setup_styling()
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup navigation item UI"""
         self.setFixedHeight(80)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -77,7 +77,7 @@ class HelpNavigationItem(AnimatedCard):
         layout.addLayout(content_layout)
         layout.addStretch()
     
-    def _setup_styling(self):
+    def _setup_styling(self) -> None:
         """Setup item styling"""
         self.setStyleSheet(f"""
             HelpNavigationItem {{
@@ -92,7 +92,7 @@ class HelpNavigationItem(AnimatedCard):
             }}
         """)
     
-    def set_active(self, active: bool):
+    def set_active(self, active: bool) -> None:
         """Set item active state"""
         self.is_active = active
         
@@ -116,7 +116,7 @@ class HelpNavigationItem(AnimatedCard):
         else:
             self._setup_styling()
     
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event) -> None:
         """Handle mouse press"""
         if event.button() == Qt.MouseButton.LeftButton:
             self.clicked.emit(self.page_name)
@@ -128,7 +128,7 @@ class HelpNavigationPanel(ElevatedCardWidget):
     
     page_requested = Signal(str)  # page_name
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.navigation_items: Dict[str, HelpNavigationItem] = {}
         self.current_page = ""
@@ -139,7 +139,7 @@ class HelpNavigationPanel(ElevatedCardWidget):
         
         logger.debug("Help navigation panel initialized")
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup navigation panel UI"""
         self.setFixedWidth(280)
         
@@ -197,7 +197,7 @@ class HelpNavigationPanel(ElevatedCardWidget):
         
         return header
     
-    def _setup_styling(self):
+    def _setup_styling(self) -> None:
         """Setup panel styling"""
         self.setStyleSheet(f"""
             HelpNavigationPanel {{
@@ -211,7 +211,7 @@ class HelpNavigationPanel(ElevatedCardWidget):
         shadow = DesignSystem.create_shadow_effect('md')
         self.setGraphicsEffect(shadow)
     
-    def _create_navigation_items(self):
+    def _create_navigation_items(self) -> None:
         """Create navigation items for help topics"""
         # Define help topics
         help_topics = [
@@ -254,13 +254,13 @@ class HelpNavigationPanel(ElevatedCardWidget):
             self.navigation_items[topic["page_name"]] = item
             self.nav_layout.addWidget(item)
     
-    def _on_item_clicked(self, page_name: str):
+    def _on_item_clicked(self, page_name: str) -> None:
         """Handle navigation item click"""
         self.set_current_page(page_name)
         self.page_requested.emit(page_name)
         logger.debug(f"Help page requested: {page_name}")
     
-    def set_current_page(self, page_name: str):
+    def set_current_page(self, page_name: str) -> None:
         """Set the current active page"""
         # Deactivate current item
         if self.current_page in self.navigation_items:
@@ -279,7 +279,7 @@ class HelpNavigationPanel(ElevatedCardWidget):
         """Get list of available help pages"""
         return list(self.navigation_items.keys())
     
-    def add_custom_item(self, page_name: str, title: str, description: str = "", icon: FIF = FIF.DOCUMENT):
+    def add_custom_item(self, page_name: str, title: str, description: str = "", icon: FIF = FIF.DOCUMENT) -> None:
         """Add a custom navigation item"""
         if page_name in self.navigation_items:
             logger.warning(f"Navigation item already exists: {page_name}")
@@ -293,7 +293,7 @@ class HelpNavigationPanel(ElevatedCardWidget):
         
         logger.debug(f"Added custom help navigation item: {page_name}")
     
-    def remove_item(self, page_name: str):
+    def remove_item(self, page_name: str) -> None:
         """Remove a navigation item"""
         if page_name not in self.navigation_items:
             return
@@ -309,7 +309,7 @@ class HelpNavigationPanel(ElevatedCardWidget):
         
         logger.debug(f"Removed help navigation item: {page_name}")
     
-    def refresh_items(self):
+    def refresh_items(self) -> None:
         """Refresh navigation items (useful for language changes)"""
         # Clear existing items
         for item in self.navigation_items.values():

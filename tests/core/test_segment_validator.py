@@ -15,7 +15,7 @@ from src.core.segment_validator import (
 class TestValidationResult:
     """Test ValidationResult dataclass"""
     
-    def test_validation_result_valid(self):
+    def test_validation_result_valid(self) -> None:
         """Test ValidationResult for valid segment"""
         result = ValidationResult(
             segment_id=5,
@@ -34,7 +34,7 @@ class TestValidationResult:
         assert result.error_message == ""
         assert result.validation_time > 0
     
-    def test_validation_result_invalid(self):
+    def test_validation_result_invalid(self) -> None:
         """Test ValidationResult for invalid segment"""
         result = ValidationResult(
             segment_id=3,
@@ -52,7 +52,7 @@ class TestValidationResult:
         assert "Size mismatch" in result.warnings
         assert "File size does not match expected size" in result.error_message
     
-    def test_has_warnings(self):
+    def test_has_warnings(self) -> None:
         """Test has_warnings method"""
         result_no_warnings = ValidationResult(
             segment_id=1, is_valid=True, file_size=1024, expected_size=1024,
@@ -72,7 +72,7 @@ class TestSegmentValidator:
     """Test SegmentValidator class"""
     
     @pytest.fixture
-    def temp_file(self):
+    def temp_file(self) -> None:
         """Create a temporary file for testing"""
         fd, path = tempfile.mkstemp(suffix=".ts")
         # Write some test data
@@ -84,11 +84,11 @@ class TestSegmentValidator:
             os.unlink(path)
     
     @pytest.fixture
-    def validator(self):
+    def validator(self) -> None:
         """Create a fresh SegmentValidator for testing"""
         return SegmentValidator()
     
-    def test_initialization(self, validator):
+    def test_initialization(self, validator) -> None:
         """Test SegmentValidator initialization"""
         assert validator.validation_stats == {
             "total_validations": 0,
@@ -100,7 +100,7 @@ class TestSegmentValidator:
         assert validator.max_segment_size == 10 * 1024 * 1024  # 10MB
         assert validator.size_tolerance == 0.1  # 10%
     
-    def test_validate_segment_file_exists(self, validator, temp_file):
+    def test_validate_segment_file_exists(self, validator, temp_file) -> None:
         """Test validating existing segment file"""
         segment_id = 5
         expected_size = os.path.getsize(temp_file)
@@ -114,7 +114,7 @@ class TestSegmentValidator:
         assert result.expected_size == expected_size
         assert result.error_message == ""
     
-    def test_validate_segment_file_not_exists(self, validator):
+    def test_validate_segment_file_not_exists(self, validator) -> None:
         """Test validating non-existent segment file"""
         segment_id = 3
         nonexistent_file = "/path/to/nonexistent/file.ts"
@@ -125,7 +125,7 @@ class TestSegmentValidator:
         assert result.is_valid is False
         assert "File does not exist" in result.error_message
     
-    def test_validate_segment_empty_file(self, validator):
+    def test_validate_segment_empty_file(self, validator) -> None:
         """Test validating empty segment file"""
         fd, empty_file = tempfile.mkstemp(suffix=".ts")
         os.close(fd)  # Create empty file
@@ -141,7 +141,7 @@ class TestSegmentValidator:
             if os.path.exists(empty_file):
                 os.unlink(empty_file)
     
-    def test_validate_segment_size_mismatch_major(self, validator, temp_file):
+    def test_validate_segment_size_mismatch_major(self, validator, temp_file) -> None:
         """Test validating segment with major size mismatch"""
         segment_id = 2
         actual_size = os.path.getsize(temp_file)
@@ -155,7 +155,7 @@ class TestSegmentValidator:
         assert result.file_size == actual_size
         assert result.expected_size == expected_size
     
-    def test_validate_segment_size_mismatch_minor(self, validator, temp_file):
+    def test_validate_segment_size_mismatch_minor(self, validator, temp_file) -> None:
         """Test validating segment with minor size mismatch (within tolerance)"""
         segment_id = 4
         actual_size = os.path.getsize(temp_file)
@@ -168,7 +168,7 @@ class TestSegmentValidator:
         assert result.has_warnings()  # But should have warnings
         assert "size difference" in result.warnings[0].lower()
     
-    def test_validate_segment_too_small(self, validator):
+    def test_validate_segment_too_small(self, validator) -> None:
         """Test validating segment that's too small"""
         fd, small_file = tempfile.mkstemp(suffix=".ts")
         os.write(fd, b"tiny")  # Very small file
@@ -185,7 +185,7 @@ class TestSegmentValidator:
             if os.path.exists(small_file):
                 os.unlink(small_file)
     
-    def test_validate_segment_too_large(self, validator):
+    def test_validate_segment_too_large(self, validator) -> None:
         """Test validating segment that's too large"""
         # Mock a very large file
         large_file = "/path/to/large/file.ts"
@@ -200,7 +200,7 @@ class TestSegmentValidator:
             assert result.is_valid is False
             assert "too large" in result.error_message.lower()
     
-    def test_validate_segment_content_basic(self, validator, temp_file):
+    def test_validate_segment_content_basic(self, validator, temp_file) -> None:
         """Test basic content validation"""
         segment_id = 8
         expected_size = os.path.getsize(temp_file)
@@ -210,7 +210,7 @@ class TestSegmentValidator:
         # Should pass basic validation
         assert result.is_valid is True
     
-    def test_validate_segment_content_ts_format(self, validator):
+    def test_validate_segment_content_ts_format(self, validator) -> None:
         """Test TS format validation"""
         # Create a file with TS sync byte
         fd, ts_file = tempfile.mkstemp(suffix=".ts")
@@ -228,7 +228,7 @@ class TestSegmentValidator:
             if os.path.exists(ts_file):
                 os.unlink(ts_file)
     
-    def test_validate_segment_content_invalid_ts(self, validator):
+    def test_validate_segment_content_invalid_ts(self, validator) -> None:
         """Test validation of invalid TS format"""
         # Create a file without proper TS sync bytes
         fd, invalid_ts_file = tempfile.mkstemp(suffix=".ts")
@@ -246,7 +246,7 @@ class TestSegmentValidator:
             if os.path.exists(invalid_ts_file):
                 os.unlink(invalid_ts_file)
     
-    def test_get_validation_stats(self, validator, temp_file):
+    def test_get_validation_stats(self, validator, temp_file) -> None:
         """Test getting validation statistics"""
         # Initially empty
         stats = validator.get_validation_stats()
@@ -265,7 +265,7 @@ class TestSegmentValidator:
         assert stats["failed_validations"] == 1
         assert stats["success_rate"] == 0.5
     
-    def test_reset_stats(self, validator, temp_file):
+    def test_reset_stats(self, validator, temp_file) -> None:
         """Test resetting validation statistics"""
         # Perform some validations
         validator.validate_segment(1, temp_file, os.path.getsize(temp_file))
@@ -284,7 +284,7 @@ class TestSegmentValidator:
         assert stats["successful_validations"] == 0
         assert stats["failed_validations"] == 0
     
-    def test_is_size_within_tolerance(self, validator):
+    def test_is_size_within_tolerance(self, validator) -> None:
         """Test size tolerance checking"""
         # Exact match
         assert validator._is_size_within_tolerance(1000, 1000) is True
@@ -297,7 +297,7 @@ class TestSegmentValidator:
         assert validator._is_size_within_tolerance(1000, 1200) is False  # 20% difference
         assert validator._is_size_within_tolerance(1000, 800) is False   # 20% difference
     
-    def test_validate_ts_format_valid(self, validator):
+    def test_validate_ts_format_valid(self, validator) -> None:
         """Test TS format validation with valid data"""
         # Create valid TS data with sync bytes
         ts_data = b'\x47' + b'\x00' * 187  # Basic TS packet
@@ -308,7 +308,7 @@ class TestSegmentValidator:
         # Should have no warnings for valid TS data
         assert len(warnings) == 0
     
-    def test_validate_ts_format_invalid(self, validator):
+    def test_validate_ts_format_invalid(self, validator) -> None:
         """Test TS format validation with invalid data"""
         # Create invalid data without sync bytes
         invalid_data = b'\x00' * 1000
@@ -323,12 +323,12 @@ class TestSegmentValidator:
 class TestGlobalSegmentValidator:
     """Test global segment validator instance"""
     
-    def test_global_instance_exists(self):
+    def test_global_instance_exists(self) -> None:
         """Test that global instance exists and is properly initialized"""
         assert segment_validator is not None
         assert isinstance(segment_validator, SegmentValidator)
     
-    def test_global_instance_functionality(self):
+    def test_global_instance_functionality(self) -> None:
         """Test basic functionality of global instance"""
         # Create a temporary test file
         fd, temp_file = tempfile.mkstemp(suffix=".ts")

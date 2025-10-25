@@ -14,7 +14,7 @@ from src.core.adaptive_retry import (
 class TestRetryReason:
     """Test RetryReason enum"""
     
-    def test_retry_reason_values(self):
+    def test_retry_reason_values(self) -> None:
         """Test RetryReason enum values"""
         assert RetryReason.NETWORK_TIMEOUT.value == "network_timeout"
         assert RetryReason.CONNECTION_ERROR.value == "connection_error"
@@ -26,7 +26,7 @@ class TestRetryReason:
 class TestHostRetryMetrics:
     """Test HostRetryMetrics dataclass"""
     
-    def test_default_metrics(self):
+    def test_default_metrics(self) -> None:
         """Test default HostRetryMetrics values"""
         metrics = HostRetryMetrics()
         assert metrics.total_attempts == 0
@@ -40,7 +40,7 @@ class TestHostRetryMetrics:
         assert metrics.consecutive_failures == 0
         assert metrics.last_updated <= time.time()
     
-    def test_record_attempt_success(self):
+    def test_record_attempt_success(self) -> None:
         """Test recording successful attempt"""
         metrics = HostRetryMetrics()
         
@@ -59,7 +59,7 @@ class TestHostRetryMetrics:
         assert 1 in metrics.retry_counts
         assert metrics.retry_counts[1] == 1
     
-    def test_record_attempt_failure(self):
+    def test_record_attempt_failure(self) -> None:
         """Test recording failed attempt"""
         metrics = HostRetryMetrics()
         
@@ -78,7 +78,7 @@ class TestHostRetryMetrics:
         assert RetryReason.NETWORK_TIMEOUT in metrics.reason_counts
         assert metrics.reason_counts[RetryReason.NETWORK_TIMEOUT] == 1
     
-    def test_multiple_attempts(self):
+    def test_multiple_attempts(self) -> None:
         """Test recording multiple attempts"""
         metrics = HostRetryMetrics()
         
@@ -92,7 +92,7 @@ class TestHostRetryMetrics:
         assert metrics.failed_attempts == 1
         assert metrics.consecutive_failures == 0  # Reset on success
     
-    def test_get_success_rate(self):
+    def test_get_success_rate(self) -> None:
         """Test success rate calculation"""
         metrics = HostRetryMetrics()
         
@@ -106,7 +106,7 @@ class TestHostRetryMetrics:
         
         assert metrics.get_success_rate() == 2.0 / 3.0
     
-    def test_get_average_retry_delay(self):
+    def test_get_average_retry_delay(self) -> None:
         """Test average retry delay calculation"""
         metrics = HostRetryMetrics()
         
@@ -126,11 +126,11 @@ class TestAdaptiveRetryManager:
     """Test AdaptiveRetryManager class"""
     
     @pytest.fixture
-    def retry_manager(self):
+    def retry_manager(self) -> None:
         """Create a fresh AdaptiveRetryManager for testing"""
         return AdaptiveRetryManager()
     
-    def test_initialization(self, retry_manager):
+    def test_initialization(self, retry_manager) -> None:
         """Test AdaptiveRetryManager initialization"""
         assert retry_manager.host_metrics == {}
         assert retry_manager.base_retry_delay == 1.0
@@ -141,7 +141,7 @@ class TestAdaptiveRetryManager:
         assert retry_manager.success_threshold == 0.8
         assert retry_manager.failure_threshold == 0.3
     
-    def test_should_retry_new_host(self, retry_manager):
+    def test_should_retry_new_host(self, retry_manager) -> None:
         """Test retry decision for new host"""
         url = "https://example.com/test"
         
@@ -152,7 +152,7 @@ class TestAdaptiveRetryManager:
         # Should not exceed max retries
         assert not retry_manager.should_retry(url, 6, RetryReason.UNKNOWN_ERROR)
     
-    def test_should_retry_successful_host(self, retry_manager):
+    def test_should_retry_successful_host(self, retry_manager) -> None:
         """Test retry decision for host with good success rate"""
         url = "https://example.com/test"
         
@@ -164,7 +164,7 @@ class TestAdaptiveRetryManager:
         assert retry_manager.should_retry(url, 1, RetryReason.NETWORK_TIMEOUT)
         assert retry_manager.should_retry(url, 4, RetryReason.CONNECTION_ERROR)
     
-    def test_should_retry_failing_host(self, retry_manager):
+    def test_should_retry_failing_host(self, retry_manager) -> None:
         """Test retry decision for host with poor success rate"""
         url = "https://example.com/test"
         
@@ -175,7 +175,7 @@ class TestAdaptiveRetryManager:
         # Should be less lenient with retries
         assert not retry_manager.should_retry(url, 3, RetryReason.CONNECTION_ERROR)
     
-    def test_get_retry_delay_base_case(self, retry_manager):
+    def test_get_retry_delay_base_case(self, retry_manager) -> None:
         """Test retry delay calculation for base case"""
         url = "https://example.com/test"
         
@@ -184,7 +184,7 @@ class TestAdaptiveRetryManager:
         # Should be around base delay with some jitter
         assert 0.9 <= delay <= 1.1  # base_delay ± jitter
     
-    def test_get_retry_delay_exponential_backoff(self, retry_manager):
+    def test_get_retry_delay_exponential_backoff(self, retry_manager) -> None:
         """Test exponential backoff in retry delay"""
         url = "https://example.com/test"
         
@@ -196,7 +196,7 @@ class TestAdaptiveRetryManager:
         assert delay2 > delay1
         assert delay3 > delay2
     
-    def test_get_retry_delay_reason_based(self, retry_manager):
+    def test_get_retry_delay_reason_based(self, retry_manager) -> None:
         """Test retry delay based on failure reason"""
         url = "https://example.com/test"
         
@@ -206,7 +206,7 @@ class TestAdaptiveRetryManager:
         # Rate limiting should have longer delay
         assert rate_limit_delay > timeout_delay
     
-    def test_get_retry_delay_max_cap(self, retry_manager):
+    def test_get_retry_delay_max_cap(self, retry_manager) -> None:
         """Test retry delay maximum cap"""
         url = "https://example.com/test"
         
@@ -215,7 +215,7 @@ class TestAdaptiveRetryManager:
         
         assert delay <= retry_manager.max_retry_delay
     
-    def test_record_attempt_new_host(self, retry_manager):
+    def test_record_attempt_new_host(self, retry_manager) -> None:
         """Test recording attempt for new host"""
         url = "https://example.com/test"
         
@@ -228,7 +228,7 @@ class TestAdaptiveRetryManager:
         assert metrics.total_attempts == 1
         assert metrics.successful_attempts == 1
     
-    def test_record_attempt_existing_host(self, retry_manager):
+    def test_record_attempt_existing_host(self, retry_manager) -> None:
         """Test recording attempt for existing host"""
         url = "https://example.com/test"
         
@@ -244,7 +244,7 @@ class TestAdaptiveRetryManager:
         assert metrics.successful_attempts == 1
         assert metrics.failed_attempts == 1
     
-    def test_get_host_from_url(self, retry_manager):
+    def test_get_host_from_url(self, retry_manager) -> None:
         """Test extracting host from URL"""
         test_cases = [
             ("https://example.com/path", "example.com"),
@@ -256,7 +256,7 @@ class TestAdaptiveRetryManager:
             host = retry_manager._get_host_from_url(url)
             assert host == expected_host
     
-    def test_calculate_reason_multiplier(self, retry_manager):
+    def test_calculate_reason_multiplier(self, retry_manager) -> None:
         """Test reason-based delay multiplier"""
         multipliers = {
             RetryReason.NETWORK_TIMEOUT: retry_manager._calculate_reason_multiplier(RetryReason.NETWORK_TIMEOUT),
@@ -273,7 +273,7 @@ class TestAdaptiveRetryManager:
         for multiplier in multipliers.values():
             assert multiplier >= 1.0
     
-    def test_get_global_stats(self, retry_manager):
+    def test_get_global_stats(self, retry_manager) -> None:
         """Test getting global statistics"""
         # Initially empty
         stats = retry_manager.get_global_stats()
@@ -291,7 +291,7 @@ class TestAdaptiveRetryManager:
         assert "example.com" in stats["hosts"]
         assert "test.com" in stats["hosts"]
     
-    def test_cleanup_old_metrics(self, retry_manager):
+    def test_cleanup_old_metrics(self, retry_manager) -> None:
         """Test cleanup of old metrics"""
         url = "https://example.com/test"
         
@@ -314,12 +314,12 @@ class TestAdaptiveRetryManager:
 class TestGlobalAdaptiveRetryManager:
     """Test global adaptive retry manager instance"""
     
-    def test_global_instance_exists(self):
+    def test_global_instance_exists(self) -> None:
         """Test that global instance exists and is properly initialized"""
         assert adaptive_retry_manager is not None
         assert isinstance(adaptive_retry_manager, AdaptiveRetryManager)
     
-    def test_global_instance_functionality(self):
+    def test_global_instance_functionality(self) -> None:
         """Test basic functionality of global instance"""
         url = "https://global-retry-test.example.com/test"
         

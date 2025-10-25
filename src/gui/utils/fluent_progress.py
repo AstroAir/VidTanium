@@ -23,7 +23,7 @@ class EnhancedFluentProgressBar(ProgressBar, ResponsiveWidget):
     finished = Signal()
     progress_changed = Signal(int, int)  # current, total
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         ProgressBar.__init__(self, parent)
         ResponsiveWidget.__init__(self)
         
@@ -40,7 +40,7 @@ class EnhancedFluentProgressBar(ProgressBar, ResponsiveWidget):
         # Apply enhanced styling
         self._apply_enhanced_styling()
 
-    def _setup_responsive_sizing(self):
+    def _setup_responsive_sizing(self) -> None:
         """Setup responsive sizing based on breakpoint"""
         current_bp = self.responsive_manager.get_current_breakpoint()
         
@@ -57,11 +57,11 @@ class EnhancedFluentProgressBar(ProgressBar, ResponsiveWidget):
         thickness = thickness_config.get(current_bp.value, 10)
         self.setFixedHeight(thickness)
 
-    def on_breakpoint_changed(self, breakpoint: str):
+    def on_breakpoint_changed(self, breakpoint: str) -> None:
         """Handle responsive breakpoint changes"""
         self._setup_responsive_sizing()
 
-    def _apply_enhanced_styling(self):
+    def _apply_enhanced_styling(self) -> None:
         """Apply enhanced theming and styling"""
         # Get theme colors if available
         theme_manager = getattr(self.parent(), 'theme_manager', None)
@@ -84,12 +84,12 @@ class EnhancedFluentProgressBar(ProgressBar, ResponsiveWidget):
                 }}
             """)
 
-    def setThickness(self, thickness: int):
+    def setThickness(self, thickness: int) -> None:
         """Set progress bar thickness with responsive consideration"""
         self.setFixedHeight(thickness)
         self._apply_enhanced_styling()
 
-    def setGradientColors(self, start_color: str, end_color: str):
+    def setGradientColors(self, start_color: str, end_color: str) -> None:
         """Set custom gradient colors"""
         self._gradient_colors = (start_color, end_color)
         if self._gradient_colors:
@@ -105,11 +105,11 @@ class EnhancedFluentProgressBar(ProgressBar, ResponsiveWidget):
                 }}
             """)
 
-    def setAnimationEnabled(self, enabled: bool):
+    def setAnimationEnabled(self, enabled: bool) -> None:
         """Enable or disable smooth animations"""
         self._animation_enabled = enabled
 
-    def setValue(self, value: int):
+    def setValue(self, value: int) -> None:
         """Set value with optional animation"""
         if self._animation_enabled:
             # Create smooth transition animation
@@ -124,7 +124,7 @@ class EnhancedFluentProgressBar(ProgressBar, ResponsiveWidget):
         else:
             super().setValue(value)
 
-    def _on_value_changed(self, value: int):
+    def _on_value_changed(self, value: int) -> None:
         """Handle value changes"""
         self.progress_changed.emit(value, self.maximum())
         if value >= self.maximum():
@@ -134,7 +134,7 @@ class EnhancedFluentProgressBar(ProgressBar, ResponsiveWidget):
 class EnhancedProgressCard(CardWidget, ResponsiveWidget):
     """Enhanced progress card with responsive design and comprehensive information display"""
 
-    def __init__(self, title: str = "", parent=None):
+    def __init__(self, title: str = "", parent=None) -> None:
         CardWidget.__init__(self, parent)
         ResponsiveWidget.__init__(self)
         
@@ -157,7 +157,7 @@ class EnhancedProgressCard(CardWidget, ResponsiveWidget):
         self._setup_ui()
         self._apply_responsive_styling()
 
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup the progress card UI"""
         layout = QVBoxLayout(self)
         
@@ -174,7 +174,7 @@ class EnhancedProgressCard(CardWidget, ResponsiveWidget):
         # Details section
         self._create_details_section(layout)
 
-    def _setup_responsive_margins(self, layout: QVBoxLayout):
+    def _setup_responsive_margins(self, layout: QVBoxLayout) -> None:
         """Setup margins that adapt to screen size"""
         current_bp = self.responsive_manager.get_current_breakpoint()
         
@@ -189,7 +189,7 @@ class EnhancedProgressCard(CardWidget, ResponsiveWidget):
         margin = margin_config.get(current_bp.value, 20)
         layout.setContentsMargins(margin, margin//2, margin, margin//2)
 
-    def _create_header(self, layout: QVBoxLayout):
+    def _create_header(self, layout: QVBoxLayout) -> None:
         """Create header with title and status"""
         header_layout = QHBoxLayout()
         
@@ -220,7 +220,7 @@ class EnhancedProgressCard(CardWidget, ResponsiveWidget):
         header_layout.addWidget(self.status_label)
         layout.addLayout(header_layout)
 
-    def _create_progress_section(self, layout: QVBoxLayout):
+    def _create_progress_section(self, layout: QVBoxLayout) -> None:
         """Create progress bar section"""
         self.progress_bar = EnhancedFluentProgressBar()
         self.progress_bar.setRange(0, 100)
@@ -241,7 +241,7 @@ class EnhancedProgressCard(CardWidget, ResponsiveWidget):
         
         layout.addWidget(self.progress_bar)
 
-    def _create_details_section(self, layout: QVBoxLayout):
+    def _create_details_section(self, layout: QVBoxLayout) -> None:
         """Create details section with speed, ETA, etc."""
         self.details_label = CaptionLabel("")
         self.details_label.setStyleSheet(f"""
@@ -255,7 +255,7 @@ class EnhancedProgressCard(CardWidget, ResponsiveWidget):
         
         layout.addWidget(self.details_label)
 
-    def _apply_responsive_styling(self):
+    def _apply_responsive_styling(self) -> None:
         """Apply responsive styling to the card"""
         current_bp = self.responsive_manager.get_current_breakpoint()
         
@@ -267,7 +267,7 @@ class EnhancedProgressCard(CardWidget, ResponsiveWidget):
             self.setMinimumHeight(120)
             self.setMaximumHeight(150)
 
-    def on_breakpoint_changed(self, breakpoint: str):
+    def on_breakpoint_changed(self, breakpoint: str) -> None:
         """Handle responsive breakpoint changes"""
         if hasattr(self, 'layout'):
             layout = self.layout()
@@ -275,13 +275,13 @@ class EnhancedProgressCard(CardWidget, ResponsiveWidget):
                 self._setup_responsive_margins(layout)
         self._apply_responsive_styling()
 
-    def setTitle(self, title: str):
+    def setTitle(self, title: str) -> None:
         """Set card title"""
         self.title = title
         if self.title_label:
             self.title_label.setText(title)
 
-    def setProgress(self, current: int, total: int = 100, speed: float = 0, eta: float = 0):
+    def setProgress(self, current: int, total: int = 100, speed: float = 0, eta: float = 0) -> None:
         """Set progress information"""
         self._current_progress = current
         self._total_progress = total
@@ -297,13 +297,13 @@ class EnhancedProgressCard(CardWidget, ResponsiveWidget):
         # Update details
         self._update_details()
 
-    def setStatus(self, status: str):
+    def setStatus(self, status: str) -> None:
         """Set status text"""
         self._status = status
         if self.status_label:
             self.status_label.setText(status)
 
-    def _update_details(self):
+    def _update_details(self) -> None:
         """Update details text"""
         if not self.details_label:
             return
@@ -353,7 +353,7 @@ class EnhancedProgressCard(CardWidget, ResponsiveWidget):
 class CompactProgressBar(EnhancedFluentProgressBar):
     """Compact progress bar for lists and small spaces"""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setFixedHeight(4)
         self.setMinimumWidth(100)

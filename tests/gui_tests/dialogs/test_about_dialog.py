@@ -5,7 +5,7 @@ from typing import Any, Optional
 
 # Mock PySide6 components for testing
 class MockQDialog:
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         self.parent_obj = parent
         self.window_title = ""
         self.window_icon = None
@@ -14,188 +14,188 @@ class MockQDialog:
         self.window_flags = None
         self.style_sheet = ""
         
-    def setWindowTitle(self, title):
+    def setWindowTitle(self, title) -> None:
         self.window_title = title
         
-    def setWindowIcon(self, icon):
+    def setWindowIcon(self, icon) -> None:
         self.window_icon = icon
         
-    def setMinimumSize(self, width, height):
+    def setMinimumSize(self, width, height) -> None:
         self.minimum_size = (width, height)
         
-    def setMaximumSize(self, width, height):
+    def setMaximumSize(self, width, height) -> None:
         self.maximum_size = (width, height)
         
-    def setWindowFlags(self, flags):
+    def setWindowFlags(self, flags) -> None:
         self.window_flags = flags
         
-    def setStyleSheet(self, style):
+    def setStyleSheet(self, style) -> None:
         self.style_sheet = style
 
 class MockQWidget:
-    def __init__(self):
+    def __init__(self) -> None:
         self.style_sheet = ""
         
-    def setStyleSheet(self, style):
+    def setStyleSheet(self, style) -> None:
         self.style_sheet = style
 
 class MockQVBoxLayout:
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         self.parent_obj = parent
         self.widgets = []
         self.margins = (0, 0, 0, 0)
         self.spacing = 0
         
-    def addWidget(self, widget, stretch=0):
+    def addWidget(self, widget, stretch=0) -> None:
         self.widgets.append(widget)
         
-    def addLayout(self, layout):
+    def addLayout(self, layout) -> None:
         self.widgets.append(layout)
         
-    def addStretch(self, stretch=0):
+    def addStretch(self, stretch=0) -> None:
         pass
         
-    def setContentsMargins(self, left, top, right, bottom):
+    def setContentsMargins(self, left, top, right, bottom) -> None:
         self.margins = (left, top, right, bottom)
         
-    def setSpacing(self, spacing):
+    def setSpacing(self, spacing) -> None:
         self.spacing = spacing
 
 class MockQHBoxLayout:
-    def __init__(self):
+    def __init__(self) -> None:
         self.widgets = []
         self.spacing = 0
         
-    def addWidget(self, widget):
+    def addWidget(self, widget) -> None:
         self.widgets.append(widget)
         
-    def addLayout(self, layout):
+    def addLayout(self, layout) -> None:
         self.widgets.append(layout)
         
-    def addStretch(self, stretch=0):
+    def addStretch(self, stretch=0) -> None:
         pass
         
-    def setSpacing(self, spacing):
+    def setSpacing(self, spacing) -> None:
         self.spacing = spacing
 
 class MockQStackedWidget:
-    def __init__(self):
+    def __init__(self) -> None:
         self.widgets = []
         self.current_index = 0
         self.minimum_height = 0
         
-    def addWidget(self, widget):
+    def addWidget(self, widget) -> None:
         self.widgets.append(widget)
         
-    def setCurrentIndex(self, index):
+    def setCurrentIndex(self, index) -> None:
         self.current_index = index
         
-    def setMinimumHeight(self, height):
+    def setMinimumHeight(self, height) -> None:
         self.minimum_height = height
 
 class MockQScrollArea:
-    def __init__(self):
+    def __init__(self) -> None:
         self.widget_obj = None
         self.widget_resizable = False
         self.frame_shape = None
         self.style_sheet = ""
         
-    def setWidget(self, widget):
+    def setWidget(self, widget) -> None:
         self.widget_obj = widget
         
-    def setWidgetResizable(self, resizable):
+    def setWidgetResizable(self, resizable) -> None:
         self.widget_resizable = resizable
         
-    def setFrameShape(self, shape):
+    def setFrameShape(self, shape) -> None:
         self.frame_shape = shape
         
-    def setStyleSheet(self, style):
+    def setStyleSheet(self, style) -> None:
         self.style_sheet = style
 
 class MockTabBar:
-    def __init__(self):
+    def __init__(self) -> None:
         self.tabs = []
         self.fixed_height = 0
         self.movable = True
         self.style_sheet = ""
         self.currentChanged = Mock()
         
-    def addTab(self, icon, text):
+    def addTab(self, icon, text) -> None:
         self.tabs.append((icon, text))
         
-    def setFixedHeight(self, height):
+    def setFixedHeight(self, height) -> None:
         self.fixed_height = height
         
-    def setMovable(self, movable):
+    def setMovable(self, movable) -> None:
         self.movable = movable
         
-    def setStyleSheet(self, style):
+    def setStyleSheet(self, style) -> None:
         self.style_sheet = style
 
 class MockCardWidget:
-    def __init__(self):
+    def __init__(self) -> None:
         self.minimum_height = 0
         
-    def setMinimumHeight(self, height):
+    def setMinimumHeight(self, height) -> None:
         self.minimum_height = height
 
 class MockLabel:
-    def __init__(self, text=""):
+    def __init__(self, text="") -> None:
         self.text_value = text
         self.style_sheet = ""
         self.word_wrap = False
         self.fixed_width = None
         
-    def setText(self, text):
+    def setText(self, text) -> None:
         self.text_value = text
         
-    def setStyleSheet(self, style):
+    def setStyleSheet(self, style) -> None:
         self.style_sheet = style
         
-    def setWordWrap(self, wrap):
+    def setWordWrap(self, wrap) -> None:
         self.word_wrap = wrap
         
-    def setFixedWidth(self, width):
+    def setFixedWidth(self, width) -> None:
         self.fixed_width = width
 
 class MockIconWidget:
-    def __init__(self, icon):
+    def __init__(self, icon) -> None:
         self.icon = icon
         self.fixed_size = (0, 0)
         self.style_sheet = ""
         
-    def setFixedSize(self, width, height):
+    def setFixedSize(self, width, height) -> None:
         self.fixed_size = (width, height)
         
-    def setStyleSheet(self, style):
+    def setStyleSheet(self, style) -> None:
         self.style_sheet = style
 
 class MockHyperlinkButton:
-    def __init__(self, text, url):
+    def __init__(self, text, url) -> None:
         self.text_value = text
         self.url = url
         self.style_sheet = ""
         
-    def setStyleSheet(self, style):
+    def setStyleSheet(self, style) -> None:
         self.style_sheet = style
 
 class MockPushButton:
-    def __init__(self, text=""):
+    def __init__(self, text="") -> None:
         self.text_value = text
         self.clicked = Mock()
         
-    def setText(self, text):
+    def setText(self, text) -> None:
         self.text_value = text
 
 class MockTextEdit:
-    def __init__(self):
+    def __init__(self) -> None:
         self.text_value = ""
         self.read_only = False
         
-    def setPlainText(self, text):
+    def setPlainText(self, text) -> None:
         self.text_value = text
         
-    def setReadOnly(self, read_only):
+    def setReadOnly(self, read_only) -> None:
         self.read_only = read_only
 
 class MockFluentIcon:
@@ -212,11 +212,11 @@ class MockFluentIcon:
     FINGERPRINT = Mock()
     GLOBE = Mock()
     
-    def __init__(self):
+    def __init__(self) -> None:
         pass
         
     @property
-    def value(self):
+    def value(self) -> None:
         return "icon_value"
 
 # Mock the PySide6 imports
@@ -279,11 +279,11 @@ from src.gui.dialogs.about_dialog import AboutDialog
 class TestAboutDialog:
     """Test suite for AboutDialog class."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.mock_parent = Mock()
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test AboutDialog initialization."""
         dialog = AboutDialog(self.mock_parent)
         
@@ -293,7 +293,7 @@ class TestAboutDialog:
         assert dialog.maximum_size == (900, 700)
         assert dialog.window_icon is not None
 
-    def test_window_properties(self):
+    def test_window_properties(self) -> None:
         """Test window properties setup."""
         dialog = AboutDialog()
         
@@ -303,7 +303,7 @@ class TestAboutDialog:
         # Check custom styling is applied
         assert "background: qlineargradient" in dialog.style_sheet
 
-    def test_main_layout_setup(self):
+    def test_main_layout_setup(self) -> None:
         """Test main layout setup."""
         dialog = AboutDialog()
         
@@ -311,7 +311,7 @@ class TestAboutDialog:
         assert dialog.main_layout.margins == (20, 20, 20, 20)
         assert dialog.main_layout.spacing == 20
 
-    def test_header_creation(self):
+    def test_header_creation(self) -> None:
         """Test header creation."""
         dialog = AboutDialog()
         
@@ -321,7 +321,7 @@ class TestAboutDialog:
         assert hasattr(dialog, 'tagline_label')
         assert hasattr(dialog, 'github_btn')
 
-    def test_content_area_creation(self):
+    def test_content_area_creation(self) -> None:
         """Test content area creation."""
         dialog = AboutDialog()
         
@@ -336,7 +336,7 @@ class TestAboutDialog:
         # Stacked widget should have minimum height
         assert dialog.stacked_widget.minimum_height == 280
 
-    def test_tabs_creation(self):
+    def test_tabs_creation(self) -> None:
         """Test that all tabs are created."""
         dialog = AboutDialog()
         
@@ -349,7 +349,7 @@ class TestAboutDialog:
         # Tab bar should have all tabs
         assert len(dialog.tab_bar.tabs) == 4
 
-    def test_tab_bar_connection(self):
+    def test_tab_bar_connection(self) -> None:
         """Test tab bar connection to stacked widget."""
         dialog = AboutDialog()
         
@@ -358,56 +358,56 @@ class TestAboutDialog:
             dialog.stacked_widget.setCurrentIndex
         )
 
-    def test_about_tab_content(self):
+    def test_about_tab_content(self) -> None:
         """Test about tab content creation."""
         dialog = AboutDialog()
         
         # About tab should be created and added to stacked widget
         assert dialog.about_tab in dialog.stacked_widget.widgets
 
-    def test_features_tab_content(self):
+    def test_features_tab_content(self) -> None:
         """Test features tab content creation."""
         dialog = AboutDialog()
         
         # Features tab should be created and added to stacked widget
         assert dialog.features_tab in dialog.stacked_widget.widgets
 
-    def test_license_tab_content(self):
+    def test_license_tab_content(self) -> None:
         """Test license tab content creation."""
         dialog = AboutDialog()
         
         # License tab should be created and added to stacked widget
         assert dialog.license_tab in dialog.stacked_widget.widgets
 
-    def test_third_party_tab_content(self):
+    def test_third_party_tab_content(self) -> None:
         """Test third-party tab content creation."""
         dialog = AboutDialog()
         
         # Third-party tab should be created and added to stacked widget
         assert dialog.third_party_tab in dialog.stacked_widget.widgets
 
-    def test_github_button_functionality(self):
+    def test_github_button_functionality(self) -> None:
         """Test GitHub button functionality."""
         dialog = AboutDialog()
         
         # GitHub button should be created with correct URL
         assert dialog.github_btn.url == "https://github.com/yourusername/vidtanium"
 
-    def test_check_updates_functionality(self):
+    def test_check_updates_functionality(self) -> None:
         """Test check updates functionality."""
         dialog = AboutDialog()
         
         # Should not raise exception when called
         dialog._check_updates()
 
-    def test_animations_setup(self):
+    def test_animations_setup(self) -> None:
         """Test animations setup."""
         dialog = AboutDialog()
         
         # Should not raise exception during setup
         dialog._setup_animations()
 
-    def test_dialog_styling(self):
+    def test_dialog_styling(self) -> None:
         """Test dialog styling application."""
         dialog = AboutDialog()
         
@@ -416,7 +416,7 @@ class TestAboutDialog:
         assert "background: qlineargradient" in dialog.style_sheet
         assert "border-radius: 12px" in dialog.style_sheet
 
-    def test_responsive_design_elements(self):
+    def test_responsive_design_elements(self) -> None:
         """Test responsive design elements."""
         dialog = AboutDialog()
         
@@ -424,7 +424,7 @@ class TestAboutDialog:
         assert dialog.minimum_size == (750, 600)
         assert dialog.maximum_size == (900, 700)
 
-    def test_content_scrollability(self):
+    def test_content_scrollability(self) -> None:
         """Test content scrollability."""
         dialog = AboutDialog()
         
@@ -432,7 +432,7 @@ class TestAboutDialog:
         # This is tested indirectly through the creation methods
         assert True  # Placeholder for scroll area tests
 
-    def test_icon_integration(self):
+    def test_icon_integration(self) -> None:
         """Test icon integration throughout dialog."""
         dialog = AboutDialog()
         
@@ -440,7 +440,7 @@ class TestAboutDialog:
         # Icons should be properly integrated in tabs and content
         assert True  # Placeholder for icon integration tests
 
-    def test_localization_support(self):
+    def test_localization_support(self) -> None:
         """Test localization support."""
         dialog = AboutDialog()
         
@@ -448,7 +448,7 @@ class TestAboutDialog:
         # This is verified through the tr() mock usage
         assert True  # Placeholder for localization tests
 
-    def test_error_handling(self):
+    def test_error_handling(self) -> None:
         """Test error handling in dialog creation."""
         # Should not raise exceptions during initialization
         try:
@@ -457,7 +457,7 @@ class TestAboutDialog:
         except Exception as e:
             pytest.fail(f"AboutDialog initialization raised an exception: {e}")
 
-    def test_memory_management(self):
+    def test_memory_management(self) -> None:
         """Test proper memory management."""
         dialog = AboutDialog()
         
@@ -466,7 +466,7 @@ class TestAboutDialog:
         assert hasattr(dialog, 'tab_bar')
         assert hasattr(dialog, 'stacked_widget')
 
-    def test_theme_integration(self):
+    def test_theme_integration(self) -> None:
         """Test theme integration."""
         dialog = AboutDialog()
         

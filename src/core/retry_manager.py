@@ -12,7 +12,7 @@ from threading import Lock
 from loguru import logger
 
 from .exceptions import VidTaniumException, ErrorCategory, ErrorSeverity, ErrorContext
-from .error_handler import EnhancedErrorHandler, RetryStrategy
+from .error_handler import ErrorHandler, RetryStrategy
 
 
 class CircuitState(Enum):
@@ -55,7 +55,7 @@ class CircuitBreakerConfig:
 class CircuitBreaker:
     """Circuit breaker implementation for preventing cascade failures"""
     
-    def __init__(self, name: str, config: CircuitBreakerConfig):
+    def __init__(self, name: str, config: CircuitBreakerConfig) -> None:
         self.name = name
         self.config = config
         self.state = CircuitState.CLOSED
@@ -82,7 +82,7 @@ class CircuitBreaker:
             elif self.state == CircuitState.HALF_OPEN:
                 return True
     
-    def record_success(self):
+    def record_success(self) -> None:
         """Record successful operation"""
         with self.lock:
             now = time.time()
@@ -98,7 +98,7 @@ class CircuitBreaker:
             elif self.state == CircuitState.CLOSED:
                 self.failure_count = max(0, self.failure_count - 1)
     
-    def record_failure(self):
+    def record_failure(self) -> None:
         """Record failed operation"""
         with self.lock:
             now = time.time()
@@ -116,7 +116,7 @@ class CircuitBreaker:
                 self.state = CircuitState.OPEN
                 logger.warning(f"Circuit breaker {self.name} transitioning back to OPEN")
     
-    def _cleanup_old_attempts(self, now: float):
+    def _cleanup_old_attempts(self, now: float) -> None:
         """Remove attempts outside monitoring window"""
         cutoff = now - self.config.monitoring_window
         self.recent_attempts = [
@@ -147,7 +147,7 @@ class CircuitBreaker:
 class IntelligentRetryManager:
     """Intelligent retry manager with circuit breaker and adaptive strategies"""
     
-    def __init__(self, error_handler: Optional[EnhancedErrorHandler] = None):
+    def __init__(self, error_handler: Optional[ErrorHandler] = None) -> None:
         self.error_handler = error_handler
         self.active_sessions: Dict[str, RetrySession] = {}
         self.circuit_breakers: Dict[str, CircuitBreaker] = {}
@@ -398,7 +398,7 @@ class IntelligentRetryManager:
             # Default retry logic: retry on network/temporary errors
             return hasattr(exception, 'is_retryable') and exception.is_retryable
     
-    def _cleanup_session(self, operation_id: str):
+    def _cleanup_session(self, operation_id: str) -> None:
         """Clean up completed retry session"""
         with self.lock:
             if operation_id in self.active_sessions:

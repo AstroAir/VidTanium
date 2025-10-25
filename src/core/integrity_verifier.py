@@ -74,7 +74,7 @@ class IntegrityConfig:
 class ContentIntegrityVerifier:
     """Multi-layer content integrity verifier"""
     
-    def __init__(self, config: Optional[IntegrityConfig] = None):
+    def __init__(self, config: Optional[IntegrityConfig] = None) -> None:
         self.config = config or IntegrityConfig()
         self.verification_cache: Dict[str, IntegrityResult] = {}
         self.lock = threading.RLock()
@@ -540,7 +540,7 @@ class ContentIntegrityVerifier:
             
             return stats
     
-    def clear_cache(self):
+    def clear_cache(self) -> None:
         """Clear verification cache"""
         with self.lock:
             self.verification_cache.clear()

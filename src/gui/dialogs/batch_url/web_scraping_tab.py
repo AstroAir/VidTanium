@@ -17,12 +17,12 @@ class WebScrapingTab(QWidget):
     # 提取URL信号
     urls_extracted = Signal(list)
 
-    def __init__(self, settings: Any, parent: Optional[QWidget] = None):
+    def __init__(self, settings: Any, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self.settings = settings
         self._create_ui()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """创建界面"""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(10, 10, 10, 10)
@@ -92,7 +92,7 @@ class WebScrapingTab(QWidget):
         layout.addWidget(options_card)
         layout.addStretch()
 
-    def _fetch_urls_from_web(self):
+    def _fetch_urls_from_web(self) -> None:
         """从网页抓取URL"""
         url: str = self.web_url_input.text().strip()
         if not url:

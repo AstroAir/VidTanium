@@ -15,7 +15,7 @@ class SettingsDialog(QDialog):
     
     settings_applied = Signal()
     
-    def __init__(self, settings, parent=None):
+    def __init__(self, settings, parent=None) -> None:
         super().__init__(parent)
         self.settings = settings
         
@@ -26,7 +26,7 @@ class SettingsDialog(QDialog):
         
         self._create_ui()
     
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """Create the dialog UI"""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)

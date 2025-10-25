@@ -18,11 +18,11 @@ class FileInputTab(QWidget):
     # 提取URL信号
     urls_extracted = Signal(list)
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self._create_ui()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """创建界面"""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(10, 10, 10, 10)
@@ -79,7 +79,7 @@ class FileInputTab(QWidget):
         layout.addWidget(options_card)
         layout.addStretch()
 
-    def _browse_file(self):
+    def _browse_file(self) -> None:
         """浏览文件"""
         file_path, _ = QFileDialog.getOpenFileName(
             self, "选择文本文件", "", "文本文件 (*.txt);;所有文件 (*)"
@@ -89,7 +89,7 @@ class FileInputTab(QWidget):
             self.file_path_input.setText(file_path)
             self.load_file_button.setEnabled(True)
 
-    def _load_file(self):
+    def _load_file(self) -> None:
         """加载文件"""
         file_path = self.file_path_input.text()
         if not file_path or not os.path.exists(file_path):

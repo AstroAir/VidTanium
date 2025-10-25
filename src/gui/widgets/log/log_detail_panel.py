@@ -16,11 +16,11 @@ from qfluentwidgets import (
 class LogDetailPanel(CardWidget):
     """Log detail panel component."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self._create_ui()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """Create the UI."""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(8, 8, 8, 8)
@@ -46,7 +46,7 @@ class LogDetailPanel(CardWidget):
 
         self._apply_styles()
 
-    def _apply_styles(self):
+    def _apply_styles(self) -> None:
         """Apply styles."""
         self.detail_text.setStyleSheet("""
             TextEdit {
@@ -55,17 +55,17 @@ class LogDetailPanel(CardWidget):
             }
         """)
 
-    def set_word_wrap(self, enabled):
+    def set_word_wrap(self, enabled) -> None:
         """Set word wrap."""
         from PySide6.QtGui import QTextOption
         mode = QTextOption.WrapMode.WordWrap if enabled else QTextOption.WrapMode.NoWrap
         self.detail_text.setWordWrapMode(mode)
 
-    def set_font(self, font):
+    def set_font(self, font) -> None:
         """Set font."""
         self.detail_text.setFont(font)
 
-    def set_log_details(self, log_entry):
+    def set_log_details(self, log_entry) -> None:
         """
         Display log details.
 
@@ -87,6 +87,6 @@ class LogDetailPanel(CardWidget):
 
         self.detail_text.setPlainText(details)
 
-    def clear(self):
+    def clear(self) -> None:
         """Clear details."""
         self.detail_text.clear()

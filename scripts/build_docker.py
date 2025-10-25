@@ -18,7 +18,7 @@ from build_config import BuildConfig, get_build_config, BuildProfile
 class DockerBuilder:
     """Docker image builder and manager"""
     
-    def __init__(self, config: BuildConfig):
+    def __init__(self, config: BuildConfig) -> None:
         self.config = config
         self.project_root = Path(__file__).parent.parent
         self.dockerfile = self.project_root / "Dockerfile"
@@ -44,7 +44,7 @@ class DockerBuilder:
             print("💡 Install Docker from https://docker.com/")
             return False
     
-    def build_image(self, target: str, tags: List[str] = None, push: bool = False) -> bool:
+    def build_image(self, target: str, tags: Optional[List[str]] = None, push: bool = False) -> bool:
         """Build Docker image for specific target"""
         if target not in self.targets:
             print(f"❌ Unknown target: {target}")
@@ -241,7 +241,7 @@ class DockerBuilder:
         
         return "unknown"
     
-    def show_images(self):
+    def show_images(self) -> None:
         """Show built VidTanium Docker images"""
         print("📋 VidTanium Docker images:")
         
@@ -260,7 +260,7 @@ class DockerBuilder:
         except subprocess.CalledProcessError as e:
             print(f"❌ Failed to list images: {e}")
 
-def main():
+def main() -> None:
     """Main Docker build function"""
     parser = argparse.ArgumentParser(description="VidTanium Docker builder")
     parser.add_argument("--profile", type=str, choices=[p.value for p in BuildProfile],

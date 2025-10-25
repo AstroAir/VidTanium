@@ -26,7 +26,7 @@ class TestEnhancedComponentsIntegration:
     """Test integration of all enhanced components"""
     
     @pytest.fixture
-    def temp_dir(self):
+    def temp_dir(self) -> None:
         """Create a temporary directory for testing"""
         temp_dir = tempfile.mkdtemp()
         yield temp_dir
@@ -35,7 +35,7 @@ class TestEnhancedComponentsIntegration:
         shutil.rmtree(temp_dir, ignore_errors=True)
     
     @pytest.fixture
-    def download_manager(self, temp_dir):
+    def download_manager(self, temp_dir) -> None:
         """Create a DownloadManager for testing"""
         # Mock settings
         mock_settings = Mock()
@@ -46,7 +46,7 @@ class TestEnhancedComponentsIntegration:
         # Cleanup
         manager.stop()
     
-    def test_all_components_initialization(self, download_manager):
+    def test_all_components_initialization(self, download_manager) -> None:
         """Test that all enhanced components are properly initialized"""
         # Check that all components are accessible
         assert download_manager.connection_pool is not None
@@ -68,7 +68,7 @@ class TestEnhancedComponentsIntegration:
         assert download_manager.segment_validator is segment_validator
         assert download_manager.integrity_verifier is content_integrity_verifier
     
-    def test_monitoring_systems_started(self, download_manager):
+    def test_monitoring_systems_started(self, download_manager) -> None:
         """Test that all monitoring systems are started"""
         download_manager.start()
         
@@ -77,7 +77,7 @@ class TestEnhancedComponentsIntegration:
         assert circuit_breaker_manager.monitoring_active is True
         assert connection_pool_manager.monitoring_active is True
     
-    def test_comprehensive_stats_collection(self, download_manager):
+    def test_comprehensive_stats_collection(self, download_manager) -> None:
         """Test comprehensive statistics collection from all components"""
         download_manager.start()
         
@@ -106,7 +106,7 @@ class TestEnhancedComponentsIntegration:
         assert "total_validations" in stats["segment_validator"]
         assert "total_verifications" in stats["integrity_verifier"]
     
-    def test_performance_metrics_collection(self, download_manager):
+    def test_performance_metrics_collection(self, download_manager) -> None:
         """Test performance metrics collection"""
         download_manager.start()
         
@@ -129,7 +129,7 @@ class TestEnhancedComponentsIntegration:
         assert isinstance(metrics["circuit_breaker_status"], dict)
         assert isinstance(metrics["validation_success_rate"], (int, float))
     
-    def test_system_health_assessment(self, download_manager):
+    def test_system_health_assessment(self, download_manager) -> None:
         """Test system health assessment"""
         download_manager.start()
         
@@ -153,7 +153,7 @@ class TestEnhancedComponentsIntegration:
         assert isinstance(health["recommendations"], list)
     
     @patch('requests.Session')
-    def test_connection_pool_integration(self, mock_session_class, download_manager):
+    def test_connection_pool_integration(self, mock_session_class, download_manager) -> None:
         """Test connection pool integration"""
         mock_session = Mock()
         mock_session_class.return_value = mock_session
@@ -174,7 +174,7 @@ class TestEnhancedComponentsIntegration:
         stats = connection_pool_manager.get_pool_stats()
         assert stats["total_hosts"] >= 1
     
-    def test_adaptive_timeout_integration(self, download_manager):
+    def test_adaptive_timeout_integration(self, download_manager) -> None:
         """Test adaptive timeout integration"""
         url = "https://test.example.com/segment.ts"
         
@@ -197,7 +197,7 @@ class TestEnhancedComponentsIntegration:
         assert new_conn_timeout <= conn_timeout
         assert new_read_timeout <= read_timeout
     
-    def test_memory_optimizer_integration(self, download_manager):
+    def test_memory_optimizer_integration(self, download_manager) -> None:
         """Test memory optimizer integration"""
         buffer_id = "test_integration_buffer"
         
@@ -220,7 +220,7 @@ class TestEnhancedComponentsIntegration:
         memory_optimizer.release_streaming_buffer(buffer_id)
         assert buffer_id not in memory_optimizer.streaming_buffers
     
-    def test_adaptive_retry_integration(self, download_manager):
+    def test_adaptive_retry_integration(self, download_manager) -> None:
         """Test adaptive retry integration"""
         url = "https://test.example.com/segment.ts"
         
@@ -241,7 +241,7 @@ class TestEnhancedComponentsIntegration:
         assert stats["total_hosts"] >= 1
         assert stats["total_attempts"] >= 1
     
-    def test_circuit_breaker_integration(self, download_manager):
+    def test_circuit_breaker_integration(self, download_manager) -> None:
         """Test circuit breaker integration"""
         url = "https://test.example.com/segment.ts"
         
@@ -259,7 +259,7 @@ class TestEnhancedComponentsIntegration:
         stats = circuit_breaker_manager.get_all_stats()
         assert stats["total_circuit_breakers"] >= 1
     
-    def test_progressive_recovery_integration(self, download_manager):
+    def test_progressive_recovery_integration(self, download_manager) -> None:
         """Test progressive recovery integration"""
         task_id = "test_recovery_task"
         
@@ -284,7 +284,7 @@ class TestEnhancedComponentsIntegration:
         # Cleanup
         progressive_recovery_manager.remove_session(task_id)
     
-    def test_segment_validator_integration(self, download_manager):
+    def test_segment_validator_integration(self, download_manager) -> None:
         """Test segment validator integration"""
         # Create a temporary test file
         fd, temp_file = tempfile.mkstemp(suffix=".ts")
@@ -309,7 +309,7 @@ class TestEnhancedComponentsIntegration:
             if os.path.exists(temp_file):
                 os.unlink(temp_file)
     
-    def test_integrity_verifier_integration(self, download_manager):
+    def test_integrity_verifier_integration(self, download_manager) -> None:
         """Test integrity verifier integration"""
         # Create a temporary test file
         fd, temp_file = tempfile.mkstemp(suffix=".ts")
@@ -339,7 +339,7 @@ class TestEnhancedComponentsIntegration:
             if os.path.exists(temp_file):
                 os.unlink(temp_file)
     
-    def test_resource_manager_integration(self, download_manager):
+    def test_resource_manager_integration(self, download_manager) -> None:
         """Test resource manager integration"""
         from src.core.resource_manager import ResourceType
         
@@ -366,7 +366,7 @@ class TestEnhancedComponentsIntegration:
         assert success is True
         assert resource_id not in resource_manager.resources
     
-    def test_component_shutdown_integration(self, download_manager):
+    def test_component_shutdown_integration(self, download_manager) -> None:
         """Test that all components shut down properly"""
         download_manager.start()
         

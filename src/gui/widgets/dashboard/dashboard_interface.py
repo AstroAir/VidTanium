@@ -10,20 +10,20 @@ from qfluentwidgets import (
     SmoothScrollArea
 )
 
-from ...utils.theme import VidTaniumTheme
+from ...utils.unified_design_system import UnifiedDesignSystem as DS
 from ...utils.responsive import ResponsiveWidget, ResponsiveManager, ResponsiveLayout
-from .hero_section import EnhancedDashboardHeroSection
-from .stats_section import EnhancedDashboardStatsSection
+from .hero_section import DashboardHeroSection
+from .stats_section import DashboardStatsSection
 from .task_preview import DashboardTaskPreview
-from .system_status import EnhancedDashboardSystemStatus
+from .system_status import DashboardSystemStatus
 from loguru import logger
 
 if TYPE_CHECKING:
     from ...main_window import MainWindow
 
 
-class EnhancedDashboardInterface(ResponsiveWidget):
-    """Enhanced Dashboard interface with responsive design and modern theming integration
+class DashboardInterface(ResponsiveWidget):
+    """Dashboard interface with responsive design and modern theming integration
     
     Features:
     - Comprehensive theme integration with EnhancedThemeManager
@@ -33,17 +33,17 @@ class EnhancedDashboardInterface(ResponsiveWidget):
     - Enhanced component integration
     """
 
-    def __init__(self, main_window: "MainWindow", theme_manager=None):
+    def __init__(self, main_window: "MainWindow", theme_manager=None) -> None:
         super().__init__()
         self.main_window = main_window
         self.theme_manager = theme_manager
         self.responsive_manager = ResponsiveManager.instance()
 
         # Component instances
-        self.hero_section: Optional[EnhancedDashboardHeroSection] = None
-        self.stats_section: Optional[EnhancedDashboardStatsSection] = None
+        self.hero_section: Optional[DashboardHeroSection] = None
+        self.stats_section: Optional[DashboardStatsSection] = None
         self.task_preview: Optional[DashboardTaskPreview] = None
-        self.system_status: Optional[EnhancedDashboardSystemStatus] = None
+        self.system_status: Optional[DashboardSystemStatus] = None
         
         # Layout containers
         self.main_container: Optional[QWidget] = None
@@ -73,11 +73,11 @@ class EnhancedDashboardInterface(ResponsiveWidget):
         main_layout.setSpacing(20)
 
         # Create component instances with enhanced theming
-        self.hero_section = EnhancedDashboardHeroSection(self.main_window, self.theme_manager)
+        self.hero_section = DashboardHeroSection(self.main_window, self.theme_manager)
         main_layout.addWidget(self.hero_section)
 
         # Statistics dashboard with enhanced theming
-        self.stats_section = EnhancedDashboardStatsSection(self.main_window, self.theme_manager)
+        self.stats_section = DashboardStatsSection(self.main_window, self.theme_manager)
         main_layout.addWidget(self.stats_section)
 
         # Content cards section with adaptive layout
@@ -93,22 +93,14 @@ class EnhancedDashboardInterface(ResponsiveWidget):
         
         return interface
 
-    def _apply_interface_styling(self, interface: SmoothScrollArea):
+    def _apply_interface_styling(self, interface: SmoothScrollArea) -> None:
         """Apply enhanced styling to the interface"""
         # Get current theme colors
-        theme_manager = getattr(self.main_window, 'theme_manager', None)
-        if theme_manager:
-            colors = theme_manager.get_theme_colors()
-            background = colors.get('background', VidTaniumTheme.BG_PRIMARY)
-            surface = colors.get('surface', VidTaniumTheme.BG_SECONDARY)
-        else:
-            background = VidTaniumTheme.BG_PRIMARY
-            surface = VidTaniumTheme.BG_SECONDARY
+        # Let qfluentwidgets and UnifiedDesignSystem handle theming
 
         interface.setStyleSheet(f"""
             SmoothScrollArea {{
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 {surface}, stop:1 {background});
+                background-color: {DS.color('surface')};
                 border: none;
             }}
             SmoothScrollArea QScrollBar:vertical {{
@@ -126,7 +118,7 @@ class EnhancedDashboardInterface(ResponsiveWidget):
             }}
         """)
 
-    def _setup_responsive_margins(self, layout: QVBoxLayout):
+    def _setup_responsive_margins(self, layout: QVBoxLayout) -> None:
         """Setup responsive margins based on current breakpoint"""
         current_bp = self.responsive_manager.get_current_breakpoint()
         
@@ -142,11 +134,11 @@ class EnhancedDashboardInterface(ResponsiveWidget):
         margin = margin_config.get(current_bp.value, 20)
         layout.setContentsMargins(margin, margin, margin, margin)
 
-    def _setup_content_section(self, main_layout: QVBoxLayout):
+    def _setup_content_section(self, main_layout: QVBoxLayout) -> None:
         """Setup the content section with adaptive layout and enhanced theming"""
         # Create task preview and system status cards with enhanced theming
         self.task_preview = DashboardTaskPreview(self.main_window)
-        self.system_status = EnhancedDashboardSystemStatus(self.main_window, self.theme_manager)
+        self.system_status = DashboardSystemStatus(self.main_window, self.theme_manager)
 
         # Create adaptive layout configuration
         breakpoint_configs = {
@@ -168,14 +160,14 @@ class EnhancedDashboardInterface(ResponsiveWidget):
         
         main_layout.addLayout(responsive_layout)
 
-    def set_layout_mode(self, mode: str):
+    def set_layout_mode(self, mode: str) -> None:
         """Set layout mode for responsive adaptation"""
         if mode != self._layout_mode:
             self._layout_mode = mode
             logger.debug(f"Dashboard layout mode changed to: {mode}")
             self._adapt_layout_for_mode(mode)
 
-    def _adapt_layout_for_mode(self, mode: str):
+    def _adapt_layout_for_mode(self, mode: str) -> None:
         """Adapt layout based on the specified mode"""
         if not self.content_layout or not self.task_preview or not self.system_status:
             return
@@ -197,7 +189,7 @@ class EnhancedDashboardInterface(ResponsiveWidget):
             self.content_layout.addWidget(self.task_preview, 2)  # Takes 2/3 of space
             self.content_layout.addWidget(self.system_status, 1)  # Takes 1/3 of space
 
-    def on_breakpoint_changed(self, breakpoint: str):
+    def on_breakpoint_changed(self, breakpoint: str) -> None:
         """Handle responsive breakpoint changes"""
         logger.debug(f"Dashboard adapting to breakpoint: {breakpoint}")
         
@@ -213,7 +205,7 @@ class EnhancedDashboardInterface(ResponsiveWidget):
         else:
             self.set_layout_mode('horizontal')
 
-    def _update_animations(self):
+    def _update_animations(self) -> None:
         """Update dashboard animations and data with performance optimization"""
         try:
             # Check if window is visible to avoid unnecessary updates
@@ -239,7 +231,7 @@ class EnhancedDashboardInterface(ResponsiveWidget):
         except Exception as e:
             logger.error(f"Error updating statistics: {e}")
 
-    def update_task_preview(self):
+    def update_task_preview(self) -> None:
         """Update task preview - delegates to task preview component"""
         try:
             if self.task_preview:
@@ -255,7 +247,7 @@ class EnhancedDashboardInterface(ResponsiveWidget):
         except Exception as e:
             logger.error(f"Error updating system status: {e}")
 
-    def update_theme(self, theme_manager=None):
+    def update_theme(self, theme_manager=None) -> None:
         """Update theme for all dashboard components"""
         if theme_manager:
             self.theme_manager = theme_manager
@@ -276,7 +268,7 @@ class EnhancedDashboardInterface(ResponsiveWidget):
             if parent_widget:
                 self._apply_interface_styling(parent_widget)
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         """Clean up resources"""
         try:
             if self.animation_timer:
@@ -287,7 +279,7 @@ class EnhancedDashboardInterface(ResponsiveWidget):
             logger.error(f"Error cleaning up dashboard: {e}")
 
     # Compatibility methods for backward compatibility
-    def update_stats(self):
+    def update_stats(self) -> None:
         """Update statistics - compatibility method"""
         self.update_statistics()
 
@@ -302,4 +294,4 @@ class EnhancedDashboardInterface(ResponsiveWidget):
 
 
 # Backward compatibility alias
-DashboardInterface = EnhancedDashboardInterface
+EnhancedDashboardInterface = DashboardInterface

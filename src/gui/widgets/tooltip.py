@@ -17,7 +17,6 @@ from qfluentwidgets import (
 )
 
 from ..utils.i18n import tr
-from ..utils.theme import VidTaniumTheme
 
 
 class Tooltip(QWidget):
@@ -35,7 +34,7 @@ class Tooltip(QWidget):
         learn_more_url: Optional[str] = None,
         actions: Optional[List[dict]] = None,
         parent=None
-    ):
+    ) -> None:
         super().__init__(parent)
         
         self.title = title
@@ -63,17 +62,16 @@ class Tooltip(QWidget):
         # Start auto-hide timer (10 seconds)
         self.auto_hide_timer.start(10000)
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup the UI components"""
         # Main container with shadow effect
         self.container = QFrame()
-        self.container.setStyleSheet(f"""
-            QFrame {{
-                background: {VidTaniumTheme.BG_SURFACE};
-                border: 1px solid {VidTaniumTheme.BORDER_COLOR};
+        self.container.setObjectName("tooltip-container")
+        self.container.setStyleSheet("""
+            QFrame#tooltip-container {
                 border-radius: 12px;
                 padding: 0px;
-            }}
+            }
         """)
         
         # Layout for the entire tooltip
@@ -92,12 +90,11 @@ class Tooltip(QWidget):
         
         # Title
         title_label = BodyLabel(self.title)
-        title_label.setStyleSheet(f"""
-            QLabel {{
-                color: {VidTaniumTheme.TEXT_PRIMARY};
+        title_label.setStyleSheet("""
+            QLabel {
                 font-weight: bold;
                 font-size: 14px;
-            }}
+            }
         """)
         header_layout.addWidget(title_label)
         
@@ -114,11 +111,10 @@ class Tooltip(QWidget):
         # Description
         desc_label = BodyLabel(self.description)
         desc_label.setWordWrap(True)
-        desc_label.setStyleSheet(f"""
-            QLabel {{
-                color: {VidTaniumTheme.TEXT_SECONDARY};
+        desc_label.setStyleSheet("""
+            QLabel {
                 line-height: 1.4;
-            }}
+            }
         """)
         container_layout.addWidget(desc_label)
         
@@ -141,7 +137,7 @@ class Tooltip(QWidget):
             )
             container_layout.addWidget(learn_more_link)
     
-    def _add_detailed_info(self, layout: QVBoxLayout):
+    def _add_detailed_info(self, layout: QVBoxLayout) -> None:
         """Add detailed information section"""
         # Expandable section
         self.details_expanded = False
@@ -150,19 +146,14 @@ class Tooltip(QWidget):
         self.details_toggle = PushButton(tr("tooltip.show_details"))
         self.details_toggle.setIcon(FIF.CHEVRON_DOWN)
         self.details_toggle.clicked.connect(self._toggle_details)
-        self.details_toggle.setStyleSheet(f"""
-            QPushButton {{
+        self.details_toggle.setObjectName("details-toggle")
+        self.details_toggle.setStyleSheet("""
+            QPushButton#details-toggle {
                 background: transparent;
-                border: 1px solid {VidTaniumTheme.BORDER_COLOR};
                 border-radius: 6px;
                 padding: 4px 8px;
-                color: {VidTaniumTheme.TEXT_SECONDARY};
                 text-align: left;
-            }}
-            QPushButton:hover {{
-                background: {VidTaniumTheme.BG_SECONDARY};
-                color: {VidTaniumTheme.TEXT_PRIMARY};
-            }}
+            }
         """)
         layout.addWidget(self.details_toggle)
         
@@ -173,21 +164,20 @@ class Tooltip(QWidget):
         
         details_label = BodyLabel(self.detailed_info)
         details_label.setWordWrap(True)
-        details_label.setStyleSheet(f"""
-            QLabel {{
-                color: {VidTaniumTheme.TEXT_SECONDARY};
-                background: {VidTaniumTheme.BG_SECONDARY};
+        details_label.setObjectName("details-label")
+        details_label.setStyleSheet("""
+            QLabel#details-label {
                 border-radius: 6px;
                 padding: 8px;
                 line-height: 1.4;
-            }}
+            }
         """)
         details_layout.addWidget(details_label)
         
         self.details_widget.setVisible(False)
         layout.addWidget(self.details_widget)
     
-    def _add_actions(self, layout: QVBoxLayout):
+    def _add_actions(self, layout: QVBoxLayout) -> None:
         """Add action buttons"""
         actions_layout = QHBoxLayout()
         actions_layout.setSpacing(8)
@@ -203,31 +193,23 @@ class Tooltip(QWidget):
             # Set style based on priority
             priority = action.get("priority", "medium")
             if priority == "high":
-                action_button.setStyleSheet(f"""
-                    QPushButton {{
-                        background: {VidTaniumTheme.ACCENT_CYAN};
+                action_button.setObjectName("action-button-high")
+                action_button.setStyleSheet("""
+                    QPushButton#action-button-high {
                         border: none;
                         border-radius: 6px;
-                        color: white;
-                        font-weight: 500;
+                        font-weight: bold;
                         padding: 6px 12px;
-                    }}
-                    QPushButton:hover {{
-                        background: {VidTaniumTheme.ACCENT_CYAN}CC;
-                    }}
+                    }
                 """)
             else:
-                action_button.setStyleSheet(f"""
-                    QPushButton {{
+                action_button.setObjectName("action-button-normal")
+                action_button.setStyleSheet("""
+                    QPushButton#action-button-normal {
                         background: transparent;
-                        border: 1px solid {VidTaniumTheme.BORDER_COLOR};
                         border-radius: 6px;
-                        color: {VidTaniumTheme.TEXT_PRIMARY};
                         padding: 6px 12px;
-                    }}
-                    QPushButton:hover {{
-                        background: {VidTaniumTheme.BG_SECONDARY};
-                    }}
+                    }
                 """)
             
             # Connect click handler
@@ -241,7 +223,7 @@ class Tooltip(QWidget):
         actions_layout.addStretch()
         layout.addLayout(actions_layout)
     
-    def _setup_animations(self):
+    def _setup_animations(self) -> None:
         """Setup show/hide animations"""
         self.fade_animation = QPropertyAnimation(self, QByteArray(b"windowOpacity"))
         self.fade_animation.setDuration(200)
@@ -251,7 +233,7 @@ class Tooltip(QWidget):
         self.scale_animation.setDuration(200)
         self.scale_animation.setEasingCurve(QEasingCurve.Type.OutBack)
     
-    def _toggle_details(self):
+    def _toggle_details(self) -> None:
         """Toggle detailed information visibility"""
         self.details_expanded = not self.details_expanded
         
@@ -267,7 +249,7 @@ class Tooltip(QWidget):
         # Adjust size
         self.adjustSize()
     
-    def show_at_position(self, position: QPoint):
+    def show_at_position(self, position: QPoint) -> None:
         """Show tooltip at specific position with animation"""
         # Calculate optimal position to stay within screen bounds
         screen = QApplication.primaryScreen().geometry()
@@ -297,30 +279,30 @@ class Tooltip(QWidget):
         # Reset auto-hide timer
         self.auto_hide_timer.start(10000)
     
-    def hide_with_animation(self):
+    def hide_with_animation(self) -> None:
         """Hide tooltip with fade animation"""
         self.fade_animation.setStartValue(1.0)
         self.fade_animation.setEndValue(0.0)
         self.fade_animation.finished.connect(self._on_hide_finished)
         self.fade_animation.start()
     
-    def _on_hide_finished(self):
+    def _on_hide_finished(self) -> None:
         """Handle hide animation completion"""
         self.hide()
         self.closed.emit()
         self.fade_animation.finished.disconnect()
     
-    def enterEvent(self, event):
+    def enterEvent(self, event) -> None:
         """Handle mouse enter - stop auto-hide timer"""
         self.auto_hide_timer.stop()
         super().enterEvent(event)
     
-    def leaveEvent(self, event):
+    def leaveEvent(self, event) -> None:
         """Handle mouse leave - restart auto-hide timer"""
         self.auto_hide_timer.start(3000)  # Shorter delay after mouse leave
         super().leaveEvent(event)
     
-    def paintEvent(self, event):
+    def paintEvent(self, event) -> None:
         """Custom paint event for shadow effect"""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -342,7 +324,7 @@ class Tooltip(QWidget):
 class SmartTooltipMixin:
     """Mixin class to add smart tooltip functionality to widgets"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.tooltip_manager = None
         self.help_context = None
         self.help_key = None
@@ -352,13 +334,13 @@ class SmartTooltipMixin:
         tooltip_manager,
         context: str,
         help_key: str
-    ):
+    ) -> None:
         """Set contextual help for this widget"""
         self.tooltip_manager = tooltip_manager
         self.help_context = context
         self.help_key = help_key
     
-    def enterEvent(self, event):
+    def enterEvent(self, event) -> None:
         """Show contextual help on mouse enter"""
         if (self.tooltip_manager and 
             self.help_context and 
@@ -372,7 +354,7 @@ class SmartTooltipMixin:
         # Call parent implementation if available
         pass
     
-    def leaveEvent(self, event):
+    def leaveEvent(self, event) -> None:
         """Hide contextual help on mouse leave"""
         if self.tooltip_manager:
             self.tooltip_manager.hide_contextual_help(self)

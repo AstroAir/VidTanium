@@ -19,7 +19,7 @@ from build_config import BuildConfig, get_build_config, BuildProfile
 class ComprehensiveBuilder:
     """Orchestrates all build processes"""
     
-    def __init__(self, profile: BuildProfile = BuildProfile.RELEASE):
+    def __init__(self, profile: BuildProfile = BuildProfile.RELEASE) -> None:
         self.config = get_build_config(profile)
         self.project_root = Path(__file__).parent.parent
         self.scripts_dir = self.project_root / "scripts"
@@ -160,8 +160,8 @@ class ComprehensiveBuilder:
                 f.write(f"# SHA256 checksums for {self.config.app_name} v{self.config.app_version}\n")
                 f.write(f"# Generated: {__import__('datetime').datetime.now().isoformat()}\n\n")
                 
-                for file_path, file_hash in sorted(checksums.items()):
-                    f.write(f"{file_hash}  {file_path}\n")
+                for file_path_str, file_hash in sorted(checksums.items()):
+                    f.write(f"{file_hash}  {file_path_str}\n")
             
             print(f"✅ Generated checksums: {checksum_file}")
             print(f"   {len(checksums)} files processed")
@@ -205,7 +205,7 @@ class ComprehensiveBuilder:
             print(f"❌ Release archive creation failed: {e}")
             return False
 
-def main():
+def main() -> None:
     """Main build orchestration function"""
     parser = argparse.ArgumentParser(description="Comprehensive VidTanium build system")
     parser.add_argument("--profile", type=str, choices=[p.value for p in BuildProfile],

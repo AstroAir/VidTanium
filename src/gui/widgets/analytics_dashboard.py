@@ -20,7 +20,6 @@ from qfluentwidgets import (
 )
 
 from ..utils.i18n import tr
-from ..utils.theme import VidTaniumTheme
 from ..utils.formatters import format_size, format_speed, format_duration
 from ...core.eta_calculator import ETAResult, ETAAlgorithm
 from ...core.bandwidth_monitor import BandwidthStats, OptimizationRecommendation
@@ -30,7 +29,7 @@ from ...core.download_history_manager import HistoryStatistics
 class MetricCard(ElevatedCardWidget):
     """Card displaying a single metric with trend indicator"""
     
-    def __init__(self, title: str, icon: str, parent=None):
+    def __init__(self, title: str, icon: str, parent=None) -> None:
         super().__init__(parent)
         self.title = title
         self.icon_name = icon
@@ -41,7 +40,7 @@ class MetricCard(ElevatedCardWidget):
         self._setup_ui()
         self._setup_animations()
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup the UI components"""
         layout = QVBoxLayout(self)
         layout.setSpacing(8)
@@ -59,36 +58,33 @@ class MetricCard(ElevatedCardWidget):
         
         # Title
         title_label = CaptionLabel(self.title)
-        title_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_SECONDARY};")
         header_layout.addWidget(title_label)
         
         header_layout.addStretch()
         
         # Trend indicator
         self.trend_label = CaptionLabel("")
-        self.trend_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_SECONDARY};")
         header_layout.addWidget(self.trend_label)
         
         layout.addLayout(header_layout)
         
         # Value
         self.value_label = SubtitleLabel(self.current_value)
-        self.value_label.setStyleSheet(f"""
-            QLabel {{
-                color: {VidTaniumTheme.TEXT_PRIMARY};
+        self.value_label.setStyleSheet("""
+            QLabel {
                 font-weight: bold;
                 font-size: 18px;
-            }}
+            }
         """)
         layout.addWidget(self.value_label)
     
-    def _setup_animations(self):
+    def _setup_animations(self) -> None:
         """Setup value change animations"""
         self.value_animation = QPropertyAnimation(self.value_label, QByteArray(b"geometry"))
         self.value_animation.setDuration(300)
         self.value_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
     
-    def update_value(self, value: str, trend: str = "stable", trend_percentage: float = 0.0):
+    def update_value(self, value: str, trend: str = "stable", trend_percentage: float = 0.0) -> None:
         """Update metric value with trend"""
         self.current_value = value
         self.trend = trend
@@ -100,18 +96,18 @@ class MetricCard(ElevatedCardWidget):
         # Update trend indicator
         if trend == "up":
             self.trend_label.setText(f"↑ {trend_percentage:.1f}%")
-            self.trend_label.setStyleSheet(f"color: {VidTaniumTheme.SUCCESS_GREEN};")
+            self.trend_label.setObjectName("trend-up")
         elif trend == "down":
             self.trend_label.setText(f"↓ {trend_percentage:.1f}%")
-            self.trend_label.setStyleSheet(f"color: {VidTaniumTheme.ERROR_RED};")
+            self.trend_label.setObjectName("trend-down")
         else:
             self.trend_label.setText("—")
-            self.trend_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_SECONDARY};")
+            self.trend_label.setObjectName("trend-stable")
         
         # Trigger animation
         self._animate_value_change()
     
-    def _animate_value_change(self):
+    def _animate_value_change(self) -> None:
         """Animate value change"""
         # Simple scale animation
         original_geometry = self.value_label.geometry()
@@ -123,12 +119,12 @@ class MetricCard(ElevatedCardWidget):
 class ETADisplayWidget(ElevatedCardWidget):
     """Widget displaying ETA information with confidence indicator"""
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.current_eta: Optional[ETAResult] = None
         self._setup_ui()
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup the UI components"""
         layout = QVBoxLayout(self)
         layout.setSpacing(12)
@@ -143,7 +139,6 @@ class ETADisplayWidget(ElevatedCardWidget):
         header_layout.addWidget(icon_label)
         
         title_label = BodyLabel(tr("analytics.eta_title"))
-        title_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_PRIMARY}; font-weight: bold;")
         header_layout.addWidget(title_label)
         
         header_layout.addStretch()
@@ -151,12 +146,11 @@ class ETADisplayWidget(ElevatedCardWidget):
         
         # ETA display
         self.eta_label = TitleLabel("--")
-        self.eta_label.setStyleSheet(f"""
-            QLabel {{
-                color: {VidTaniumTheme.ACCENT_CYAN};
+        self.eta_label.setStyleSheet("""
+            QLabel {
                 font-weight: bold;
                 font-size: 24px;
-            }}
+            }
         """)
         layout.addWidget(self.eta_label)
         
@@ -169,7 +163,6 @@ class ETADisplayWidget(ElevatedCardWidget):
         confidence_layout.setSpacing(4)
         
         confidence_title = CaptionLabel(tr("analytics.confidence"))
-        confidence_title.setStyleSheet(f"color: {VidTaniumTheme.TEXT_SECONDARY};")
         confidence_layout.addWidget(confidence_title)
         
         self.confidence_bar = ProgressBar()
@@ -184,11 +177,9 @@ class ETADisplayWidget(ElevatedCardWidget):
         algorithm_layout.setSpacing(4)
         
         algorithm_title = CaptionLabel(tr("analytics.algorithm"))
-        algorithm_title.setStyleSheet(f"color: {VidTaniumTheme.TEXT_SECONDARY};")
         algorithm_layout.addWidget(algorithm_title)
         
         self.algorithm_label = CaptionLabel("--")
-        self.algorithm_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_PRIMARY};")
         algorithm_layout.addWidget(self.algorithm_label)
         
         info_layout.addLayout(algorithm_layout)
@@ -198,18 +189,16 @@ class ETADisplayWidget(ElevatedCardWidget):
         trend_layout.setSpacing(4)
         
         trend_title = CaptionLabel(tr("analytics.speed_trend"))
-        trend_title.setStyleSheet(f"color: {VidTaniumTheme.TEXT_SECONDARY};")
         trend_layout.addWidget(trend_title)
         
         self.trend_label = CaptionLabel("--")
-        self.trend_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_PRIMARY};")
         trend_layout.addWidget(self.trend_label)
         
         info_layout.addLayout(trend_layout)
         
         layout.addLayout(info_layout)
     
-    def update_eta(self, eta_result: Optional[ETAResult]):
+    def update_eta(self, eta_result: Optional[ETAResult]) -> None:
         """Update ETA display"""
         self.current_eta = eta_result
         
@@ -232,20 +221,8 @@ class ETADisplayWidget(ElevatedCardWidget):
         confidence_percentage = int(eta_result.confidence * 100)
         self.confidence_bar.setValue(confidence_percentage)
         
-        # Set confidence bar color based on value
-        if confidence_percentage >= 70:
-            color = VidTaniumTheme.SUCCESS_GREEN
-        elif confidence_percentage >= 40:
-            color = VidTaniumTheme.WARNING_ORANGE
-        else:
-            color = VidTaniumTheme.ERROR_RED
-        
-        self.confidence_bar.setStyleSheet(f"""
-            QProgressBar::chunk {{
-                background: {color};
-                border-radius: 3px;
-            }}
-        """)
+        # Set confidence bar - let qfluentwidgets handle color
+        # Higher confidence values will be shown with progress bar styling
         
         # Update algorithm
         algorithm_names = {
@@ -257,18 +234,11 @@ class ETADisplayWidget(ElevatedCardWidget):
         }
         self.algorithm_label.setText(algorithm_names.get(eta_result.algorithm_used, "Unknown"))
         
-        # Update trend with color coding
-        trend_colors = {
-            "increasing": VidTaniumTheme.SUCCESS_GREEN,
-            "decreasing": VidTaniumTheme.ERROR_RED,
-            "stable": VidTaniumTheme.TEXT_SECONDARY
-        }
-        
+        # Update trend with semantic object name
         trend_text = tr(f"analytics.trend_{eta_result.speed_trend}")
-        trend_color = trend_colors.get(eta_result.speed_trend, VidTaniumTheme.TEXT_SECONDARY)
         
         self.trend_label.setText(trend_text)
-        self.trend_label.setStyleSheet(f"color: {trend_color}; font-weight: 500;")
+        self.trend_label.setObjectName(f"trend-{eta_result.speed_trend}")
 
 
 class BandwidthAnalyticsWidget(ElevatedCardWidget):
@@ -276,13 +246,13 @@ class BandwidthAnalyticsWidget(ElevatedCardWidget):
     
     optimization_requested = Signal(str, dict)  # suggestion_type, metadata
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.current_stats: Optional[BandwidthStats] = None
         self.recommendations: List[OptimizationRecommendation] = []
         self._setup_ui()
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup the UI components"""
         layout = QVBoxLayout(self)
         layout.setSpacing(12)
@@ -297,7 +267,6 @@ class BandwidthAnalyticsWidget(ElevatedCardWidget):
         header_layout.addWidget(icon_label)
         
         title_label = BodyLabel(tr("analytics.bandwidth_title"))
-        title_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_PRIMARY}; font-weight: bold;")
         header_layout.addWidget(title_label)
         
         header_layout.addStretch()
@@ -332,7 +301,6 @@ class BandwidthAnalyticsWidget(ElevatedCardWidget):
         suggestions_layout.setContentsMargins(0, 8, 0, 0)
         
         suggestions_title = CaptionLabel(tr("analytics.optimization_suggestions"))
-        suggestions_title.setStyleSheet(f"color: {VidTaniumTheme.TEXT_PRIMARY}; font-weight: bold;")
         suggestions_layout.addWidget(suggestions_title)
         
         self.suggestions_container = QWidget()
@@ -344,7 +312,7 @@ class BandwidthAnalyticsWidget(ElevatedCardWidget):
         self.suggestions_widget.setVisible(False)
         layout.addWidget(self.suggestions_widget)
     
-    def update_bandwidth_stats(self, stats: Optional[BandwidthStats]):
+    def update_bandwidth_stats(self, stats: Optional[BandwidthStats]) -> None:
         """Update bandwidth statistics display"""
         self.current_stats = stats
         
@@ -361,7 +329,7 @@ class BandwidthAnalyticsWidget(ElevatedCardWidget):
         self.utilization_card.update_value(f"{stats.utilization_percentage:.1f}%")
         self.efficiency_card.update_value(f"{stats.efficiency_ratio * 100:.1f}%")
     
-    def update_optimization_suggestions(self, recommendations: List[OptimizationRecommendation]):
+    def update_optimization_suggestions(self, recommendations: List[OptimizationRecommendation]) -> None:
         """Update optimization suggestions"""
         self.recommendations = recommendations
         
@@ -385,40 +353,26 @@ class BandwidthAnalyticsWidget(ElevatedCardWidget):
     def _create_suggestion_widget(self, recommendation: OptimizationRecommendation) -> QWidget:
         """Create widget for optimization suggestion"""
         widget = QFrame()
-        widget.setStyleSheet(f"""
-            QFrame {{
-                background: {VidTaniumTheme.BG_SECONDARY};
-                border: 1px solid {VidTaniumTheme.BORDER_COLOR};
-                border-radius: 6px;
-                padding: 8px;
-            }}
-        """)
+        widget.setObjectName("suggestion-frame")
         
         layout = QHBoxLayout(widget)
         layout.setSpacing(8)
         layout.setContentsMargins(8, 6, 8, 6)
         
         # Priority indicator
-        priority_colors = {
-            1: VidTaniumTheme.ERROR_RED,
-            2: VidTaniumTheme.WARNING_ORANGE,
-            3: VidTaniumTheme.ACCENT_CYAN
-        }
-        
         priority_label = QLabel("●")
-        priority_label.setStyleSheet(f"""
-            QLabel {{
-                color: {priority_colors.get(recommendation.priority, VidTaniumTheme.TEXT_SECONDARY)};
+        priority_label.setObjectName(f"priority-{recommendation.priority}")
+        priority_label.setStyleSheet("""
+            QLabel {
                 font-size: 12px;
                 font-weight: bold;
-            }}
+            }
         """)
         layout.addWidget(priority_label)
         
         # Description
         desc_label = CaptionLabel(recommendation.description)
         desc_label.setWordWrap(True)
-        desc_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_PRIMARY};")
         layout.addWidget(desc_label)
         
         # Action button
@@ -441,7 +395,7 @@ class AnalyticsDashboard(ScrollArea):
     
     optimization_requested = Signal(str, dict)
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setWidgetResizable(True)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -456,7 +410,6 @@ class AnalyticsDashboard(ScrollArea):
         
         # Title
         title_label = TitleLabel(tr("analytics.dashboard_title"))
-        title_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_PRIMARY};")
         layout.addWidget(title_label)
         
         # ETA widget
@@ -474,30 +427,28 @@ class AnalyticsDashboard(ScrollArea):
         history_layout.setContentsMargins(16, 12, 16, 12)
         
         history_title = BodyLabel(tr("analytics.history_stats_title"))
-        history_title.setStyleSheet(f"color: {VidTaniumTheme.TEXT_PRIMARY}; font-weight: bold;")
         history_layout.addWidget(history_title)
         
         self.history_summary_label = BodyLabel(tr("analytics.history_loading"))
-        self.history_summary_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_SECONDARY};")
         history_layout.addWidget(self.history_summary_label)
         
         layout.addWidget(self.history_stats_widget)
         
         layout.addStretch()
     
-    def update_eta(self, eta_result: Optional[ETAResult]):
+    def update_eta(self, eta_result: Optional[ETAResult]) -> None:
         """Update ETA display"""
         self.eta_widget.update_eta(eta_result)
     
-    def update_bandwidth_stats(self, stats: Optional[BandwidthStats]):
+    def update_bandwidth_stats(self, stats: Optional[BandwidthStats]) -> None:
         """Update bandwidth statistics"""
         self.bandwidth_widget.update_bandwidth_stats(stats)
     
-    def update_optimization_suggestions(self, recommendations: List[OptimizationRecommendation]):
+    def update_optimization_suggestions(self, recommendations: List[OptimizationRecommendation]) -> None:
         """Update optimization suggestions"""
         self.bandwidth_widget.update_optimization_suggestions(recommendations)
     
-    def update_history_stats(self, stats: HistoryStatistics):
+    def update_history_stats(self, stats: HistoryStatistics) -> None:
         """Update history statistics summary"""
         summary_text = tr("analytics.history_summary").format(
             total=stats.total_downloads,

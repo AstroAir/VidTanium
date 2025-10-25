@@ -10,14 +10,18 @@ from typing import List, Dict, Set, Tuple, Optional, Any, TypeVar, Union, Callab
 try:
     from bs4 import BeautifulSoup, Tag
     from bs4.element import PageElement
-    from playwright.async_api import async_playwright, Page, Browser, BrowserContext
+    from playwright.async_api import async_playwright, Page, Browser, BrowserContext, PlaywrightContextManager
     import aiofiles
     import aiosqlite
     from dataclasses import dataclass, asdict, field
     import hashlib
+    import logging
 except ImportError as e:
     print(f"请安装必要的依赖: {e}")
     raise
+
+# Set up logger
+logger = logging.getLogger(__name__)
 
 # 自定义类型
 T = TypeVar('T')
@@ -43,28 +47,8 @@ class PaginationLinkDict(TypedDict):
 
 # 类型别名
 LinkList = List[LinkDict]
-@dataclass
-class PageInfo:
-    """网页信息数据类"""
-    url: str
-    title: str = ""
-    content_text: str = ""
-    links: LinkList = field(default_factory=list)
-    meta_description: str = ""
-    meta_keywords: str = ""
-    images: ImageList = field(default_factory=list)
-    h1: List[str] = field(default_factory=list)
-    status_code: int = 0
-    content_type: str = ""
-    crawl_time: str = ""
-    screenshot_path: str = ""
-    pdf_path: str = ""
-    page_depth: int = 0
-    pagination_links: PaginationLinkList = field(default_factory=list)
-    error: str = ""
-    word_count: int = 0
-        return ' '.join(str(v) for v in val)
-    return str(val)
+ImageList = List[ImageDict]
+PaginationLinkList = List[PaginationLinkDict]
 
 
 @dataclass
@@ -109,7 +93,7 @@ class WebAnalyzer:
                  respect_robots_txt: bool = True,
                  extract_content: bool = True,
                  keywords: Optional[List[str]] = None,
-                 max_internal_depth_limit: int = 3):  # Added for run's max_depth
+                 max_internal_depth_limit: int = 3) -> None:  # Added for run's max_depth
 
         self.start_url = start_url
         self.base_domain = urlparse(start_url).netloc
@@ -622,8 +606,8 @@ class WebAnalyzer:
                 VALUES (?, ?, ?, ?)
                 ''', (
                     page_info.url,
-                    link_data['url'],  # type: ignore
-                    link_data['text'],  # type: ignore
+                    link_data['url'],  # 
+                    link_data['text'],  # 
                     1 if link_data['is_internal'] else 0
                 ))
 

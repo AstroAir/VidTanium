@@ -40,13 +40,14 @@ from src.gui.utils.i18n import tr
 from src.gui.utils.responsive import ResponsiveWidget, ResponsiveManager
 from src.gui.utils.theme import VidTaniumTheme
 from src.gui.theme_manager import EnhancedThemeManager
+from src.core.advanced_validator import advanced_validator, ContentInfo, SmartDefaults
 from loguru import logger
 
 
 class URLValidator(QValidator):
     """Custom URL validator for input fields"""
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         # Pattern for basic URL validation
         self.url_pattern = re.compile(
@@ -72,7 +73,7 @@ class URLValidator(QValidator):
 class HistoryManager:
     """Manages URL history and auto-completion with enhanced caching"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.settings = QSettings("VidTanium", "TaskDialog")
         self.max_history = 50
         self._url_cache = None
@@ -87,7 +88,7 @@ class HistoryManager:
             self._cache_dirty["url"] = False
         return list(self._url_cache.copy())
     
-    def add_url(self, url: str):
+    def add_url(self, url: str) -> None:
         """Add URL to history with smart deduplication"""
         if not url or not url.strip():
             return
@@ -123,7 +124,7 @@ class HistoryManager:
             self._cache_dirty["output"] = False
         return list(self._output_cache.copy())
     
-    def add_output_path(self, path: str):
+    def add_output_path(self, path: str) -> None:
         """Add output path to history with directory validation"""
         if not path or not path.strip():
             return
@@ -148,7 +149,7 @@ class HistoryManager:
         self._output_cache = history
         self._cache_dirty["output"] = False
     
-    def clear_history(self, history_type: str = "all"):
+    def clear_history(self, history_type: str = "all") -> None:
         """Clear history of specified type"""
         if history_type in ("all", "url"):
             self.settings.remove("url_history")
@@ -171,7 +172,7 @@ class HistoryManager:
 class URLAnalyzer:
     """Advanced URL analysis and suggestion system"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.common_patterns = {
             'quality': re.compile(r'(\d{3,4}p)', re.IGNORECASE),
             'resolution': re.compile(r'(\d{3,4}x\d{3,4})', re.IGNORECASE),
@@ -244,7 +245,7 @@ class EnhancedTaskDialog(QDialog):
     dataChanged = Signal()
     validationChanged = Signal(bool)
 
-    def __init__(self, settings, theme_manager=None, parent=None):
+    def __init__(self, settings, theme_manager=None, parent=None) -> None:
         super().__init__(parent)
 
         # Add responsive functionality manually
@@ -267,7 +268,7 @@ class EnhancedTaskDialog(QDialog):
         self._animations_setup = False
         
         # Enhanced caching for better performance
-        self._validation_cache = {}
+        self._validation_cache: dict[str, bool] = {}
         self._last_validation_time = 0
         self._validation_debounce_interval = 300  # ms
         
@@ -332,7 +333,7 @@ class EnhancedTaskDialog(QDialog):
         
         self._performance_metrics['init_time'] = float(time.time() - start_time)
 
-    def _setup_responsive_window(self):
+    def _setup_responsive_window(self) -> None:
         """Setup responsive window properties"""
         self.setWindowTitle(tr("task_dialog.title"))
         self.setWindowIcon(FIF.DOWNLOAD.icon())
@@ -364,7 +365,7 @@ class EnhancedTaskDialog(QDialog):
             Qt.WindowType.WindowContextHelpButtonHint
         )
 
-    def _apply_enhanced_theme_styles(self):
+    def _apply_enhanced_theme_styles(self) -> None:
         """Apply enhanced theme-aware styles using QFluentWidgets theming"""
         # Let QFluentWidgets handle most of the theming automatically
         # Only apply minimal custom styling where absolutely necessary
@@ -386,25 +387,25 @@ class EnhancedTaskDialog(QDialog):
             }}
         """)
 
-    def _on_breakpoint_changed(self, breakpoint: str):
+    def _on_breakpoint_changed(self, breakpoint: str) -> None:
         """Handle responsive breakpoint changes"""
         logger.debug(f"Task dialog adapting to breakpoint: {breakpoint}")
         self._setup_responsive_window()
         self.on_breakpoint_changed(breakpoint)
 
-    def _on_orientation_changed(self, orientation):
+    def _on_orientation_changed(self, orientation) -> None:
         """Handle orientation changes"""
         self.on_orientation_changed(orientation)
 
-    def on_breakpoint_changed(self, breakpoint: str):
+    def on_breakpoint_changed(self, breakpoint: str) -> None:
         """Override to handle breakpoint changes"""
         pass
 
-    def on_orientation_changed(self, orientation):
+    def on_orientation_changed(self, orientation) -> None:
         """Override to handle orientation changes"""
         pass
 
-    def _create_enhanced_ui(self):
+    def _create_enhanced_ui(self) -> None:
         """Create enhanced responsive user interface"""
         # Main layout with responsive spacing
         main_layout = QVBoxLayout(self)
@@ -447,7 +448,7 @@ class EnhancedTaskDialog(QDialog):
         # Fill default values
         self._fill_defaults()
 
-    def _create_enhanced_header(self, parent_layout):
+    def _create_enhanced_header(self, parent_layout) -> None:
         """Create enhanced header with responsive design"""
         header_layout = QHBoxLayout()
         current_bp = self.responsive_manager.get_current_breakpoint()
@@ -485,7 +486,7 @@ class EnhancedTaskDialog(QDialog):
 
         parent_layout.addLayout(header_layout)
 
-    def _create_responsive_content(self, parent_layout):
+    def _create_responsive_content(self, parent_layout) -> None:
         """Create responsive content section with adaptive cards"""
         current_bp = self.responsive_manager.get_current_breakpoint()
         
@@ -551,7 +552,7 @@ class EnhancedTaskDialog(QDialog):
         self._create_responsive_advanced_form(advanced_card_layout, current_bp)
         parent_layout.addWidget(self.advanced_card)
 
-    def _create_responsive_basic_form(self, parent_layout, current_bp):
+    def _create_responsive_basic_form(self, parent_layout, current_bp) -> None:
         """Create responsive basic form layout"""
         # Form layout with responsive spacing
         basic_layout = QFormLayout()
@@ -642,7 +643,7 @@ class EnhancedTaskDialog(QDialog):
         basic_layout.addRow(tr("task_dialog.basic_info.output_file"), output_layout)
         parent_layout.addLayout(basic_layout)
 
-    def _create_responsive_advanced_form(self, parent_layout, current_bp):
+    def _create_responsive_advanced_form(self, parent_layout, current_bp) -> None:
         """Create responsive advanced form layout"""
         # Form layout with responsive spacing
         advanced_layout = QFormLayout()
@@ -697,7 +698,7 @@ class EnhancedTaskDialog(QDialog):
         advanced_layout.addRow(tr("task_dialog.advanced_options.options"), options_widget)
         parent_layout.addLayout(advanced_layout)
 
-    def _create_responsive_actions(self, parent_layout):
+    def _create_responsive_actions(self, parent_layout) -> None:
         """Create responsive action buttons"""
         current_bp = self.responsive_manager.get_current_breakpoint()
         
@@ -738,14 +739,14 @@ class EnhancedTaskDialog(QDialog):
 
         parent_layout.addLayout(button_layout)
 
-    def _fill_defaults(self):
+    def _fill_defaults(self) -> None:
         """填充默认值"""
         # 设置默认的输出目录
         output_dir = self.settings.get("general", "output_directory", "")
         if output_dir and os.path.exists(output_dir):
             self.output_input.setText(os.path.join(output_dir, "output.mp4"))
 
-    def _browse_output(self):
+    def _browse_output(self) -> None:
         """浏览输出文件"""
         output_dir = self.settings.get("general", "output_directory", "")
         filename, _ = QFileDialog.getSaveFileName(
@@ -758,7 +759,7 @@ class EnhancedTaskDialog(QDialog):
             self.settings.set("general", "output_directory",
                               os.path.dirname(filename))
 
-    def _on_ok(self):
+    def _on_ok(self) -> None:
         """确定按钮点击"""
         # 验证输入
         if not self.base_url_input.text():
@@ -783,7 +784,7 @@ class EnhancedTaskDialog(QDialog):
         # 接受对话框
         self.accept()
 
-    def _show_error(self, message):
+    def _show_error(self, message) -> None:
         """显示错误消息"""
         InfoBar.error(
             title=tr("task_dialog.errors.input_error"),
@@ -795,7 +796,7 @@ class EnhancedTaskDialog(QDialog):
             parent=self
         )
 
-    def _show_info(self, message):
+    def _show_info(self, message) -> None:
         """显示信息消息"""
         InfoBar.info(
             title=tr("task_dialog.info"),
@@ -807,7 +808,7 @@ class EnhancedTaskDialog(QDialog):
             parent=self
         )
 
-    def _extract_m3u8_info(self):
+    def _extract_m3u8_info(self) -> None:
         """从M3U8 URL自动提取信息"""
         url = self.base_url_input.text().strip()
         if not url:
@@ -880,7 +881,7 @@ class EnhancedTaskDialog(QDialog):
             self._show_error(
                 tr("task_dialog.errors.extract_error").format(error=str(e)))
 
-    def get_task_data(self):
+    def get_task_data(self) -> None:
         """获取任务数据"""
         # Save to history when task is created
         url = self.base_url_input.text().strip()
@@ -903,7 +904,7 @@ class EnhancedTaskDialog(QDialog):
 
     # ====== New Performance and Feature Methods ======
     
-    def _setup_keyboard_shortcuts(self):
+    def _setup_keyboard_shortcuts(self) -> None:
         """Setup keyboard shortcuts for better UX"""
         # Ctrl+Enter to create task
         create_shortcut = QAction(self)
@@ -965,7 +966,7 @@ class EnhancedTaskDialog(QDialog):
         help_shortcut.triggered.connect(self._show_help)
         self.addAction(help_shortcut)
 
-    def _setup_animations(self):
+    def _setup_animations(self) -> None:
         """Setup smooth animations for better UX"""
         if self._animations_setup:
             return
@@ -1032,12 +1033,12 @@ class EnhancedTaskDialog(QDialog):
         return self._window_context_menu
 
     @Slot()
-    def _show_window_context_menu(self, pos):
+    def _show_window_context_menu(self, pos) -> None:
         """Show window context menu"""
         menu = self._create_window_context_menu()
         menu.exec(self.mapToGlobal(pos))
 
-    def _setup_completers(self):
+    def _setup_completers(self) -> None:
         """Setup auto-completion for input fields (lazy loaded)"""
         if self._completers_setup:
             return
@@ -1060,7 +1061,7 @@ class EnhancedTaskDialog(QDialog):
         
         self._completers_setup = True
 
-    def _setup_context_menus(self):
+    def _setup_context_menus(self) -> None:
         """Setup context menus for input fields"""
         # URL context menu
         self.base_url_input.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -1136,19 +1137,19 @@ class EnhancedTaskDialog(QDialog):
         return self._output_context_menu
 
     @Slot()
-    def _show_url_context_menu(self, pos):
+    def _show_url_context_menu(self, pos) -> None:
         """Show context menu for URL input"""
         menu = self._create_url_context_menu()
         menu.exec(self.base_url_input.mapToGlobal(pos))
 
     @Slot()
-    def _show_output_context_menu(self, pos):
+    def _show_output_context_menu(self, pos) -> None:
         """Show context menu for output input"""
         menu = self._create_output_context_menu()
         menu.exec(self.output_input.mapToGlobal(pos))
 
     @Slot()
-    def _show_key_context_menu(self, pos):
+    def _show_key_context_menu(self, pos) -> None:
         """Show context menu for key URL input"""
         menu = QMenu(self)
         
@@ -1168,7 +1169,7 @@ class EnhancedTaskDialog(QDialog):
         menu.exec(self.key_url_input.mapToGlobal(pos))
 
     @Slot()
-    def _validate_current_url(self):
+    def _validate_current_url(self) -> None:
         """Validate the current URL with enhanced network checking"""
         url = self.base_url_input.text().strip()
         if not url:
@@ -1192,11 +1193,11 @@ class EnhancedTaskDialog(QDialog):
         class URLNetworkValidator(QObject):
             validation_completed = Signal(bool, str)  # success, message
 
-            def __init__(self, url):
+            def __init__(self, url) -> None:
                 super().__init__()
                 self.url = url
 
-            def validate(self):
+            def validate(self) -> None:
                 """Perform network validation"""
                 try:
                     import requests
@@ -1260,7 +1261,7 @@ class EnhancedTaskDialog(QDialog):
                 except Exception as e:
                     self.validation_completed.emit(False, f"Validation error: {str(e)}")
 
-            def _validate_m3u8_content(self):
+            def _validate_m3u8_content(self) -> None:
                 """Validate M3U8 content by fetching and parsing"""
                 try:
                     import requests
@@ -1275,12 +1276,35 @@ class EnhancedTaskDialog(QDialog):
                     if response.status_code == 200:
                         content = response.text
                         if self._is_valid_m3u8_content(content):
-                            # Count segments for additional validation
-                            segment_count = content.count('#EXTINF:')
-                            if segment_count > 0:
-                                self.validation_completed.emit(True, f"Valid M3U8 playlist with {segment_count} segments")
-                            else:
-                                self.validation_completed.emit(True, tr("validation.m3u8_valid"))
+                            # Use advanced validator for detailed analysis
+                            try:
+                                content_info, smart_defaults = advanced_validator.validate_and_analyze(self.url)
+
+                                # Create detailed validation message
+                                details = []
+                                if content_info.estimated_segments:
+                                    details.append(f"{content_info.estimated_segments} segments")
+                                if content_info.duration_seconds:
+                                    duration_str = f"{content_info.duration_seconds // 60}:{content_info.duration_seconds % 60:02d}"
+                                    details.append(f"Duration: {duration_str}")
+                                if content_info.quality_level:
+                                    details.append(f"Quality: {content_info.quality_level.value}")
+                                if content_info.is_live:
+                                    details.append("Live Stream")
+
+                                message = f"Valid M3U8 playlist"
+                                if details:
+                                    message += f" ({', '.join(details)})"
+
+                                self.validation_completed.emit(True, message)
+                            except Exception as e:
+                                logger.warning(f"Advanced validation failed, using basic validation: {e}")
+                                # Fallback to basic validation
+                                segment_count = content.count('#EXTINF:')
+                                if segment_count > 0:
+                                    self.validation_completed.emit(True, f"Valid M3U8 playlist with {segment_count} segments")
+                                else:
+                                    self.validation_completed.emit(True, tr("validation.m3u8_valid"))
                         else:
                             self.validation_completed.emit(False, tr("validation.m3u8_invalid"))
                     else:
@@ -1326,7 +1350,7 @@ class EnhancedTaskDialog(QDialog):
         # Start validation
         self.validator_thread.start()
 
-    def _on_url_validation_completed(self, success: bool, message: str):
+    def _on_url_validation_completed(self, success: bool, message: str) -> None:
         """Handle URL validation completion"""
         if success:
             InfoBar.success(
@@ -1335,6 +1359,9 @@ class EnhancedTaskDialog(QDialog):
                 duration=3000,
                 parent=self
             )
+
+            # Apply smart defaults if validation was successful
+            self._apply_smart_defaults()
         else:
             InfoBar.error(
                 title=tr("validation.url_invalid"),
@@ -1343,8 +1370,51 @@ class EnhancedTaskDialog(QDialog):
                 parent=self
             )
 
+    def _apply_smart_defaults(self) -> None:
+        """Apply smart defaults based on URL analysis"""
+        try:
+            url = self.base_url_input.text().strip()
+            if not url:
+                return
+
+            # Get advanced analysis
+            content_info, smart_defaults = advanced_validator.validate_and_analyze(url)
+
+            # Apply defaults to form fields
+            if hasattr(self, 'concurrent_connections_input'):
+                self.concurrent_connections_input.setValue(smart_defaults.concurrent_connections)
+
+            if hasattr(self, 'retry_attempts_input'):
+                self.retry_attempts_input.setValue(smart_defaults.retry_attempts)
+
+            if hasattr(self, 'timeout_input'):
+                self.timeout_input.setValue(smart_defaults.timeout_seconds)
+
+            # Show smart defaults information
+            info_parts = []
+            if smart_defaults.estimated_completion_time != "Unknown":
+                info_parts.append(f"Est. time: {smart_defaults.estimated_completion_time}")
+            if smart_defaults.storage_requirements_mb > 0:
+                info_parts.append(f"Storage: {smart_defaults.storage_requirements_mb:.0f}MB")
+            if smart_defaults.network_requirements_mbps > 0:
+                info_parts.append(f"Bandwidth: {smart_defaults.network_requirements_mbps:.1f}Mbps")
+
+            if info_parts:
+                InfoBar.info(
+                    title=tr("validation.smart_defaults_applied"),
+                    content=" | ".join(info_parts),
+                    duration=4000,
+                    parent=self
+                )
+
+            logger.info(f"Smart defaults applied: {smart_defaults}")
+
+        except Exception as e:
+            logger.warning(f"Failed to apply smart defaults: {e}")
+            # Don't show error to user as this is not critical
+
     @Slot()
-    def _open_output_folder(self):
+    def _open_output_folder(self) -> None:
         """Open output folder in file explorer"""
         path = self.output_input.text().strip()
         if not path:
@@ -1358,7 +1428,7 @@ class EnhancedTaskDialog(QDialog):
                 os.system(f'open "{folder}"' if sys.platform == 'darwin' else f'xdg-open "{folder}"')
 
     @Slot()
-    def _clear_all_fields(self):
+    def _clear_all_fields(self) -> None:
         """Clear all input fields"""
         reply = QMessageBox.question(
             self,
@@ -1379,11 +1449,11 @@ class EnhancedTaskDialog(QDialog):
             self.notify_check.setChecked(True)
 
     @Slot()
-    def _auto_save_draft(self):
+    def _auto_save_draft(self) -> None:
         """Auto-save current form data as draft"""
         self._save_draft()
 
-    def _save_draft(self):
+    def _save_draft(self) -> None:
         """Save current form data as draft"""
         draft_data = {
             "name": self.name_input.text(),
@@ -1406,7 +1476,7 @@ class EnhancedTaskDialog(QDialog):
             # Silent fail for auto-save
             pass
 
-    def _load_draft(self):
+    def _load_draft(self) -> None:
         """Load draft data if available"""
         draft_file = os.path.join(QStandardPaths.writableLocation(QStandardPaths.StandardLocation.AppDataLocation), "task_draft.json")
         
@@ -1447,7 +1517,7 @@ class EnhancedTaskDialog(QDialog):
             pass
 
     @Slot()
-    def _validate_form(self):
+    def _validate_form(self) -> None:
         """Validate form and emit signal with enhanced validation"""
         url = self.base_url_input.text().strip()
         output = self.output_input.text().strip()
@@ -1497,12 +1567,12 @@ class EnhancedTaskDialog(QDialog):
         except Exception:
             return False
 
-    def _on_input_changed(self):
+    def _on_input_changed(self) -> None:
         """Handle input changes with delayed validation"""
         self.dataChanged.emit()
         self.validation_timer.start()  # Restart timer
 
-    def showEvent(self, event):
+    def showEvent(self, event) -> None:
         """Override show event for performance optimizations"""
         super().showEvent(event)
         
@@ -1510,13 +1580,13 @@ class EnhancedTaskDialog(QDialog):
         QTimer.singleShot(100, self._setup_completers)
         QTimer.singleShot(200, self._setup_context_menus)
 
-    def closeEvent(self, event):
+    def closeEvent(self, event) -> None:
         """Override close event to save draft and cleanup"""
         self._save_draft()
         self.auto_save_timer.stop()
         super().closeEvent(event)
 
-    def accept(self):
+    def accept(self) -> None:
         """Override accept to save final data"""
         # Clear draft when task is created successfully
         draft_file = os.path.join(QStandardPaths.writableLocation(QStandardPaths.StandardLocation.AppDataLocation), "task_draft.json")
@@ -1531,13 +1601,13 @@ class EnhancedTaskDialog(QDialog):
     # ====== Enhanced Performance and Feature Methods ======
     
     @Slot()
-    def _on_url_changed(self):
+    def _on_url_changed(self) -> None:
         """Handle URL changes with analysis"""
         self.url_analysis_timer.start()  # Restart analysis timer
         self._performance_metrics['validation_count'] += 1
     
     @Slot()
-    def _analyze_current_url(self):
+    def _analyze_current_url(self) -> None:
         """Analyze current URL and provide suggestions"""
         url = self.base_url_input.text().strip()
         if not url:
@@ -1553,7 +1623,7 @@ class EnhancedTaskDialog(QDialog):
         if not self.name_input.text() and analysis.get('properties'):
             self._auto_generate_name(url, analysis['properties'])
     
-    def _show_url_suggestions(self, suggestions: List[str]):
+    def _show_url_suggestions(self, suggestions: List[str]) -> None:
         """Show URL analysis suggestions"""
         if not suggestions:
             return
@@ -1567,7 +1637,7 @@ class EnhancedTaskDialog(QDialog):
             parent=self
         )
     
-    def _auto_generate_name(self, url: str, properties: Dict[str, str]):
+    def _auto_generate_name(self, url: str, properties: Dict[str, str]) -> None:
         """Auto-generate task name from URL and properties"""
         try:
             parsed_url = urlparse(url)
@@ -1587,7 +1657,7 @@ class EnhancedTaskDialog(QDialog):
             pass
     
     @Slot()
-    def _toggle_history_panel(self):
+    def _toggle_history_panel(self) -> None:
         """Toggle history panel visibility"""
         # Create a simple history dialog
         dialog = QDialog(self)
@@ -1644,7 +1714,7 @@ class EnhancedTaskDialog(QDialog):
         
         dialog.exec()
     
-    def _use_history_item(self, text: str, item_type: str):
+    def _use_history_item(self, text: str, item_type: str) -> None:
         """Use selected history item"""
         if item_type == "url":
             self.base_url_input.setText(text)
@@ -1652,7 +1722,7 @@ class EnhancedTaskDialog(QDialog):
             self.output_input.setText(text)
     
     @Slot()
-    def _show_url_history(self):
+    def _show_url_history(self) -> None:
         """Show URL history in a flyout"""
         urls = self.history_manager.get_frequent_urls(10)
         if not urls:
@@ -1676,7 +1746,7 @@ class EnhancedTaskDialog(QDialog):
         )
     
     @Slot()
-    def _show_output_history(self):
+    def _show_output_history(self) -> None:
         """Show output history"""
         paths = self.history_manager.get_output_history()[:10]
         if not paths:
@@ -1699,7 +1769,7 @@ class EnhancedTaskDialog(QDialog):
         )
     
     @Slot()
-    def _clear_cache(self):
+    def _clear_cache(self) -> None:
         """Clear performance cache"""
         self._validation_cache.clear()
         self.history_manager._url_cache = None
@@ -1714,7 +1784,7 @@ class EnhancedTaskDialog(QDialog):
         )
     
     @Slot()
-    def _show_performance_metrics(self):
+    def _show_performance_metrics(self) -> None:
         """Show performance metrics"""
         metrics = self._performance_metrics.copy()
         
@@ -1732,7 +1802,7 @@ Extraction Count: {metrics['extraction_count']}
         )
     
     @Slot()
-    def _show_help(self):
+    def _show_help(self) -> None:
         """Show help information"""
         help_text = tr("help.task_dialog_content")
         
@@ -1743,7 +1813,7 @@ Extraction Count: {metrics['extraction_count']}
         )
     
     @Slot()
-    def _show_about(self):
+    def _show_about(self) -> None:
         """Show about information"""
         about_text = tr("about.task_dialog_content")
         
@@ -1753,7 +1823,7 @@ Extraction Count: {metrics['extraction_count']}
             about_text
         )
     
-    def _extract_m3u8_info_with_perf(self):
+    def _extract_m3u8_info_with_perf(self) -> None:
         """Enhanced M3U8 extraction with performance tracking (renamed to avoid duplicate)"""
         self._performance_metrics['extraction_count'] += 1
         
@@ -1775,7 +1845,7 @@ Extraction Count: {metrics['extraction_count']}
         progress_timer = QTimer()
         progress_value = 0
         
-        def update_progress():
+        def update_progress() -> None:
             nonlocal progress_value
             progress_value = (progress_value + 1) % 100
             progress.setValue(progress_value)

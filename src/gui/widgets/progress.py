@@ -15,6 +15,7 @@ from qfluentwidgets import (
 )
 
 from ..utils.design_system import DesignSystem, AnimatedCard
+from ..utils.unified_design_system import UnifiedDesignSystem as DS
 
 
 class ProgressCard(AnimatedCard):
@@ -23,7 +24,7 @@ class ProgressCard(AnimatedCard):
     pause_clicked = Signal()
     cancel_clicked = Signal()
     
-    def __init__(self, title: str, parent=None):
+    def __init__(self, title: str, parent=None) -> None:
         super().__init__(parent)
         self.title = title
         self.progress_value = 0
@@ -34,7 +35,7 @@ class ProgressCard(AnimatedCard):
         self._setup_ui()
         self._setup_animations()
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup progress card UI"""
         self.setMinimumHeight(140)
         
@@ -48,7 +49,7 @@ class ProgressCard(AnimatedCard):
         self.title_label = BodyLabel(self.title)
         self.title_label.setStyleSheet(f"""
             {DesignSystem.get_typography_style('body')}
-            color: {DesignSystem.get_color('text_primary_adaptive')};
+            color: {DS.color('on_surface')};
             font-weight: 600;
         """)
         header_layout.addWidget(self.title_label)
@@ -73,13 +74,11 @@ class ProgressCard(AnimatedCard):
         self.progress_bar.setFixedHeight(8)
         self.progress_bar.setStyleSheet(f"""
             ProgressBar {{
-                background: {DesignSystem.get_color('surface_tertiary_adaptive')};
+                background: {DS.color('surface_variant')};
                 border-radius: 4px;
             }}
             ProgressBar::chunk {{
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 {DesignSystem.get_color('primary')},
-                    stop:1 {DesignSystem.get_color('accent_blue')});
+                background-color: {DS.color('primary')}});
                 border-radius: 4px;
             }}
         """)
@@ -90,7 +89,7 @@ class ProgressCard(AnimatedCard):
         
         self.progress_label = CaptionLabel("0%")
         self.progress_label.setStyleSheet(f"""
-            color: {DesignSystem.get_color('text_secondary_adaptive')};
+            color: {DS.color('on_surface_variant')};
             font-weight: 500;
         """)
         info_layout.addWidget(self.progress_label)
@@ -99,26 +98,26 @@ class ProgressCard(AnimatedCard):
 
         self.speed_label = CaptionLabel(self.speed)
         self.speed_label.setStyleSheet(f"""
-            color: {DesignSystem.get_color('text_secondary_adaptive')};
+            color: {DS.color('on_surface_variant')};
         """)
         info_layout.addWidget(self.speed_label)
 
         self.eta_label = CaptionLabel(f"ETA: {self.eta}")
         self.eta_label.setStyleSheet(f"""
-            color: {DesignSystem.get_color('text_secondary_adaptive')};
+            color: {DS.color('on_surface_variant')};
         """)
         info_layout.addWidget(self.eta_label)
         
         layout.addLayout(info_layout)
     
-    def _setup_animations(self):
+    def _setup_animations(self) -> None:
         """Setup progress animations"""
         if hasattr(self, 'progress_bar'):
             self.progress_animation = QPropertyAnimation(self.progress_bar, QByteArray(b"value"))
             self.progress_animation.setDuration(500)
             self.progress_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
     
-    def _toggle_pause(self):
+    def _toggle_pause(self) -> None:
         """Toggle pause state"""
         self.is_paused = not self.is_paused
         
@@ -126,7 +125,7 @@ class ProgressCard(AnimatedCard):
             self.pause_btn.setIcon(FIF.PLAY)
             self.setStyleSheet(f"""
                 ProgressCard {{
-                    border-left: 4px solid {DesignSystem.get_color('warning')};
+                    border-left: 4px solid {DS.color('warning')};
                 }}
             """)
         else:
@@ -135,7 +134,7 @@ class ProgressCard(AnimatedCard):
         
         self.pause_clicked.emit()
     
-    def update_progress(self, value: int, speed: Optional[str] = None, eta: Optional[str] = None):
+    def update_progress(self, value: int, speed: Optional[str] = None, eta: Optional[str] = None) -> None:
         """Update progress with animation"""
         # Animate progress bar if available
         if hasattr(self, 'progress_animation') and hasattr(self, 'progress_bar'):
@@ -155,34 +154,34 @@ class ProgressCard(AnimatedCard):
             self.eta = eta
             self.eta_label.setText(f"ETA: {eta}")
     
-    def set_completed(self):
+    def set_completed(self) -> None:
         """Set progress as completed"""
         self.update_progress(100)
         self.setStyleSheet(f"""
             ProgressCard {{
-                border-left: 4px solid {DesignSystem.get_color('success')};
+                border-left: 4px solid {DS.color('success')};
             }}
         """)
         self.pause_btn.hide()
         self.cancel_btn.hide()
 
-    def set_error(self, error_message: str = "Error occurred"):
+    def set_error(self, error_message: str = "Error occurred") -> None:
         """Set progress as error state"""
         self.setStyleSheet(f"""
             ProgressCard {{
-                border-left: 4px solid {DesignSystem.get_color('error')};
+                border-left: 4px solid {DS.color('error')};
             }}
         """)
         self.speed_label.setText(error_message)
         self.speed_label.setStyleSheet(f"""
-            color: {DesignSystem.get_color('error')};
+            color: {DS.color('error')};
         """)
 
 
 class CircularProgressCard(AnimatedCard):
     """Circular progress card for compact display"""
     
-    def __init__(self, title: str, size: int = 80, parent=None):
+    def __init__(self, title: str, size: int = 80, parent=None) -> None:
         super().__init__(parent)
         self.title = title
         self.size = size
@@ -190,7 +189,7 @@ class CircularProgressCard(AnimatedCard):
         
         self._setup_ui()
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup circular progress UI"""
         self.setFixedSize(140, 120)
         
@@ -204,8 +203,8 @@ class CircularProgressCard(AnimatedCard):
         self.progress_ring.setFixedSize(self.size, self.size)
         self.progress_ring.setStyleSheet(f"""
             ProgressRing {{
-                qproperty-backgroundColor: {DesignSystem.get_color('surface_tertiary_adaptive')};
-                qproperty-progressColor: {DesignSystem.get_color('primary')};
+                qproperty-backgroundColor: {DS.color('surface_variant')};
+                qproperty-progressColor: {DS.color('primary')};
             }}
         """)
         layout.addWidget(self.progress_ring, 0, Qt.AlignmentFlag.AlignCenter)
@@ -214,12 +213,12 @@ class CircularProgressCard(AnimatedCard):
         self.title_label = CaptionLabel(self.title)
         self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.title_label.setStyleSheet(f"""
-            color: {DesignSystem.get_color('text_secondary_adaptive')};
+            color: {DS.color('on_surface_variant')};
             font-weight: 500;
         """)
         layout.addWidget(self.title_label)
     
-    def update_progress(self, value: int):
+    def update_progress(self, value: int) -> None:
         """Update circular progress"""
         self.progress_value = value
         self.progress_ring.setValue(value)
@@ -228,7 +227,7 @@ class CircularProgressCard(AnimatedCard):
 class ProgressSummaryCard(AnimatedCard):
     """Summary card showing overall progress statistics"""
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.stats = {
             'total': 0,
@@ -239,7 +238,7 @@ class ProgressSummaryCard(AnimatedCard):
         
         self._setup_ui()
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup progress summary UI"""
         self.setFixedHeight(100)
         
@@ -283,7 +282,7 @@ class ProgressSummaryCard(AnimatedCard):
         label_widget = CaptionLabel(label)
         label_widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
         label_widget.setStyleSheet(f"""
-            color: {DesignSystem.get_color('text_secondary_adaptive')};
+            color: {DS.color('on_surface_variant')};
         """)
         layout.addWidget(label_widget)
         
@@ -297,12 +296,12 @@ class ProgressSummaryCard(AnimatedCard):
         separator = QLabel("|")
         separator.setAlignment(Qt.AlignmentFlag.AlignCenter)
         separator.setStyleSheet(f"""
-            color: {DesignSystem.get_color('border_adaptive')};
+            color: {DS.color('outline')};
             font-size: 16px;
         """)
         return separator
     
-    def update_stats(self, stats: Dict[str, int]):
+    def update_stats(self, stats: Dict[str, int]) -> None:
         """Update progress statistics"""
         self.stats.update(stats)
         

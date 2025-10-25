@@ -14,7 +14,7 @@ from src.core.eta_calculator import (
 class TestETAAlgorithm:
     """Test suite for ETAAlgorithm enum."""
 
-    def test_algorithm_values(self):
+    def test_algorithm_values(self) -> None:
         """Test enum values."""
         assert ETAAlgorithm.SIMPLE_LINEAR.value == "simple_linear"
         assert ETAAlgorithm.EXPONENTIAL_SMOOTHING.value == "exponential_smoothing"
@@ -26,7 +26,7 @@ class TestETAAlgorithm:
 class TestSpeedSample:
     """Test suite for SpeedSample dataclass."""
 
-    def test_speed_sample_creation(self):
+    def test_speed_sample_creation(self) -> None:
         """Test SpeedSample creation with all fields."""
         sample = SpeedSample(
             timestamp=1234567890.0,
@@ -40,7 +40,7 @@ class TestSpeedSample:
         assert sample.bytes_downloaded == 1048576
         assert sample.segment_index == 5
 
-    def test_speed_sample_defaults(self):
+    def test_speed_sample_defaults(self) -> None:
         """Test SpeedSample with default values."""
         sample = SpeedSample(
             timestamp=1234567890.0,
@@ -54,7 +54,7 @@ class TestSpeedSample:
 class TestETAResult:
     """Test suite for ETAResult dataclass."""
 
-    def test_eta_result_creation(self):
+    def test_eta_result_creation(self) -> None:
         """Test ETAResult creation with all fields."""
         result = ETAResult(
             eta_seconds=120.0,
@@ -70,7 +70,7 @@ class TestETAResult:
         assert result.speed_trend == "increasing"
         assert result.metadata["avg_speed"] == 1024.0
 
-    def test_eta_result_defaults(self):
+    def test_eta_result_defaults(self) -> None:
         """Test ETAResult with default values."""
         result = ETAResult(
             eta_seconds=120.0,
@@ -85,11 +85,11 @@ class TestETAResult:
 class TestETACalculator:
     """Test suite for ETACalculator class."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.calculator = ETACalculator(max_samples=50)
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test ETACalculator initialization."""
         assert self.calculator.max_samples == 50
         assert isinstance(self.calculator.speed_samples, deque)
@@ -99,7 +99,7 @@ class TestETACalculator:
         assert "completion_times" in self.calculator.historical_data
         assert "file_sizes" in self.calculator.historical_data
 
-    def test_add_speed_sample(self):
+    def test_add_speed_sample(self) -> None:
         """Test adding speed samples."""
         self.calculator.add_speed_sample(1024.0, 1048576, 1)
         
@@ -110,7 +110,7 @@ class TestETACalculator:
         assert sample.segment_index == 1
         assert sample.timestamp > 0
 
-    def test_add_speed_sample_without_segment(self):
+    def test_add_speed_sample_without_segment(self) -> None:
         """Test adding speed sample without segment index."""
         self.calculator.add_speed_sample(1024.0, 1048576)
         
@@ -118,7 +118,7 @@ class TestETACalculator:
         sample = self.calculator.speed_samples[0]
         assert sample.segment_index is None
 
-    def test_add_speed_sample_cleanup_old(self):
+    def test_add_speed_sample_cleanup_old(self) -> None:
         """Test cleanup of old samples."""
         current_time = time.time()
         
@@ -137,18 +137,18 @@ class TestETACalculator:
         assert len(self.calculator.speed_samples) == 1
         assert self.calculator.speed_samples[0].speed == 1024.0
 
-    def test_calculate_eta_no_samples(self):
+    def test_calculate_eta_no_samples(self) -> None:
         """Test ETA calculation with no samples."""
         result = self.calculator.calculate_eta(1048576, 524288)
         assert result is None
 
-    def test_calculate_eta_already_complete(self):
+    def test_calculate_eta_already_complete(self) -> None:
         """Test ETA calculation when download is already complete."""
         self.calculator.add_speed_sample(1024.0, 1048576)
         result = self.calculator.calculate_eta(1048576, 1048576)
         assert result is None
 
-    def test_calculate_simple_linear(self):
+    def test_calculate_simple_linear(self) -> None:
         """Test simple linear ETA calculation."""
         # Add some speed samples
         for i in range(5):
@@ -166,7 +166,7 @@ class TestETACalculator:
         assert result.confidence > 0
         assert "avg_speed" in result.metadata
 
-    def test_calculate_simple_linear_no_samples(self):
+    def test_calculate_simple_linear_no_samples(self) -> None:
         """Test simple linear with no samples."""
         result = self.calculator._calculate_simple_linear(1024)
         
@@ -174,7 +174,7 @@ class TestETACalculator:
         assert result.confidence == 0.0
         assert result.speed_trend == "unknown"
 
-    def test_calculate_simple_linear_zero_speed(self):
+    def test_calculate_simple_linear_zero_speed(self) -> None:
         """Test simple linear with zero speed."""
         self.calculator.add_speed_sample(0.0, 1024)
         result = self.calculator._calculate_simple_linear(1024)
@@ -182,7 +182,7 @@ class TestETACalculator:
         assert result.eta_seconds == float('inf')
         assert result.confidence == 0.0
 
-    def test_calculate_exponential_smoothing(self):
+    def test_calculate_exponential_smoothing(self) -> None:
         """Test exponential smoothing ETA calculation."""
         # Add samples with varying speeds
         speeds = [500.0, 750.0, 1000.0, 1250.0, 1500.0]
@@ -200,7 +200,7 @@ class TestETACalculator:
         assert result.eta_seconds > 0
         assert "smoothed_speed" in result.metadata
 
-    def test_calculate_exponential_smoothing_insufficient_samples(self):
+    def test_calculate_exponential_smoothing_insufficient_samples(self) -> None:
         """Test exponential smoothing with insufficient samples."""
         self.calculator.add_speed_sample(1024.0, 1024)
         
@@ -208,7 +208,7 @@ class TestETACalculator:
         result = self.calculator._calculate_exponential_smoothing(1024)
         assert result.algorithm_used == ETAAlgorithm.SIMPLE_LINEAR
 
-    def test_calculate_weighted_average(self):
+    def test_calculate_weighted_average(self) -> None:
         """Test weighted average ETA calculation."""
         current_time = time.time()
         
@@ -227,14 +227,14 @@ class TestETACalculator:
         assert result.eta_seconds > 0
         assert "weighted_avg_speed" in result.metadata
 
-    def test_calculate_weighted_average_no_samples(self):
+    def test_calculate_weighted_average_no_samples(self) -> None:
         """Test weighted average with no samples."""
         result = self.calculator._calculate_weighted_average(1024)
         
         assert result.eta_seconds == float('inf')
         assert result.confidence == 0.0
 
-    def test_calculate_regression_based(self):
+    def test_calculate_regression_based(self) -> None:
         """Test regression-based ETA calculation."""
         current_time = time.time()
         
@@ -254,7 +254,7 @@ class TestETACalculator:
         assert "slope" in result.metadata
         assert "r_squared" in result.metadata
 
-    def test_calculate_regression_based_insufficient_samples(self):
+    def test_calculate_regression_based_insufficient_samples(self) -> None:
         """Test regression with insufficient samples."""
         self.calculator.add_speed_sample(1024.0, 1024)
         
@@ -262,7 +262,7 @@ class TestETACalculator:
         result = self.calculator._calculate_regression_based(1024, 1024)
         assert result.algorithm_used == ETAAlgorithm.WEIGHTED_AVERAGE
 
-    def test_calculate_adaptive_hybrid(self):
+    def test_calculate_adaptive_hybrid(self) -> None:
         """Test adaptive hybrid ETA calculation."""
         # Add sufficient samples for all algorithms
         for i in range(10):
@@ -279,7 +279,7 @@ class TestETACalculator:
         assert result.eta_seconds > 0
         assert result.confidence > 0
 
-    def test_detect_speed_trend_increasing(self):
+    def test_detect_speed_trend_increasing(self) -> None:
         """Test speed trend detection - increasing."""
         samples = [
             SpeedSample(time.time(), 500.0, 1024),
@@ -292,7 +292,7 @@ class TestETACalculator:
         trend = self.calculator._detect_speed_trend(samples)
         assert trend == "increasing"
 
-    def test_detect_speed_trend_decreasing(self):
+    def test_detect_speed_trend_decreasing(self) -> None:
         """Test speed trend detection - decreasing."""
         samples = [
             SpeedSample(time.time(), 1500.0, 1024),
@@ -305,7 +305,7 @@ class TestETACalculator:
         trend = self.calculator._detect_speed_trend(samples)
         assert trend == "decreasing"
 
-    def test_detect_speed_trend_stable(self):
+    def test_detect_speed_trend_stable(self) -> None:
         """Test speed trend detection - stable."""
         samples = [
             SpeedSample(time.time(), 1000.0, 1024),
@@ -318,14 +318,14 @@ class TestETACalculator:
         trend = self.calculator._detect_speed_trend(samples)
         assert trend == "stable"
 
-    def test_detect_speed_trend_insufficient_samples(self):
+    def test_detect_speed_trend_insufficient_samples(self) -> None:
         """Test speed trend detection with insufficient samples."""
         samples = [SpeedSample(time.time(), 1000.0, 1024)]
         
         trend = self.calculator._detect_speed_trend(samples)
         assert trend == "unknown"
 
-    def test_assess_data_quality(self):
+    def test_assess_data_quality(self) -> None:
         """Test data quality assessment."""
         # Add consistent samples
         for i in range(20):
@@ -336,12 +336,12 @@ class TestETACalculator:
         assert 0.0 <= quality <= 1.0
         assert quality > 0.5  # Should be high quality due to consistency
 
-    def test_assess_data_quality_no_samples(self):
+    def test_assess_data_quality_no_samples(self) -> None:
         """Test data quality with no samples."""
         quality = self.calculator._assess_data_quality()
         assert quality == 0.0
 
-    def test_get_speed_statistics(self):
+    def test_get_speed_statistics(self) -> None:
         """Test speed statistics calculation."""
         speeds = [500.0, 750.0, 1000.0, 1250.0, 1500.0]
         for i, speed in enumerate(speeds):
@@ -364,12 +364,12 @@ class TestETACalculator:
         assert stats["max_speed"] == 1500.0
         assert stats["sample_count"] == 5
 
-    def test_get_speed_statistics_no_samples(self):
+    def test_get_speed_statistics_no_samples(self) -> None:
         """Test speed statistics with no samples."""
         stats = self.calculator.get_speed_statistics()
         assert stats == {}
 
-    def test_reset(self):
+    def test_reset(self) -> None:
         """Test calculator reset."""
         # Add some samples
         for i in range(5):
@@ -381,7 +381,7 @@ class TestETACalculator:
         
         assert len(self.calculator.speed_samples) == 0
 
-    def test_add_historical_completion(self):
+    def test_add_historical_completion(self) -> None:
         """Test adding historical completion data."""
         self.calculator.add_historical_completion(1048576, 120.0, 8738.13)
         
@@ -393,7 +393,7 @@ class TestETACalculator:
         assert self.calculator.historical_data["completion_times"][0] == 120.0
         assert self.calculator.historical_data["speeds"][0] == 8738.13
 
-    def test_historical_data_limit(self):
+    def test_historical_data_limit(self) -> None:
         """Test historical data size limit."""
         # Add more than 100 entries
         for i in range(105):
@@ -403,7 +403,7 @@ class TestETACalculator:
         for key in self.calculator.historical_data:
             assert len(self.calculator.historical_data[key]) == 100
 
-    def test_maxlen_enforcement(self):
+    def test_maxlen_enforcement(self) -> None:
         """Test that deque maxlen is enforced."""
         # Add more samples than max_samples
         for i in range(60):  # More than max_samples (50)
@@ -412,7 +412,7 @@ class TestETACalculator:
         # Should only keep the most recent 50
         assert len(self.calculator.speed_samples) == 50
 
-    def test_algorithm_parameter_adjustment(self):
+    def test_algorithm_parameter_adjustment(self) -> None:
         """Test algorithm parameter adjustment."""
         original_smoothing = self.calculator.smoothing_factor
         original_threshold = self.calculator.confidence_threshold

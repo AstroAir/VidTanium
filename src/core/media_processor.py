@@ -8,7 +8,7 @@ from loguru import logger
 class MediaProcessor:
     """Media processor for video transcoding, editing and other operations"""
 
-    def __init__(self, ffmpeg_path: Optional[str] = None):
+    def __init__(self, ffmpeg_path: Optional[str] = None) -> None:
         """
         Initialize media processor
 

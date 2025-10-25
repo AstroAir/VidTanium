@@ -20,7 +20,7 @@ from src.core.exceptions import NetworkException, ErrorContext
 class TestHostPoolConfig:
     """Test HostPoolConfig dataclass"""
     
-    def test_default_config(self):
+    def test_default_config(self) -> None:
         """Test default configuration values"""
         config = HostPoolConfig()
         assert config.max_connections == 10
@@ -32,7 +32,7 @@ class TestHostPoolConfig:
         assert config.keep_alive_timeout == 300.0
         assert config.health_check_interval == 60.0
     
-    def test_custom_config(self):
+    def test_custom_config(self) -> None:
         """Test custom configuration values"""
         config = HostPoolConfig(
             max_connections=20,
@@ -49,7 +49,7 @@ class TestHostPoolConfig:
 class TestConnectionInfo:
     """Test ConnectionInfo wrapper"""
 
-    def test_connection_info_creation(self):
+    def test_connection_info_creation(self) -> None:
         """Test ConnectionInfo creation and attributes"""
         mock_session = Mock(spec=Session)
         host = "example.com"
@@ -67,7 +67,7 @@ class TestConnectionInfo:
         assert connection_info.stats.requests_count == 0
         assert connection_info.stats.is_healthy is True
     
-    def test_needs_health_check(self):
+    def test_needs_health_check(self) -> None:
         """Test health check timing"""
         mock_session = Mock(spec=Session)
         config = HostPoolConfig(health_check_interval=1.0)  # 1 second interval
@@ -88,7 +88,7 @@ class TestConnectionPoolManager:
     """Test ConnectionPoolManager class"""
     
     @pytest.fixture
-    def pool_manager(self):
+    def pool_manager(self) -> None:
         """Create a fresh ConnectionPoolManager for testing"""
         manager = ConnectionPoolManager()
         yield manager
@@ -96,14 +96,14 @@ class TestConnectionPoolManager:
         manager.stop_monitoring()
         manager.cleanup_all_connections()
     
-    def test_initialization(self, pool_manager):
+    def test_initialization(self, pool_manager) -> None:
         """Test ConnectionPoolManager initialization"""
         assert len(pool_manager.connection_pools) == 0
         assert len(pool_manager.host_configs) == 0
         assert pool_manager.monitoring_active is False
         assert pool_manager.health_monitor_thread is None
     
-    def test_configure_host_pool(self, pool_manager):
+    def test_configure_host_pool(self, pool_manager) -> None:
         """Test configuring host pool"""
         host = "example.com"
         config = HostPoolConfig(max_connections=15)
@@ -113,7 +113,7 @@ class TestConnectionPoolManager:
         assert host in pool_manager.host_configs
         assert pool_manager.host_configs[host] == config
     
-    def test_get_session_new_host(self, pool_manager):
+    def test_get_session_new_host(self, pool_manager) -> None:
         """Test getting session for new host"""
         url = "https://example.com/test"
         error_context = ErrorContext(task_id="test_task")
@@ -130,7 +130,7 @@ class TestConnectionPoolManager:
             host = "https://example.com"
             assert host in pool_manager.connection_pools
     
-    def test_get_session_existing_host(self, pool_manager):
+    def test_get_session_existing_host(self, pool_manager) -> None:
         """Test getting session for existing host"""
         url = "https://example.com/test"
         error_context = ErrorContext(task_id="test_task")
@@ -152,7 +152,7 @@ class TestConnectionPoolManager:
             assert session1 == mock_session
             assert session2 == mock_session
     
-    def test_release_session_success(self, pool_manager):
+    def test_release_session_success(self, pool_manager) -> None:
         """Test releasing session with success"""
         url = "https://example.com/test"
         error_context = ErrorContext(task_id="test_task")
@@ -173,7 +173,7 @@ class TestConnectionPoolManager:
             host = "https://example.com"
             assert host in pool_manager.connection_pools
     
-    def test_release_session_failure(self, pool_manager):
+    def test_release_session_failure(self, pool_manager) -> None:
         """Test releasing session with failure"""
         url = "https://example.com/test"
         error_context = ErrorContext(task_id="test_task")
@@ -194,7 +194,7 @@ class TestConnectionPoolManager:
             host = "https://example.com"
             assert host in pool_manager.connection_pools
     
-    def test_start_stop_monitoring(self, pool_manager):
+    def test_start_stop_monitoring(self, pool_manager) -> None:
         """Test starting and stopping monitoring"""
         assert pool_manager.monitoring_active is False
 
@@ -205,7 +205,7 @@ class TestConnectionPoolManager:
         pool_manager.stop_monitoring()
         assert pool_manager.monitoring_active is False
 
-    def test_get_pool_stats(self, pool_manager):
+    def test_get_pool_stats(self, pool_manager) -> None:
         """Test getting pool statistics"""
         # Initially empty
         stats = pool_manager.get_stats()
@@ -219,12 +219,12 @@ class TestConnectionPoolManager:
 class TestGlobalConnectionPoolManager:
     """Test global connection pool manager instance"""
     
-    def test_global_instance_exists(self):
+    def test_global_instance_exists(self) -> None:
         """Test that global instance exists and is properly initialized"""
         assert connection_pool_manager is not None
         assert isinstance(connection_pool_manager, ConnectionPoolManager)
     
-    def test_global_instance_functionality(self):
+    def test_global_instance_functionality(self) -> None:
         """Test basic functionality of global instance"""
         url = "https://test.example.com/test"
         error_context = ErrorContext(task_id="global_test")

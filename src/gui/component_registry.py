@@ -73,7 +73,7 @@ class ComponentRegistry(QObject):
         # Auto-registration for common patterns
         self._setup_auto_registration_patterns()
     
-    def _setup_auto_registration_patterns(self):
+    def _setup_auto_registration_patterns(self) -> None:
         """Setup automatic registration patterns for common component types"""
         # Theme component pattern
         self.register_pattern(
@@ -245,13 +245,13 @@ class ComponentRegistry(QObject):
 
         return stats
     
-    def _apply_auto_registration_features(self, component: Any, component_type: ComponentType, **kwargs):
+    def _apply_auto_registration_features(self, component: Any, component_type: ComponentType, **kwargs) -> None:
         """Apply automatic registration features based on component type and kwargs"""
         
         # Auto theme registration
         if kwargs.get("auto_theme_registration", False):
             try:
-                from .enhanced_theme_system import get_theme_system
+                from .theme_system import get_theme_system
                 get_theme_system().register_component(component)
             except Exception as e:
                 logger.warning(f"Auto theme registration failed: {e}")
@@ -259,7 +259,7 @@ class ComponentRegistry(QObject):
         # Auto event registration
         if kwargs.get("auto_event_registration", False):
             try:
-                from .enhanced_event_system import get_event_system
+                from .event_system import get_event_system
                 # Register common event handlers if component has them
                 if hasattr(component, 'handle_event'):
                     get_event_system().register_handler(
@@ -277,14 +277,14 @@ class ComponentRegistry(QObject):
             except Exception as e:
                 logger.warning(f"Auto resource management registration failed: {e}")
     
-    def _update_initialization_order(self):
+    def _update_initialization_order(self) -> None:
         """Update the component initialization order based on dependencies"""
         # Simple topological sort for dependency resolution
         visited = set()
         temp_visited = set()
         order = []
         
-        def visit(component_id: str):
+        def visit(component_id: str) -> None:
             if component_id in temp_visited:
                 logger.warning(f"Circular dependency detected involving {component_id}")
                 return
@@ -309,7 +309,7 @@ class ComponentRegistry(QObject):
         
         self.initialization_order = order
     
-    def _on_component_deleted(self, component_id: str):
+    def _on_component_deleted(self, component_id: str) -> None:
         """Handle component deletion via weak reference callback"""
         if component_id in self.components:
             self.unregister_component(component_id)

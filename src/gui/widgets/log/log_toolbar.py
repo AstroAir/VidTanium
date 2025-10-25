@@ -28,11 +28,11 @@ class LogToolbar(QToolBar):
     zoomInRequested = Signal()
     zoomOutRequested = Signal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self._create_ui()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """Create the toolbar UI."""
         self.setIconSize(QSize(16, 16))
         self.setMovable(False)
@@ -105,7 +105,7 @@ class LogToolbar(QToolBar):
         # Apply styles
         self._apply_styles()
 
-    def _apply_styles(self):
+    def _apply_styles(self) -> None:
         """Apply styles to the toolbar."""
         self.setStyleSheet("""
             QToolBar {
@@ -127,7 +127,7 @@ class LogToolbar(QToolBar):
             }
         """)
 
-    def _save_logs(self):
+    def _save_logs(self) -> None:
         """Save logs to a file."""
         default_name = f"vidtanium_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
 
@@ -140,7 +140,7 @@ class LogToolbar(QToolBar):
         if filename:
             self.saveRequested.emit(filename)
 
-    def _export_html(self):
+    def _export_html(self) -> None:
         """Export logs as HTML format."""
         default_name = f"vidtanium_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
 
@@ -153,6 +153,6 @@ class LogToolbar(QToolBar):
         if filename:
             self.exportHtmlRequested.emit(filename)
 
-    def set_detail_panel_visible(self, visible):
+    def set_detail_panel_visible(self, visible) -> None:
         """Set the visibility of the detail panel."""
         self.detail_action.setChecked(visible)

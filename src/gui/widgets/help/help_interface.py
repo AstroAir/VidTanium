@@ -34,10 +34,11 @@ class HelpInterface(ResponsiveWidget):
     page_changed = Signal(str)  # page_name
     error_occurred = Signal(str)  # error_message
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.current_page = "index"
-        self.help_base_path = Path(__file__).parent.parent.parent.parent / "docs" / "help"
+        # Get the project root directory (go up from src/gui/widgets/help/ to project root)
+        self.help_base_path = Path(__file__).parent.parent.parent.parent.parent / "docs" / "help"
         self.responsive_manager = ResponsiveManager.instance()
         
         # Initialize UI
@@ -50,7 +51,7 @@ class HelpInterface(ResponsiveWidget):
         
         logger.info("Help interface initialized")
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup the help interface UI"""
         self.main_layout = QHBoxLayout(self)
         self.main_layout.setContentsMargins(16, 16, 16, 16)
@@ -149,7 +150,7 @@ class HelpInterface(ResponsiveWidget):
         
         return header_container
     
-    def _setup_styling(self):
+    def _setup_styling(self) -> None:
         """Setup interface styling"""
         self.setStyleSheet(f"""
             HelpInterface {{
@@ -164,11 +165,11 @@ class HelpInterface(ResponsiveWidget):
         content_shadow = DesignSystem.create_shadow_effect('lg')
         self.content_panel.setGraphicsEffect(content_shadow)
     
-    def _connect_signals(self):
+    def _connect_signals(self) -> None:
         """Connect internal signals"""
         self.responsive_manager.breakpoint_changed.connect(self._on_breakpoint_changed)
     
-    def _load_initial_content(self):
+    def _load_initial_content(self) -> None:
         """Load initial help content"""
         try:
             self.load_page("index")
@@ -176,21 +177,28 @@ class HelpInterface(ResponsiveWidget):
             logger.error(f"Failed to load initial help content: {e}")
             self._show_error(tr("help.error.load_failed"))
     
-    def load_page(self, page_name: str):
+    def load_page(self, page_name: str) -> None:
         """Load a help page by name"""
         try:
             # Get current locale
             i18n_manager = get_i18n_manager()
             locale = i18n_manager.current_locale
-            
+
             # Construct file path
             page_path = self.help_base_path / locale / f"{page_name}.md"
-            
+            logger.debug(f"Looking for help page at: {page_path}")
+
             # Fallback to English if locale file doesn't exist
             if not page_path.exists():
                 page_path = self.help_base_path / "en" / f"{page_name}.md"
-            
+                logger.debug(f"Fallback to English help page at: {page_path}")
+
             if not page_path.exists():
+                logger.error(f"Help page not found at: {page_path}")
+                logger.debug(f"Help base path: {self.help_base_path}")
+                logger.debug(f"Help base path exists: {self.help_base_path.exists()}")
+                if self.help_base_path.exists():
+                    logger.debug(f"Contents of help base path: {list(self.help_base_path.iterdir())}")
                 raise FileNotFoundError(f"Help page not found: {page_name}")
             
             # Load and display content
@@ -221,11 +229,11 @@ class HelpInterface(ResponsiveWidget):
             logger.error(f"Failed to load help page '{page_name}': {e}")
             self._show_error(tr("help.error.page_not_found", page=page_name))
     
-    def _on_page_requested(self, page_name: str):
+    def _on_page_requested(self, page_name: str) -> None:
         """Handle page request from navigation"""
         self.load_page(page_name)
     
-    def _on_link_clicked(self, url: str):
+    def _on_link_clicked(self, url: str) -> None:
         """Handle link clicks in markdown content"""
         try:
             # Handle internal links (markdown files)
@@ -241,12 +249,12 @@ class HelpInterface(ResponsiveWidget):
         except Exception as e:
             logger.error(f"Failed to handle link click: {url}, error: {e}")
     
-    def _refresh_content(self):
+    def _refresh_content(self) -> None:
         """Refresh current page content"""
         self.load_page(self.current_page)
         self._show_info(tr("help.content_refreshed"))
     
-    def _show_error(self, message: str):
+    def _show_error(self, message: str) -> None:
         """Show error message"""
         InfoBar.error(
             title=tr("help.error.title"),
@@ -259,7 +267,7 @@ class HelpInterface(ResponsiveWidget):
         )
         self.error_occurred.emit(message)
     
-    def _show_info(self, message: str):
+    def _show_info(self, message: str) -> None:
         """Show info message"""
         InfoBar.success(
             title=tr("help.info.title"),
@@ -271,7 +279,7 @@ class HelpInterface(ResponsiveWidget):
             parent=self
         )
     
-    def _on_breakpoint_changed(self, breakpoint: str):
+    def _on_breakpoint_changed(self, breakpoint: str) -> None:
         """Handle responsive breakpoint changes"""
         if breakpoint in ['xs', 'sm']:
             # On small screens, hide navigation panel

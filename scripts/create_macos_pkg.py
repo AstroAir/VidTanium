@@ -19,7 +19,7 @@ from build_config import BuildConfig, get_build_config, BuildProfile
 class MacOSPKGBuilder:
     """Creates macOS PKG installers"""
     
-    def __init__(self, config: BuildConfig):
+    def __init__(self, config: BuildConfig) -> None:
         self.config = config
         self.project_root = Path(__file__).parent.parent
         self.dist_dir = self.project_root / "dist"
@@ -166,7 +166,7 @@ class MacOSPKGBuilder:
         
         return dist_file
     
-    def create_installer_resources(self):
+    def create_installer_resources(self) -> None:
         """Create installer resources (welcome, license, etc.)"""
         resources_dir = self.build_dir / "resources"
         resources_dir.mkdir(exist_ok=True)
@@ -309,7 +309,7 @@ class MacOSPKGBuilder:
             print(f"❌ PKG build failed: {e}")
             return False
 
-def main():
+def main() -> None:
     """Main PKG builder function"""
     import argparse
     

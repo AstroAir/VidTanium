@@ -137,7 +137,7 @@ class HistoryStatistics:
 class DownloadHistoryManager:
     """Comprehensive download history management system"""
     
-    def __init__(self, db_path: Optional[str] = None):
+    def __init__(self, db_path: Optional[str] = None) -> None:
         self.db_path = db_path or "download_history.db"
         self.lock = threading.RLock()
         self.callbacks: List[Callable[[DownloadHistoryEntry], None]] = []
@@ -150,7 +150,7 @@ class DownloadHistoryManager:
         self._cache_timestamp = 0.0
         self._cache_ttl = 300.0  # 5 minutes
     
-    def _init_database(self):
+    def _init_database(self) -> None:
         """Initialize SQLite database"""
         try:
             with sqlite3.connect(self.db_path) as conn:
@@ -544,11 +544,11 @@ class DownloadHistoryManager:
             tags=json.loads(row['tags']) if row['tags'] else []
         )
     
-    def register_callback(self, callback: Callable[[DownloadHistoryEntry], None]):
+    def register_callback(self, callback: Callable[[DownloadHistoryEntry], None]) -> None:
         """Register callback for new history entries"""
         self.callbacks.append(callback)
     
-    def _trigger_callbacks(self, entry: DownloadHistoryEntry):
+    def _trigger_callbacks(self, entry: DownloadHistoryEntry) -> None:
         """Trigger registered callbacks"""
         for callback in self.callbacks:
             try:

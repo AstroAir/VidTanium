@@ -35,7 +35,7 @@ class BatchURLDialog(QDialog):
     # 导入URL信号
     urls_imported = Signal(list)  # URL列表
 
-    def __init__(self, settings, parent=None):
+    def __init__(self, settings, parent=None) -> None:
         super().__init__(parent)
 
         self.settings = settings
@@ -48,7 +48,7 @@ class BatchURLDialog(QDialog):
 
         self._create_ui()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """创建界面（优化布局和控件尺寸）"""
         # 主布局
         main_layout = QVBoxLayout(self)
@@ -148,7 +148,7 @@ class BatchURLDialog(QDialog):
 
         main_layout.addLayout(button_layout)
 
-    def _switch_tab(self, tab_widget):
+    def _switch_tab(self, tab_widget) -> None:
         """切换选项卡"""
         if self.current_tab:
             self.stacked_layout.removeWidget(self.current_tab)
@@ -157,7 +157,7 @@ class BatchURLDialog(QDialog):
         self.stacked_layout.addWidget(tab_widget)
         self.current_tab = tab_widget
 
-    def _create_text_tab(self):
+    def _create_text_tab(self) -> None:
         layout = QVBoxLayout(self.text_tab)
         layout.setContentsMargins(18, 18, 18, 18)
         layout.setSpacing(12)
@@ -201,7 +201,7 @@ class BatchURLDialog(QDialog):
         layout.addWidget(options_card)
         layout.addStretch()
 
-    def _create_file_tab(self):
+    def _create_file_tab(self) -> None:
         layout = QVBoxLayout(self.file_tab)
         layout.setContentsMargins(18, 18, 18, 18)
         layout.setSpacing(12)
@@ -239,7 +239,7 @@ class BatchURLDialog(QDialog):
         layout.addWidget(options_card)
         layout.addStretch()
 
-    def _create_web_tab(self):
+    def _create_web_tab(self) -> None:
         layout = QVBoxLayout(self.web_tab)
         layout.setContentsMargins(18, 18, 18, 18)
         layout.setSpacing(12)
@@ -285,7 +285,7 @@ class BatchURLDialog(QDialog):
         layout.addWidget(options_card)
         layout.addStretch()
 
-    def _paste_from_clipboard(self):
+    def _paste_from_clipboard(self) -> None:
         """从剪贴板粘贴"""
         clipboard = QApplication.clipboard()
         text = clipboard.text()
@@ -311,7 +311,7 @@ class BatchURLDialog(QDialog):
                 parent=self
             )
 
-    def _clear_text(self):
+    def _clear_text(self) -> None:
         """清空文本框"""
         self.text_input.clear()
 
@@ -325,7 +325,7 @@ class BatchURLDialog(QDialog):
             parent=self
         )
 
-    def _browse_file(self):
+    def _browse_file(self) -> None:
         """浏览文件"""
         file_path, _ = QFileDialog.getOpenFileName(
             self, "选择文本文件", "", "文本文件 (*.txt);;所有文件 (*)"
@@ -335,7 +335,7 @@ class BatchURLDialog(QDialog):
             self.file_path_input.setText(file_path)
             self.load_file_button.setEnabled(True)
 
-    def _load_file(self):
+    def _load_file(self) -> None:
         """加载文件"""
         file_path = self.file_path_input.text()
         if not file_path or not os.path.exists(file_path):
@@ -367,7 +367,7 @@ class BatchURLDialog(QDialog):
                 parent=self
             )
 
-    def _process_text_input(self):
+    def _process_text_input(self) -> None:
         """处理文本输入"""
         text = self.text_input.toPlainText()
         pattern = self.regex_input.text() if self.regex_input.text() else None
@@ -375,7 +375,7 @@ class BatchURLDialog(QDialog):
         urls = URLExtractor.extract_urls_from_text(text, pattern)
         self._update_url_preview(urls)
 
-    def _fetch_urls_from_web(self):
+    def _fetch_urls_from_web(self) -> None:
         """从网页抓取URL"""
         url = self.web_url_input.text().strip()
         if not url:
@@ -492,7 +492,7 @@ class BatchURLDialog(QDialog):
                 parent=self
             )
 
-    def _update_url_preview(self, urls):
+    def _update_url_preview(self, urls) -> None:
         """更新URL预览"""
         self.urls = urls
         preview_text = "\n".join(urls)
@@ -500,7 +500,7 @@ class BatchURLDialog(QDialog):
         self.url_count_label.setText(f"已检测到 {len(urls)} 个URL")
         self.ok_button.setEnabled(len(urls) > 0)
 
-    def _import_urls(self):
+    def _import_urls(self) -> None:
         """导入URL"""
         if not self.urls:
             return
@@ -511,6 +511,6 @@ class BatchURLDialog(QDialog):
         # 关闭对话框
         self.accept()
 
-    def get_urls(self):
+    def get_urls(self) -> None:
         """获取导入的URL"""
         return self.urls

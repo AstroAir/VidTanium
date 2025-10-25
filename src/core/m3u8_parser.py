@@ -35,7 +35,7 @@ class EncryptionMethod(Enum):
 class M3U8Segment:
     """M3U8 video segment"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.url: str = ""
         self.duration: float = 0.0
         self.index: int = 0
@@ -48,7 +48,7 @@ class M3U8Segment:
 class M3U8Stream:
     """M3U8 video stream"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.url: str = ""
         self.type: StreamType = StreamType.UNKNOWN
         self.bandwidth: int = 0
@@ -72,7 +72,7 @@ class M3U8Stream:
 class M3U8Parser:
     """M3U8 parser"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.streams: List[M3U8Stream] = []
         self.master_url: str = ""
         self.base_url: str = ""

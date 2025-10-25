@@ -85,7 +85,7 @@ class ValidationReport:
 class SegmentValidator:
     """Comprehensive segment validator"""
     
-    def __init__(self, config: Optional[ValidationConfig] = None):
+    def __init__(self, config: Optional[ValidationConfig] = None) -> None:
         self.config = config or ValidationConfig()
         self.validation_cache: Dict[str, ValidationReport] = {}
         
@@ -387,12 +387,12 @@ class SegmentValidator:
         
         return stats
     
-    def clear_cache(self):
+    def clear_cache(self) -> None:
         """Clear validation cache"""
         self.validation_cache.clear()
         logger.debug("Validation cache cleared")
     
-    def cleanup_cache(self, max_age_seconds: float = 3600.0):
+    def cleanup_cache(self, max_age_seconds: float = 3600.0) -> None:
         """Clean up old cache entries"""
         current_time = time.time()
         expired_keys = []

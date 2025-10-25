@@ -22,7 +22,7 @@ class ModernSettingsInterface(ScrollArea):
 
     settings_changed = Signal()
 
-    def __init__(self, settings, theme_manager, parent=None):
+    def __init__(self, settings, theme_manager, parent=None) -> None:
         super().__init__(parent)
         self.settings = settings
         self.theme_manager = theme_manager
@@ -46,7 +46,7 @@ class ModernSettingsInterface(ScrollArea):
         # Apply transparent background
         self.enableTransparentBackground()
 
-    def _create_setting_cards(self):
+    def _create_setting_cards(self) -> None:
         """Create setting cards"""
         # General settings group
         self.generalGroup = SettingCardGroup("常规设置", self.scrollWidget)
@@ -109,7 +109,7 @@ class ModernSettingsInterface(ScrollArea):
         from qfluentwidgets import SettingCard, SpinBox
 
         class SimpleSpinBoxSettingCard(SettingCard):
-            def __init__(self, icon, title, content, config_item):
+            def __init__(self, icon, title, content, config_item) -> None:
                 super().__init__(icon, title, content)
                 self.config_item = config_item
                 self.spinBox = SpinBox()
@@ -119,7 +119,7 @@ class ModernSettingsInterface(ScrollArea):
                 self.hBoxLayout.addWidget(self.spinBox)
                 self.hBoxLayout.addSpacing(16)
 
-            def _on_value_changed(self, value):
+            def _on_value_changed(self, value) -> None:
                 self.config_item.value = value
 
         self.maxRecentCard = SimpleSpinBoxSettingCard(
@@ -139,7 +139,7 @@ class ModernSettingsInterface(ScrollArea):
         self.expandLayout.addWidget(self.appearanceGroup)
         self.expandLayout.addWidget(self.updateGroup)
 
-    def _choose_output_directory(self):
+    def _choose_output_directory(self) -> None:
         """Choose output directory"""
         from PySide6.QtWidgets import QFileDialog
 
@@ -156,13 +156,13 @@ class ModernSettingsInterface(ScrollArea):
             self.outputDirCard.setContent(folder)
             self.save_settings()
 
-    def _on_theme_changed(self, theme_value):
+    def _on_theme_changed(self, theme_value) -> None:
         """Handle theme change"""
         if self.theme_manager:
             self.theme_manager.set_theme(theme_value)
         self.save_settings()
 
-    def save_settings(self):
+    def save_settings(self) -> None:
         """Save all settings using the shared SettingsManager"""
         try:
             SettingsManager.save_to_settings(self.config, self.settings)

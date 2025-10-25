@@ -62,7 +62,7 @@ class ContextualHelpManager(QObject):
     help_requested = Signal(str, dict)  # context, data
     action_suggested = Signal(str, dict)  # action_id, action_data
     
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.help_content: Dict[str, Dict[str, HelpContent]] = {}
         self.suggested_actions: Dict[str, List[SuggestedAction]] = {}
@@ -78,7 +78,7 @@ class ContextualHelpManager(QObject):
         self._initialize_help_content()
         self._initialize_suggested_actions()
     
-    def _initialize_help_content(self):
+    def _initialize_help_content(self) -> None:
         """Initialize help content for different contexts"""
         
         # Task Creation Help
@@ -161,7 +161,7 @@ class ContextualHelpManager(QObject):
             )
         }
     
-    def _initialize_suggested_actions(self):
+    def _initialize_suggested_actions(self) -> None:
         """Initialize suggested actions for different contexts"""
         
         # Task Creation Actions
@@ -251,7 +251,7 @@ class ContextualHelpManager(QObject):
         help_key: str,
         position: Optional[QPoint] = None,
         delay: int = 500
-    ):
+    ) -> None:
         """Show contextual help for a widget"""
         
         help_content = self.help_content.get(context.value, {}).get(help_key)
@@ -269,7 +269,7 @@ class ContextualHelpManager(QObject):
         # Start delay timer
         self.tooltip_timer.start(delay)
     
-    def _show_delayed_tooltip(self):
+    def _show_delayed_tooltip(self) -> None:
         """Show tooltip after delay"""
         if not hasattr(self, 'pending_tooltip_data'):
             return
@@ -296,7 +296,7 @@ class ContextualHelpManager(QObject):
         # Clean up when tooltip is closed
         tooltip.closed.connect(lambda: self._cleanup_tooltip(widget))
     
-    def hide_contextual_help(self, widget: QWidget):
+    def hide_contextual_help(self, widget: QWidget) -> None:
         """Hide contextual help for a widget"""
         if widget in self.active_tooltips:
             self.active_tooltips[widget].hide()
@@ -366,7 +366,7 @@ class ContextualHelpManager(QObject):
         
         return suggestions
     
-    def update_user_preferences(self, preferences: Dict[str, Any]):
+    def update_user_preferences(self, preferences: Dict[str, Any]) -> None:
         """Update user preferences for help system"""
         self.user_preferences.update(preferences)
     
@@ -382,11 +382,11 @@ class ContextualHelpManager(QObject):
         
         return True
     
-    def mark_help_as_seen(self, help_key: str):
+    def mark_help_as_seen(self, help_key: str) -> None:
         """Mark help as seen by user"""
         self.user_preferences[f"help_seen_{help_key}"] = True
     
-    def _cleanup_tooltip(self, widget: QWidget):
+    def _cleanup_tooltip(self, widget: QWidget) -> None:
         """Clean up tooltip reference"""
         if widget in self.active_tooltips:
             del self.active_tooltips[widget]

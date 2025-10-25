@@ -20,7 +20,6 @@ from qfluentwidgets import (
 )
 
 from ..utils.i18n import tr
-from ..utils.theme import VidTaniumTheme
 from ...core.exceptions import VidTaniumException, ErrorSeverity, ErrorCategory, UserAction
 from ...core.error_handler import ErrorReport
 
@@ -30,7 +29,7 @@ class ActionButton(PrimaryPushButton):
     
     action_triggered = Signal(str, dict)  # action_type, action_data
     
-    def __init__(self, action: UserAction, parent=None):
+    def __init__(self, action: UserAction, parent=None) -> None:
         super().__init__(parent)
         self.action = action
         self.setText(action.description)
@@ -50,32 +49,15 @@ class ActionButton(PrimaryPushButton):
         else:
             self.setIcon(FIF.HELP)
         
-        # Priority-based styling
+        # Use object name for potential custom styling
         if action.priority == 1:
-            self.setStyleSheet(f"""
-                QPushButton {{
-                    background: {VidTaniumTheme.SUCCESS_GREEN};
-                    border: 2px solid {VidTaniumTheme.SUCCESS_GREEN};
-                    color: white;
-                    font-weight: bold;
-                }}
-                QPushButton:hover {{
-                    background: {VidTaniumTheme.ACCENT_CYAN};
-                    border-color: {VidTaniumTheme.ACCENT_CYAN};
-                }}
-            """)
+            self.setObjectName("priority-1-button")
         elif action.priority == 2:
-            self.setStyleSheet(f"""
-                QPushButton {{
-                    background: {VidTaniumTheme.WARNING_ORANGE};
-                    border: 2px solid {VidTaniumTheme.WARNING_ORANGE};
-                    color: white;
-                }}
-            """)
+            self.setObjectName("priority-2-button")
         
         self.clicked.connect(self._on_clicked)
     
-    def _on_clicked(self):
+    def _on_clicked(self) -> None:
         """Handle button click"""
         action_data = {
             "action_type": self.action.action_type,
@@ -89,12 +71,12 @@ class ActionButton(PrimaryPushButton):
 class ErrorSummaryCard(ElevatedCardWidget):
     """Card displaying error summary information"""
     
-    def __init__(self, error_report: ErrorReport, parent=None):
+    def __init__(self, error_report: ErrorReport, parent=None) -> None:
         super().__init__(parent)
         self.error_report = error_report
         self._setup_ui()
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup the UI components"""
         layout = VBoxLayout(self)
         layout.setSpacing(12)
@@ -108,13 +90,10 @@ class ErrorSummaryCard(ElevatedCardWidget):
         icon_size = 32
         if self.error_report.severity == ErrorSeverity.CRITICAL:
             icon_label.setPixmap(FIF.CANCEL.icon().pixmap(icon_size, icon_size))
-            icon_color = VidTaniumTheme.ERROR_RED
         elif self.error_report.severity == ErrorSeverity.HIGH:
             icon_label.setPixmap(FIF.WARNING.icon().pixmap(icon_size, icon_size))
-            icon_color = VidTaniumTheme.WARNING_ORANGE
         else:
             icon_label.setPixmap(FIF.INFO.icon().pixmap(icon_size, icon_size))
-            icon_color = VidTaniumTheme.ACCENT_CYAN
         
         icon_label.setFixedSize(icon_size, icon_size)
         header_layout.addWidget(icon_label)
@@ -124,11 +103,9 @@ class ErrorSummaryCard(ElevatedCardWidget):
         title_layout.setSpacing(4)
         
         title_label = SubtitleLabel(self.error_report.title)
-        title_label.setStyleSheet(f"color: {icon_color}; font-weight: bold;")
         title_layout.addWidget(title_label)
         
         category_label = CaptionLabel(f"Category: {self.error_report.category.value.title()}")
-        category_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_SECONDARY};")
         title_layout.addWidget(category_label)
         
         header_layout.addLayout(title_layout)
@@ -137,13 +114,7 @@ class ErrorSummaryCard(ElevatedCardWidget):
         # Retry indicator
         if self.error_report.is_retryable:
             retry_label = CaptionLabel(f"Retry {self.error_report.retry_count + 1}")
-            retry_label.setStyleSheet(f"""
-                background: {VidTaniumTheme.BG_SURFACE};
-                border: 1px solid {VidTaniumTheme.BORDER_COLOR};
-                border-radius: 12px;
-                padding: 4px 8px;
-                color: {VidTaniumTheme.TEXT_SECONDARY};
-            """)
+            retry_label.setObjectName("retry-badge")
             header_layout.addWidget(retry_label)
         
         layout.addLayout(header_layout)
@@ -151,7 +122,6 @@ class ErrorSummaryCard(ElevatedCardWidget):
         # Error message
         message_label = BodyLabel(self.error_report.message)
         message_label.setWordWrap(True)
-        message_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_PRIMARY}; line-height: 1.4;")
         layout.addWidget(message_label)
         
         # Context information if available
@@ -161,12 +131,10 @@ class ErrorSummaryCard(ElevatedCardWidget):
             
             if self.error_report.context.task_name:
                 task_label = CaptionLabel(f"Task: {self.error_report.context.task_name}")
-                task_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_SECONDARY};")
                 context_layout.addWidget(task_label)
             
             if self.error_report.context.url:
                 url_label = CaptionLabel(f"URL: {self.error_report.context.url[:50]}...")
-                url_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_SECONDARY};")
                 context_layout.addWidget(url_label)
             
             context_layout.addStretch()
@@ -178,12 +146,12 @@ class SuggestedActionsWidget(QWidget):
     
     action_requested = Signal(str, dict)  # action_type, action_data
     
-    def __init__(self, actions: List[UserAction], parent=None):
+    def __init__(self, actions: List[UserAction], parent=None) -> None:
         super().__init__(parent)
         self._actions = sorted(actions, key=lambda x: x.priority)  # Sort by priority
         self._setup_ui()
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup the UI components"""
         layout = QVBoxLayout(self)
         layout.setSpacing(8)
@@ -191,7 +159,6 @@ class SuggestedActionsWidget(QWidget):
         
         # Title
         title_label = SubtitleLabel(tr("error_dialog.suggested_actions"))
-        title_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_PRIMARY}; font-weight: bold;")
         layout.addWidget(title_label)
         
         # Actions
@@ -206,12 +173,12 @@ class SuggestedActionsWidget(QWidget):
 class TechnicalDetailsWidget(QWidget):
     """Widget displaying technical error details"""
     
-    def __init__(self, technical_details: Dict[str, Any], parent=None):
+    def __init__(self, technical_details: Dict[str, Any], parent=None) -> None:
         super().__init__(parent)
         self.technical_details = technical_details
         self._setup_ui()
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup the UI components"""
         layout = QVBoxLayout(self)
         layout.setSpacing(12)
@@ -219,7 +186,6 @@ class TechnicalDetailsWidget(QWidget):
         
         # Title
         title_label = SubtitleLabel(tr("error_dialog.technical_details"))
-        title_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_PRIMARY}; font-weight: bold;")
         layout.addWidget(title_label)
         
         # Details text area
@@ -231,16 +197,11 @@ class TechnicalDetailsWidget(QWidget):
         formatted_details = self._format_technical_details()
         details_text.setPlainText(formatted_details)
         
-        details_text.setStyleSheet(f"""
-            QTextEdit {{
-                background: {VidTaniumTheme.BG_SURFACE};
-                border: 1px solid {VidTaniumTheme.BORDER_COLOR};
-                border-radius: 8px;
-                padding: 8px;
-                color: {VidTaniumTheme.TEXT_SECONDARY};
+        details_text.setStyleSheet("""
+            QTextEdit {
                 font-family: 'Consolas', 'Monaco', monospace;
                 font-size: 11px;
-            }}
+            }
         """)
         
         layout.addWidget(details_text)
@@ -268,7 +229,7 @@ class ErrorDialog(QDialog):
     retry_requested = Signal()
     dismiss_requested = Signal()
     
-    def __init__(self, error_report: ErrorReport, parent=None):
+    def __init__(self, error_report: ErrorReport, parent=None) -> None:
         super().__init__(parent)
         self.error_report = error_report
         self.setWindowTitle(tr("error_dialog.title"))
@@ -277,7 +238,7 @@ class ErrorDialog(QDialog):
         self._setup_ui()
         self._apply_theme()
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup the UI components"""
         layout = QVBoxLayout(self)
         layout.setSpacing(16)
@@ -289,25 +250,7 @@ class ErrorDialog(QDialog):
         
         # Main content area with tabs
         tab_widget = QTabWidget()
-        tab_widget.setStyleSheet(f"""
-            QTabWidget::pane {{
-                border: 1px solid {VidTaniumTheme.BORDER_COLOR};
-                border-radius: 8px;
-                background: {VidTaniumTheme.BG_SURFACE};
-            }}
-            QTabBar::tab {{
-                background: {VidTaniumTheme.BG_SECONDARY};
-                color: {VidTaniumTheme.TEXT_SECONDARY};
-                padding: 8px 16px;
-                margin-right: 2px;
-                border-top-left-radius: 8px;
-                border-top-right-radius: 8px;
-            }}
-            QTabBar::tab:selected {{
-                background: {VidTaniumTheme.BG_SURFACE};
-                color: {VidTaniumTheme.TEXT_PRIMARY};
-            }}
-        """)
+        # Let qfluentwidgets handle tab styling
         
         # Suggested actions tab
         if self.error_report.suggested_actions:
@@ -350,16 +293,12 @@ class ErrorDialog(QDialog):
         
         layout.addLayout(button_layout)
     
-    def _apply_theme(self):
+    def _apply_theme(self) -> None:
         """Apply theme styling"""
-        self.setStyleSheet(f"""
-            QDialog {{
-                background: {VidTaniumTheme.BG_PRIMARY};
-                color: {VidTaniumTheme.TEXT_PRIMARY};
-            }}
-        """)
+        # qfluentwidgets handles dialog styling automatically
+        pass
     
-    def _copy_details(self):
+    def _copy_details(self) -> None:
         """Copy error details to clipboard"""
         from PySide6.QtGui import QGuiApplication
         

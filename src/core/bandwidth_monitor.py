@@ -78,7 +78,7 @@ class OptimizationRecommendation:
 class BandwidthMonitor:
     """Real-time bandwidth monitor with analytics and optimization"""
     
-    def __init__(self, sample_interval: float = 1.0, max_samples: int = 3600):
+    def __init__(self, sample_interval: float = 1.0, max_samples: int = 3600) -> None:
         self.sample_interval = sample_interval
         self.max_samples = max_samples
         
@@ -111,7 +111,7 @@ class BandwidthMonitor:
             "peak_hours": []
         }
     
-    def start_monitoring(self):
+    def start_monitoring(self) -> None:
         """Start bandwidth monitoring"""
         if self.monitoring:
             return
@@ -121,14 +121,14 @@ class BandwidthMonitor:
         self.monitor_thread.start()
         logger.info("Bandwidth monitoring started")
     
-    def stop_monitoring(self):
+    def stop_monitoring(self) -> None:
         """Stop bandwidth monitoring"""
         self.monitoring = False
         if self.monitor_thread:
             self.monitor_thread.join(timeout=5.0)
         logger.info("Bandwidth monitoring stopped")
     
-    def _monitoring_loop(self):
+    def _monitoring_loop(self) -> None:
         """Main monitoring loop"""
         while self.monitoring:
             try:
@@ -244,7 +244,7 @@ class BandwidthMonitor:
         except Exception:
             return 0
     
-    def _update_task_bandwidth(self, sample: BandwidthSample):
+    def _update_task_bandwidth(self, sample: BandwidthSample) -> None:
         """Update per-task bandwidth tracking"""
         if sample.task_id:
             if sample.task_id not in self.task_bandwidth:
@@ -321,7 +321,7 @@ class BandwidthMonitor:
                 "sample_count": len(samples)
             }
     
-    def _check_optimization_opportunities(self):
+    def _check_optimization_opportunities(self) -> None:
         """Check for bandwidth optimization opportunities"""
         stats = self.get_current_stats()
         if not stats:
@@ -375,15 +375,15 @@ class BandwidthMonitor:
         if recommendations:
             self._trigger_optimization_callbacks(recommendations)
     
-    def register_bandwidth_callback(self, callback: Callable[[BandwidthSample], None]):
+    def register_bandwidth_callback(self, callback: Callable[[BandwidthSample], None]) -> None:
         """Register callback for bandwidth updates"""
         self.bandwidth_callbacks.append(callback)
     
-    def register_optimization_callback(self, callback: Callable[[List[OptimizationRecommendation]], None]):
+    def register_optimization_callback(self, callback: Callable[[List[OptimizationRecommendation]], None]) -> None:
         """Register callback for optimization recommendations"""
         self.optimization_callbacks.append(callback)
     
-    def _trigger_callbacks(self, sample: BandwidthSample):
+    def _trigger_callbacks(self, sample: BandwidthSample) -> None:
         """Trigger bandwidth update callbacks"""
         for callback in self.bandwidth_callbacks:
             try:
@@ -391,7 +391,7 @@ class BandwidthMonitor:
             except Exception as e:
                 logger.error(f"Error in bandwidth callback: {e}")
     
-    def _trigger_optimization_callbacks(self, recommendations: List[OptimizationRecommendation]):
+    def _trigger_optimization_callbacks(self, recommendations: List[OptimizationRecommendation]) -> None:
         """Trigger optimization recommendation callbacks"""
         for callback in self.optimization_callbacks:
             try:
@@ -422,7 +422,7 @@ class BandwidthMonitor:
                 for s in recent_samples
             ]
     
-    def reset_statistics(self):
+    def reset_statistics(self) -> None:
         """Reset all bandwidth statistics"""
         with self.lock:
             self.samples.clear()

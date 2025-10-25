@@ -16,12 +16,12 @@ from src.core.scheduler import TaskType
 class TaskDetailsWidget(CardWidget):
     """任务详情组件"""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.current_task = None
         self._create_ui()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """创建用户界面"""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(15, 15, 15, 15)
@@ -130,7 +130,7 @@ class TaskDetailsWidget(CardWidget):
         layout.addLayout(actions_layout)
         layout.addStretch(1)
 
-    def update_task(self, task):
+    def update_task(self, task) -> None:
         """更新任务信息"""
         if not task:
             self.setVisible(False)
@@ -207,7 +207,7 @@ class TaskDetailsWidget(CardWidget):
         # 显示详情面板
         self.setVisible(True)
 
-    def _get_task_type_text(self, task_type):
+    def _get_task_type_text(self, task_type) -> str:
         """获取任务类型文本"""
         type_texts = {
             TaskType.ONE_TIME: "一次性",
@@ -217,7 +217,7 @@ class TaskDetailsWidget(CardWidget):
         }
         return type_texts.get(task_type, str(task_type))
 
-    def _format_datetime(self, dt):
+    def _format_datetime(self, dt) -> str:
         """格式化日期时间"""
         if not dt:
             return "--"

@@ -17,13 +17,13 @@ class ScheduleOptionsWidget(QWidget):
     # 信号
     type_changed = Signal(int)  # 任务类型改变信号
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
 
         self.days_checks: List[CheckBox] = []
         self._create_ui()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """创建界面"""
         schedule_layout = QVBoxLayout(self)
         schedule_layout.setContentsMargins(15, 15, 15, 15)
@@ -121,7 +121,7 @@ class ScheduleOptionsWidget(QWidget):
         self.one_time_radio.setChecked(True)
         self._update_schedule_options(self.one_time_radio)
 
-    def _update_schedule_options(self, button: QAbstractButton):
+    def _update_schedule_options(self, button: QAbstractButton) -> None:
         """根据选择的任务类型更新界面"""
         # 隐藏所有特定选项
         self.interval_widget.setVisible(False)

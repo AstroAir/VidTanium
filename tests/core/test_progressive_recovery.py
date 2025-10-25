@@ -16,7 +16,7 @@ from src.core.progressive_recovery import (
 class TestRecoverySession:
     """Test RecoverySession dataclass"""
     
-    def test_recovery_session_creation(self):
+    def test_recovery_session_creation(self) -> None:
         """Test RecoverySession creation"""
         session = RecoverySession(
             task_id="test_task",
@@ -38,7 +38,7 @@ class TestRecoverySession:
         assert session.last_updated > 0
         assert session.can_resume is True
     
-    def test_mark_segment_complete(self):
+    def test_mark_segment_complete(self) -> None:
         """Test marking segment as complete"""
         session = RecoverySession(
             task_id="test_task",
@@ -62,7 +62,7 @@ class TestRecoverySession:
             "completed_at": session.last_updated
         }
     
-    def test_mark_segment_failed(self):
+    def test_mark_segment_failed(self) -> None:
         """Test marking segment as failed"""
         session = RecoverySession(
             task_id="test_task",
@@ -81,7 +81,7 @@ class TestRecoverySession:
         assert segment_id not in session.completed_segments
         assert session.failure_reasons[segment_id] == error_message
     
-    def test_get_completion_percentage(self):
+    def test_get_completion_percentage(self) -> None:
         """Test completion percentage calculation"""
         session = RecoverySession(
             task_id="test_task",
@@ -109,7 +109,7 @@ class TestRecoverySession:
         # Should be 100%
         assert session.get_completion_percentage() == 100.0
     
-    def test_get_remaining_segments(self):
+    def test_get_remaining_segments(self) -> None:
         """Test getting remaining segments"""
         session = RecoverySession(
             task_id="test_task",
@@ -131,7 +131,7 @@ class TestRecoverySession:
         remaining = session.get_remaining_segments()
         assert remaining == [0, 2, 4]
     
-    def test_to_dict(self):
+    def test_to_dict(self) -> None:
         """Test converting session to dictionary"""
         session = RecoverySession(
             task_id="test_task",
@@ -156,7 +156,7 @@ class TestRecoverySession:
         assert 0 in data["segment_files"]
         assert data["failure_reasons"]["1"] == "Network error"
     
-    def test_from_dict(self):
+    def test_from_dict(self) -> None:
         """Test creating session from dictionary"""
         data = {
             "task_id": "test_task",
@@ -190,7 +190,7 @@ class TestProgressiveRecoveryManager:
     """Test ProgressiveRecoveryManager class"""
     
     @pytest.fixture
-    def temp_dir(self):
+    def temp_dir(self) -> None:
         """Create a temporary directory for testing"""
         temp_dir = tempfile.mkdtemp()
         yield temp_dir
@@ -199,18 +199,18 @@ class TestProgressiveRecoveryManager:
         shutil.rmtree(temp_dir, ignore_errors=True)
     
     @pytest.fixture
-    def recovery_manager(self, temp_dir):
+    def recovery_manager(self, temp_dir) -> None:
         """Create a fresh ProgressiveRecoveryManager for testing"""
         return ProgressiveRecoveryManager(recovery_dir=temp_dir)
     
-    def test_initialization(self, recovery_manager, temp_dir):
+    def test_initialization(self, recovery_manager, temp_dir) -> None:
         """Test ProgressiveRecoveryManager initialization"""
         assert recovery_manager.recovery_dir == temp_dir
         assert recovery_manager.active_sessions == {}
         assert recovery_manager.max_session_age == 86400 * 7  # 7 days
         assert recovery_manager.auto_cleanup_enabled is True
     
-    def test_create_recovery_session(self, recovery_manager):
+    def test_create_recovery_session(self, recovery_manager) -> None:
         """Test creating recovery session"""
         task_id = "test_task"
         task_name = "Test Task"
@@ -230,7 +230,7 @@ class TestProgressiveRecoveryManager:
         assert session.total_segments == total_segments
         assert task_id in recovery_manager.active_sessions
     
-    def test_get_recovery_session_existing(self, recovery_manager):
+    def test_get_recovery_session_existing(self, recovery_manager) -> None:
         """Test getting existing recovery session"""
         task_id = "test_task"
         session = recovery_manager.create_recovery_session(
@@ -242,13 +242,13 @@ class TestProgressiveRecoveryManager:
         
         assert retrieved_session is session
     
-    def test_get_recovery_session_nonexistent(self, recovery_manager):
+    def test_get_recovery_session_nonexistent(self, recovery_manager) -> None:
         """Test getting non-existent recovery session"""
         retrieved_session = recovery_manager.get_recovery_session("nonexistent_task")
         
         assert retrieved_session is None
     
-    def test_mark_segment_complete(self, recovery_manager):
+    def test_mark_segment_complete(self, recovery_manager) -> None:
         """Test marking segment as complete"""
         task_id = "test_task"
         session = recovery_manager.create_recovery_session(
@@ -266,7 +266,7 @@ class TestProgressiveRecoveryManager:
         assert session.segment_files[segment_id]["file_path"] == file_path
         assert session.segment_files[segment_id]["file_size"] == file_size
     
-    def test_mark_segment_failed(self, recovery_manager):
+    def test_mark_segment_failed(self, recovery_manager) -> None:
         """Test marking segment as failed"""
         task_id = "test_task"
         session = recovery_manager.create_recovery_session(
@@ -282,7 +282,7 @@ class TestProgressiveRecoveryManager:
         assert segment_id in session.failed_segments
         assert session.failure_reasons[segment_id] == error_message
     
-    def test_get_resume_info_existing_session(self, recovery_manager):
+    def test_get_resume_info_existing_session(self, recovery_manager) -> None:
         """Test getting resume info for existing session"""
         task_id = "test_task"
         session = recovery_manager.create_recovery_session(
@@ -302,13 +302,13 @@ class TestProgressiveRecoveryManager:
         assert resume_info["completed_segments"] == [0, 1]
         assert resume_info["remaining_segments"] == [2, 3, 4, 5, 6, 7, 8, 9]
     
-    def test_get_resume_info_nonexistent_session(self, recovery_manager):
+    def test_get_resume_info_nonexistent_session(self, recovery_manager) -> None:
         """Test getting resume info for non-existent session"""
         resume_info = recovery_manager.get_resume_info("nonexistent_task")
         
         assert resume_info is None
     
-    def test_save_session(self, recovery_manager):
+    def test_save_session(self, recovery_manager) -> None:
         """Test saving session to disk"""
         task_id = "test_task"
         session = recovery_manager.create_recovery_session(
@@ -331,7 +331,7 @@ class TestProgressiveRecoveryManager:
         assert data["task_id"] == task_id
         assert data["completed_segments"] == [0]
     
-    def test_load_session(self, recovery_manager):
+    def test_load_session(self, recovery_manager) -> None:
         """Test loading session from disk"""
         task_id = "test_task"
         session_data = {
@@ -366,13 +366,13 @@ class TestProgressiveRecoveryManager:
         assert len(session.segment_files) == 2
         assert task_id in recovery_manager.active_sessions
     
-    def test_load_session_nonexistent(self, recovery_manager):
+    def test_load_session_nonexistent(self, recovery_manager) -> None:
         """Test loading non-existent session"""
         session = recovery_manager.load_session("nonexistent_task")
         
         assert session is None
     
-    def test_remove_session(self, recovery_manager):
+    def test_remove_session(self, recovery_manager) -> None:
         """Test removing session"""
         task_id = "test_task"
         session = recovery_manager.create_recovery_session(
@@ -389,7 +389,7 @@ class TestProgressiveRecoveryManager:
         assert task_id not in recovery_manager.active_sessions
         assert not os.path.exists(session_file)
     
-    def test_cleanup_old_sessions(self, recovery_manager):
+    def test_cleanup_old_sessions(self, recovery_manager) -> None:
         """Test cleanup of old sessions"""
         task_id = "old_task"
         session = recovery_manager.create_recovery_session(
@@ -408,7 +408,7 @@ class TestProgressiveRecoveryManager:
         session_file = os.path.join(recovery_manager.recovery_dir, f"{task_id}.json")
         assert not os.path.exists(session_file)
     
-    def test_get_all_sessions(self, recovery_manager):
+    def test_get_all_sessions(self, recovery_manager) -> None:
         """Test getting all sessions"""
         # Initially empty
         sessions = recovery_manager.get_all_sessions()
@@ -433,12 +433,12 @@ class TestProgressiveRecoveryManager:
 class TestGlobalProgressiveRecoveryManager:
     """Test global progressive recovery manager instance"""
     
-    def test_global_instance_exists(self):
+    def test_global_instance_exists(self) -> None:
         """Test that global instance exists and is properly initialized"""
         assert progressive_recovery_manager is not None
         assert isinstance(progressive_recovery_manager, ProgressiveRecoveryManager)
     
-    def test_global_instance_functionality(self):
+    def test_global_instance_functionality(self) -> None:
         """Test basic functionality of global instance"""
         task_id = "global_test_task"
         

@@ -5,66 +5,66 @@ from typing import Any, Dict, Optional
 
 # Mock PySide6 components for testing
 class MockQWidget:
-    def __init__(self):
+    def __init__(self) -> None:
         self.object_name = ""
         self.minimum_size = (0, 0)
         self.size_value = (800, 600)
         self.visible = False
         
-    def setObjectName(self, name):
+    def setObjectName(self, name) -> None:
         self.object_name = name
         
-    def setMinimumSize(self, width, height):
+    def setMinimumSize(self, width, height) -> None:
         self.minimum_size = (width, height)
         
-    def minimumWidth(self):
+    def minimumWidth(self) -> None:
         return self.minimum_size[0]
         
-    def minimumHeight(self):
+    def minimumHeight(self) -> None:
         return self.minimum_size[1]
         
-    def resize(self, width, height):
+    def resize(self, width, height) -> None:
         self.size_value = (width, height)
         
-    def size(self):
+    def size(self) -> None:
         mock_size = Mock()
         mock_size.width.return_value = self.size_value[0]
         mock_size.height.return_value = self.size_value[1]
         return mock_size
         
-    def show(self):
+    def show(self) -> None:
         self.visible = True
 
-    def hide(self):
+    def hide(self) -> None:
         self.visible = False
 
-    def setVisible(self, visible):
+    def setVisible(self, visible) -> None:
         self.visible = visible
 
-    def setMinimumWidth(self, width):
+    def setMinimumWidth(self, width) -> None:
         self.minimum_size = (width, self.minimum_size[1])
 
-    def setMinimumHeight(self, height):
+    def setMinimumHeight(self, height) -> None:
         self.minimum_size = (self.minimum_size[0], height)
 
-    def setMaximumWidth(self, width):
+    def setMaximumWidth(self, width) -> None:
         self.maximum_width = width
 
-    def setMaximumHeight(self, height):
+    def setMaximumHeight(self, height) -> None:
         self.maximum_height = height
 
-    def setLayout(self, layout):
+    def setLayout(self, layout) -> None:
         self.layout_obj = layout
 
-    def layout(self):
+    def layout(self) -> None:
         return getattr(self, 'layout_obj', None)
 
-    def addWidget(self, widget):
+    def addWidget(self, widget) -> None:
         if not hasattr(self, 'children'):
             self.children = []
         self.children.append(widget)
 
-    def setSizePolicy(self, *args):
+    def setSizePolicy(self, *args) -> None:
         if len(args) == 1:
             self.size_policy = args[0]
         elif len(args) == 2:
@@ -73,58 +73,58 @@ class MockQWidget:
         else:
             self.size_policy = MockQSizePolicy()
 
-    def sizePolicy(self):
+    def sizePolicy(self) -> None:
         return getattr(self, 'size_policy', None)
 
-    def setStyleSheet(self, stylesheet):
+    def setStyleSheet(self, stylesheet) -> None:
         self.stylesheet = stylesheet
 
-    def styleSheet(self):
+    def styleSheet(self) -> None:
         return getattr(self, 'stylesheet', '')
 
-    def setWindowFlags(self, flags):
+    def setWindowFlags(self, flags) -> None:
         self.window_flags = flags
 
-    def windowFlags(self):
+    def windowFlags(self) -> None:
         return getattr(self, 'window_flags', 0)
 
-    def setFocusPolicy(self, policy):
+    def setFocusPolicy(self, policy) -> None:
         self.focus_policy = policy
 
-    def focusPolicy(self):
+    def focusPolicy(self) -> None:
         return getattr(self, 'focus_policy', None)
 
-    def setEnabled(self, enabled):
+    def setEnabled(self, enabled) -> None:
         self.enabled = enabled
 
-    def isEnabled(self):
+    def isEnabled(self) -> None:
         return getattr(self, 'enabled', True)
 
-    def setToolTip(self, tooltip):
+    def setToolTip(self, tooltip) -> None:
         self.tooltip = tooltip
 
-    def toolTip(self):
+    def toolTip(self) -> None:
         return getattr(self, 'tooltip', '')
 
-    def setWhatsThis(self, whatsthis):
+    def setWhatsThis(self, whatsthis) -> None:
         self.whatsthis = whatsthis
 
-    def whatsThis(self):
+    def whatsThis(self) -> None:
         return getattr(self, 'whatsthis', '')
 
-    def update(self):
+    def update(self) -> None:
         pass
 
-    def repaint(self):
+    def repaint(self) -> None:
         pass
 
-    def setFocus(self):
+    def setFocus(self) -> None:
         pass
 
-    def clearFocus(self):
+    def clearFocus(self) -> None:
         pass
 
-    def hasFocus(self):
+    def hasFocus(self) -> None:
         return False
 
 class MockQSizePolicy:
@@ -137,25 +137,25 @@ class MockQSizePolicy:
         MinimumExpanding = 3
         Ignored = 13
 
-    def __init__(self, horizontal=None, vertical=None):
+    def __init__(self, horizontal=None, vertical=None) -> None:
         self.horizontal_policy = horizontal or self.Policy.Preferred
         self.vertical_policy = vertical or self.Policy.Preferred
 
-    def setHorizontalPolicy(self, policy):
+    def setHorizontalPolicy(self, policy) -> None:
         self.horizontal_policy = policy
 
-    def setVerticalPolicy(self, policy):
+    def setVerticalPolicy(self, policy) -> None:
         self.vertical_policy = policy
 
-    def horizontalPolicy(self):
+    def horizontalPolicy(self) -> None:
         return self.horizontal_policy
 
-    def verticalPolicy(self):
+    def verticalPolicy(self) -> None:
         return self.vertical_policy
 
 class MockQApplication:
     @staticmethod
-    def primaryScreen():
+    def primaryScreen() -> None:
         mock_screen = Mock()
         mock_geometry = Mock()
         mock_geometry.width.return_value = 1920
@@ -164,30 +164,30 @@ class MockQApplication:
         return mock_screen
 
 class MockQTimer:
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         self.timeout = Mock()
         self.interval = 0
         self.running = False
         self.parent = parent
 
-    def start(self, interval=None):
+    def start(self, interval=None) -> None:
         if interval:
             self.interval = interval
         self.running = True
 
-    def stop(self):
+    def stop(self) -> None:
         self.running = False
 
-    def setInterval(self, interval):
+    def setInterval(self, interval) -> None:
         self.interval = interval
 
 class MockFluentWindow(MockQWidget):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.navigationInterface = Mock()
         self.sub_interfaces = []
         
-    def addSubInterface(self, interface, icon, text, position):
+    def addSubInterface(self, interface, icon, text, position) -> None:
         self.sub_interfaces.append({
             'interface': interface,
             'icon': icon,
@@ -195,117 +195,117 @@ class MockFluentWindow(MockQWidget):
             'position': position
         })
         
-    def setWindowIcon(self, icon):
+    def setWindowIcon(self, icon) -> None:
         self.window_icon = icon
 
-    def setWindowTitle(self, title):
+    def setWindowTitle(self, title) -> None:
         self.window_title = title
 
-    def setMinimumSize(self, width, height):
+    def setMinimumSize(self, width, height) -> None:
         self.minimum_width = width
         self.minimum_height = height
 
-    def setGeometry(self, x, y, width, height):
+    def setGeometry(self, x, y, width, height) -> None:
         self.geometry_x = x
         self.geometry_y = y
         self.geometry_width = width
         self.geometry_height = height
 
-    def move(self, x, y):
+    def move(self, x, y) -> None:
         self.x = x
         self.y = y
 
-    def resize(self, width, height):
+    def resize(self, width, height) -> None:
         self.width = width
         self.height = height
 
-    def resizeEvent(self, event):
+    def resizeEvent(self, event) -> None:
         pass
 
-    def stackedWidget(self):
+    def stackedWidget(self) -> None:
         if not hasattr(self, '_stacked_widget'):
             self._stacked_widget = MockQWidget()
         return self._stacked_widget
 
-    def addWidget(self, widget):
+    def addWidget(self, widget) -> None:
         if not hasattr(self, 'widgets'):
             self.widgets = []
         self.widgets.append(widget)
 
-    def setCurrentWidget(self, widget):
+    def setCurrentWidget(self, widget) -> None:
         self.current_widget = widget
 
-    def currentWidget(self):
+    def currentWidget(self) -> None:
         return getattr(self, 'current_widget', None)
 
-    def setWindowState(self, state):
+    def setWindowState(self, state) -> None:
         self.window_state = state
 
-    def windowState(self):
+    def windowState(self) -> None:
         return getattr(self, 'window_state', 0)
 
-    def isMaximized(self):
+    def isMaximized(self) -> None:
         return False
 
-    def isMinimized(self):
+    def isMinimized(self) -> None:
         return False
 
-    def isFullScreen(self):
+    def isFullScreen(self) -> None:
         return False
 
-    def closeEvent(self, event):
+    def closeEvent(self, event) -> None:
         pass
 
-    def showEvent(self, event):
+    def showEvent(self, event) -> None:
         pass
 
-    def hideEvent(self, event):
+    def hideEvent(self, event) -> None:
         pass
 
-    def paintEvent(self, event):
+    def paintEvent(self, event) -> None:
         pass
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event) -> None:
         pass
 
-    def mouseReleaseEvent(self, event):
+    def mouseReleaseEvent(self, event) -> None:
         pass
 
-    def keyPressEvent(self, event):
+    def keyPressEvent(self, event) -> None:
         pass
 
-    def keyReleaseEvent(self, event):
+    def keyReleaseEvent(self, event) -> None:
         pass
 
 class MockDownloadManager:
-    def __init__(self):
+    def __init__(self) -> None:
         self.on_task_progress = None
         self.on_task_status_changed = None
         self.on_task_completed = None
         self.on_task_failed = None
         self.tasks = {}
         
-    def get_all_tasks(self):
+    def get_all_tasks(self) -> None:
         return self.tasks
         
-    def start_task(self, task_id):
+    def start_task(self, task_id) -> None:
         pass
         
-    def pause_task(self, task_id):
+    def pause_task(self, task_id) -> None:
         pass
         
-    def resume_task(self, task_id):
+    def resume_task(self, task_id) -> None:
         pass
         
-    def cancel_task(self, task_id):
+    def cancel_task(self, task_id) -> None:
         pass
         
-    def remove_task(self, task_id):
+    def remove_task(self, task_id) -> None:
         if task_id in self.tasks:
             del self.tasks[task_id]
 
 class MockSettings:
-    def __init__(self):
+    def __init__(self) -> None:
         self.data = {
             "ui": {
                 "show_notifications": True,
@@ -313,18 +313,18 @@ class MockSettings:
             }
         }
         
-    def get(self, section, key, default=None):
+    def get(self, section, key, default=None) -> None:
         return self.data.get(section, {}).get(key, default)
 
-    def save_settings(self):
+    def save_settings(self) -> None:
         """Mock save settings method"""
         pass
 
 class MockApp:
-    def __init__(self):
+    def __init__(self) -> None:
         self.tray_icon = Mock()
         
-    def send_notification(self, title, message, icon=None, duration=5000):
+    def send_notification(self, title, message, icon=None, duration=5000) -> None:
         pass
 
 # Mock the PySide6 imports
@@ -364,13 +364,13 @@ sys.modules['src.gui.utils.i18n'] = Mock()
 
 # Mock core components with proper structure
 class MockThreadPoolManager:
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
-    def submit(self, *args, **kwargs):
+    def submit(self, *args, **kwargs) -> None:
         return Mock()
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         pass
 
 mock_thread_pool = Mock()
@@ -391,7 +391,7 @@ class MockDesignSystem:
     }
 
     @staticmethod
-    def get_color(color_name):
+    def get_color(color_name) -> None:
         color_map = {
             'surface_adaptive': '#ffffff',
             'text_primary_adaptive': '#000000',
@@ -410,7 +410,7 @@ from src.gui.main_window import MainWindow
 class TestMainWindow:
     """Test suite for MainWindow class."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.mock_app = MockApp()
         self.mock_download_manager = MockDownloadManager()
@@ -423,7 +423,7 @@ class TestMainWindow:
     @patch('src.gui.main_window.LogViewer')
     @patch('src.gui.main_window.SettingsInterface')
     def test_initialization(self, mock_settings_interface, mock_log_viewer, 
-                           mock_task_manager, mock_dashboard, mock_responsive_manager):
+                           mock_task_manager, mock_dashboard, mock_responsive_manager) -> None:
         """Test MainWindow initialization."""
         # Mock responsive manager
         mock_responsive_instance = Mock()
@@ -451,7 +451,7 @@ class TestMainWindow:
     @patch('src.gui.main_window.ResponsiveManager')
     @patch('src.gui.main_window.Dashboard')
     @patch('src.gui.main_window.QApplication.primaryScreen')
-    def test_responsive_window_setup(self, mock_primary_screen, mock_dashboard, mock_responsive_manager):
+    def test_responsive_window_setup(self, mock_primary_screen, mock_dashboard, mock_responsive_manager) -> None:
         """Test responsive window setup."""
         # Mock screen
         mock_screen = Mock()
@@ -484,7 +484,7 @@ class TestMainWindow:
 
     @patch('src.gui.main_window.ResponsiveManager')
     @patch('src.gui.main_window.Dashboard')
-    def test_breakpoint_changed_callback(self, mock_dashboard, mock_responsive_manager):
+    def test_breakpoint_changed_callback(self, mock_dashboard, mock_responsive_manager) -> None:
         """Test breakpoint change handling."""
         # Mock responsive manager
         mock_responsive_instance = Mock()
@@ -513,7 +513,7 @@ class TestMainWindow:
 
     @patch('src.gui.main_window.ResponsiveManager')
     @patch('src.gui.main_window.Dashboard')
-    def test_orientation_changed_callback(self, mock_dashboard, mock_responsive_manager):
+    def test_orientation_changed_callback(self, mock_dashboard, mock_responsive_manager) -> None:
         """Test orientation change handling."""
         # Mock responsive manager
         mock_responsive_instance = Mock()
@@ -541,7 +541,7 @@ class TestMainWindow:
     @patch('src.gui.main_window.ResponsiveManager')
     @patch('src.gui.main_window.Dashboard')
     @patch('src.gui.main_window.TaskManager')
-    def test_download_manager_signal_connections(self, mock_task_manager, mock_dashboard, mock_responsive_manager):
+    def test_download_manager_signal_connections(self, mock_task_manager, mock_dashboard, mock_responsive_manager) -> None:
         """Test download manager signal connections."""
         # Mock responsive manager
         mock_responsive_instance = Mock()
@@ -567,7 +567,7 @@ class TestMainWindow:
 
     @patch('src.gui.main_window.ResponsiveManager')
     @patch('src.gui.main_window.Dashboard')
-    def test_task_progress_callback(self, mock_dashboard, mock_responsive_manager):
+    def test_task_progress_callback(self, mock_dashboard, mock_responsive_manager) -> None:
         """Test task progress callback."""
         # Mock responsive manager
         mock_responsive_instance = Mock()
@@ -597,7 +597,7 @@ class TestMainWindow:
 
     @patch('src.gui.main_window.ResponsiveManager')
     @patch('src.gui.main_window.Dashboard')
-    def test_task_completed_callback(self, mock_dashboard, mock_responsive_manager):
+    def test_task_completed_callback(self, mock_dashboard, mock_responsive_manager) -> None:
         """Test task completion callback."""
         # Mock responsive manager
         mock_responsive_instance = Mock()
@@ -623,7 +623,7 @@ class TestMainWindow:
 
     @patch('src.gui.main_window.ResponsiveManager')
     @patch('src.gui.main_window.Dashboard')
-    def test_task_failed_callback(self, mock_dashboard, mock_responsive_manager):
+    def test_task_failed_callback(self, mock_dashboard, mock_responsive_manager) -> None:
         """Test task failure callback."""
         # Mock responsive manager
         mock_responsive_instance = Mock()
@@ -649,7 +649,7 @@ class TestMainWindow:
 
     @patch('src.gui.main_window.ResponsiveManager')
     @patch('src.gui.main_window.Dashboard')
-    def test_handle_task_action(self, mock_dashboard, mock_responsive_manager):
+    def test_handle_task_action(self, mock_dashboard, mock_responsive_manager) -> None:
         """Test task action handling."""
         # Mock responsive manager
         mock_responsive_instance = Mock()
@@ -679,7 +679,7 @@ class TestMainWindow:
 
     @patch('src.gui.main_window.ResponsiveManager')
     @patch('src.gui.main_window.Dashboard')
-    def test_auto_save_setup(self, mock_dashboard, mock_responsive_manager):
+    def test_auto_save_setup(self, mock_dashboard, mock_responsive_manager) -> None:
         """Test auto save timer setup."""
         # Mock responsive manager
         mock_responsive_instance = Mock()
@@ -703,7 +703,7 @@ class TestMainWindow:
 
     @patch('src.gui.main_window.ResponsiveManager')
     @patch('src.gui.main_window.Dashboard')
-    def test_statistics_update_timer(self, mock_dashboard, mock_responsive_manager):
+    def test_statistics_update_timer(self, mock_dashboard, mock_responsive_manager) -> None:
         """Test statistics update timer."""
         # Mock responsive manager
         mock_responsive_instance = Mock()
@@ -726,7 +726,7 @@ class TestMainWindow:
 
     @patch('src.gui.main_window.ResponsiveManager')
     @patch('src.gui.main_window.Dashboard')
-    def test_task_refresh_timer(self, mock_dashboard, mock_responsive_manager):
+    def test_task_refresh_timer(self, mock_dashboard, mock_responsive_manager) -> None:
         """Test task refresh timer."""
         # Mock responsive manager
         mock_responsive_instance = Mock()

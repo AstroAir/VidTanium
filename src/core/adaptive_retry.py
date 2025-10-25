@@ -88,7 +88,7 @@ class HostRetryMetrics:
     last_success_time: float = field(default_factory=time.time)
     consecutive_failures: int = 0
     
-    def record_attempt(self, attempt: RetryAttempt):
+    def record_attempt(self, attempt: RetryAttempt) -> None:
         """Record a retry attempt"""
         self.total_attempts += 1
         self.recent_attempts.append(attempt)
@@ -127,7 +127,7 @@ class HostRetryMetrics:
 class AdaptiveRetryManager:
     """Intelligent retry manager with network-aware strategies"""
     
-    def __init__(self, default_config: Optional[RetryConfig] = None):
+    def __init__(self, default_config: Optional[RetryConfig] = None) -> None:
         self.default_config = default_config or RetryConfig()
         self.host_configs: Dict[str, RetryConfig] = {}
         self.host_metrics: Dict[str, HostRetryMetrics] = {}
@@ -142,7 +142,7 @@ class AdaptiveRetryManager:
         
         logger.info("Adaptive retry manager initialized")
     
-    def configure_host(self, host: str, config: RetryConfig):
+    def configure_host(self, host: str, config: RetryConfig) -> None:
         """Configure retry settings for a specific host"""
         with self.lock:
             self.host_configs[host] = config
@@ -314,7 +314,7 @@ class AdaptiveRetryManager:
     
     def record_attempt(self, host: str, attempt_number: int, reason: RetryReason,
                       success: bool, response_time: float = 0.0, 
-                      error_message: str = ""):
+                      error_message: str = "") -> None:
         """Record retry attempt for learning"""
         with self.lock:
             if host not in self.host_metrics:
@@ -335,7 +335,7 @@ class AdaptiveRetryManager:
             # Update global network conditions based on patterns
             self._update_global_conditions()
     
-    def _update_global_conditions(self):
+    def _update_global_conditions(self) -> None:
         """Update global network quality and server load estimates"""
         if not self.host_metrics:
             return
@@ -387,7 +387,7 @@ class AdaptiveRetryManager:
                 "fibonacci_cache_size": len(self.fibonacci_cache)
             }
     
-    def reset_host_metrics(self, host: str):
+    def reset_host_metrics(self, host: str) -> None:
         """Reset metrics for a specific host"""
         with self.lock:
             if host in self.host_metrics:

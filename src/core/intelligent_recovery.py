@@ -60,7 +60,7 @@ class RecoveryPlan:
 class IntelligentRecoverySystem:
     """Advanced error recovery system with user guidance"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.lock = threading.RLock()
         self.recovery_history: Dict[str, List[RecoveryPlan]] = {}
         self.success_rates: Dict[RecoveryStrategy, float] = {}
@@ -73,7 +73,7 @@ class IntelligentRecoverySystem:
         
         logger.info("Intelligent recovery system initialized")
     
-    def _init_recovery_strategies(self):
+    def _init_recovery_strategies(self) -> None:
         """Initialize recovery strategy success rates"""
         self.success_rates = {
             RecoveryStrategy.IMMEDIATE_RETRY: 0.3,
@@ -407,7 +407,7 @@ class IntelligentRecoverySystem:
         logger.info(f"Skipping problematic segments (max {max_skip}%)")
         return True, f"Segment skip enabled (max {max_skip}%)"
     
-    def _update_success_rate(self, strategy: RecoveryStrategy, success: bool):
+    def _update_success_rate(self, strategy: RecoveryStrategy, success: bool) -> None:
         """Update success rate for a recovery strategy"""
         with self.lock:
             current_rate = self.success_rates.get(strategy, 0.5)

@@ -128,7 +128,7 @@ class TaskRecoveryInfo:
 class ProgressiveRecoveryManager:
     """Manager for progressive download recovery"""
     
-    def __init__(self, recovery_dir: str = ".vidtanium_recovery"):
+    def __init__(self, recovery_dir: str = ".vidtanium_recovery") -> None:
         self.recovery_dir = Path(recovery_dir)
         self.recovery_dir.mkdir(exist_ok=True)
         self.lock = threading.RLock()
@@ -208,7 +208,7 @@ class ProgressiveRecoveryManager:
     
     def update_segment_progress(self, task_id: str, segment_index: int, 
                               segment_url: str, downloaded_size: int,
-                              file_path: str = "", expected_size: int = 0):
+                              file_path: str = "", expected_size: int = 0) -> None:
         """Update progress for a specific segment"""
         with self.lock:
             if task_id not in self.active_sessions:
@@ -250,7 +250,7 @@ class ProgressiveRecoveryManager:
                 self._last_save_time = time.time()
     
     def mark_segment_complete(self, task_id: str, segment_index: int, 
-                            file_path: str, final_size: int):
+                            file_path: str, final_size: int) -> None:
         """Mark a segment as completely downloaded"""
         with self.lock:
             if task_id not in self.active_sessions:
@@ -270,7 +270,7 @@ class ProgressiveRecoveryManager:
                 
                 logger.debug(f"Marked segment {segment_index} as complete for task {task_id}")
     
-    def mark_segment_failed(self, task_id: str, segment_index: int, error_message: str):
+    def mark_segment_failed(self, task_id: str, segment_index: int, error_message: str) -> None:
         """Mark a segment as failed"""
         with self.lock:
             if task_id not in self.active_sessions:
@@ -315,7 +315,7 @@ class ProgressiveRecoveryManager:
             "can_resume": len(completed_segments) > 0
         }
     
-    def complete_recovery_session(self, task_id: str):
+    def complete_recovery_session(self, task_id: str) -> None:
         """Mark recovery session as complete and clean up"""
         with self.lock:
             if task_id in self.active_sessions:
@@ -329,7 +329,7 @@ class ProgressiveRecoveryManager:
                 
                 logger.info(f"Completed recovery session for task: {task_id}")
     
-    def cleanup_recovery_session(self, task_id: str):
+    def cleanup_recovery_session(self, task_id: str) -> None:
         """Clean up recovery session and files"""
         with self.lock:
             # Remove from active sessions
@@ -345,7 +345,7 @@ class ProgressiveRecoveryManager:
                 except Exception as e:
                     logger.error(f"Error cleaning up recovery session {task_id}: {e}")
     
-    def _save_recovery_info(self, recovery_info: TaskRecoveryInfo):
+    def _save_recovery_info(self, recovery_info: TaskRecoveryInfo) -> None:
         """Save recovery information to disk"""
         recovery_file = self.recovery_dir / f"{recovery_info.task_id}.json"
         
@@ -364,7 +364,7 @@ class ProgressiveRecoveryManager:
         except Exception as e:
             logger.error(f"Error saving recovery info for {recovery_info.task_id}: {e}")
     
-    def cleanup_old_recovery_files(self):
+    def cleanup_old_recovery_files(self) -> None:
         """Clean up old recovery files"""
         cutoff_time = time.time() - (self.max_recovery_age_days * 24 * 3600)
         

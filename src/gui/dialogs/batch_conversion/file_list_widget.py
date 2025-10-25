@@ -18,13 +18,13 @@ class FileListWidget(QWidget):
     # 文件列表变化信号
     file_list_changed = Signal(int)  # 参数: 文件数量
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
 
         self.input_files: List[str] = []
         self._create_ui()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """创建文件列表界面"""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -69,7 +69,7 @@ class FileListWidget(QWidget):
         files_layout.addLayout(file_buttons_layout)
         layout.addWidget(files_group)
 
-    def _add_files(self):
+    def _add_files(self) -> None:
         """添加文件到列表"""
         file_dialog = QFileDialog(self)
         file_dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
@@ -88,7 +88,7 @@ class FileListWidget(QWidget):
 
             self._notify_file_list_changed()
 
-    def _add_folder(self):
+    def _add_folder(self) -> None:
         """添加文件夹中的所有媒体文件"""
         folder = QFileDialog.getExistingDirectory(
             self, "选择包含媒体文件的文件夹"
@@ -129,7 +129,7 @@ class FileListWidget(QWidget):
                 parent=self
             )
 
-    def _remove_selected_files(self):
+    def _remove_selected_files(self) -> None:
         """从列表中移除选定的文件"""
         selected_items = self.files_list.selectedItems()
 
@@ -141,13 +141,13 @@ class FileListWidget(QWidget):
 
         self._notify_file_list_changed()
 
-    def clear_files(self):
+    def clear_files(self) -> None:
         """清空文件列表"""
         self.files_list.clear()
         self.input_files.clear()
         self._notify_file_list_changed()
 
-    def _notify_file_list_changed(self):
+    def _notify_file_list_changed(self) -> None:
         """发出文件列表变化信号"""
         self.file_list_changed.emit(len(self.input_files))
 

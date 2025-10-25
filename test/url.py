@@ -31,7 +31,7 @@ class ResourceAnalyzer:
                  screenshot: bool = False,
                  download_dir: Optional[str] = None,
                  include_pattern: Optional[str] = None,
-                 exclude_pattern: Optional[str] = None):
+                 exclude_pattern: Optional[str] = None) -> None:
         """
         Initialize the resource analyzer
         """

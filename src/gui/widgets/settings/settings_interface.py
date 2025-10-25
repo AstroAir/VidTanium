@@ -30,7 +30,7 @@ class SettingsInterface(QWidget):
     
     settings_applied = Signal()
     
-    def __init__(self, settings, parent=None):
+    def __init__(self, settings, parent=None) -> None:
         super().__init__(parent)
         self.settings = settings
         
@@ -47,7 +47,7 @@ class SettingsInterface(QWidget):
         # Connect config signals
         self.config.theme_changed.connect(self._apply_current_theme)
     
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """Create the unified settings interface"""
         # Main layout
         main_layout = QVBoxLayout(self)
@@ -152,7 +152,7 @@ class SettingsInterface(QWidget):
         scroll_area.setWidget(content_widget)
         return scroll_area
     
-    def _switch_category(self, category):
+    def _switch_category(self, category) -> None:
         """Switch to a different settings category"""
         if category == self.current_category:
             return
@@ -179,14 +179,14 @@ class SettingsInterface(QWidget):
         elif category == "advanced":
             self._create_advanced_settings()
     
-    def _clear_content(self):
+    def _clear_content(self) -> None:
         """Clear current content"""
         while self.content_layout.count():
             child = self.content_layout.takeAt(0)
             if child.widget():
                 child.widget().deleteLater()
     
-    def _create_general_settings(self):
+    def _create_general_settings(self) -> None:
         """Create general settings group"""
         # Output directory card
         output_card = self._create_output_directory_card()
@@ -202,25 +202,25 @@ class SettingsInterface(QWidget):
         
         self.content_layout.addStretch()
     
-    def _create_download_settings(self):
+    def _create_download_settings(self) -> None:
         """Create download settings group"""
         download_card = self._create_download_card()
         self.content_layout.addWidget(download_card)
         self.content_layout.addStretch()
     
-    def _create_appearance_settings(self):
+    def _create_appearance_settings(self) -> None:
         """Create appearance settings group"""
         appearance_card = self._create_appearance_card()
         self.content_layout.addWidget(appearance_card)
         self.content_layout.addStretch()
     
-    def _create_network_settings(self):
+    def _create_network_settings(self) -> None:
         """Create network settings group"""
         network_card = self._create_network_card()
         self.content_layout.addWidget(network_card)
         self.content_layout.addStretch()
     
-    def _create_advanced_settings(self):
+    def _create_advanced_settings(self) -> None:
         """Create advanced settings group"""
         advanced_card = self._create_advanced_card()
         self.content_layout.addWidget(advanced_card)
@@ -523,25 +523,25 @@ class SettingsInterface(QWidget):
         
         return button_layout
     
-    def hide_action_buttons(self):
+    def hide_action_buttons(self) -> None:
         """Hide action buttons for embedded use"""
         for i in range(self.action_layout.count()):
             item = self.action_layout.itemAt(i)
             if item.widget():
                 item.widget().hide()
     
-    def show_action_buttons(self):
+    def show_action_buttons(self) -> None:
         """Show action buttons for standalone use"""
         for i in range(self.action_layout.count()):
             item = self.action_layout.itemAt(i)
             if item.widget():
                 item.widget().show()
-    def _load_settings(self):
+    def _load_settings(self) -> None:
         """Load settings into the UI"""
         # Settings are loaded during UI creation
         pass
     
-    def _apply_current_theme(self):
+    def _apply_current_theme(self) -> None:
         """Apply the current theme to the UI"""
         theme_value = self.config.theme.value
         if theme_value == "light":
@@ -551,7 +551,7 @@ class SettingsInterface(QWidget):
         else:  # system
             setTheme(Theme.AUTO)
     
-    def _apply_settings(self):
+    def _apply_settings(self) -> None:
         """Apply all settings"""
         try:
             SettingsManager.save_to_settings(self.config, self.settings)
@@ -566,7 +566,7 @@ class SettingsInterface(QWidget):
             return False
     
     # Event handlers
-    def _browse_output_directory(self):
+    def _browse_output_directory(self) -> None:
         """Browse for output directory"""
         from PySide6.QtWidgets import QFileDialog
         
@@ -582,31 +582,31 @@ class SettingsInterface(QWidget):
             self.config.output_directory.value = folder
             self.output_dir_input.setText(folder)
     
-    def _on_output_dir_changed(self, text):
+    def _on_output_dir_changed(self, text) -> None:
         """Handle output directory change"""
         self.config.output_directory.value = text
     
-    def _on_auto_cleanup_changed(self, checked):
+    def _on_auto_cleanup_changed(self, checked) -> None:
         """Handle auto cleanup change"""
         self.config.auto_cleanup.value = checked
     
-    def _on_auto_start_changed(self, checked):
+    def _on_auto_start_changed(self, checked) -> None:
         """Handle auto start change"""
         self.config.auto_start_downloads.value = checked
     
-    def _on_notifications_changed(self, checked):
+    def _on_notifications_changed(self, checked) -> None:
         """Handle notifications change"""
         self.config.enable_notifications.value = checked
     
-    def _on_updates_changed(self, checked):
+    def _on_updates_changed(self, checked) -> None:
         """Handle updates change"""
         self.config.check_updates.value = checked
     
-    def _on_max_recent_files_changed(self, value):
+    def _on_max_recent_files_changed(self, value) -> None:
         """Handle max recent files change"""
         self.config.max_recent_files.value = value
     
-    def _on_max_downloads_changed(self, text):
+    def _on_max_downloads_changed(self, text) -> None:
         """Handle max downloads change"""
         try:
             value = int(text)
@@ -615,7 +615,7 @@ class SettingsInterface(QWidget):
         except ValueError:
             pass
     
-    def _on_retry_changed(self, text):
+    def _on_retry_changed(self, text) -> None:
         """Handle retry attempts change"""
         try:
             value = int(text)
@@ -624,11 +624,11 @@ class SettingsInterface(QWidget):
         except ValueError:
             pass
     
-    def _on_timeout_changed(self, value):
+    def _on_timeout_changed(self, value) -> None:
         """Handle timeout change"""
         self.config.timeout.value = value
     
-    def _on_theme_changed(self, text):
+    def _on_theme_changed(self, text) -> None:
         """Handle theme change"""
         if text in SettingsConstants.THEME_MAP:
             theme_value = SettingsConstants.THEME_MAP[text]
@@ -636,24 +636,24 @@ class SettingsInterface(QWidget):
             # Apply theme immediately for preview
             self._apply_current_theme()
     
-    def _on_language_changed(self, text):
+    def _on_language_changed(self, text) -> None:
         """Handle language change"""
         if text in SettingsConstants.LANGUAGE_MAP:
             language_value = SettingsConstants.LANGUAGE_MAP[text]
             self.config.language.value = language_value
     
-    def _on_proxy_changed(self, checked):
+    def _on_proxy_changed(self, checked) -> None:
         """Handle proxy change"""
         self.config.use_proxy.value = checked
     
-    def _on_proxy_host_changed(self, text):
+    def _on_proxy_host_changed(self, text) -> None:
         """Handle proxy host change"""
         self.config.proxy_host.value = text
     
-    def _on_proxy_port_changed(self, value):
+    def _on_proxy_port_changed(self, value) -> None:
         """Handle proxy port change"""
         self.config.proxy_port.value = value
-    def _on_user_agent_changed(self, text):
+    def _on_user_agent_changed(self, text) -> None:
         """Handle user agent change"""
         if text in SettingsConstants.USER_AGENT_MAP:
             ua_value = SettingsConstants.USER_AGENT_MAP[text]
@@ -661,11 +661,11 @@ class SettingsInterface(QWidget):
             # Show/hide custom input
             self.custom_ua_input.setVisible(ua_value == "custom")
     
-    def _on_custom_ua_changed(self, text):
+    def _on_custom_ua_changed(self, text) -> None:
         """Handle custom user agent change"""
         self.config.custom_user_agent.value = text
     
-    def _reset_to_defaults(self):
+    def _reset_to_defaults(self) -> None:
         """Reset all settings to defaults"""
         from PySide6.QtWidgets import QMessageBox
         reply = QMessageBox.question(

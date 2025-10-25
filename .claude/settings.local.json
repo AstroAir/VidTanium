@@ -1,8 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python:*)"
+      "Bash(python3:*)",
+      "Bash(__NEW_LINE__ ls -lh \"d:/Project/VidTanium/src/gui/utils/unified_design_system.py\" \"d:/Project/VidTanium/DESIGN_SYSTEM.md\")",
+      "Bash(__NEW_LINE__ echo \"PHASE 1 COMPLETION SUMMARY\")",
+      "Bash(__NEW_LINE__ echo \"PHASE 1: UNIFIED DESIGN SYSTEM - COMPLETION STATUS\")",
+      "Read(//c/Users/Max Qian/AppData/Local/Microsoft/WindowsApps//**)",
+      "Read(//d//**)",
+      "Read(//c/Users/**)"
     ],
-    "deny": []
+    "deny": [],
+    "ask": []
   }
 }

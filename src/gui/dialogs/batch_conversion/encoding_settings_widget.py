@@ -14,11 +14,11 @@ class EncodingSettingsWidget(QWidget):
     # 设置变更信号
     settings_changed = Signal()
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self._create_ui()
 
-    def _create_ui(self):
+    def _create_ui(self) -> None:
         """创建编码设置界面"""
         # 编码设置布局
         layout = QFormLayout(self)
@@ -60,7 +60,7 @@ class EncodingSettingsWidget(QWidget):
         layout.addRow("音频编码:", self.audio_codec_combo)
 
     @Slot(int)
-    def _on_quality_changed(self, index: int):
+    def _on_quality_changed(self, index: int) -> None:
         """处理质量选择变化"""
         # 仅对自定义质量启用码率设置
         self.bitrate_spin.setEnabled(index == 3)  # 自定义选项

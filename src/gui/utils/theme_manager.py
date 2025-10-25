@@ -13,7 +13,7 @@ from qfluentwidgets import (
     qconfig, ConfigItem, OptionsConfigItem
 )
 
-from .design_system import DesignSystem, EnhancedDesignSystem
+from .design_system import DesignSystem
 
 
 class ThemeManager(QObject):
@@ -22,7 +22,7 @@ class ThemeManager(QObject):
     theme_changed = Signal(str)
     transition_finished = Signal()
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.current_theme: str = "auto"
         self.custom_themes: Dict[str, Dict[str, str]] = {}
@@ -32,13 +32,13 @@ class ThemeManager(QObject):
         self._setup_system_listener()
         self._register_custom_themes()
     
-    def _setup_system_listener(self):
+    def _setup_system_listener(self) -> None:
         """Setup system theme listener"""
         self.system_listener = SystemThemeListener(self)
         # Note: SystemThemeListener doesn't have themeChanged signal in current version
         # We'll handle theme changes through qconfig instead
     
-    def _register_custom_themes(self):
+    def _register_custom_themes(self) -> None:
         """Register custom theme variants"""
         # Midnight Blue Theme
         self.custom_themes["midnight"] = {
@@ -76,17 +76,17 @@ class ThemeManager(QObject):
             'text_secondary_dark': '#FDBA74',
         }
     
-    def register_widget(self, widget: QWidget):
+    def register_widget(self, widget: QWidget) -> None:
         """Register widget for theme updates"""
         if widget not in self.widgets_to_update:
             self.widgets_to_update.append(widget)
     
-    def unregister_widget(self, widget: QWidget):
+    def unregister_widget(self, widget: QWidget) -> None:
         """Unregister widget from theme updates"""
         if widget in self.widgets_to_update:
             self.widgets_to_update.remove(widget)
     
-    def set_theme(self, theme_name: str, animate: bool = True):
+    def set_theme(self, theme_name: str, animate: bool = True) -> None:
         """Set theme with optional animation"""
         if theme_name == self.current_theme:
             return
@@ -101,7 +101,7 @@ class ThemeManager(QObject):
         
         self.theme_changed.emit(theme_name)
     
-    def _apply_theme_immediately(self, theme_name: str):
+    def _apply_theme_immediately(self, theme_name: str) -> None:
         """Apply theme immediately without animation"""
         if theme_name == "auto":
             setTheme(Theme.AUTO)
@@ -114,7 +114,7 @@ class ThemeManager(QObject):
         
         self._update_registered_widgets()
     
-    def _animate_theme_transition(self, old_theme: str, new_theme: str):
+    def _animate_theme_transition(self, old_theme: str, new_theme: str) -> None:
         """Animate theme transition with smooth fade effect"""
         # Create fade out animation for current theme
         self.fade_timer = QTimer()
@@ -125,7 +125,7 @@ class ThemeManager(QObject):
         self._fade_widgets(0.7)
         self.fade_timer.start(self.transition_duration // 2)
     
-    def _complete_theme_transition(self, new_theme: str):
+    def _complete_theme_transition(self, new_theme: str) -> None:
         """Complete theme transition after fade out"""
         # Apply new theme
         self._apply_theme_immediately(new_theme)
@@ -134,13 +134,13 @@ class ThemeManager(QObject):
         QTimer.singleShot(50, lambda: self._fade_widgets(1.0))
         QTimer.singleShot(self.transition_duration // 2, self.transition_finished.emit)
     
-    def _fade_widgets(self, opacity: float):
+    def _fade_widgets(self, opacity: float) -> None:
         """Fade widgets to specified opacity"""
         for widget in self.widgets_to_update:
             if hasattr(widget, 'setWindowOpacity'):
                 widget.setWindowOpacity(opacity)
     
-    def _apply_custom_theme(self, theme_name: str):
+    def _apply_custom_theme(self, theme_name: str) -> None:
         """Apply custom theme colors"""
         if theme_name not in self.custom_themes:
             return
@@ -154,7 +154,7 @@ class ThemeManager(QObject):
         # Set base theme to dark for custom themes
         setTheme(Theme.DARK)
     
-    def _update_registered_widgets(self):
+    def _update_registered_widgets(self) -> None:
         """Update all registered widgets with new theme"""
         for widget in self.widgets_to_update:
             if hasattr(widget, 'update_theme'):
@@ -162,7 +162,7 @@ class ThemeManager(QObject):
             else:
                 widget.update()
     
-    def _on_system_theme_changed(self, theme: Theme):
+    def _on_system_theme_changed(self, theme: Theme) -> None:
         """Handle system theme change"""
         if self.current_theme == "auto":
             self._update_registered_widgets()
@@ -207,36 +207,36 @@ class ThemeManager(QObject):
 class ThemeAwareWidget:
     """Mixin class for widgets that need theme awareness"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.theme_manager: Optional["EnhancedThemeManager"] = None
 
-    def set_theme_manager(self, theme_manager: "EnhancedThemeManager"):
+    def set_theme_manager(self, theme_manager: "EnhancedThemeManager") -> None:
         """Set theme manager for this widget"""
         self.theme_manager = theme_manager
         self.theme_manager.register_widget(self)
         self.theme_manager.theme_changed.connect(self.on_theme_changed)
     
-    def on_theme_changed(self, theme_name: str):
+    def on_theme_changed(self, theme_name: str) -> None:
         """Handle theme change - override in subclasses"""
         self.update_theme()
     
-    def update_theme(self):
+    def update_theme(self) -> None:
         """Update widget styling for current theme - override in subclasses"""
         if hasattr(self, 'update'):
             self.update()
     
     def get_theme_color(self, color_key: str) -> str:
         """Get color for current theme"""
-        return EnhancedDesignSystem.get_color(color_key)
+        return DesignSystem.get_color(color_key)
 
 
 class OptionsValidator:
     """Simple options validator for config items"""
     
-    def __init__(self, options: list):
+    def __init__(self, options: list) -> None:
         self.options = options
     
-    def validate(self, value):
+    def validate(self, value) -> None:
         return value in self.options
 
 

@@ -11,10 +11,9 @@ from qfluentwidgets import (
 )
 
 from ...utils.i18n import tr
-from ...utils.theme import VidTaniumTheme
 from ...utils.responsive import ResponsiveWidget, ResponsiveManager, ResponsiveContainer
 from ...utils.formatters import format_speed
-from ...theme_manager import EnhancedThemeManager
+from ...theme_manager import ThemeManager
 from src.core.thread_pool import submit_task
 from loguru import logger
 
@@ -22,8 +21,8 @@ if TYPE_CHECKING:
     from ...main_window import MainWindow
 
 
-class EnhancedDashboardStatsSection(ResponsiveWidget):
-    """Enhanced statistics cards section component with responsive design and modern theming
+class DashboardStatsSection(ResponsiveWidget):
+    """Statistics cards section component with responsive design and modern theming
     
     Features:
     - Responsive grid layout that adapts to screen size
@@ -33,7 +32,7 @@ class EnhancedDashboardStatsSection(ResponsiveWidget):
     - Adaptive typography and spacing
     """
 
-    def __init__(self, main_window: "MainWindow", theme_manager=None, parent=None):
+    def __init__(self, main_window: "MainWindow", theme_manager=None, parent=None) -> None:
         super().__init__(parent)
         self.main_window = main_window
         self.theme_manager = theme_manager
@@ -52,7 +51,7 @@ class EnhancedDashboardStatsSection(ResponsiveWidget):
         self._setup_enhanced_ui()
         self._apply_enhanced_theming()
 
-    def _setup_enhanced_ui(self):
+    def _setup_enhanced_ui(self) -> None:
         """Setup enhanced responsive statistics section UI"""
         current_bp = self.responsive_manager.get_current_breakpoint()
         
@@ -82,28 +81,28 @@ class EnhancedDashboardStatsSection(ResponsiveWidget):
             tr("dashboard.stats.total_tasks"),
             "0",
             FIF.MENU,
-            [VidTaniumTheme.PRIMARY_BLUE, VidTaniumTheme.PRIMARY_PURPLE]
+            ["#0078D4", "#8B5CF6"]
         )
 
         self.running_tasks_card = self._create_enhanced_stats_card(
             tr("dashboard.stats.active_downloads"),
             "0",
             FIF.DOWNLOAD,
-            [VidTaniumTheme.SUCCESS_GREEN, VidTaniumTheme.SUCCESS_LIGHT]
+            ["#10B981", "#34D399"]
         )
 
         self.completed_tasks_card = self._create_enhanced_stats_card(
             tr("dashboard.stats.completed"),
             "0",
             FIF.ACCEPT,
-            [VidTaniumTheme.ACCENT_CYAN, VidTaniumTheme.ACCENT_GREEN]
+            ["#00BCD4", "#4CAF50"]
         )
 
         self.speed_card = self._create_enhanced_stats_card(
             tr("dashboard.stats.total_speed"),
             "0 MB/s",
             FIF.SPEED_HIGH,
-            [VidTaniumTheme.WARNING_ORANGE, VidTaniumTheme.WARNING_LIGHT]
+            ["#FF9800", "#FFB74D"]
         )
 
         # Add cards to responsive layout
@@ -189,7 +188,7 @@ class EnhancedDashboardStatsSection(ResponsiveWidget):
 
         return card
 
-    def update_stats_threaded(self):
+    def update_stats_threaded(self) -> None:
         """Update statistics using thread pool for better performance"""
         try:
             # Performance optimization: skip updates when no tasks and no recent activity
@@ -212,7 +211,7 @@ class EnhancedDashboardStatsSection(ResponsiveWidget):
             # Fallback to direct update
             self._update_stats_fallback()
 
-    def _calculate_stats(self):
+    def _calculate_stats(self) -> None:
         """Calculate statistics in background thread"""
         try:
             if not self.main_window or not self.main_window.download_manager:
@@ -272,7 +271,7 @@ class EnhancedDashboardStatsSection(ResponsiveWidget):
             raise
 
     @Slot()
-    def _on_stats_calculated(self, stats):
+    def _on_stats_calculated(self, stats) -> None:
         """Handle calculated statistics on main thread"""
         try:
             # Update stats cards
@@ -304,7 +303,7 @@ class EnhancedDashboardStatsSection(ResponsiveWidget):
             logger.error(f"Error updating stats display: {e}")
 
     @Slot()
-    def _on_stats_error(self, error_tuple):
+    def _on_stats_error(self, error_tuple) -> None:
         """Handle stats calculation errors"""
         try:
             exctype, value, tb = error_tuple
@@ -314,7 +313,7 @@ class EnhancedDashboardStatsSection(ResponsiveWidget):
         except Exception as e:
             logger.error(f"Error in stats error callback: {e}")
 
-    def _update_stats_fallback(self):
+    def _update_stats_fallback(self) -> None:
         """Fallback method for updating stats without thread pool"""
         try:
             if not self.main_window or not self.main_window.download_manager:
@@ -357,20 +356,20 @@ class EnhancedDashboardStatsSection(ResponsiveWidget):
         except Exception as e:
             logger.error(f"Error in fallback stats update: {e}")
 
-    def update_statistics(self):
+    def update_statistics(self) -> None:
         """Public method to update statistics"""
         self.update_stats_threaded()
 
-    def _apply_enhanced_theming(self):
+    def _apply_enhanced_theming(self) -> None:
         """Apply enhanced theming using QFluentWidgets theming system"""
         if not self.theme_manager:
             return
             
         cards = [
-            (self.total_tasks_card, [VidTaniumTheme.PRIMARY_BLUE, VidTaniumTheme.PRIMARY_PURPLE]),
-            (self.running_tasks_card, [VidTaniumTheme.SUCCESS_GREEN, VidTaniumTheme.SUCCESS_LIGHT]),
-            (self.completed_tasks_card, [VidTaniumTheme.ACCENT_CYAN, VidTaniumTheme.ACCENT_GREEN]),
-            (self.speed_card, [VidTaniumTheme.WARNING_ORANGE, VidTaniumTheme.WARNING_LIGHT])
+            (self.total_tasks_card, ["#0078D4", "#8B5CF6"]),
+            (self.running_tasks_card, ["#10B981", "#34D399"]),
+            (self.completed_tasks_card, ["#00BCD4", "#4CAF50"]),
+            (self.speed_card, ["#FF9800", "#FFB74D"])
         ]
         
         for card, gradient_colors in cards:
@@ -383,14 +382,39 @@ class EnhancedDashboardStatsSection(ResponsiveWidget):
                     }}
                 """)
 
-    def on_breakpoint_changed(self, breakpoint: str):
+    def on_breakpoint_changed(self, breakpoint: str) -> None:
         """Handle responsive breakpoint changes"""
         logger.debug(f"Stats section adapting to breakpoint: {breakpoint}")
+        # Clear existing layout before recreating
+        self._clear_layout()
         # Recreate UI with new breakpoint
         self._setup_enhanced_ui()
         self._apply_enhanced_theming()
 
-    def update_theme(self, theme_manager: Optional[EnhancedThemeManager] = None):
+    def _clear_layout(self) -> None:
+        """Clear existing layout to prevent QLayout warnings"""
+        current_layout = self.layout()
+        if current_layout:
+            # Remove all widgets from layout
+            while current_layout.count():
+                item = current_layout.takeAt(0)
+                if item.widget():
+                    item.widget().setParent(None)
+                elif item.layout():
+                    self._clear_sublayout(item.layout())
+            # Delete the layout
+            current_layout.deleteLater()
+
+    def _clear_sublayout(self, layout) -> None:
+        """Recursively clear sublayout"""
+        while layout.count():
+            item = layout.takeAt(0)
+            if item.widget():
+                item.widget().setParent(None)
+            elif item.layout():
+                self._clear_sublayout(item.layout())
+
+    def update_theme(self, theme_manager: Optional["ThemeManager"] = None) -> None:
         """Update theme styling"""
         if theme_manager:
             self.theme_manager = theme_manager
@@ -398,4 +422,4 @@ class EnhancedDashboardStatsSection(ResponsiveWidget):
 
 
 # Backward compatibility alias
-DashboardStatsSection = EnhancedDashboardStatsSection
+EnhancedDashboardStatsSection = DashboardStatsSection

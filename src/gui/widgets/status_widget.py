@@ -20,7 +20,6 @@ from qfluentwidgets import (
 )
 
 from ..utils.i18n import tr
-from ..utils.theme import VidTaniumTheme
 from ..utils.formatters import format_size, format_speed, format_duration
 from ..utils.responsive import ResponsiveWidget, ResponsiveManager
 
@@ -46,10 +45,10 @@ class StatusInfo:
 class StatusBadge(QWidget):
     """Animated status badge with color coding"""
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.status_text = ""
-        self.status_color = VidTaniumTheme.TEXT_SECONDARY
+        self.status_color = "#808080"
         self.is_animated = False
         self.setFixedHeight(24)
         self.setMinimumWidth(80)
@@ -61,33 +60,33 @@ class StatusBadge(QWidget):
         
         self._setup_style()
     
-    def _setup_style(self):
+    def _setup_style(self) -> None:
         """Setup styling"""
-        self.setStyleSheet(f"""
-            QWidget {{
-                background: {VidTaniumTheme.BG_SURFACE};
-                border: 1px solid {VidTaniumTheme.BORDER_COLOR};
+        self.setStyleSheet("""
+            QWidget {
                 border-radius: 12px;
                 padding: 4px 12px;
-            }}
+            }
         """)
     
-    def update_status(self, status: str, animated: bool = False):
+    def update_status(self, status: str, animated: bool = False) -> None:
         """Update status with optional animation"""
         self.status_text = status
         self.is_animated = animated
         
         # Set color based on status
-        status_colors = {
-            "downloading": VidTaniumTheme.SUCCESS_GREEN,
-            "paused": VidTaniumTheme.WARNING_ORANGE,
-            "completed": VidTaniumTheme.ACCENT_CYAN,
-            "failed": VidTaniumTheme.ERROR_RED,
-            "pending": VidTaniumTheme.TEXT_SECONDARY,
-            "canceled": VidTaniumTheme.TEXT_DISABLED
+        # Status colors handled by objectName
+        status_map = {
+            "downloading": "success",
+            "paused": "warning",
+            "completed": "info",
+            "failed": "error",
+            "pending": "secondary",
+            "canceled": "disabled"
         }
         
-        self.status_color = status_colors.get(status.lower(), VidTaniumTheme.TEXT_SECONDARY)
+        self.setObjectName(f"status-{status_map.get(status.lower(), 'secondary')}")
+        self.status_color = "#808080"
         
         if animated and status.lower() == "downloading":
             self._start_pulse_animation()
@@ -96,18 +95,18 @@ class StatusBadge(QWidget):
         
         self.update()
     
-    def _start_pulse_animation(self):
+    def _start_pulse_animation(self) -> None:
         """Start pulsing animation for active status"""
         if not self.animation.state() == QPropertyAnimation.State.Running:
             self.animation.setLoopCount(-1)  # Infinite loop
             self.animation.start()
     
-    def _stop_pulse_animation(self):
+    def _stop_pulse_animation(self) -> None:
         """Stop pulsing animation"""
         if self.animation.state() == QPropertyAnimation.State.Running:
             self.animation.stop()
     
-    def paintEvent(self, event):
+    def paintEvent(self, event) -> None:
         """Custom paint event for status badge"""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -132,11 +131,11 @@ class StatusBadge(QWidget):
 class ProgressMetricsWidget(QWidget):
     """Widget displaying detailed progress metrics"""
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self._setup_ui()
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup the UI components"""
         layout = QGridLayout(self)
         layout.setSpacing(8)
@@ -145,28 +144,28 @@ class ProgressMetricsWidget(QWidget):
         # Speed metric
         self.speed_label = CaptionLabel(tr("status.speed"))
         self.speed_value = BodyLabel("--")
-        self.speed_value.setStyleSheet(f"color: {VidTaniumTheme.TEXT_PRIMARY}; font-weight: 500;")
+        self.speed_value.setStyleSheet("font-weight: 500;")
         layout.addWidget(self.speed_label, 0, 0)
         layout.addWidget(self.speed_value, 0, 1)
         
         # ETA metric
         self.eta_label = CaptionLabel(tr("status.eta"))
         self.eta_value = BodyLabel("--")
-        self.eta_value.setStyleSheet(f"color: {VidTaniumTheme.TEXT_PRIMARY}; font-weight: 500;")
+        self.eta_value.setStyleSheet("font-weight: 500;")
         layout.addWidget(self.eta_label, 0, 2)
         layout.addWidget(self.eta_value, 0, 3)
         
         # Progress metric
         self.progress_label = CaptionLabel(tr("status.progress"))
         self.progress_value = BodyLabel("--")
-        self.progress_value.setStyleSheet(f"color: {VidTaniumTheme.TEXT_PRIMARY}; font-weight: 500;")
+        self.progress_value.setStyleSheet("font-weight: 500;")
         layout.addWidget(self.progress_label, 1, 0)
         layout.addWidget(self.progress_value, 1, 1)
         
         # Size metric
         self.size_label = CaptionLabel(tr("status.size"))
         self.size_value = BodyLabel("--")
-        self.size_value.setStyleSheet(f"color: {VidTaniumTheme.TEXT_PRIMARY}; font-weight: 500;")
+        self.size_value.setStyleSheet("font-weight: 500;")
         layout.addWidget(self.size_label, 1, 2)
         layout.addWidget(self.size_value, 1, 3)
         
@@ -174,7 +173,7 @@ class ProgressMetricsWidget(QWidget):
         layout.setColumnStretch(1, 1)
         layout.setColumnStretch(3, 1)
     
-    def update_metrics(self, status_info: StatusInfo):
+    def update_metrics(self, status_info: StatusInfo) -> None:
         """Update all metrics"""
         # Speed
         if status_info.speed is not None and status_info.speed > 0:
@@ -210,21 +209,20 @@ class ProgressMetricsWidget(QWidget):
 class StatusProgressBar(ProgressBar):
     """Progress bar with gradient and animation"""
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setFixedHeight(8)
-        self.gradient_colors = [VidTaniumTheme.SUCCESS_GREEN, VidTaniumTheme.ACCENT_CYAN]
+        self.gradient_colors = ["#4CAF50", "#00BCD4"]
         self._setup_style()
     
-    def _setup_style(self):
+    def _setup_style(self) -> None:
         """Setup enhanced styling"""
         self.setStyleSheet(f"""
-            QProgressBar {{
+            QProgressBar {
                 border: none;
                 border-radius: 4px;
-                background: {VidTaniumTheme.BG_SURFACE};
                 text-align: center;
-            }}
+            }
             QProgressBar::chunk {{
                 border-radius: 4px;
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
@@ -233,7 +231,7 @@ class StatusProgressBar(ProgressBar):
             }}
         """)
     
-    def set_gradient_colors(self, start_color: str, end_color: str):
+    def set_gradient_colors(self, start_color: str, end_color: str) -> None:
         """Set custom gradient colors"""
         self.gradient_colors = [start_color, end_color]
         self._setup_style()
@@ -242,11 +240,11 @@ class StatusProgressBar(ProgressBar):
 class CurrentFileWidget(QWidget):
     """Widget displaying current file being processed"""
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self._setup_ui()
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup the UI components"""
         layout = QHBoxLayout(self)
         layout.setSpacing(8)
@@ -259,16 +257,16 @@ class CurrentFileWidget(QWidget):
         
         # File name
         self.file_label = CaptionLabel(tr("status.current_file"))
-        self.file_label.setStyleSheet(f"color: {VidTaniumTheme.TEXT_SECONDARY};")
+        # Let qfluentwidgets handle label styling
         layout.addWidget(self.file_label)
         
         self.file_name = BodyLabel("--")
-        self.file_name.setStyleSheet(f"color: {VidTaniumTheme.TEXT_PRIMARY}; font-weight: 500;")
+        self.file_name.setStyleSheet("font-weight: 500;")
         layout.addWidget(self.file_name)
         
         layout.addStretch()
     
-    def update_current_file(self, filename: Optional[str]):
+    def update_current_file(self, filename: Optional[str]) -> None:
         """Update current file display"""
         if filename:
             # Truncate long filenames
@@ -287,7 +285,7 @@ class StatusWidget(ElevatedCardWidget):
 
     status_clicked = Signal(str)  # task_id
 
-    def __init__(self, task_id: str, parent=None):
+    def __init__(self, task_id: str, parent=None) -> None:
         super().__init__(parent)
 
         self.task_id = task_id
@@ -308,7 +306,7 @@ class StatusWidget(ElevatedCardWidget):
         self.update_timer.timeout.connect(self._update_display)
         self.update_timer.start(100)  # Update every 100ms
     
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Setup the UI components"""
         layout = QVBoxLayout(self)
         layout.setSpacing(12)
@@ -354,7 +352,7 @@ class StatusWidget(ElevatedCardWidget):
         error_layout.addWidget(self.error_icon)
         
         self.error_text = CaptionLabel("")
-        self.error_text.setStyleSheet(f"color: {VidTaniumTheme.WARNING_ORANGE};")
+        self.error_text.setObjectName("warning-text")
         error_layout.addWidget(self.error_text)
         
         error_layout.addStretch()
@@ -362,12 +360,12 @@ class StatusWidget(ElevatedCardWidget):
         self.error_info_widget.setVisible(False)
         layout.addWidget(self.error_info_widget)
     
-    def _setup_responsive(self):
+    def _setup_responsive(self) -> None:
         """Setup responsive behavior"""
         # ResponsiveManager doesn't have size_changed signal, we already connected the right signals in __init__
         pass
     
-    def _on_breakpoint_changed(self, breakpoint: str):
+    def _on_breakpoint_changed(self, breakpoint: str) -> None:
         """Handle breakpoint changes"""
         if breakpoint in ['xs', 'sm']:
             # Compact layout for small screens
@@ -378,21 +376,21 @@ class StatusWidget(ElevatedCardWidget):
             self.metrics_widget.setVisible(True)
             self.current_file_widget.setVisible(True)
 
-    def _on_orientation_changed(self, orientation):
+    def _on_orientation_changed(self, orientation) -> None:
         """Handle orientation changes"""
         # Handle orientation changes if needed
         pass
 
-    def _on_size_changed(self, size_category: str):
+    def _on_size_changed(self, size_category: str) -> None:
         """Handle responsive size changes (legacy method)"""
         self._on_breakpoint_changed(size_category)
     
-    def update_status(self, status_info: StatusInfo):
+    def update_status(self, status_info: StatusInfo) -> None:
         """Update status information"""
         self.current_status = status_info
         self._update_display()
     
-    def _update_display(self):
+    def _update_display(self) -> None:
         """Update all display elements"""
         status_info = self.current_status
         
@@ -409,18 +407,18 @@ class StatusWidget(ElevatedCardWidget):
         # Set progress bar colors based on status
         if status_info.status.lower() == "downloading":
             self.progress_bar.set_gradient_colors(
-                VidTaniumTheme.SUCCESS_GREEN,
-                VidTaniumTheme.ACCENT_CYAN
+                "#4CAF50",
+                "#00BCD4"
             )
         elif status_info.status.lower() == "paused":
             self.progress_bar.set_gradient_colors(
-                VidTaniumTheme.WARNING_ORANGE,
-                VidTaniumTheme.WARNING_ORANGE
+                "#FF9800",
+                "#FF9800"
             )
         elif status_info.status.lower() == "failed":
             self.progress_bar.set_gradient_colors(
-                VidTaniumTheme.ERROR_RED,
-                VidTaniumTheme.ERROR_RED
+                "#F44336",
+                "#F44336"
             )
         
         # Update current file

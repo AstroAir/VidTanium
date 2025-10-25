@@ -66,7 +66,7 @@ class ConfigurationSection:
 class ConfigurationSchema:
     """Enhanced configuration schema with JSON Schema validation"""
     
-    def __init__(self, schema_version: str = "2.0.0"):
+    def __init__(self, schema_version: str = "2.0.0") -> None:
         self.schema_version = schema_version
         self.sections: Dict[str, ConfigurationSection] = {}
         self._json_schema: Optional[Dict[str, Any]] = None
@@ -541,7 +541,7 @@ class ConfigurationSchema:
 class ConfigurationValidator:
     """Configuration validator using JSON Schema"""
     
-    def __init__(self, schema: ConfigurationSchema, validation_level: ValidationLevel = ValidationLevel.NORMAL):
+    def __init__(self, schema: ConfigurationSchema, validation_level: ValidationLevel = ValidationLevel.NORMAL) -> None:
         self.schema = schema
         self.validation_level = validation_level
         self._validator: Optional[jsonschema.Draft7Validator] = None

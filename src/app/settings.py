@@ -140,7 +140,7 @@ class Settings:
     tools: Optional['ConfigurationTools']
     cli_args: Optional[argparse.Namespace]
 
-    def __init__(self, config_dir=None, cli_args=None, use_new_system=None):
+    def __init__(self, config_dir=None, cli_args=None, use_new_system=None) -> None:
         """Initialize settings manager
 
         Args:
@@ -221,7 +221,7 @@ class Settings:
         else:
             logger.info("Using legacy configuration system")
 
-    def _init_new_config_system(self, cli_args=None):
+    def _init_new_config_system(self, cli_args=None) -> None:
         """Initialize the new enhanced configuration system"""
         try:
             # Create configuration schema
@@ -253,7 +253,7 @@ class Settings:
             self.use_new_system = False
             self._init_legacy_config_system()
 
-    def _init_legacy_config_system(self):
+    def _init_legacy_config_system(self) -> None:
         """Initialize the legacy configuration system"""
         # Set up legacy system attributes (reset to None for legacy mode)
         if hasattr(self, 'schema'):
@@ -273,14 +273,14 @@ class Settings:
 
         logger.info("Legacy configuration system initialized")
 
-    def load_settings(self):
+    def load_settings(self) -> None:
         """Load settings from configuration file using appropriate system"""
         if self.use_new_system and self.loader:
             return self._load_settings_new_system()
         else:
             return self._load_settings_legacy()
 
-    def _load_settings_new_system(self):
+    def _load_settings_new_system(self) -> None:
         """Load settings using the new configuration system"""
         try:
             # Load configuration from all sources
@@ -335,7 +335,7 @@ class Settings:
             logger.warning("Falling back to legacy configuration loading")
             return self._load_settings_legacy()
 
-    def _load_settings_legacy(self):
+    def _load_settings_legacy(self) -> None:
         """Load settings using the legacy system"""
         if self.config_file.exists():
             try:
@@ -428,7 +428,7 @@ class Settings:
             logger.error(f"Failed to restore settings backup: {e}")
             return False
 
-    def reset_to_defaults(self):
+    def reset_to_defaults(self) -> None:
         """Reset all settings to default values
 
         Returns:
@@ -573,7 +573,7 @@ class Settings:
         backup_info = self.tools.create_backup(self.settings, backup_dir, description)
         return backup_info is not None
 
-    def add_recent_task(self, task_info):
+    def add_recent_task(self, task_info) -> None:
         """Add recent task
 
         Args:
@@ -601,7 +601,7 @@ class Settings:
         # Update settings
         self.settings["recent_tasks"] = recent_tasks
 
-    def get_recent_tasks(self):
+    def get_recent_tasks(self) -> None:
         """Get list of recent tasks
 
         Returns:
@@ -611,7 +611,7 @@ class Settings:
         logger.debug(f"Retrieved {len(tasks)} recent tasks")
         return tasks
 
-    def save_preset(self, name, preset_data):
+    def save_preset(self, name, preset_data) -> None:
         """Save preset
 
         Args:
@@ -632,7 +632,7 @@ class Settings:
             logger.error(f"Error saving preset {name}: {e}", exc_info=True)
             return False
 
-    def load_preset(self, name):
+    def load_preset(self, name) -> None:
         """Load preset
 
         Args:
@@ -656,7 +656,7 @@ class Settings:
             logger.error(f"Error loading preset {name}: {e}", exc_info=True)
             return None
 
-    def get_presets(self):
+    def get_presets(self) -> None:
         """Get all presets
 
         Returns:
@@ -671,7 +671,7 @@ class Settings:
             f"Found {len(presets)} presets: {', '.join(presets) if presets else 'none'}")
         return presets
 
-    def delete_preset(self, name):
+    def delete_preset(self, name) -> None:
         """Delete preset
 
         Args:
