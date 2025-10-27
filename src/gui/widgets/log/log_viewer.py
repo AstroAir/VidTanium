@@ -421,17 +421,17 @@ class EnhancedLogViewer(ResponsiveWidget):
                 font-family: 'Consolas', 'Monaco', monospace;
                 font-size: 12px;
                 line-height: 1.4;
-            }}
-            PlainTextEdit QScrollBar:vertical {{
+            }
+            PlainTextEdit QScrollBar:vertical {
                 background: transparent;
                 width: 8px;
                 border-radius: 4px;
-            }}
-            PlainTextEdit QScrollBar::handle:vertical {{
+            }
+            PlainTextEdit QScrollBar::handle:vertical {
                 background: rgba(255, 255, 255, 0.3);
                 border-radius: 4px;
                 min-height: 20px;
-            }}
+            }
             """)
 
     def _setup_responsive_behavior(self) -> None:

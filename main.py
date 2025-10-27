@@ -7,13 +7,18 @@ import argparse
 from pathlib import Path
 from typing import Optional
 
-from src.app.application import Application
+# NOTE: Application and IPC components are imported conditionally to avoid loading Qt in CLI mode
 from src.core.singleton_manager import get_singleton_manager
-from src.core.ipc_server import IPCClient
 
 
-def setup_logging(debug: bool = False, log_level: Optional[str] = None) -> None:
-    """设置日志系统"""
+def setup_logging(debug: bool = False, log_level: Optional[str] = None, terminal_mode: bool = False) -> None:
+    """设置日志系统
+
+    Args:
+        debug: Enable debug mode
+        log_level: Specific log level to use
+        terminal_mode: If True, suppress console output to avoid interfering with terminal UI
+    """
     if log_level:
         level = getattr(logging, log_level.upper(), logging.INFO)
     else:
@@ -24,20 +29,42 @@ def setup_logging(debug: bool = False, log_level: Optional[str] = None) -> None:
     log_dir.mkdir(parents=True, exist_ok=True)
     log_file = log_dir / "app.log"
 
+    # 配置日志处理器
+    handlers = [
+        logging.FileHandler(log_file, encoding='utf-8')
+    ]
+
+    # Only add console handler if NOT in terminal mode
+    # Terminal mode uses rich for UI and logs would interfere
+    if not terminal_mode:
+        handlers.append(logging.StreamHandler())
+
     # 配置日志
     logging.basicConfig(
         level=level,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler(log_file, encoding='utf-8'),
-            logging.StreamHandler()
-        ]
+        handlers=handlers
     )
 
     # 减少第三方库的日志级别
     logging.getLogger("requests").setLevel(logging.WARNING)
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("PySide6").setLevel(logging.WARNING)
+
+    # In terminal mode, also suppress loguru console output
+    if terminal_mode:
+        from loguru import logger
+        # Remove default handler that outputs to stderr
+        logger.remove()
+        # Add only file handler for loguru
+        logger.add(
+            log_file,
+            format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
+            level="DEBUG" if debug else "INFO",
+            rotation="10 MB",
+            retention="7 days",
+            compression="zip"
+        )
 
 
 def parse_args() -> argparse.Namespace:
@@ -301,9 +328,12 @@ def main() -> int:
     # 解析命令行参数
     args = parse_args()
 
-    # 设置日志
+    # Determine if running in terminal mode (no GUI)
+    no_gui = getattr(args, 'no_gui', True)
+
+    # 设置日志 - suppress console output in terminal mode
     log_level = args.log_level if hasattr(args, 'log_level') and args.log_level else None
-    setup_logging(args.debug, log_level)
+    setup_logging(args.debug, log_level, terminal_mode=no_gui)
 
     # Check for singleton behavior (can be disabled with --allow-multiple flag)
     allow_multiple = getattr(args, 'allow_multiple', False)
@@ -336,16 +366,25 @@ def main() -> int:
     if hasattr(args, 'backup_config') and args.backup_config:
         return handle_backup_config(args)
 
-    # 创建并运行应用
+    # no_gui was already determined earlier for logging configuration
     config_dir = getattr(args, 'config_dir', None) or getattr(args, 'config', None)
-    app = Application(config_dir=config_dir, cli_args=args)
 
-    # 如果提供了URL，自动创建下载任务
-    if args.url:
-        app.add_task_from_url(args.url)
+    if no_gui:
+        # Run in CLI mode - Qt/PySide6 will NOT be loaded
+        from src.cli.cli_app import CLIApplication
+        cli_app = CLIApplication(config_dir=config_dir, cli_args=args)
+        return cli_app.run()
+    else:
+        # Run in GUI mode - Import Application here to load Qt/PySide6 only when needed
+        from src.app.application import Application
+        app = Application(config_dir=config_dir, cli_args=args)
 
-    # 运行应用
-    return app.run()
+        # 如果提供了URL，自动创建下载任务
+        if args.url:
+            app.add_task_from_url(args.url)
+
+        # 运行应用
+        return app.run()
 
 
 if __name__ == "__main__":

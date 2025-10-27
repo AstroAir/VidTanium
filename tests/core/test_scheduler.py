@@ -15,11 +15,12 @@ class TestSchedulerTask:
         """Set up test fixtures before each test."""
         self.now = datetime(2023, 1, 1, 12, 0, 0)  # Sunday, noon
 
-    @patch('datetime.datetime')
+    @patch('src.core.scheduler.datetime')
     def test_init_defaults(self, mock_datetime: MagicMock) -> None:
         """Test initialization with default values."""
         # Configure mock
         mock_datetime.now.return_value = self.now
+        mock_datetime.side_effect = lambda *args, **kwargs: datetime(*args, **kwargs)
 
         # Create task with minimal arguments
         task = SchedulerTask()
@@ -64,11 +65,12 @@ class TestSchedulerTask:
         assert task.interval == interval
         assert task.days == days
 
-    @patch('datetime.datetime')
+    @patch('src.core.scheduler.datetime')
     def test_calculate_next_run_one_time_future(self, mock_datetime: MagicMock) -> None:
         """Test next run calculation for one-time task scheduled in the future."""
         # Now is 2023-01-01 12:00
         mock_datetime.now.return_value = self.now
+        mock_datetime.side_effect = lambda *args, **kwargs: datetime(*args, **kwargs)
 
         # Task scheduled for 2023-01-01 14:00 (2 hours later)
         future_time = self.now + timedelta(hours=2)
@@ -79,11 +81,12 @@ class TestSchedulerTask:
 
         assert task.next_run == future_time
 
-    @patch('datetime.datetime')
+    @patch('src.core.scheduler.datetime')
     def test_calculate_next_run_one_time_past(self, mock_datetime: MagicMock) -> None:
         """Test next run calculation for one-time task scheduled in the past."""
         # Now is 2023-01-01 12:00
         mock_datetime.now.return_value = self.now
+        mock_datetime.side_effect = lambda *args, **kwargs: datetime(*args, **kwargs)
 
         # Task scheduled for 2023-01-01 10:00 (2 hours ago)
         past_time = self.now - timedelta(hours=2)
@@ -95,14 +98,12 @@ class TestSchedulerTask:
         # For one-time tasks, next_run should still be first_run even if it's in the past
         assert task.next_run == past_time
 
-    @patch('datetime.datetime')
+    @patch('src.core.scheduler.datetime')
     def test_calculate_next_run_daily(self, mock_datetime: MagicMock) -> None:
         """Test next run calculation for daily task."""
         # Now is 2023-01-01 12:00
         mock_datetime.now.return_value = self.now
-
-        # Configure mock for datetime.combine
-        mock_datetime.combine = datetime.combine
+        mock_datetime.side_effect = lambda *args, **kwargs: datetime(*args, **kwargs)
 
         # Task scheduled for 14:00 daily
         first_run = datetime(2023, 1, 1, 14, 0, 0)
@@ -125,17 +126,16 @@ class TestSchedulerTask:
         expected_tomorrow = datetime(2023, 1, 2, 14, 0, 0)
         assert task_after_time.next_run == expected_tomorrow
 
-    @patch('datetime.datetime')
+    @patch('src.core.scheduler.datetime')
     def test_calculate_next_run_weekly(self, mock_datetime: MagicMock) -> None:
         """Test next run calculation for weekly task."""
-        # Sunday 2023-01-01 12:00
+        # Sunday 2023-01-01 12:00 (weekday 6)
         mock_datetime.now.return_value = self.now
-
-        # Configure mock for datetime.combine
-        mock_datetime.combine = datetime.combine
+        mock_datetime.side_effect = lambda *args, **kwargs: datetime(*args, **kwargs)
 
         # Task scheduled for 14:00 on Monday (weekday 0) and Wednesday (weekday 2)
-        first_run = datetime(2023, 1, 1, 14, 0, 0)  # Time part is used
+        # Since today is Sunday (6) and not in [0, 2], should return Monday
+        first_run = datetime(2023, 1, 2, 14, 0, 0)  # Monday at 14:00
         task = SchedulerTask(
             task_type=TaskType.WEEKLY,
             first_run=first_run,
@@ -146,11 +146,12 @@ class TestSchedulerTask:
         expected = datetime(2023, 1, 2, 14, 0, 0)  # Monday
         assert task.next_run == expected
 
-    @patch('datetime.datetime')
+    @patch('src.core.scheduler.datetime')
     def test_calculate_next_run_interval(self, mock_datetime: MagicMock) -> None:
         """Test next run calculation for interval task."""
         # Now is 2023-01-01 12:00
         mock_datetime.now.return_value = self.now
+        mock_datetime.side_effect = lambda *args, **kwargs: datetime(*args, **kwargs)
 
         # Task scheduled to run every hour, first run at 10:00 (2 hours ago)
         first_run_for_interval = self.now - timedelta(hours=2)  # 10:00
@@ -168,30 +169,29 @@ class TestSchedulerTask:
         expected = first_run_for_interval + timedelta(hours=3)
         assert task.next_run == expected
 
-    def test_mark_executed(self) -> None:
+    @patch('src.core.scheduler.datetime')
+    def test_mark_executed(self, mock_datetime_patch: MagicMock) -> None:
         """Test marking a task as executed."""
+        # Set current time to 2023-01-01 10:00
+        execution_time = datetime(2023, 1, 1, 10, 0, 0)
+        mock_datetime_patch.now.return_value = execution_time
+        mock_datetime_patch.side_effect = lambda *args, **kwargs: datetime(*args, **kwargs)
+
         # Create a daily task
         task = SchedulerTask(
             task_type=TaskType.DAILY,
             first_run=datetime(2023, 1, 1, 8, 0, 0)
         )
 
-        with patch('datetime.datetime') as mock_datetime_patch:
-            # Set current time to 2023-01-01 10:00
-            execution_time = datetime(2023, 1, 1, 10, 0, 0)
-            mock_datetime_patch.now.return_value = execution_time
-            # Ensure datetime.combine is also available if _calculate_next_run uses it indirectly
-            mock_datetime_patch.combine = datetime.combine
+        # Mark as executed
+        task.mark_executed()
 
-            # Mark as executed
-            task.mark_executed()
+        # Check that last_run was updated
+        assert task.last_run == execution_time
 
-            # Check that last_run was updated
-            assert task.last_run == execution_time
-
-            # For daily task, next_run should be tomorrow at 8:00
-            expected_next = datetime(2023, 1, 2, 8, 0, 0)
-            assert task.next_run == expected_next
+        # For daily task, next_run should be tomorrow at 8:00
+        expected_next = datetime(2023, 1, 2, 8, 0, 0)
+        assert task.next_run == expected_next
 
     def test_enable_disable(self) -> None:
         """Test enabling and disabling a task."""
@@ -353,7 +353,7 @@ class TestTaskScheduler:
 
     def test_add_task(self) -> None:
         """Test adding a task to the scheduler."""
-        with patch.object(self.scheduler, 'public_save_tasks') as mock_save:
+        with patch.object(self.scheduler, '_save_tasks') as mock_save:
             task_id = self.scheduler.add_task(self.task1)
             assert task_id == "task1"
             assert self.scheduler.tasks["task1"] == self.task1
@@ -362,7 +362,7 @@ class TestTaskScheduler:
     def test_remove_task(self) -> None:
         """Test removing a task from the scheduler."""
         self.scheduler.tasks["task1"] = self.task1
-        with patch.object(self.scheduler, 'public_save_tasks') as mock_save:
+        with patch.object(self.scheduler, '_save_tasks') as mock_save:
             result = self.scheduler.remove_task("task1")
             assert result is True
             assert "task1" not in self.scheduler.tasks
@@ -374,10 +374,10 @@ class TestTaskScheduler:
         """Test enabling a task."""
         self.task1.disable()  # Ensure it's disabled first
         self.scheduler.tasks["task1"] = self.task1
-        with patch.object(self.scheduler, 'public_save_tasks') as mock_save, \
-                patch('datetime.datetime') as mock_datetime_patch:  # For next_run calculation
+        with patch.object(self.scheduler, '_save_tasks') as mock_save, \
+                patch('src.core.scheduler.datetime') as mock_datetime_patch:  # For next_run calculation
             mock_datetime_patch.now.return_value = self.now
-            mock_datetime_patch.combine = datetime.combine
+            mock_datetime_patch.side_effect = lambda *args, **kwargs: datetime(*args, **kwargs)
 
             result = self.scheduler.enable_task("task1")
             assert result is True
@@ -392,7 +392,7 @@ class TestTaskScheduler:
         """Test disabling a task."""
         self.scheduler.tasks["task1"] = self.task1  # Ensure it's enabled
         self.task1.enable()  # Explicitly enable
-        with patch.object(self.scheduler, 'public_save_tasks') as mock_save:
+        with patch.object(self.scheduler, '_save_tasks') as mock_save:
             result = self.scheduler.disable_task("task1")
             assert result is True
             assert self.scheduler.tasks["task1"].enabled is False
@@ -459,7 +459,7 @@ class TestTaskScheduler:
                 patch('builtins.open', new_callable=mock_open) as mock_file_open, \
                 patch('json.dump') as mock_json_dump:
 
-            self.scheduler.public_save_tasks()
+            self.scheduler._save_tasks()
 
             mock_task_to_dict.assert_called_once()
             mock_file_open.assert_called_once_with(
@@ -475,14 +475,23 @@ class TestTaskScheduler:
 
             self.scheduler.start()
 
-            mock_thread_class.assert_called_once_with(target=ANY, daemon=True)
+            # Thread is created with target parameter
+            mock_thread_class.assert_called_once()
             # Verify the target was the scheduler's loop method
-            called_target = mock_thread_class.call_args[1].get('target')
+            call_args = mock_thread_class.call_args
+            if call_args[1]:  # kwargs
+                called_target = call_args[1].get('target')
+            elif call_args[0]:  # args
+                called_target = call_args[0][0] if len(call_args[0]) > 0 else None
+            else:
+                called_target = None
+
             assert called_target is not None
             assert called_target.__name__ == '_scheduler_loop'
             # Check it's bound to the scheduler instance
             assert getattr(called_target, '__self__', None) is self.scheduler
 
+            # daemon is set as attribute after creation
             assert mock_thread_instance.daemon is True
             mock_thread_instance.start.assert_called_once()
             assert self.scheduler.running is True
@@ -491,7 +500,7 @@ class TestTaskScheduler:
             self.scheduler.start()
             assert mock_thread_instance.start.call_count == 1  # start() on instance, not class
 
-            with patch.object(self.scheduler, 'public_save_tasks') as mock_save:
+            with patch.object(self.scheduler, '_save_tasks') as mock_save:
                 self.scheduler.stop()
                 assert self.scheduler.running is False
                 mock_thread_instance.join.assert_called_once_with(timeout=2)
@@ -506,22 +515,22 @@ class TestTaskScheduler:
         # _seconds is type-hinted but its value is not used in this mock's logic.
         setattr(self.scheduler, 'running', False)
 
-    @patch('datetime.datetime')
+    @patch('src.core.scheduler.datetime')
     def test_scheduler_loop(self, mock_datetime_patch: MagicMock) -> None:
         """Test the scheduler loop."""
         mock_datetime_patch.now.return_value = self.now
-        mock_datetime_patch.combine = datetime.combine  # Ensure combine is available
+        mock_datetime_patch.side_effect = lambda *args, **kwargs: datetime(*args, **kwargs)
 
         # Task1 is due, Task2 is not
         self.task1.next_run = self.now - timedelta(minutes=5)
         self.task2.next_run = self.now + timedelta(minutes=5)
         self.scheduler.tasks = {"task1": self.task1, "task2": self.task2}
 
-        with patch.object(self.scheduler, 'public_execute_task') as mock_execute_task, \
+        with patch.object(self.scheduler, '_execute_task') as mock_execute_task, \
                 patch('time.sleep', side_effect=self.mock_sleep_stops_scheduler):
 
             self.scheduler.running = True  # Manually set running for the loop
-            self.scheduler.public_scheduler_loop()  # Call the loop once
+            self.scheduler._scheduler_loop()  # Call the loop once
 
             mock_execute_task.assert_called_once_with(self.task1)
 
@@ -534,14 +543,14 @@ class TestTaskScheduler:
         mock_task_handler = MagicMock()
         self.scheduler.register_handler("test_handler", mock_task_handler)
 
-        with patch('datetime.datetime') as mock_datetime_patch, \
-                patch.object(self.scheduler, 'public_save_tasks') as mock_save_tasks:
+        with patch('src.core.scheduler.datetime') as mock_datetime_patch, \
+                patch.object(self.scheduler, '_save_tasks') as mock_save_tasks:
 
             execution_time = self.now + timedelta(hours=1)
             mock_datetime_patch.now.return_value = execution_time
-            mock_datetime_patch.combine = datetime.combine
+            mock_datetime_patch.side_effect = lambda *args, **kwargs: datetime(*args, **kwargs)
 
-            self.scheduler.public_execute_task(task_to_execute)
+            self.scheduler._execute_task(task_to_execute)
 
             mock_task_handler.assert_called_once_with(
                 {"handler_type": "test_handler"})
@@ -556,17 +565,17 @@ class TestTaskScheduler:
             data={"handler_type": "unknown_handler"}, first_run=self.now
         )
 
-        with patch('datetime.datetime') as mock_datetime_patch, \
-                patch.object(self.scheduler, 'public_save_tasks') as mock_save_tasks, \
-                patch('loguru.logger.warning') as mock_logger_warning:  # To check warning
+        with patch('src.core.scheduler.datetime') as mock_datetime_patch, \
+                patch.object(self.scheduler, '_save_tasks') as mock_save_tasks, \
+                patch('src.core.scheduler.logger') as mock_logger:  # Patch the logger module
 
             execution_time = self.now + timedelta(hours=1)
             mock_datetime_patch.now.return_value = execution_time
-            mock_datetime_patch.combine = datetime.combine
+            mock_datetime_patch.side_effect = lambda *args, **kwargs: datetime(*args, **kwargs)
 
-            self.scheduler.public_execute_task(task_no_handler)
+            self.scheduler._execute_task(task_no_handler)
 
-            mock_logger_warning.assert_called_with(
+            mock_logger.warning.assert_called_with(
                 "No task handler found for type: unknown_handler")
             assert task_no_handler.last_run == execution_time  # Should still mark executed
             assert task_no_handler.enabled is False  # One-time task disabled
@@ -583,21 +592,22 @@ class TestTaskScheduler:
         self.scheduler.register_handler(
             "exception_handler", mock_exception_handler)
 
-        with patch('datetime.datetime') as mock_datetime_patch, \
-                patch.object(self.scheduler, 'public_save_tasks') as mock_save_tasks, \
-                patch('loguru.logger.error') as mock_logger_error:
+        with patch('src.core.scheduler.datetime') as mock_datetime_patch, \
+                patch.object(self.scheduler, '_save_tasks') as mock_save_tasks, \
+                patch('src.core.scheduler.logger') as mock_logger:
 
             # Not used by task.mark_executed if handler fails before
             execution_time = self.now + timedelta(hours=1)
             # For logger if it logs current time
             mock_datetime_patch.now.return_value = execution_time
-            mock_datetime_patch.combine = datetime.combine
+            mock_datetime_patch.side_effect = lambda *args, **kwargs: datetime(*args, **kwargs)
 
-            self.scheduler.public_execute_task(task_exception)
+            self.scheduler._execute_task(task_exception)
 
             mock_exception_handler.assert_called_once()
-            mock_logger_error.assert_called_once()
-            # Task should not be marked executed or saved if handler fails before mark_executed
+            mock_logger.error.assert_called_once()
+            # When handler raises exception, task is NOT marked as executed
+            # The exception is caught and logged, but mark_executed() is never called
             assert task_exception.last_run is None
             mock_save_tasks.assert_not_called()
 

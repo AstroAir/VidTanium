@@ -398,12 +398,25 @@ class EnhancedTaskDialog(QDialog):
         self.on_orientation_changed(orientation)
 
     def on_breakpoint_changed(self, breakpoint: str) -> None:
-        """Override to handle breakpoint changes"""
-        pass
+        """Handle responsive breakpoint changes for task dialog"""
+        try:
+            # Adjust form layout based on breakpoint
+            if hasattr(self, 'basic_card') and self.basic_card:
+                if breakpoint in ['xs', 'sm']:
+                    self.basic_card.setMinimumHeight(280)
+                else:
+                    self.basic_card.setMinimumHeight(320)
+            logger.debug(f"Task dialog adapted to breakpoint: {breakpoint}")
+        except Exception as e:
+            logger.error(f"Error handling breakpoint change: {e}")
 
     def on_orientation_changed(self, orientation) -> None:
-        """Override to handle orientation changes"""
-        pass
+        """Handle device orientation changes"""
+        try:
+            # Adjust layout for portrait/landscape
+            logger.debug(f"Task dialog orientation changed: {orientation}")
+        except Exception as e:
+            logger.error(f"Error handling orientation change: {e}")
 
     def _create_enhanced_ui(self) -> None:
         """Create enhanced responsive user interface"""
@@ -1473,8 +1486,7 @@ class EnhancedTaskDialog(QDialog):
             with open(draft_file, 'w', encoding='utf-8') as f:
                 json.dump(draft_data, f, indent=2)
         except Exception as e:
-            # Silent fail for auto-save
-            pass
+            logger.debug(f"Failed to auto-save draft: {e}")
 
     def _load_draft(self) -> None:
         """Load draft data if available"""
@@ -1513,8 +1525,7 @@ class EnhancedTaskDialog(QDialog):
                 self.notify_check.setChecked(draft_data["notify"])
                 
         except Exception as e:
-            # Silent fail for draft loading
-            pass
+            logger.debug(f"Failed to load draft: {e}")
 
     @Slot()
     def _validate_form(self) -> None:
@@ -1593,8 +1604,8 @@ class EnhancedTaskDialog(QDialog):
         if os.path.exists(draft_file):
             try:
                 os.remove(draft_file)
-            except:
-                pass
+            except Exception as e:
+                logger.debug(f"Failed to remove draft file: {e}")
         
         super().accept()
 
@@ -1653,8 +1664,8 @@ class EnhancedTaskDialog(QDialog):
                     name += f"_{properties['resolution']}"
                 
                 self.name_input.setText(name)
-        except:
-            pass
+        except Exception as e:
+            logger.debug(f"Failed to auto-generate name from URL: {e}")
     
     @Slot()
     def _toggle_history_panel(self) -> None:

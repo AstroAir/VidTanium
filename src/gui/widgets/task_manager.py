@@ -132,18 +132,19 @@ class TaskItem(ResponsiveContainer):
         self._create_actions_section()
 
     def _setup_responsive_margins(self) -> None:
-        """Setup margins that adapt to screen size"""
+        """Setup margins that adapt to screen size - optimized for compactness"""
         current_bp = self.responsive_manager.get_current_breakpoint()
-        
+
+        # Reduced margins by ~30% for more compact layout
         margin_config = {
-            'xs': 12,
-            'sm': 16,
-            'md': 20,
-            'lg': 24,
-            'xl': 28
+            'xs': 8,
+            'sm': 12,
+            'md': 14,
+            'lg': 16,
+            'xl': 20
         }
-        
-        margin = margin_config.get(current_bp.value, 20)
+
+        margin = margin_config.get(current_bp.value, 14)
         self.main_layout.setContentsMargins(margin, margin//2, margin, margin//2)
 
     def on_breakpoint_changed(self, breakpoint: str) -> None:
@@ -202,7 +203,7 @@ class TaskItem(ResponsiveContainer):
         icon_container = QWidget()
         icon_container.setFixedSize(icon_size, icon_size)
         # Use theme color for icon background
-        theme_color = qconfig.themeColor()
+        theme_color = qconfig.themeColor.value
         icon_container.setStyleSheet(f"""
             QWidget {{
                 background-color: {theme_color.name()};
@@ -443,8 +444,16 @@ class TaskItem(ResponsiveContainer):
 
 # Legacy compatibility
 class TaskManagerCompat:
-    """Legacy TaskManager for backward compatibility"""
-    pass
+    """Legacy TaskManager for backward compatibility
+    
+    This class is deprecated and maintained only for backward compatibility.
+    Use TaskManager directly instead.
+    """
+    def __init__(self, *args, **kwargs):
+        logger.warning("TaskManagerCompat is deprecated. Use TaskManager instead.")
+        # Delegate to TaskManager for compatibility
+        from .task_manager import TaskManager as ModernTaskManager
+        self._manager = ModernTaskManager(*args, **kwargs)
 
 # Backward compatibility alias
 EnhancedTaskItem = TaskItem
@@ -474,7 +483,7 @@ class TaskManager(QWidget):
         # Beautiful header using qfluentwidgets theme
         header_card = ElevatedCardWidget()
         # Use theme color for header background
-        theme_color = qconfig.themeColor()
+        theme_color = qconfig.themeColor.value
         header_card.setStyleSheet(f"""
             ElevatedCardWidget {{
                 background-color: {theme_color.name()};

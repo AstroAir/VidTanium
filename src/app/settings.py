@@ -121,9 +121,15 @@ class ConfigurationUtilities:
 
         for section, section_data in updates.items():
             if section not in result:
-                result[section] = section_data.copy()
+                # Handle both dict and non-dict values
+                result[section] = section_data.copy() if isinstance(section_data, dict) else section_data
             else:
-                result[section].update(section_data)
+                # Only call update() if both are dictionaries
+                if isinstance(result[section], dict) and isinstance(section_data, dict):
+                    result[section].update(section_data)
+                else:
+                    # For non-dict values (like lists), just replace
+                    result[section] = section_data
 
         return result
 
@@ -273,14 +279,14 @@ class Settings:
 
         logger.info("Legacy configuration system initialized")
 
-    def load_settings(self) -> None:
+    def load_settings(self) -> Dict[str, Any]:
         """Load settings from configuration file using appropriate system"""
         if self.use_new_system and self.loader:
             return self._load_settings_new_system()
         else:
             return self._load_settings_legacy()
 
-    def _load_settings_new_system(self) -> None:
+    def _load_settings_new_system(self) -> Dict[str, Any]:
         """Load settings using the new configuration system"""
         try:
             # Load configuration from all sources
@@ -335,7 +341,7 @@ class Settings:
             logger.warning("Falling back to legacy configuration loading")
             return self._load_settings_legacy()
 
-    def _load_settings_legacy(self) -> None:
+    def _load_settings_legacy(self) -> Dict[str, Any]:
         """Load settings using the legacy system"""
         if self.config_file.exists():
             try:

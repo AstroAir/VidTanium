@@ -9,6 +9,9 @@ from .media_processor import MediaProcessor
 from .scheduler import TaskScheduler
 from .thread_pool import ThreadPoolManager
 
+# Event system
+from .event_dispatcher import EventDispatcher, EventType, Event, get_event_dispatcher
+
 # Enhanced error handling and analytics
 from .exceptions import VidTaniumException, ErrorCategory, ErrorSeverity, ErrorContext
 from .error_handler import ErrorHandler, error_handler
@@ -28,6 +31,12 @@ __all__ = [
     'MediaProcessor',
     'TaskScheduler',
     'ThreadPoolManager',
+
+    # Event system
+    'EventDispatcher',
+    'EventType',
+    'Event',
+    'get_event_dispatcher',
 
     # Enhanced error handling
     'VidTaniumException',

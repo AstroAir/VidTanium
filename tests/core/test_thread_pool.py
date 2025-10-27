@@ -1,483 +1,279 @@
+﻿"""
+Tests for thread pool management
+"""
+
 import pytest
 import time
 import threading
-import sys
-from unittest.mock import patch, Mock, MagicMock
-from typing import Callable, Any, Optional
+from unittest.mock import Mock, patch
+from typing import List
 
-# Mock PySide6 components for testing
-class MockQObject:
-    def __init__(self) -> None:
-        pass
-
-class MockSignal:
-    def __init__(self) -> None:
-        self.callbacks = []
-    
-    def connect(self, callback) -> None:
-        self.callbacks.append(callback)
-    
-    def emit(self, *args) -> None:
-        for callback in self.callbacks:
-            callback(*args)
-
-class MockQRunnable:
-    def __init__(self) -> None:
-        pass
-
-class MockQThreadPool:
-    def __init__(self) -> None:
-        self._max_threads = 4
-        self._active_threads = 0
-        self._tasks = []
-    
-    def setMaxThreadCount(self, count) -> None:
-        self._max_threads = count
-    
-    def maxThreadCount(self) -> None:
-        return self._max_threads
-    
-    def activeThreadCount(self) -> None:
-        return self._active_threads
-    
-    def start(self, worker) -> None:
-        self._tasks.append(worker)
-        self._active_threads += 1
-        # Simulate running the worker
-        threading.Thread(target=self._run_worker, args=(worker,)).start()
-    
-    def _run_worker(self, worker) -> None:
-        try:
-            worker.run()
-        finally:
-            self._active_threads = max(0, self._active_threads - 1)
-    
-    def waitForDone(self, timeout_ms) -> None:
-        # Simple simulation - wait for active threads to finish
-        start_time = time.time()
-        while self._active_threads > 0 and (time.time() - start_time) * 1000 < timeout_ms:
-            time.sleep(0.01)
-        return self._active_threads == 0
-    
-    def clear(self) -> None:
-        self._tasks.clear()
-
-# Mock the PySide6 imports
-sys.modules['PySide6'] = Mock()
-sys.modules['PySide6.QtCore'] = Mock()
-sys.modules['PySide6.QtCore'].QObject = MockQObject
-sys.modules['PySide6.QtCore'].Signal = MockSignal
-sys.modules['PySide6.QtCore'].QRunnable = MockQRunnable
-sys.modules['PySide6.QtCore'].QThreadPool = MockQThreadPool
-
-# Now import the actual module
 from src.core.thread_pool import (
-    WorkerSignals, Worker, ThreadPoolManager, get_thread_pool, submit_task
+    Worker, WorkerCallbacks, ThreadPoolManager, get_thread_pool, submit_task
 )
 
 
-class TestWorkerSignals:
-    """Test suite for WorkerSignals class."""
+@pytest.fixture
+def thread_pool_manager():
+    """Create ThreadPoolManager instance for testing"""
+    manager = ThreadPoolManager(max_threads=4)
+    yield manager
+    # Cleanup
+    try:
+        manager.shutdown(wait=True)
+    except:
+        pass
 
-    def test_signals_initialization(self) -> None:
-        """Test WorkerSignals initialization."""
-        signals = WorkerSignals()
+
+class TestWorkerCallbacks:
+    """Test WorkerCallbacks class"""
+    
+    def test_initialization(self) -> None:
+        """Test WorkerCallbacks initialization"""
+        callbacks = WorkerCallbacks()
         
-        assert hasattr(signals, 'finished')
-        assert hasattr(signals, 'error')
-        assert hasattr(signals, 'result')
-        assert hasattr(signals, 'progress')
-        assert isinstance(signals.finished, MockSignal)
-        assert isinstance(signals.error, MockSignal)
-        assert isinstance(signals.result, MockSignal)
-        assert isinstance(signals.progress, MockSignal)
+        assert callbacks.on_finished is None
+        assert callbacks.on_error is None
+        assert callbacks.on_result is None
+        assert callbacks.on_progress is None
+    
+    def test_set_callbacks(self) -> None:
+        """Test setting callbacks"""
+        callbacks = WorkerCallbacks()
+        
+        def finished_cb():
+            pass
+        
+        def error_cb(error):
+            pass
+        
+        callbacks.on_finished = finished_cb
+        callbacks.on_error = error_cb
+        
+        assert callbacks.on_finished == finished_cb
+        assert callbacks.on_error == error_cb
 
 
 class TestWorker:
-    """Test suite for Worker class."""
-
+    """Test Worker class"""
+    
     def test_worker_initialization(self) -> None:
-        """Test Worker initialization."""
-        def test_function(x, y, z=None) -> None:
-            return x + y + (z or 0)
+        """Test Worker initialization"""
+        def test_func():
+            return "result"
         
-        worker = Worker(test_function, 1, 2, z=3)
+        worker = Worker(test_func, 1, 2, key="value")
         
-        assert worker.fn == test_function
+        assert worker.fn == test_func
         assert worker.args == (1, 2)
-        assert worker.kwargs == {'z': 3}
-        assert isinstance(worker.signals, WorkerSignals)
-
-    def test_worker_initialization_with_progress_callback(self) -> None:
-        """Test Worker initialization with progress callback removal."""
-        def test_function(x, y) -> None:
-            return x + y
+        assert worker.kwargs == {"key": "value"}
+        assert worker.is_running is False
+        assert worker.priority == 0
+        assert isinstance(worker.callbacks, WorkerCallbacks)
+    
+    def test_worker_call_success(self) -> None:
+        """Test worker execution with success"""
+        def test_func(a, b):
+            return a + b
         
-        def progress_callback(value) -> None:
-            pass
+        worker = Worker(test_func, 2, 3)
+        result_holder = []
         
-        worker = Worker(test_function, 1, 2, progress_callback=progress_callback)
+        def on_result(result):
+            result_holder.append(result)
         
-        assert worker.fn == test_function
-        assert worker.args == (1, 2)
-        assert 'progress_callback' not in worker.kwargs
-
-    def test_worker_run_success(self) -> None:
-        """Test successful worker execution."""
-        def test_function(x, y) -> None:
-            return x * y
+        worker.callbacks.on_result = on_result
         
-        worker = Worker(test_function, 3, 4)
+        result = worker()
         
-        # Mock signal connections
-        result_callback = Mock()
-        finished_callback = Mock()
-        worker.signals.result.connect(result_callback)
-        worker.signals.finished.connect(finished_callback)
-        
-        worker.run()
-        
-        result_callback.assert_called_once_with(12)
-        finished_callback.assert_called_once()
-
-    def test_worker_run_exception(self) -> None:
-        """Test worker execution with exception."""
-        def failing_function() -> None:
+        assert result == 5
+        assert result_holder == [5]
+        assert worker.is_running is False
+    
+    def test_worker_call_with_error(self) -> None:
+        """Test worker execution with error"""
+        def test_func():
             raise ValueError("Test error")
         
-        worker = Worker(failing_function)
+        worker = Worker(test_func)
+        error_holder = []
         
-        # Mock signal connections
-        error_callback = Mock()
-        finished_callback = Mock()
-        worker.signals.error.connect(error_callback)
-        worker.signals.finished.connect(finished_callback)
+        def on_error(error):
+            error_holder.append(error)
         
-        worker.run()
+        worker.callbacks.on_error = on_error
         
-        error_callback.assert_called_once()
-        error_args = error_callback.call_args[0][0]
-        assert error_args[0] == ValueError
-        assert "Test error" in str(error_args[1])
-        finished_callback.assert_called_once()
-
-    def test_worker_run_with_args_and_kwargs(self) -> None:
-        """Test worker execution with various arguments."""
-        def complex_function(a, b, c=10, d=20) -> None:
-            return a + b + c + d
+        with pytest.raises(ValueError):
+            worker()
         
-        worker = Worker(complex_function, 1, 2, c=30, d=40)
-        
-        result_callback = Mock()
-        worker.signals.result.connect(result_callback)
-        
-        worker.run()
-        
-        result_callback.assert_called_once_with(73)  # 1 + 2 + 30 + 40
+        assert len(error_holder) == 1
+        assert worker.is_running is False
 
 
 class TestThreadPoolManager:
-    """Test suite for ThreadPoolManager class."""
-
-    def setup_method(self) -> None:
-        """Set up test fixtures."""
-        self.manager = ThreadPoolManager(max_threads=4)
-
-    def test_initialization_with_max_threads(self) -> None:
-        """Test ThreadPoolManager initialization with specified max threads."""
+    """Test ThreadPoolManager class"""
+    
+    def test_initialization(self) -> None:
+        """Test ThreadPoolManager initialization"""
         manager = ThreadPoolManager(max_threads=8)
         
         assert manager.max_thread_count() == 8
-
-    @patch('os.cpu_count')
-    def test_initialization_default_threads(self, mock_cpu_count) -> None:
-        """Test ThreadPoolManager initialization with default thread calculation."""
-        mock_cpu_count.return_value = 6
+        assert manager.active_thread_count() == 0
+        assert manager.total_tasks_submitted == 0
+        assert manager.total_tasks_completed == 0
+        assert manager.total_tasks_failed == 0
         
-        manager = ThreadPoolManager()
+        manager.shutdown()
+    
+    def test_submit_task_basic(self, thread_pool_manager) -> None:
+        """Test basic task submission"""
+        def simple_task():
+            return "result"
         
-        # Should be max(4, min(6 * 2, 16)) = 12
-        assert manager.max_thread_count() == 12
-
-    @patch('os.cpu_count')
-    def test_initialization_cpu_count_none(self, mock_cpu_count) -> None:
-        """Test initialization when cpu_count returns None."""
-        mock_cpu_count.return_value = None
-        
-        manager = ThreadPoolManager()
-        
-        # Should default to max(4, min(4 * 2, 16)) = 8
-        assert manager.max_thread_count() == 8
-
-    def test_submit_task_basic(self) -> None:
-        """Test basic task submission."""
-        def simple_task() -> None:
-            return "task_result"
-        
-        worker = self.manager.submit_task(simple_task)
+        worker = thread_pool_manager.submit_task(simple_task)
         
         assert isinstance(worker, Worker)
         assert worker.fn == simple_task
-
-    def test_submit_task_with_callbacks(self) -> None:
-        """Test task submission with callbacks."""
-        def test_task() -> None:
-            return "success"
+        assert worker.worker_id is not None
+        assert thread_pool_manager.total_tasks_submitted == 1
+    
+    def test_submit_task_with_callback(self, thread_pool_manager) -> None:
+        """Test task submission with callback"""
+        results = []
         
-        result_callback = Mock()
-        error_callback = Mock()
-        progress_callback = Mock()
+        def test_task():
+            return 42
         
-        worker = self.manager.submit_task(
-            test_task,
-            callback=result_callback,
-            error_callback=error_callback,
-            progress_callback=progress_callback
-        )
+        def on_result(result):
+            results.append(result)
         
-        # Verify callbacks are connected
-        assert result_callback in worker.signals.result.callbacks
-        assert error_callback in worker.signals.error.callbacks
-        assert progress_callback in worker.signals.progress.callbacks
-
-    def test_submit_task_with_args_kwargs(self) -> None:
-        """Test task submission with arguments."""
-        def parameterized_task(a, b, c=None) -> None:
-            return f"{a}-{b}-{c}"
+        worker = thread_pool_manager.submit_task(test_task, callback=on_result)
         
-        worker = self.manager.submit_task(
-            parameterized_task,
-            "arg1", "arg2",
-            c="kwarg1"
-        )
+        # Wait for task to complete
+        thread_pool_manager.wait_for_done(timeout_ms=5000)
         
-        assert worker.args == ("arg1", "arg2")
-        assert worker.kwargs == {"c": "kwarg1"}
-
-    def test_submit_task_callback_execution(self) -> None:
-        """Test that callbacks are actually executed."""
-        def test_task() -> None:
-            return "callback_test"
+        assert len(results) == 1
+        assert results[0] == 42
+    
+    def test_submit_task_with_error_callback(self, thread_pool_manager) -> None:
+        """Test task submission with error callback"""
+        errors = []
         
-        result_callback = Mock()
+        def failing_task():
+            raise RuntimeError("Test error")
         
-        worker = self.manager.submit_task(test_task, callback=result_callback)
+        def on_error(error):
+            errors.append(error)
         
-        # Wait a bit for the task to complete
-        time.sleep(0.1)
+        worker = thread_pool_manager.submit_task(failing_task, error_callback=on_error)
         
-        result_callback.assert_called_once_with("callback_test")
-
-    def test_submit_task_error_callback_execution(self) -> None:
-        """Test that error callbacks are executed on exceptions."""
-        def failing_task() -> None:
-            raise RuntimeError("Task failed")
+        # Wait for task to complete
+        thread_pool_manager.wait_for_done(timeout_ms=5000)
         
-        error_callback = Mock()
+        assert len(errors) == 1
+        assert thread_pool_manager.total_tasks_failed == 1
+    
+    def test_submit_task_with_args(self, thread_pool_manager) -> None:
+        """Test task submission with arguments"""
+        results = []
         
-        worker = self.manager.submit_task(failing_task, error_callback=error_callback)
+        def add_task(a, b):
+            return a + b
         
-        # Wait a bit for the task to complete
-        time.sleep(0.1)
+        def on_result(result):
+            results.append(result)
         
-        error_callback.assert_called_once()
-
-    def test_wait_for_done_success(self) -> None:
-        """Test waiting for tasks to complete successfully."""
-        def quick_task() -> None:
-            time.sleep(0.05)
-            return "done"
+        worker = thread_pool_manager.submit_task(add_task, 5, 3, callback=on_result)
         
-        self.manager.submit_task(quick_task)
+        # Wait for task to complete
+        thread_pool_manager.wait_for_done(timeout_ms=5000)
         
-        result = self.manager.wait_for_done(timeout_ms=1000)
+        assert len(results) == 1
+        assert results[0] == 8
+    
+    def test_submit_task_with_priority(self, thread_pool_manager) -> None:
+        """Test task submission with priority"""
+        def test_task():
+            return "result"
         
-        assert result is True
-
-    def test_wait_for_done_timeout(self) -> None:
-        """Test waiting for tasks with timeout."""
-        def slow_task() -> None:
-            time.sleep(0.5)
-            return "done"
+        worker = thread_pool_manager.submit_task(test_task, priority=10)
         
-        self.manager.submit_task(slow_task)
+        assert worker.priority == 10
+    
+    def test_wait_for_done(self, thread_pool_manager) -> None:
+        """Test waiting for all tasks to complete"""
+        results = []
         
-        result = self.manager.wait_for_done(timeout_ms=100)
+        def test_task(n):
+            time.sleep(0.1)
+            return n * 2
         
-        # May be True or False depending on timing, but should not hang
-        assert isinstance(result, bool)
-
-    def test_clear_tasks(self) -> None:
-        """Test clearing pending tasks."""
-        def dummy_task() -> None:
-            return "dummy"
+        def on_result(result):
+            results.append(result)
         
-        # Submit some tasks
-        for _ in range(3):
-            self.manager.submit_task(dummy_task)
+        # Submit multiple tasks
+        for i in range(3):
+            thread_pool_manager.submit_task(test_task, i, callback=on_result)
         
-        self.manager.clear()
+        # Wait for all to complete
+        completed = thread_pool_manager.wait_for_done(timeout_ms=5000)
         
-        # Clear should not raise an exception
-        assert True
-
-    def test_active_thread_count(self) -> None:
-        """Test getting active thread count."""
-        count = self.manager.active_thread_count()
+        assert completed is True
+        assert len(results) == 3
+        assert set(results) == {0, 2, 4}
+    
+    def test_shutdown(self) -> None:
+        """Test thread pool shutdown"""
+        manager = ThreadPoolManager(max_threads=4)
         
-        assert isinstance(count, int)
-        assert count >= 0
-
+        def test_task():
+            return "result"
+        
+        manager.submit_task(test_task)
+        manager.shutdown(wait=True)
+        
+        assert manager._shutdown is True
+    
     def test_max_thread_count(self) -> None:
-        """Test getting max thread count."""
-        count = self.manager.max_thread_count()
+        """Test max thread count"""
+        manager = ThreadPoolManager(max_threads=6)
         
-        assert isinstance(count, int)
-        assert count == 4  # Set in setup_method
-
-    def test_set_max_thread_count(self) -> None:
-        """Test setting max thread count."""
-        self.manager.set_max_thread_count(8)
+        assert manager.max_thread_count() == 6
         
-        assert self.manager.max_thread_count() == 8
-
-    def test_submit_task_logging_filter(self) -> None:
-        """Test that stats tasks don't generate excessive logs."""
-        def _calculate_stats() -> None:
-            return "stats"
-        
-        # This should not generate debug logs
-        worker = self.manager.submit_task(_calculate_stats)
-        
-        assert isinstance(worker, Worker)
-
-    def test_multiple_task_submission(self) -> None:
-        """Test submitting multiple tasks."""
-        def numbered_task(n) -> None:
-            return f"task_{n}"
-        
-        workers = []
-        for i in range(5):
-            worker = self.manager.submit_task(numbered_task, i)
-            workers.append(worker)
-        
-        assert len(workers) == 5
-        for worker in workers:
-            assert isinstance(worker, Worker)
+        manager.shutdown()
 
 
-class TestGlobalFunctions:
-    """Test suite for global functions."""
-
-    def test_get_thread_pool_singleton(self) -> None:
-        """Test that get_thread_pool returns singleton instance."""
+class TestGlobalThreadPool:
+    """Test global thread pool functions"""
+    
+    def test_get_thread_pool(self) -> None:
+        """Test getting global thread pool instance"""
         pool1 = get_thread_pool()
         pool2 = get_thread_pool()
         
         assert pool1 is pool2
         assert isinstance(pool1, ThreadPoolManager)
-
-    def test_submit_task_global_function(self) -> None:
-        """Test global submit_task function."""
-        def global_task() -> None:
+    
+    def test_submit_task_global(self) -> None:
+        """Test submitting task to global thread pool"""
+        results = []
+        
+        def test_task():
             return "global_result"
         
-        result_callback = Mock()
-        
-        worker = submit_task(global_task, callback=result_callback)
-        
-        assert isinstance(worker, Worker)
-        assert worker.fn == global_task
-
-    def test_submit_task_global_with_callbacks(self) -> None:
-        """Test global submit_task with all callback types."""
-        def test_task() -> None:
-            return "test"
-        
-        result_callback = Mock()
-        error_callback = Mock()
-        progress_callback = Mock()
-        
-        worker = submit_task(
-            test_task,
-            callback=result_callback,
-            error_callback=error_callback,
-            progress_callback=progress_callback
-        )
-        
-        assert result_callback in worker.signals.result.callbacks
-        assert error_callback in worker.signals.error.callbacks
-        assert progress_callback in worker.signals.progress.callbacks
-
-    def test_submit_task_global_with_args(self) -> None:
-        """Test global submit_task with arguments."""
-        def task_with_args(x, y, z=None) -> None:
-            return x + y + (z or 0)
-        
-        worker = submit_task(task_with_args, 10, 20, z=30)
-        
-        assert worker.args == (10, 20)
-        assert worker.kwargs == {"z": 30}
-
-
-class TestIntegration:
-    """Integration tests for thread pool functionality."""
-
-    def test_end_to_end_task_execution(self) -> None:
-        """Test complete task execution flow."""
-        results = []
-        errors = []
-        
-        def success_callback(result) -> None:
+        def on_result(result):
             results.append(result)
         
-        def error_callback(error_info) -> None:
-            errors.append(error_info)
+        worker = submit_task(test_task, callback=on_result)
         
-        def working_task(value) -> None:
-            return value * 2
-        
-        def failing_task() -> None:
-            raise ValueError("Intentional failure")
-        
-        # Submit working task
-        submit_task(working_task, 21, callback=success_callback)
-        
-        # Submit failing task
-        submit_task(failing_task, error_callback=error_callback)
+        assert isinstance(worker, Worker)
         
         # Wait for completion
-        get_thread_pool().wait_for_done(timeout_ms=1000)
+        get_thread_pool().wait_for_done(timeout_ms=5000)
         
         assert len(results) == 1
-        assert results[0] == 42
-        assert len(errors) == 1
-
-    def test_concurrent_task_execution(self) -> None:
-        """Test multiple tasks running concurrently."""
-        results = []
-        lock = threading.Lock()
-        
-        def concurrent_task(task_id) -> None:
-            time.sleep(0.1)  # Simulate work
-            with lock:
-                results.append(task_id)
-            return task_id
-        
-        def result_callback(result) -> None:
-            pass  # Results are collected in the task itself
-        
-        # Submit multiple tasks
-        for i in range(5):
-            submit_task(concurrent_task, i, callback=result_callback)
-        
-        # Wait for all to complete
-        get_thread_pool().wait_for_done(timeout_ms=2000)
-        
-        assert len(results) == 5
-        assert set(results) == {0, 1, 2, 3, 4}
+        assert results[0] == "global_result"
 
 
-# Run tests if executed directly
 if __name__ == "__main__":
-    pytest.main(["-v", __file__])
+    pytest.main([__file__])

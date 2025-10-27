@@ -279,27 +279,43 @@ class MockFluentWindow(MockQWidget):
 
 class MockDownloadManager:
     def __init__(self) -> None:
+        # Legacy callbacks (DEPRECATED)
         self.on_task_progress = None
         self.on_task_status_changed = None
         self.on_task_completed = None
         self.on_task_failed = None
         self.tasks = {}
-        
+        self._subscribers = {}
+
+    def subscribe(self, event_type, callback, weak=True) -> bool:
+        """Mock subscribe method for event system"""
+        if event_type not in self._subscribers:
+            self._subscribers[event_type] = []
+        self._subscribers[event_type].append(callback)
+        return True
+
+    def unsubscribe(self, event_type, callback) -> bool:
+        """Mock unsubscribe method for event system"""
+        if event_type in self._subscribers and callback in self._subscribers[event_type]:
+            self._subscribers[event_type].remove(callback)
+            return True
+        return False
+
     def get_all_tasks(self) -> None:
         return self.tasks
-        
+
     def start_task(self, task_id) -> None:
         pass
-        
+
     def pause_task(self, task_id) -> None:
         pass
-        
+
     def resume_task(self, task_id) -> None:
         pass
-        
+
     def cancel_task(self, task_id) -> None:
         pass
-        
+
     def remove_task(self, task_id) -> None:
         if task_id in self.tasks:
             del self.tasks[task_id]

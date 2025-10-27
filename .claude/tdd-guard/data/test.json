@@ -1,0 +1,144 @@
+{
+  "testModules": [
+    {
+      "moduleId": "tests/core/test_scheduler.py",
+      "tests": [
+        {
+          "name": "test_init_defaults",
+          "fullName": "tests/core/test_scheduler.py::TestSchedulerTask::test_init_defaults",
+          "state": "passed"
+        },
+        {
+          "name": "test_init_with_values",
+          "fullName": "tests/core/test_scheduler.py::TestSchedulerTask::test_init_with_values",
+          "state": "passed"
+        },
+        {
+          "name": "test_calculate_next_run_one_time_future",
+          "fullName": "tests/core/test_scheduler.py::TestSchedulerTask::test_calculate_next_run_one_time_future",
+          "state": "passed"
+        },
+        {
+          "name": "test_calculate_next_run_one_time_past",
+          "fullName": "tests/core/test_scheduler.py::TestSchedulerTask::test_calculate_next_run_one_time_past",
+          "state": "passed"
+        },
+        {
+          "name": "test_calculate_next_run_daily",
+          "fullName": "tests/core/test_scheduler.py::TestSchedulerTask::test_calculate_next_run_daily",
+          "state": "passed"
+        },
+        {
+          "name": "test_calculate_next_run_weekly",
+          "fullName": "tests/core/test_scheduler.py::TestSchedulerTask::test_calculate_next_run_weekly",
+          "state": "passed"
+        },
+        {
+          "name": "test_calculate_next_run_interval",
+          "fullName": "tests/core/test_scheduler.py::TestSchedulerTask::test_calculate_next_run_interval",
+          "state": "passed"
+        },
+        {
+          "name": "test_mark_executed",
+          "fullName": "tests/core/test_scheduler.py::TestSchedulerTask::test_mark_executed",
+          "state": "passed"
+        },
+        {
+          "name": "test_enable_disable",
+          "fullName": "tests/core/test_scheduler.py::TestSchedulerTask::test_enable_disable",
+          "state": "passed"
+        },
+        {
+          "name": "test_to_dict",
+          "fullName": "tests/core/test_scheduler.py::TestSchedulerTask::test_to_dict",
+          "state": "passed"
+        },
+        {
+          "name": "test_from_dict",
+          "fullName": "tests/core/test_scheduler.py::TestSchedulerTask::test_from_dict",
+          "state": "passed"
+        },
+        {
+          "name": "test_init_default_config_dir",
+          "fullName": "tests/core/test_scheduler.py::TestTaskScheduler::test_init_default_config_dir",
+          "state": "passed"
+        },
+        {
+          "name": "test_init_custom_config_dir",
+          "fullName": "tests/core/test_scheduler.py::TestTaskScheduler::test_init_custom_config_dir",
+          "state": "passed"
+        },
+        {
+          "name": "test_register_handler",
+          "fullName": "tests/core/test_scheduler.py::TestTaskScheduler::test_register_handler",
+          "state": "passed"
+        },
+        {
+          "name": "test_add_task",
+          "fullName": "tests/core/test_scheduler.py::TestTaskScheduler::test_add_task",
+          "state": "passed"
+        },
+        {
+          "name": "test_remove_task",
+          "fullName": "tests/core/test_scheduler.py::TestTaskScheduler::test_remove_task",
+          "state": "passed"
+        },
+        {
+          "name": "test_enable_task",
+          "fullName": "tests/core/test_scheduler.py::TestTaskScheduler::test_enable_task",
+          "state": "passed"
+        },
+        {
+          "name": "test_disable_task",
+          "fullName": "tests/core/test_scheduler.py::TestTaskScheduler::test_disable_task",
+          "state": "passed"
+        },
+        {
+          "name": "test_get_task",
+          "fullName": "tests/core/test_scheduler.py::TestTaskScheduler::test_get_task",
+          "state": "passed"
+        },
+        {
+          "name": "test_get_all_tasks",
+          "fullName": "tests/core/test_scheduler.py::TestTaskScheduler::test_get_all_tasks",
+          "state": "passed"
+        },
+        {
+          "name": "test_load_tasks",
+          "fullName": "tests/core/test_scheduler.py::TestTaskScheduler::test_load_tasks",
+          "state": "passed"
+        },
+        {
+          "name": "test_save_tasks",
+          "fullName": "tests/core/test_scheduler.py::TestTaskScheduler::test_save_tasks",
+          "state": "passed"
+        },
+        {
+          "name": "test_start_stop_scheduler",
+          "fullName": "tests/core/test_scheduler.py::TestTaskScheduler::test_start_stop_scheduler",
+          "state": "passed"
+        },
+        {
+          "name": "test_scheduler_loop",
+          "fullName": "tests/core/test_scheduler.py::TestTaskScheduler::test_scheduler_loop",
+          "state": "passed"
+        },
+        {
+          "name": "test_execute_task",
+          "fullName": "tests/core/test_scheduler.py::TestTaskScheduler::test_execute_task",
+          "state": "passed"
+        },
+        {
+          "name": "test_execute_task_no_handler",
+          "fullName": "tests/core/test_scheduler.py::TestTaskScheduler::test_execute_task_no_handler",
+          "state": "passed"
+        },
+        {
+          "name": "test_execute_task_handler_exception",
+          "fullName": "tests/core/test_scheduler.py::TestTaskScheduler::test_execute_task_handler_exception",
+          "state": "passed"
+        }
+      ]
+    }
+  ]
+}

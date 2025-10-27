@@ -3,50 +3,50 @@
 /* Responsive breakpoints matching the Python ResponsiveManager */
 /* xs: < 576px, sm: >= 576px, md: >= 768px, lg: >= 992px, xl: >= 1200px, xxl: >= 1400px */
 
-/* Base responsive container styles */
+/* Base responsive container styles - optimized for compactness */
 .ResponsiveContainer {
-    padding: 16px;
+    padding: 12px;
     transition: padding 0.3s ease;
 }
 
 /* Extra small screens (< 576px) */
 @media (max-width: 575px) {
     .ResponsiveContainer {
-        padding: 8px;
+        padding: 6px;
     }
-    
+
     /* Stack navigation vertically */
     NavigationInterface {
         max-width: 48px !important;
         min-width: 48px !important;
     }
-    
+
     /* Stack cards vertically */
     .dashboard-cards {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 6px;
     }
-    
+
     /* Reduce font sizes */
     TitleLabel {
         font-size: 18px;
     }
-    
+
     StrongBodyLabel {
         font-size: 14px;
     }
-    
+
     BodyLabel {
         font-size: 12px;
     }
-    
+
     /* Compact buttons */
     PrimaryPushButton {
-        padding: 6px 12px;
-        min-height: 32px;
+        padding: 5px 10px;
+        min-height: 30px;
     }
-    
+
     /* Hide less important elements */
     .optional-info {
         display: none;
@@ -56,23 +56,23 @@
 /* Small screens (576px - 767px) */
 @media (min-width: 576px) and (max-width: 767px) {
     .ResponsiveContainer {
-        padding: 12px;
+        padding: 10px;
     }
-    
+
     NavigationInterface {
         max-width: 48px !important;
     }
-    
+
     .dashboard-cards {
         display: grid;
         grid-template-columns: 1fr;
-        gap: 12px;
+        gap: 10px;
     }
-    
+
     TitleLabel {
         font-size: 20px;
     }
-    
+
     StrongBodyLabel {
         font-size: 15px;
     }
@@ -81,19 +81,19 @@
 /* Medium screens (768px - 991px) */
 @media (min-width: 768px) and (max-width: 991px) {
     .ResponsiveContainer {
-        padding: 16px;
+        padding: 12px;
     }
-    
+
     NavigationInterface {
         max-width: 200px !important;
     }
-    
+
     .dashboard-cards {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
+        gap: 12px;
     }
-    
+
     TitleLabel {
         font-size: 22px;
     }
@@ -221,34 +221,35 @@
     }
 }
 
+/* Responsive padding utility - optimized for compactness */
 .p-responsive {
-    padding: 8px;
-    
+    padding: 6px;
+
     @media (min-width: 576px) {
+        padding: 10px;
+    }
+
+    @media (min-width: 768px) {
         padding: 12px;
     }
-    
-    @media (min-width: 768px) {
+
+    @media (min-width: 992px) {
         padding: 16px;
     }
-    
-    @media (min-width: 992px) {
-        padding: 24px;
-    }
-    
+
     @media (min-width: 1200px) {
-        padding: 32px;
+        padding: 20px;
     }
 }
 
-/* Responsive card layouts */
+/* Responsive card layouts - optimized for compactness */
 ElevatedCardWidget {
     transition: all 0.3s ease;
 }
 
 @media (max-width: 767px) {
     ElevatedCardWidget {
-        margin: 8px 0;
+        margin: 6px 0;
         border-radius: 8px;
     }
 }

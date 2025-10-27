@@ -35,6 +35,7 @@ from .progressive_recovery import progressive_recovery_manager
 from .segment_validator import segment_validator, ValidationResult
 from .intelligent_recovery import intelligent_recovery_system
 from .integrity_verifier import content_integrity_verifier, IntegrityLevel
+from .event_dispatcher import get_event_dispatcher, EventType, Event
 
 
 class TaskStatus(Enum):
@@ -366,7 +367,10 @@ class DownloadManager:
         self.bandwidth_limiter = None
         self.bandwidth_limit = 0
 
-        # Signal handling and callbacks
+        # Event dispatcher (Pure Python event system)
+        self.event_dispatcher = get_event_dispatcher()
+
+        # Signal handling and callbacks (DEPRECATED - use event_dispatcher instead)
         self.on_task_progress = None
         self.on_task_status_changed = None
         self.on_task_completed = None
@@ -929,7 +933,18 @@ class DownloadManager:
 
     def _emit_status_changed(self, task_id: str, old_status: Optional[TaskStatus], new_status: TaskStatus) -> None:
         """Emit task status change event"""
-        # Call old callback system
+        # Emit via event dispatcher (NEW - Pure Python)
+        self.event_dispatcher.emit(
+            EventType.TASK_STATUS_CHANGED,
+            {
+                "task_id": task_id,
+                "old_status": old_status.value if old_status else None,
+                "new_status": new_status.value
+            },
+            source="DownloadManager"
+        )
+
+        # Call old callback system (DEPRECATED - for backward compatibility)
         if self.on_task_status_changed:
             event: EventTuple = ("status_changed", task_id,
                                  old_status, new_status)
@@ -944,7 +959,17 @@ class DownloadManager:
 
     def _emit_progress(self, task_id: str, progress: ProgressDict) -> None:
         """Emit task progress event"""
-        # Call old callback system
+        # Emit via event dispatcher (NEW - Pure Python)
+        self.event_dispatcher.emit(
+            EventType.TASK_PROGRESS,
+            {
+                "task_id": task_id,
+                "progress": progress
+            },
+            source="DownloadManager"
+        )
+
+        # Call old callback system (DEPRECATED - for backward compatibility)
         if self.on_task_progress:
             event: EventTuple = ("progress", task_id, progress)
             self.event_queue.put(event)
@@ -958,6 +983,27 @@ class DownloadManager:
 
     def _emit_completed(self, task_id: str, success: bool, message: str) -> None:
         """Emit task completion event"""
+        # Emit via event dispatcher (NEW - Pure Python)
+        if success:
+            self.event_dispatcher.emit(
+                EventType.TASK_COMPLETED,
+                {
+                    "task_id": task_id,
+                    "message": message
+                },
+                source="DownloadManager"
+            )
+        else:
+            self.event_dispatcher.emit(
+                EventType.TASK_FAILED,
+                {
+                    "task_id": task_id,
+                    "message": message
+                },
+                source="DownloadManager"
+            )
+
+        # Old callback system (DEPRECATED - for backward compatibility)
         if success and self.on_task_completed:
             completion_event: EventTuple = ("completed", task_id, message)
             self.event_queue.put(completion_event)
@@ -1627,13 +1673,50 @@ class DownloadManager:
         with self.lock:
             return [task_id for task_id, task in self.tasks.items() if task.status == status]
 
+    # Event subscription API (NEW - Pure Python event system)
+    def subscribe(self, event_type: EventType, callback: Callable[[Event], None], weak: bool = True) -> bool:
+        """
+        Subscribe to download manager events using the pure Python event system.
+
+        Args:
+            event_type: Type of event to subscribe to (e.g., EventType.TASK_PROGRESS)
+            callback: Callback function that receives Event objects
+            weak: Use weak references to prevent memory leaks (default: True)
+
+        Returns:
+            bool: True if subscription successful
+
+        Example:
+            def on_progress(event: Event):
+                task_id = event.data["task_id"]
+                progress = event.data["progress"]
+                print(f"Task {task_id}: {progress['percent']}%")
+
+            manager.subscribe(EventType.TASK_PROGRESS, on_progress)
+        """
+        return self.event_dispatcher.subscribe(event_type, callback, weak=weak)
+
+    def unsubscribe(self, event_type: EventType, callback: Callable[[Event], None]) -> bool:
+        """
+        Unsubscribe from download manager events.
+
+        Args:
+            event_type: Type of event to unsubscribe from
+            callback: Callback function to remove
+
+        Returns:
+            bool: True if unsubscription successful
+        """
+        return self.event_dispatcher.unsubscribe(event_type, callback)
+
+    # Legacy callback API (DEPRECATED - use subscribe() instead)
     def set_progress_callback(self, callback: Callable[[str, ProgressDict], None]) -> None:
-        """Set progress callback"""
+        """Set progress callback (DEPRECATED - use subscribe(EventType.TASK_PROGRESS, ...) instead)"""
         self.progress_callbacks.append(callback)
         self.on_task_progress = callback  # Also set old-style callback for compatibility
 
     def set_status_changed_callback(self, callback: Callable[[str, Optional[TaskStatus], TaskStatus], None]) -> None:
-        """Set status changed callback"""
+        """Set status changed callback (DEPRECATED - use subscribe(EventType.TASK_STATUS_CHANGED, ...) instead)"""
         self.status_callbacks.append(callback)
         self.on_task_status_changed = callback  # Also set old-style callback for compatibility
 
@@ -1643,11 +1726,11 @@ class DownloadManager:
         logger.info(f"Bandwidth limit set to: {limit} bytes/sec" if limit else "Bandwidth limit removed")
 
     def set_task_completed_callback(self, callback: Callable[[str, str], None]) -> None:
-        """Set task completed callback"""
+        """Set task completed callback (DEPRECATED - use subscribe(EventType.TASK_COMPLETED, ...) instead)"""
         self.on_task_completed = callback
 
     def set_task_failed_callback(self, callback: Callable[[str, str], None]) -> None:
-        """Set task failed callback"""
+        """Set task failed callback (DEPRECATED - use subscribe(EventType.TASK_FAILED, ...) instead)"""
         self.on_task_failed = callback
 
     def get_comprehensive_stats(self) -> Dict[str, Any]:

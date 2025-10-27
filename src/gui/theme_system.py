@@ -34,8 +34,11 @@ class ThemeableComponent:
     """Interface for components that can be themed"""
     
     def apply_theme(self, config: ThemeConfiguration) -> None:
-        """Apply theme configuration to this component"""
-        raise NotImplementedError
+        """Apply theme configuration to this component
+        
+        This method should be implemented by concrete component classes.
+        """
+        raise NotImplementedError("Components must implement apply_theme() method")
     
     def get_theme_requirements(self) -> Dict[str, Any]:
         """Get theme requirements for this component"""
@@ -218,8 +221,18 @@ class ThemeSystem(QObject):
     
     def _apply_widget_theme(self, widget: QWidget, config: ThemeConfiguration) -> None:
         """Apply theme to a standard QWidget"""
-        # Basic theme application for QWidget
-        pass
+        try:
+            # Apply basic styling based on theme mode
+            if hasattr(widget, 'setStyleSheet'):
+                # Update widget to reflect current theme
+                widget.update()
+            
+            # Recursively update child widgets
+            for child in widget.findChildren(QWidget):
+                if isinstance(child, QWidget):
+                    child.update()
+        except Exception as e:
+            logger.debug(f"Error applying widget theme: {e}")
     
     def _schedule_component_update(self) -> None:
         """Schedule a batched component update"""

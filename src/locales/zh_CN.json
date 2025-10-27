@@ -15,7 +15,7 @@
     "subtitle": "管理您的视频下载任务",
     "welcome": {
       "title": "欢迎使用 VidTanium",
-      "subtitle": "强大的视频下载工具",
+      "subtitle": "视频下载工具",
       "description": "轻松下载和管理您的视频内容"
     },
     "actions": {
@@ -122,7 +122,17 @@
       "clear": "清除日志",
       "export": "导出日志"
     },
-    "init_failed": "日志查看器初始化失败"
+    "messages": {
+      "success": "成功",
+      "warning": "警告",
+      "error": "错误",
+      "cleared": "日志已成功清除",
+      "exported": "日志已导出到 {0}",
+      "export_failed": "导出日志失败：{0}",
+      "no_logs_to_export": "没有可导出的日志"
+    },
+    "init_failed": "日志查看器初始化失败",
+    "fallback_message": "日志查看器正在以后备模式运行"
   },
   "settings": {
     "title": "应用设置",
@@ -991,5 +1001,211 @@
     "audio_feedback": "音频反馈",
     "reduced_motion": "减少动画",
     "app_ready": "VidTanium应用程序已准备就绪"
+  },
+  "analytics": {
+    "title": "分析仪表板",
+    "eta_title": "预计时间",
+    "eta_unknown": "未知",
+    "confidence": "置信度",
+    "algorithm": "算法",
+    "speed_trend": "速度趋势",
+    "algorithm_simple": "简单线性",
+    "algorithm_exponential": "指数平滑",
+    "algorithm_weighted": "加权平均",
+    "algorithm_adaptive": "自适应混合",
+    "algorithm_regression": "基于回归",
+    "trend_increasing": "上升 ↑",
+    "trend_decreasing": "下降 ↓",
+    "trend_stable": "稳定 —",
+    "bandwidth_title": "带宽分析",
+    "optimization_suggestions": "优化建议"
+  },
+  "bulk_ops": {
+    "title": "批量操作",
+    "selection_title": "任务选择",
+    "select_all": "全选",
+    "select_none": "全不选",
+    "invert_selection": "反选",
+    "filter_by_status": "按状态筛选:",
+    "filter_by_size": "按大小筛选:",
+    "filter_by_pattern": "搜索模式:",
+    "any_status": "任何状态",
+    "status_pending": "等待中",
+    "status_running": "运行中",
+    "status_paused": "已暂停",
+    "status_completed": "已完成",
+    "status_failed": "失败",
+    "min_size": "最小 (MB)",
+    "max_size": "最大 (MB)",
+    "search_pattern": "输入搜索模式...",
+    "apply_filters": "应用筛选",
+    "operations_title": "批量操作",
+    "start_selected": "启动选中",
+    "pause_selected": "暂停选中",
+    "delete_selected": "删除选中",
+    "export_selected": "导出选中",
+    "priority_high": "设为高优先级",
+    "priority_normal": "设为普通优先级",
+    "priority_low": "设为低优先级",
+    "confirm_bulk_action": "确认批量操作",
+    "confirm_message": "确定要对 {count} 个任务执行此操作吗？",
+    "success_message": "成功对 {count} 个任务执行操作",
+    "error_message": "执行操作失败: {error}"
+  },
+  "error_dialog": {
+    "title": "错误详情",
+    "suggested_actions": "建议操作",
+    "technical_details": "技术详情",
+    "actions_tab": "操作",
+    "details_tab": "详情",
+    "copy_details": "复制详情",
+    "retry": "重试",
+    "dismiss": "关闭",
+    "severity_low": "低",
+    "severity_medium": "中",
+    "severity_high": "高",
+    "severity_critical": "严重",
+    "category_network": "网络错误",
+    "category_filesystem": "文件系统错误",
+    "category_validation": "验证错误",
+    "category_authentication": "身份验证错误",
+    "category_unknown": "未知错误"
+  },
+  "progress": {
+    "downloading": "下载中",
+    "processing": "处理中",
+    "completed": "已完成",
+    "speed": "速度",
+    "eta": "预计时间",
+    "downloaded": "已下载",
+    "total": "总计",
+    "segments": "片段"
+  },
+  "tooltip": {
+    "show_details": "点击显示详情",
+    "hide_details": "点击隐藏详情",
+    "copy": "复制到剪贴板",
+    "open_folder": "打开所在文件夹",
+    "delete": "删除任务",
+    "retry": "重试下载"
+  },
+  "history": {
+    "title": "历史记录",
+    "urls": "URL历史",
+    "outputs": "输出历史",
+    "empty": "无历史记录",
+    "no_urls": "无URL历史记录",
+    "no_outputs": "无输出历史记录",
+    "recent_urls": "最近URL",
+    "clear_history": "清除历史"
+  },
+  "dialog": {
+    "clear_confirm": "确认清空",
+    "clear_confirm_message": "确定要清空所有字段吗？此操作无法撤销。"
+  },
+  "analysis": {
+    "suggestions": "分析建议"
+  },
+  "download_path": "保存路径",
+  "task_manager": {
+    "unknown_task": "未知任务",
+    "download_path": "下载路径"
+  },
+  "cli": {
+    "welcome": {
+      "title": "欢迎使用 VidTanium 命令行工具",
+      "subtitle": "视频下载工具"
+    },
+    "messages": {
+      "interrupted": "操作已被用户中断",
+      "goodbye": "感谢使用 VidTanium！",
+      "no_tasks": "未找到任务",
+      "no_command": "未指定命令",
+      "use_help": "使用 --help 查看可用选项"
+    },
+    "errors": {
+      "unexpected": "意外错误：{error}",
+      "suggestions": "建议操作",
+      "initialization_failed": "CLI 应用初始化失败",
+      "invalid_url": "提供的 URL 无效",
+      "task_not_found": "未找到任务：{task_id}",
+      "download_failed": "下载失败：{error}",
+      "network_error": "网络错误：{error}",
+      "permission_error": "权限被拒绝：{error}"
+    },
+    "status": {
+      "pending": "等待中",
+      "running": "运行中",
+      "paused": "已暂停",
+      "completed": "已完成",
+      "failed": "失败",
+      "canceled": "已取消"
+    },
+    "commands": {
+      "analyze": {
+        "started": "正在分析 URL：{url}",
+        "completed": "分析完成",
+        "failed": "分析失败：{error}"
+      },
+      "download": {
+        "started": "开始下载：{url}",
+        "progress": "下载中：{progress}%",
+        "completed": "下载完成：{name}",
+        "failed": "下载失败：{error}"
+      },
+      "list": {
+        "started": "正在列出任务...",
+        "empty": "没有任务可显示"
+      },
+      "pause": {
+        "success": "任务已暂停：{task_id}",
+        "failed": "暂停任务失败：{error}"
+      },
+      "resume": {
+        "success": "任务已恢复：{task_id}",
+        "failed": "恢复任务失败：{error}"
+      },
+      "cancel": {
+        "success": "任务已取消：{task_id}",
+        "failed": "取消任务失败：{error}",
+        "confirm": "确定要取消此任务吗？"
+      }
+    },
+    "task_list": {
+      "title": "下载任务",
+      "id": "ID",
+      "name": "名称",
+      "status": "状态",
+      "progress": "进度",
+      "speed": "速度",
+      "eta": "预计剩余时间"
+    },
+    "progress": {
+      "downloading": "正在下载 {name}",
+      "segments": "{completed}/{total} 个片段",
+      "speed": "{speed} MB/s",
+      "eta": "预计剩余：{time}",
+      "completed": "完成于 {time}"
+    },
+    "settings": {
+      "title": "设置",
+      "current": "当前设置",
+      "updated": "设置已更新：{key} = {value}",
+      "invalid_key": "无效的设置键：{key}",
+      "invalid_value": "{key} 的值无效：{value}"
+    },
+    "interactive": {
+      "select_task": "选择一个任务：",
+      "confirm_action": "确认操作：{action}",
+      "enter_url": "输入视频 URL：",
+      "enter_output": "输入输出文件路径（可选）：",
+      "press_key": "按任意键继续..."
+    },
+    "monitoring": {
+      "title": "实时下载监控",
+      "active_downloads": "活跃下载：{count}",
+      "total_speed": "总速度：{speed} MB/s",
+      "press_q": "按 'q' 退出"
+    }
   }
 }

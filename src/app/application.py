@@ -144,10 +144,13 @@ class Application(QApplication):
         return cls._instance
 
     def __init__(self, config_dir=None, cli_args=None) -> None:
+        # CRITICAL: Check initialization BEFORE calling super().__init__()
+        # to prevent Qt from creating duplicate application state
         if hasattr(self, '_initialized') and self._initialized:
             logger.debug("Application already initialized, skipping")
             return
 
+        # Only call QApplication.__init__ once for the singleton instance
         super().__init__(sys.argv)
         self._initialized = True
         self._config_dir = config_dir
@@ -195,14 +198,16 @@ class Application(QApplication):
         )
 
         # UI components phase
-        self._initializer.register_step(
-            InitializationPhase.UI_COMPONENTS,
-            InitializationStep("system_tray", self._init_system_tray, ["theme_manager"])
-        )
+        # CRITICAL: main_window MUST be initialized before system_tray
+        # because system_tray references self.main_window
         self._initializer.register_step(
             InitializationPhase.UI_COMPONENTS,
             InitializationStep("main_window", self._init_main_window,
                              ["theme_manager", "download_manager", "task_scheduler"])
+        )
+        self._initializer.register_step(
+            InitializationPhase.UI_COMPONENTS,
+            InitializationStep("system_tray", self._init_system_tray, ["main_window"])
         )
 
         # Finalization phase
@@ -256,45 +261,7 @@ class Application(QApplication):
         self.main_window = MainWindow(
             cast(AppType, self), self.download_manager, cast(SettingsType, self.settings), self.theme_manager)
 
-    def _init_core_systems(self) -> None:
-        """Initialize core application systems"""
-        # Set application properties (only once)
-        self.setApplicationName("VidTanium")
-        self.setApplicationVersion("0.1.0")
-        self.setOrganizationName("VidTanium Team")
-        self.setOrganizationDomain("vidtanium.com")
 
-        # Initialize settings and validate/fix them immediately
-        self.settings = Settings(self._config_dir, cli_args=self._cli_args)
-        self._validate_and_fix_settings()
-
-        # Initialize i18n system and apply language in one step
-        init_i18n()
-        self._i18n_initialized = True
-        self._apply_language()
-
-    def _init_managers(self) -> None:
-        """Initialize application managers"""
-        # Initialize theme manager
-        from src.gui.theme_manager import EnhancedThemeManager
-        self.theme_manager = EnhancedThemeManager(self.settings, self)
-
-        # Initialize download manager
-        self.download_manager = DownloadManager(self.settings)
-
-        # Initialize task scheduler and register handlers immediately
-        self.task_scheduler = TaskScheduler(self._config_dir)
-        self.task_scheduler.register_handler("download", self._handle_download_task)
-
-    def _init_ui_components(self) -> None:
-        """Initialize UI components"""
-        self._init_system_tray()
-
-        # Create main window with all dependencies ready
-        from typing import cast
-        from src.gui.main_window import SettingsType, AppType
-        self.main_window = MainWindow(
-            cast(AppType, self), self.download_manager, cast(SettingsType, self.settings), self.theme_manager)
 
     def _finalize_initialization(self) -> None:
         """Finalize initialization process"""

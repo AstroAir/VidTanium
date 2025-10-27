@@ -2,11 +2,11 @@
 Thread Pool Manager for VidTanium
 
 Provides centralized thread pool management for performance optimization
-and better resource management.
+and better resource management. Pure Python implementation without Qt dependencies.
 """
 
-from PySide6.QtCore import QObject, QThreadPool, QRunnable, Signal
-from typing import Callable, Any, Optional, Dict, List
+from concurrent.futures import ThreadPoolExecutor, Future
+from typing import Callable, Any, Optional, Dict, List, Tuple
 import sys
 import traceback
 import threading
@@ -15,58 +15,69 @@ from loguru import logger
 from .resource_manager import resource_manager, ResourceType, register_for_cleanup
 
 
-class WorkerSignals(QObject):
-    """Defines the signals available from a running worker thread."""
+class WorkerCallbacks:
+    """Container for worker callbacks (replaces Qt signals)"""
 
-    finished = Signal()  # No data
-    error = Signal(tuple)  # (exception_type, value, traceback)
-    result = Signal(object)  # Result data
-    progress = Signal(int)  # Progress percentage
+    def __init__(self):
+        self.on_finished: Optional[Callable[[], None]] = None
+        self.on_error: Optional[Callable[[Tuple], None]] = None
+        self.on_result: Optional[Callable[[Any], None]] = None
+        self.on_progress: Optional[Callable[[int], None]] = None
 
 
-class Worker(QRunnable):
-    """Worker thread for running tasks in the thread pool."""
+class Worker:
+    """Worker task for running in the thread pool (replaces QRunnable)"""
 
     def __init__(self, fn: Callable, *args, **kwargs) -> None:
-        super().__init__()
-
-        # Store constructor arguments (re-used for processing)
+        # Store constructor arguments
         self.fn = fn
         self.args = args
         self.kwargs = kwargs
-        self.signals = WorkerSignals()
+        self.callbacks = WorkerCallbacks()
 
         # Worker tracking attributes
         self.worker_id: Optional[str] = None
         self.is_running: bool = False
         self.priority: int = 0
+        self.future: Optional[Future] = None
 
-        # Add the progress callback to our kwargs
-        if 'progress_callback' in kwargs:
-            del kwargs['progress_callback']
+        # Extract progress callback if provided
+        self.progress_callback = kwargs.pop('progress_callback', None)
 
-    def run(self) -> None:
-        """Execute the worker function with exception handling."""
+    def __call__(self) -> Any:
+        """Execute the worker function with exception handling"""
+        self.is_running = True
         try:
             result = self.fn(*self.args, **self.kwargs)
+            if self.callbacks.on_result:
+                self.callbacks.on_result(result)
+            return result
         except Exception:
             exctype, value, tb = sys.exc_info()
             logger.error(f"Worker thread error: {value}")
             logger.error(
                 f"Traceback: {''.join(traceback.format_exception(exctype, value, tb))}")
-            self.signals.error.emit((exctype, value, tb))
-        else:
-            self.signals.result.emit(result)
+            if self.callbacks.on_error:
+                self.callbacks.on_error((exctype, value, tb))
+            raise
         finally:
-            self.signals.finished.emit()
+            self.is_running = False
+            if self.callbacks.on_finished:
+                self.callbacks.on_finished()
 
 
-class ThreadPoolManager(QObject):
-    """Enhanced centralized thread pool manager with resource optimization."""
+class ThreadPoolManager:
+    """Enhanced centralized thread pool manager with resource optimization (Pure Python)"""
 
     def __init__(self, max_threads: Optional[int] = None) -> None:
-        super().__init__()
-        self.pool = QThreadPool()
+        # Determine thread count
+        self._max_threads = self._calculate_thread_count(max_threads)
+
+        # Create thread pool executor
+        self.pool = ThreadPoolExecutor(
+            max_workers=self._max_threads,
+            thread_name_prefix="VidTanium-Worker"
+        )
 
         # Thread tracking and management
         self.active_workers: Dict[str, Worker] = {}
@@ -78,8 +89,8 @@ class ThreadPoolManager(QObject):
         self.total_tasks_completed = 0
         self.total_tasks_failed = 0
 
-        # Dynamic thread management
-        self._setup_thread_limits(max_threads)
+        # Shutdown flag
+        self._shutdown = False
 
         # Register for resource management
         register_for_cleanup(
@@ -90,35 +101,35 @@ class ThreadPoolManager(QObject):
         )
 
         logger.info(
-            f"Enhanced thread pool initialized with {self.pool.maxThreadCount()} threads")
+            f"Enhanced thread pool initialized with {self._max_threads} threads")
 
-    def _setup_thread_limits(self, max_threads: Optional[int]) -> None:
-        """Setup thread limits based on system resources"""
+    def _calculate_thread_count(self, max_threads: Optional[int]) -> int:
+        """Calculate optimal thread count based on system resources"""
         if max_threads:
-            self.pool.setMaxThreadCount(max_threads)
-        else:
-            # Dynamic thread count based on system resources
-            import os
-            cpu_count = os.cpu_count() or 4
+            return max_threads
 
-            try:
-                # Try to get memory info for better thread allocation
-                import psutil
-                memory_gb = psutil.virtual_memory().total / (1024**3)
+        # Dynamic thread count based on system resources
+        import os
+        cpu_count = os.cpu_count() or 4
 
-                # Adjust thread count based on available memory
-                if memory_gb < 4:
-                    max_threads = max(2, min(cpu_count, 8))
-                elif memory_gb < 8:
-                    max_threads = max(4, min(int(cpu_count * 1.5), 12))
-                else:
-                    max_threads = max(4, min(cpu_count * 2, 16))
+        try:
+            # Try to get memory info for better thread allocation
+            import psutil
+            memory_gb = psutil.virtual_memory().total / (1024**3)
 
-            except ImportError:
-                # Fallback if psutil not available
-                max_threads = max(4, min(cpu_count * 2, 16))
+            # Adjust thread count based on available memory
+            if memory_gb < 4:
+                calculated_threads = max(2, min(cpu_count, 8))
+            elif memory_gb < 8:
+                calculated_threads = max(4, min(int(cpu_count * 1.5), 12))
+            else:
+                calculated_threads = max(4, min(cpu_count * 2, 16))
 
-            self.pool.setMaxThreadCount(int(max_threads))
+        except ImportError:
+            # Fallback if psutil not available
+            calculated_threads = max(4, min(cpu_count * 2, 16))
+
+        return int(calculated_threads)
 
     def _cleanup_completed_workers(self) -> None:
         """Clean up completed workers and their resources"""
@@ -159,6 +170,9 @@ class ThreadPoolManager(QObject):
         Returns:
             Worker: The worker instance
         """
+        if self._shutdown:
+            raise RuntimeError("Cannot submit task to shutdown thread pool")
+
         # Check if we should throttle based on system resources
         if self._should_throttle():
             logger.warning("Thread pool throttling due to high resource usage")
@@ -167,7 +181,6 @@ class ThreadPoolManager(QObject):
         worker = Worker(function, *args, **kwargs)
         worker_id = f"{function.__name__}_{id(worker)}"
         worker.worker_id = worker_id
-        worker.is_running = True
         worker.priority = priority
 
         # Enhanced callback wrapping for tracking
@@ -181,11 +194,11 @@ class ThreadPoolManager(QObject):
             if error_callback:
                 error_callback(error)
 
-        # Connect callbacks
-        worker.signals.result.connect(wrapped_callback)
-        worker.signals.error.connect(wrapped_error_callback)
+        # Set callbacks on worker
+        worker.callbacks.on_result = wrapped_callback
+        worker.callbacks.on_error = wrapped_error_callback
         if progress_callback:
-            worker.signals.progress.connect(progress_callback)
+            worker.callbacks.on_progress = progress_callback
 
         # Track worker
         with self.lock:
@@ -197,8 +210,8 @@ class ThreadPoolManager(QObject):
             }
             self.total_tasks_submitted += 1
 
-        # Submit to thread pool
-        self.pool.start(worker)
+        # Submit to thread pool and store future
+        worker.future = self.pool.submit(worker)
 
         # Only log non-stats tasks to reduce noise
         if function.__name__ != '_calculate_stats':
@@ -209,8 +222,11 @@ class ThreadPoolManager(QObject):
     def _should_throttle(self) -> bool:
         """Check if we should throttle task submission based on system resources"""
         try:
-            # Check active thread count
-            if self.pool.activeThreadCount() >= self.pool.maxThreadCount() * 0.9:
+            # Check active worker count
+            with self.lock:
+                active_count = sum(1 for w in self.active_workers.values() if w.is_running)
+
+            if active_count >= self._max_threads * 0.9:
                 return True
 
             # Check memory usage if psutil is available
@@ -255,25 +271,48 @@ class ThreadPoolManager(QObject):
         Returns:
             bool: True if all tasks completed, False if timeout
         """
-        return bool(self.pool.waitForDone(timeout_ms))
+        timeout_sec = timeout_ms / 1000.0
+        try:
+            # Shutdown with wait, but don't prevent new submissions
+            # Just wait for current tasks
+            with self.lock:
+                futures = [w.future for w in self.active_workers.values() if w.future]
 
-    def clear(self) -> None:
-        """Clear all pending tasks."""
-        self.pool.clear()
-        logger.info("Thread pool cleared")
+            if not futures:
+                return True
+
+            # Wait for all futures with timeout
+            from concurrent.futures import wait, FIRST_COMPLETED, ALL_COMPLETED
+            done, not_done = wait(futures, timeout=timeout_sec, return_when=ALL_COMPLETED)
+
+            return len(not_done) == 0
+        except Exception as e:
+            logger.error(f"Error waiting for tasks: {e}")
+            return False
+
+    def shutdown(self, wait: bool = True) -> None:
+        """Shutdown the thread pool"""
+        self._shutdown = True
+        self.pool.shutdown(wait=wait)
+        logger.info("Thread pool shutdown completed")
 
     def active_thread_count(self) -> int:
-        """Get the number of active threads."""
-        return int(self.pool.activeThreadCount())
+        """Get the number of active threads"""
+        with self.lock:
+            return sum(1 for w in self.active_workers.values() if w.is_running)
 
     def max_thread_count(self) -> int:
-        """Get the maximum thread count."""
-        return int(self.pool.maxThreadCount())
+        """Get the maximum thread count"""
+        return self._max_threads
 
     def set_max_thread_count(self, count: int) -> None:
-        """Set the maximum thread count."""
-        self.pool.setMaxThreadCount(count)
-        logger.info(f"Thread pool max threads set to {count}")
+        """
+        Set the maximum thread count.
+        Note: ThreadPoolExecutor doesn't support dynamic resizing,
+        so this will only affect new pool instances.
+        """
+        logger.warning("ThreadPoolExecutor doesn't support dynamic thread count changes")
+        logger.info(f"Thread pool max threads would be set to {count} on next restart")
 
 
 # Global thread pool instance
@@ -317,10 +356,10 @@ def submit_task(function: Callable,
     )
 
 
-def shutdown_thread_pool() -> None:
+def shutdown_thread_pool(wait: bool = True) -> None:
     """Shutdown the global thread pool."""
     global _thread_pool_manager
     if _thread_pool_manager:
-        _thread_pool_manager.wait_for_done()
+        _thread_pool_manager.shutdown(wait=wait)
         _thread_pool_manager = None
-        logger.info("Thread pool shutdown completed")
+        logger.info("Global thread pool shutdown completed")

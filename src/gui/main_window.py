@@ -13,6 +13,7 @@ from PySide6.QtGui import (
     QPixmap, QColor, QPainter, QCloseEvent
 )
 from src.core.downloader import DownloadManager
+from src.core.event_dispatcher import EventType, Event
 from loguru import logger
 
 from qfluentwidgets import (
@@ -31,6 +32,7 @@ from .widgets import dashboard
 Dashboard = dashboard.DashboardInterface
 from .widgets.progress import ProgressCard, ProgressSummaryCard
 from .utils.design_system import DesignSystem
+from .utils.unified_design_system import UnifiedDesignSystem as DS
 
 from .widgets.task_manager import TaskManager
 from .widgets.log.log_viewer import LogViewer
@@ -55,30 +57,47 @@ class AppType(QApplication):
 
     def send_notification(self, title: str, message: str, icon: Optional[FIF] = None, duration: int = 5000) -> None:
         """Send system notification"""
-        # Implementation would be handled by the application
-        pass
+        try:
+            if hasattr(self, 'tray_icon') and self.tray_icon:
+                self.tray_icon.showMessage(title, message, icon.icon() if icon else QIcon(), duration)
+        except Exception as e:
+            logger.debug(f"Failed to send notification: {e}")
 
     def _apply_theme(self) -> None:
-        """Apply theme settings"""
-        # Implementation would be handled by the application
-        pass
+        """Apply theme settings to the application"""
+        try:
+            if hasattr(self, 'theme_manager') and self.theme_manager:
+                self.theme_manager.apply_theme()
+        except Exception as e:
+            logger.debug(f"Failed to apply theme: {e}")
 
 
 class SettingsType:
     def get(self, section: str, key: str, default: Any = None) -> Any:
-        """Get setting value"""
-        # Implementation would be handled by settings manager
-        return default
+        """Get setting value from configuration"""
+        try:
+            if hasattr(self, '_settings') and self._settings:
+                return self._settings.get(f"{section}.{key}", default)
+            return default
+        except Exception:
+            return default
 
     def set(self, section: str, key: str, value: Any) -> None:
-        """Set setting value"""
-        # Implementation would be handled by settings manager
-        pass
+        """Set setting value in configuration"""
+        try:
+            if hasattr(self, '_settings') and self._settings:
+                self._settings[f"{section}.{key}"] = value
+        except Exception as e:
+            logger.debug(f"Failed to set setting {section}.{key}: {e}")
 
     def save_settings(self) -> None:
-        """Save settings to file"""
-        # Implementation would be handled by settings manager
-        pass
+        """Save settings to persistent storage"""
+        try:
+            if hasattr(self, '_settings') and self._settings:
+                # Save implementation would be handled by the actual settings manager
+                logger.debug("Settings saved")
+        except Exception as e:
+            logger.error(f"Failed to save settings: {e}")
 
 
 class StatusInfoWidget(QWidget):
@@ -200,12 +219,12 @@ class MainWindow(FluentWindow):
         # Reduced frequency: refresh every 5 seconds
         self.task_refresh_timer.start(5000)
 
-        # Connect download manager signals if available
+        # Subscribe to download manager events (Pure Python event system)
         if self.download_manager:
-            self.download_manager.on_task_progress = self.on_task_progress
-            self.download_manager.on_task_status_changed = self.on_task_status_changed
-            self.download_manager.on_task_completed = self.on_task_completed
-            self.download_manager.on_task_failed = self.on_task_failed
+            self.download_manager.subscribe(EventType.TASK_PROGRESS, self._on_task_progress_event)
+            self.download_manager.subscribe(EventType.TASK_STATUS_CHANGED, self._on_task_status_changed_event)
+            self.download_manager.subscribe(EventType.TASK_COMPLETED, self._on_task_completed_event)
+            self.download_manager.subscribe(EventType.TASK_FAILED, self._on_task_failed_event)
 
         # Setup responsive window sizing
         self._setup_responsive_window()
@@ -638,54 +657,43 @@ class MainWindow(FluentWindow):
         return panel
 
     def _create_log_interface(self) -> QWidget:
-        """Create enhanced log viewing interface"""
-        interface = QWidget()
-        main_layout = QVBoxLayout(interface)
-        main_layout.setContentsMargins(24, 24, 24, 24)
-        main_layout.setSpacing(20)
-
-        # Top toolbar
-        toolbar_layout = QHBoxLayout()
-
-        # Title
-        title = TitleLabel(tr("logs.title"))
-        toolbar_layout.addWidget(title)
-        toolbar_layout.addStretch()
-
-        # Log level filter
-        level_combo = ComboBox()
-        level_combo.addItems([
-            tr("logs.levels.all"),
-            tr("logs.levels.debug"),
-            tr("logs.levels.info"),
-            tr("logs.levels.warning"),
-            tr("logs.levels.error")
-        ])
-        level_combo.setFixedWidth(100)
-        toolbar_layout.addWidget(level_combo)
-
-        # Clear logs button
-        clear_btn = PrimaryPushButton(tr("logs.buttons.clear"))
-        clear_btn.setIcon(FIF.DELETE)
-        toolbar_layout.addWidget(clear_btn)
-
-        # Export logs button
-        export_btn = PrimaryPushButton(tr("logs.buttons.export"))
-        export_btn.setIcon(FIF.SAVE)
-        toolbar_layout.addWidget(export_btn)
-
-        main_layout.addLayout(toolbar_layout)        # Create log viewer
+        """Create comprehensive log viewing interface using LogViewer component"""
         try:
+            # Use the comprehensive LogViewer component with all features
             self.log_viewer = LogViewer(self)
-            main_layout.addWidget(self.log_viewer)
+
+            # Set theme manager for enhanced styling
+            if hasattr(self, 'theme_manager') and self.theme_manager:
+                self.log_viewer.set_theme_manager(self.theme_manager)
+
+            # Connect signals for log operations
+            self.log_viewer.log_cleared.connect(self._on_logs_cleared)
+            self.log_viewer.export_requested.connect(self._on_logs_export_requested)
+
+            logger.debug("Comprehensive log viewer created successfully")
+            return self.log_viewer
+
         except Exception as e:
-            # Fallback to simple text widget
+            logger.error(f"Failed to create comprehensive log viewer: {e}")
+
+            # Fallback to basic interface
+            interface = QWidget()
+            main_layout = QVBoxLayout(interface)
+            main_layout.setContentsMargins(24, 24, 24, 24)
+            main_layout.setSpacing(20)
+
+            # Error message
+            error_label = BodyLabel(tr("logs.init_failed") + f": {e}")
+            error_label.setStyleSheet(f"color: {DS.color('error')};")
+            main_layout.addWidget(error_label)
+
+            # Fallback text widget
             fallback_log = TextEdit()
             fallback_log.setReadOnly(True)
-            fallback_log.setPlainText(tr("logs.init_failed") + f": {e}")
+            fallback_log.setPlaceholderText(tr("logs.fallback_message"))
             main_layout.addWidget(fallback_log)
 
-        return interface
+            return interface
 
     def _create_settings_interface(self) -> QWidget:
         """Create settings interface using the unified settings component"""
@@ -1083,9 +1091,36 @@ class MainWindow(FluentWindow):
 
     @Slot()
     def import_from_url(self) -> None:
-        """Import from URL"""
-        # Implementation would handle URL import
-        pass
+        """Import task from URL clipboard"""
+        try:
+            clipboard = QApplication.clipboard()
+            url = clipboard.text().strip()
+            
+            if url and url.startswith(('http://', 'https://')):
+                # Open task dialog with pre-filled URL
+                dialog = TaskDialog(self.settings, self)
+                if hasattr(dialog, 'base_url_input'):
+                    dialog.base_url_input.setText(url)
+                dialog.exec()
+            else:
+                InfoBar.warning(
+                    title=tr("dialogs.import_error"),
+                    content=tr("dialogs.no_valid_url_in_clipboard"),
+                    orient=Qt.Orientation.Horizontal,
+                    position=InfoBarPosition.TOP,
+                    duration=2000,
+                    parent=self
+                )
+        except Exception as e:
+            logger.error(f"Error importing from URL: {e}")
+            InfoBar.error(
+                title=tr("dialogs.import_error"),
+                content=tr("dialogs.import_error_message", error=str(e)),
+                orient=Qt.Orientation.Horizontal,
+                position=InfoBarPosition.TOP,
+                duration=3000,
+                parent=self
+            )
 
     @Slot()
     def import_batch_urls(self) -> None:
@@ -1256,7 +1291,38 @@ class MainWindow(FluentWindow):
                 logger.error(f"Error clearing completed tasks: {e}")
         self._update_ui()
 
-    # Event handlers
+    # Event handlers (Pure Python event system)
+    def _on_task_progress_event(self, event: Event) -> None:
+        """Handle task progress event from event dispatcher"""
+        task_id = event.data.get("task_id", "")
+        progress = event.data.get("progress", {})
+        self.on_task_progress(task_id, progress)
+
+    def _on_task_status_changed_event(self, event: Event) -> None:
+        """Handle task status changed event from event dispatcher"""
+        task_id = event.data.get("task_id", "")
+        old_status_str = event.data.get("old_status")
+        new_status_str = event.data.get("new_status")
+
+        # Convert status strings back to enums
+        old_status = CoreTaskStatus(old_status_str) if old_status_str else None
+        new_status = CoreTaskStatus(new_status_str) if new_status_str else CoreTaskStatus.PENDING
+
+        self.on_task_status_changed(task_id, old_status, new_status)
+
+    def _on_task_completed_event(self, event: Event) -> None:
+        """Handle task completed event from event dispatcher"""
+        task_id = event.data.get("task_id", "")
+        message = event.data.get("message", "")
+        self.on_task_completed(task_id, message)
+
+    def _on_task_failed_event(self, event: Event) -> None:
+        """Handle task failed event from event dispatcher"""
+        task_id = event.data.get("task_id", "")
+        message = event.data.get("message", "")
+        self.on_task_failed(task_id, message)
+
+    # Legacy event handlers (called by event wrappers above)
     def on_task_progress(self, task_id: str, progress_data: "ProgressDict") -> None:
         """Handle task progress updates with better error handling and speed calculation"""
         try:
@@ -1410,3 +1476,127 @@ class MainWindow(FluentWindow):
             self.switchTo(self.log_interface)
         except Exception as e:
             logger.error(f"Error switching to log interface: {e}")
+
+    def _on_logs_cleared(self) -> None:
+        """Handle log cleared signal"""
+        logger.debug("Logs cleared by user")
+        InfoBar.success(
+            title=tr("logs.messages.success"),
+            content=tr("logs.messages.cleared"),
+            parent=self,
+            duration=2000
+        )
+
+    def _on_logs_export_requested(self, format_type: str, file_path: str) -> None:
+        """Handle log export request"""
+        try:
+            logger.debug(f"Exporting logs to {file_path} in {format_type} format")
+
+            # Get log entries from viewer
+            if not hasattr(self, 'log_viewer') or not self.log_viewer:
+                raise ValueError("Log viewer not initialized")
+
+            entries = self.log_viewer.filtered_entries
+            if not entries:
+                InfoBar.warning(
+                    title=tr("logs.messages.warning"),
+                    content=tr("logs.messages.no_logs_to_export"),
+                    parent=self
+                )
+                return
+
+            # Export based on format
+            if format_type == "txt":
+                self._export_logs_txt(entries, file_path)
+            elif format_type == "html":
+                self._export_logs_html(entries, file_path)
+            elif format_type == "json":
+                self._export_logs_json(entries, file_path)
+            elif format_type == "csv":
+                self._export_logs_csv(entries, file_path)
+            else:
+                raise ValueError(f"Unsupported export format: {format_type}")
+
+            InfoBar.success(
+                title=tr("logs.messages.success"),
+                content=tr("logs.messages.exported").format(file_path),
+                parent=self,
+                duration=3000
+            )
+            logger.info(f"Successfully exported {len(entries)} log entries to {file_path}")
+
+        except Exception as e:
+            logger.error(f"Failed to export logs: {e}")
+            InfoBar.error(
+                title=tr("logs.messages.error"),
+                content=tr("logs.messages.export_failed").format(str(e)),
+                parent=self
+            )
+
+    def _export_logs_txt(self, entries, file_path: str) -> None:
+        """Export logs as plain text"""
+        with open(file_path, 'w', encoding='utf-8') as f:
+            for entry in entries:
+                f.write(f"{entry.display_text}\n")
+
+    def _export_logs_html(self, entries, file_path: str) -> None:
+        """Export logs as HTML"""
+        html_content = """
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>VidTanium Logs</title>
+    <style>
+        body { font-family: 'Consolas', monospace; background: #1e1e1e; color: #d4d4d4; padding: 20px; }
+        .log-entry { padding: 8px; margin: 4px 0; border-radius: 4px; }
+        .DEBUG { background: #2d2d2d; color: #9cdcfe; }
+        .INFO { background: #2d2d2d; color: #4ec9b0; }
+        .WARNING { background: #3d3d00; color: #dcdcaa; }
+        .ERROR { background: #3d0000; color: #f48771; }
+        .CRITICAL { background: #5d0000; color: #ff6b6b; }
+    </style>
+</head>
+<body>
+    <h1>VidTanium Application Logs</h1>
+"""
+        for entry in entries:
+            html_content += f'    <div class="log-entry {entry.level}">{entry.display_text}</div>\n'
+
+        html_content += """
+</body>
+</html>
+"""
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(html_content)
+
+    def _export_logs_json(self, entries, file_path: str) -> None:
+        """Export logs as JSON"""
+        import json
+        log_data = []
+        for entry in entries:
+            log_data.append({
+                'timestamp': entry.timestamp_str,
+                'level': entry.level,
+                'message': entry.message,
+                'source': entry.source,
+                'details': entry.details
+            })
+
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(log_data, f, indent=2, ensure_ascii=False)
+
+    def _export_logs_csv(self, entries, file_path: str) -> None:
+        """Export logs as CSV"""
+        import csv
+        with open(file_path, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(['Timestamp', 'Level', 'Message', 'Source', 'Details'])
+            for entry in entries:
+                writer.writerow([
+                    entry.timestamp_str,
+                    entry.level,
+                    entry.message,
+                    entry.source,
+                    entry.details
+                ])

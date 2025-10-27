@@ -78,7 +78,7 @@ class ProgressCard(AnimatedCard):
                 border-radius: 4px;
             }}
             ProgressBar::chunk {{
-                background-color: {DS.color('primary')}});
+                background-color: {DS.color('primary')};
                 border-radius: 4px;
             }}
         """)

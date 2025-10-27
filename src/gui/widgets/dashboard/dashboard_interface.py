@@ -67,10 +67,11 @@ class DashboardInterface(ResponsiveWidget):
         # Main container with responsive layout
         self.main_container = QWidget()
         main_layout = QVBoxLayout(self.main_container)
-        
+
         # Responsive margins based on breakpoint
         self._setup_responsive_margins(main_layout)
-        main_layout.setSpacing(20)
+        # Reduced spacing for more compact layout
+        main_layout.setSpacing(12)
 
         # Create component instances with enhanced theming
         self.hero_section = DashboardHeroSection(self.main_window, self.theme_manager)
@@ -119,19 +120,20 @@ class DashboardInterface(ResponsiveWidget):
         """)
 
     def _setup_responsive_margins(self, layout: QVBoxLayout) -> None:
-        """Setup responsive margins based on current breakpoint"""
+        """Setup responsive margins based on current breakpoint - optimized for compactness"""
         current_bp = self.responsive_manager.get_current_breakpoint()
-        
+
+        # Reduced margins by ~30% for more compact layout
         margin_config = {
-            'xs': 12,
-            'sm': 16,
-            'md': 20,
-            'lg': 24,
-            'xl': 32,
-            'xxl': 40
+            'xs': 8,
+            'sm': 12,
+            'md': 14,
+            'lg': 16,
+            'xl': 20,
+            'xxl': 24
         }
-        
-        margin = margin_config.get(current_bp.value, 20)
+
+        margin = margin_config.get(current_bp.value, 14)
         layout.setContentsMargins(margin, margin, margin, margin)
 
     def _setup_content_section(self, main_layout: QVBoxLayout) -> None:

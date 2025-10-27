@@ -76,6 +76,10 @@
     },
     "task_status": {
       "waiting": "Waiting"
+    },
+    "success": {
+      "cache_cleared": "Cache Cleared",
+      "cache_cleared_message": "Application cache has been successfully cleared"
     }
   },
   "download": {
@@ -118,7 +122,17 @@
       "clear": "Clear Logs",
       "export": "Export Logs"
     },
-    "init_failed": "Log viewer initialization failed"
+    "messages": {
+      "success": "Success",
+      "warning": "Warning",
+      "error": "Error",
+      "cleared": "Logs cleared successfully",
+      "exported": "Logs exported to {0}",
+      "export_failed": "Failed to export logs: {0}",
+      "no_logs_to_export": "No logs to export"
+    },
+    "init_failed": "Log viewer initialization failed",
+    "fallback_message": "Log viewer is running in fallback mode"
   },
   "settings": {
     "title": "App Settings",
@@ -987,5 +1001,211 @@
     "audio_feedback": "Audio Feedback",
     "reduced_motion": "Reduced Motion",
     "app_ready": "VidTanium application is ready"
+  },
+  "analytics": {
+    "title": "Analytics Dashboard",
+    "eta_title": "Estimated Time",
+    "eta_unknown": "Unknown",
+    "confidence": "Confidence",
+    "algorithm": "Algorithm",
+    "speed_trend": "Speed Trend",
+    "algorithm_simple": "Simple Linear",
+    "algorithm_exponential": "Exponential Smoothing",
+    "algorithm_weighted": "Weighted Average",
+    "algorithm_adaptive": "Adaptive Hybrid",
+    "algorithm_regression": "Regression Based",
+    "trend_increasing": "Increasing ↑",
+    "trend_decreasing": "Decreasing ↓",
+    "trend_stable": "Stable —",
+    "bandwidth_title": "Bandwidth Analytics",
+    "optimization_suggestions": "Optimization Suggestions"
+  },
+  "bulk_ops": {
+    "title": "Bulk Operations",
+    "selection_title": "Task Selection",
+    "select_all": "Select All",
+    "select_none": "Select None",
+    "invert_selection": "Invert Selection",
+    "filter_by_status": "Filter by Status:",
+    "filter_by_size": "Filter by Size:",
+    "filter_by_pattern": "Search Pattern:",
+    "any_status": "Any Status",
+    "status_pending": "Pending",
+    "status_running": "Running",
+    "status_paused": "Paused",
+    "status_completed": "Completed",
+    "status_failed": "Failed",
+    "min_size": "Min (MB)",
+    "max_size": "Max (MB)",
+    "search_pattern": "Enter search pattern...",
+    "apply_filters": "Apply Filters",
+    "operations_title": "Bulk Operations",
+    "start_selected": "Start Selected",
+    "pause_selected": "Pause Selected",
+    "delete_selected": "Delete Selected",
+    "export_selected": "Export Selected",
+    "priority_high": "Set High Priority",
+    "priority_normal": "Set Normal Priority",
+    "priority_low": "Set Low Priority",
+    "confirm_bulk_action": "Confirm Bulk Action",
+    "confirm_message": "Are you sure you want to perform this action on {count} tasks?",
+    "success_message": "Successfully performed action on {count} tasks",
+    "error_message": "Failed to perform action: {error}"
+  },
+  "error_dialog": {
+    "title": "Error Details",
+    "suggested_actions": "Suggested Actions",
+    "technical_details": "Technical Details",
+    "actions_tab": "Actions",
+    "details_tab": "Details",
+    "copy_details": "Copy Details",
+    "retry": "Retry",
+    "dismiss": "Dismiss",
+    "severity_low": "Low",
+    "severity_medium": "Medium",
+    "severity_high": "High",
+    "severity_critical": "Critical",
+    "category_network": "Network Error",
+    "category_filesystem": "File System Error",
+    "category_validation": "Validation Error",
+    "category_authentication": "Authentication Error",
+    "category_unknown": "Unknown Error"
+  },
+  "progress": {
+    "downloading": "Downloading",
+    "processing": "Processing",
+    "completed": "Completed",
+    "speed": "Speed",
+    "eta": "ETA",
+    "downloaded": "Downloaded",
+    "total": "Total",
+    "segments": "Segments"
+  },
+  "tooltip": {
+    "show_details": "Click to show details",
+    "hide_details": "Click to hide details",
+    "copy": "Copy to clipboard",
+    "open_folder": "Open containing folder",
+    "delete": "Delete task",
+    "retry": "Retry download"
+  },
+  "history": {
+    "title": "History",
+    "urls": "URL History",
+    "outputs": "Output History",
+    "empty": "No History",
+    "no_urls": "No URL history available",
+    "no_outputs": "No output history available",
+    "recent_urls": "Recent URLs",
+    "clear_history": "Clear History"
+  },
+  "dialog": {
+    "clear_confirm": "Confirm Clear",
+    "clear_confirm_message": "Are you sure you want to clear all fields? This cannot be undone."
+  },
+  "analysis": {
+    "suggestions": "Analysis Suggestions"
+  },
+  "download_path": "Save Path",
+  "task_manager": {
+    "unknown_task": "Unknown Task",
+    "download_path": "Download Path"
+  },
+  "cli": {
+    "welcome": {
+      "title": "Welcome to VidTanium CLI",
+      "subtitle": "Powerful Video Download Tool"
+    },
+    "messages": {
+      "interrupted": "Operation interrupted by user",
+      "goodbye": "Thank you for using VidTanium!",
+      "no_tasks": "No tasks found",
+      "no_command": "No command specified",
+      "use_help": "Use --help to see available options"
+    },
+    "errors": {
+      "unexpected": "Unexpected error: {error}",
+      "suggestions": "Suggested actions",
+      "initialization_failed": "Failed to initialize CLI application",
+      "invalid_url": "Invalid URL provided",
+      "task_not_found": "Task not found: {task_id}",
+      "download_failed": "Download failed: {error}",
+      "network_error": "Network error: {error}",
+      "permission_error": "Permission denied: {error}"
+    },
+    "status": {
+      "pending": "Pending",
+      "running": "Running",
+      "paused": "Paused",
+      "completed": "Completed",
+      "failed": "Failed",
+      "canceled": "Canceled"
+    },
+    "commands": {
+      "analyze": {
+        "started": "Analyzing URL: {url}",
+        "completed": "Analysis completed",
+        "failed": "Analysis failed: {error}"
+      },
+      "download": {
+        "started": "Starting download: {url}",
+        "progress": "Downloading: {progress}%",
+        "completed": "Download completed: {name}",
+        "failed": "Download failed: {error}"
+      },
+      "list": {
+        "started": "Listing tasks...",
+        "empty": "No tasks to display"
+      },
+      "pause": {
+        "success": "Task paused: {task_id}",
+        "failed": "Failed to pause task: {error}"
+      },
+      "resume": {
+        "success": "Task resumed: {task_id}",
+        "failed": "Failed to resume task: {error}"
+      },
+      "cancel": {
+        "success": "Task canceled: {task_id}",
+        "failed": "Failed to cancel task: {error}",
+        "confirm": "Are you sure you want to cancel this task?"
+      }
+    },
+    "task_list": {
+      "title": "Download Tasks",
+      "id": "ID",
+      "name": "Name",
+      "status": "Status",
+      "progress": "Progress",
+      "speed": "Speed",
+      "eta": "ETA"
+    },
+    "progress": {
+      "downloading": "Downloading {name}",
+      "segments": "{completed}/{total} segments",
+      "speed": "{speed} MB/s",
+      "eta": "ETA: {time}",
+      "completed": "Completed in {time}"
+    },
+    "settings": {
+      "title": "Settings",
+      "current": "Current Settings",
+      "updated": "Setting updated: {key} = {value}",
+      "invalid_key": "Invalid setting key: {key}",
+      "invalid_value": "Invalid value for {key}: {value}"
+    },
+    "interactive": {
+      "select_task": "Select a task:",
+      "confirm_action": "Confirm action: {action}",
+      "enter_url": "Enter video URL:",
+      "enter_output": "Enter output file path (optional):",
+      "press_key": "Press any key to continue..."
+    },
+    "monitoring": {
+      "title": "Live Download Monitor",
+      "active_downloads": "Active Downloads: {count}",
+      "total_speed": "Total Speed: {speed} MB/s",
+      "press_q": "Press 'q' to quit"
+    }
   }
 }
